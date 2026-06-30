@@ -16,11 +16,43 @@ body {
   font-family: var(--font-body);
 }
 
+#root {
+  min-height: 100vh;
+}
+
 button,
 input,
 textarea,
 select {
   font: inherit;
+}
+
+button {
+  border: 1px solid rgba(242, 169, 59, 0.4);
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--color-wine), #3b1118);
+  color: var(--color-paper);
+  cursor: pointer;
+  font-weight: 700;
+  padding: 0.8rem 1.1rem;
+}
+
+input,
+textarea,
+select {
+  width: 100%;
+  border: 1px solid rgba(167, 162, 154, 0.22);
+  border-radius: 0.85rem;
+  background: rgba(17, 16, 15, 0.68);
+  color: var(--color-paper);
+  padding: 0.8rem 0.95rem;
+}
+
+label {
+  display: block;
+  margin: var(--space-4) 0 var(--space-2);
+  color: var(--color-paper-muted);
+  font-size: 0.82rem;
 }
 
 a {
@@ -34,4 +66,8 @@ a {
   font-weight: 800;
   letter-spacing: 0.14em;
   text-transform: uppercase;
+}
+
+::selection {
+  background: rgba(242, 169, 59, 0.35);
 }

@@ -1,4 +1,4 @@
-import { supabase } from '../../lib/supabase';
+import { getSupabase } from '../../lib/supabase';
 import { SongSummary } from './song.types';
 
 interface SongRow {
@@ -9,6 +9,7 @@ interface SongRow {
 }
 
 export async function listSongs(): Promise<SongSummary[]> {
+  const supabase = getSupabase();
   const { data, error } = await supabase
     .from('songs')
     .select('id,title,status,difficulty')

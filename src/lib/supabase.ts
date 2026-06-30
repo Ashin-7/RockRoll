@@ -1,6 +1,13 @@
 import { createClient } from '@supabase/supabase-js';
 import { readEnv } from '../config/env';
 
-const env = readEnv();
+let supabaseClient: ReturnType<typeof createClient> | undefined;
 
-export const supabase = createClient(env.supabaseUrl, env.supabaseAnonKey);
+export function getSupabase() {
+  if (!supabaseClient) {
+    const env = readEnv();
+    supabaseClient = createClient(env.supabaseUrl, env.supabaseAnonKey);
+  }
+
+  return supabaseClient as any;
+}

@@ -1,4 +1,4 @@
-import { supabase } from '../../lib/supabase';
+import { getSupabase } from '../../lib/supabase';
 import { ImportCandidateSummary, ImportSource } from './inbox.types';
 
 interface ImportCandidateRow {
@@ -9,6 +9,7 @@ interface ImportCandidateRow {
 }
 
 export async function listImportCandidates(): Promise<ImportCandidateSummary[]> {
+  const supabase = getSupabase();
   const { data, error } = await supabase
     .from('import_candidates')
     .select('id,display_title,display_subtitle,source_name')

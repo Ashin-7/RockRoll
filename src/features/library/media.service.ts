@@ -1,4 +1,4 @@
-import { supabase } from '../../lib/supabase';
+import { getSupabase } from '../../lib/supabase';
 import { MediaAssetSummary, MediaType } from './media.types';
 
 interface MediaAssetRow {
@@ -9,6 +9,7 @@ interface MediaAssetRow {
 }
 
 export async function listMediaAssets(): Promise<MediaAssetSummary[]> {
+  const supabase = getSupabase();
   const { data, error } = await supabase
     .from('media_assets')
     .select('id,file_name,media_type,created_at')

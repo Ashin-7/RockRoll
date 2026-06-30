@@ -22,6 +22,14 @@
   text-transform: uppercase;
 }
 
+.app-shell__brand small {
+  display: block;
+  margin-top: 0.15rem;
+  color: var(--color-paper-muted);
+  font-size: 0.62rem;
+  letter-spacing: 0.18em;
+}
+
 .app-shell__rec {
   width: 0.75rem;
   height: 0.75rem;

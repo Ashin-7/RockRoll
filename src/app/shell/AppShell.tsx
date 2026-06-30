@@ -12,7 +12,10 @@ export function AppShell({ children }: AppShellProps) {
       <aside className="app-shell__sidebar">
         <div className="app-shell__brand">
           <span className="app-shell__rec" aria-hidden="true" />
-          <span>RcokRoll</span>
+          <span>
+            RcokRoll
+            <small>Private room</small>
+          </span>
         </div>
         <nav aria-label="Primary" className="app-shell__nav">
           {navItems.map((item) => (
