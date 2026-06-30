@@ -30,6 +30,11 @@
   letter-spacing: 0.18em;
 }
 
+.app-shell__language {
+  width: 100%;
+  margin-top: var(--space-6);
+}
+
 .app-shell__rec {
   width: 0.75rem;
   height: 0.75rem;

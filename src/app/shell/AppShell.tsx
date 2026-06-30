@@ -1,12 +1,22 @@
 import './AppShell.css';
+import { useI18n } from '../../i18n/I18nProvider';
+import { MessageKey } from '../../i18n/messages';
 
 interface AppShellProps {
   children: React.ReactNode;
 }
 
-const navItems = ['Backstage', 'Songs', 'Archive', 'Inbox', 'Library'];
+const navItems: Array<{ href: string; labelKey: MessageKey }> = [
+  { href: '#backstage', labelKey: 'nav.backstage' },
+  { href: '#songs', labelKey: 'nav.songs' },
+  { href: '#archive', labelKey: 'nav.archive' },
+  { href: '#inbox', labelKey: 'nav.inbox' },
+  { href: '#library', labelKey: 'nav.library' },
+];
 
 export function AppShell({ children }: AppShellProps) {
+  const { locale, setLocale, t } = useI18n();
+
   return (
     <div className="app-shell">
       <aside className="app-shell__sidebar">
@@ -14,13 +24,20 @@ export function AppShell({ children }: AppShellProps) {
           <span className="app-shell__rec" aria-hidden="true" />
           <span>
             RcokRoll
-            <small>Private room</small>
+            <small>{t('nav.privateRoom')}</small>
           </span>
         </div>
-        <nav aria-label="Primary" className="app-shell__nav">
+        <button
+          className="app-shell__language"
+          type="button"
+          onClick={() => setLocale(locale === 'en' ? 'zh-CN' : 'en')}
+        >
+          {t('common.languageToggle')}
+        </button>
+        <nav aria-label={t('nav.primary')} className="app-shell__nav">
           {navItems.map((item) => (
-            <a href={`#${item.toLowerCase()}`} key={item}>
-              {item}
+            <a href={item.href} key={item.href}>
+              {t(item.labelKey)}
             </a>
           ))}
         </nav>

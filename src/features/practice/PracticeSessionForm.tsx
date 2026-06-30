@@ -1,4 +1,5 @@
 import { FormEvent, useState } from 'react';
+import { useI18n } from '../../i18n/I18nProvider';
 import { createPracticeSession } from './practice.service';
 import { PracticeSessionInput } from './practice.types';
 
@@ -7,6 +8,7 @@ interface PracticeSessionFormProps {
 }
 
 export function PracticeSessionForm({ onSave = createPracticeSession }: PracticeSessionFormProps) {
+  const { t } = useI18n();
   const [durationMinutes, setDurationMinutes] = useState('');
   const [bpm, setBpm] = useState('');
   const [focusArea, setFocusArea] = useState('');
@@ -25,7 +27,7 @@ export function PracticeSessionForm({ onSave = createPracticeSession }: Practice
 
   return (
     <form onSubmit={handleSubmit}>
-      <label htmlFor="durationMinutes">Duration minutes</label>
+      <label htmlFor="durationMinutes">{t('practice.duration')}</label>
       <input
         id="durationMinutes"
         type="number"
@@ -35,16 +37,16 @@ export function PracticeSessionForm({ onSave = createPracticeSession }: Practice
         required
       />
 
-      <label htmlFor="bpm">BPM</label>
+      <label htmlFor="bpm">{t('practice.bpm')}</label>
       <input id="bpm" type="number" min="1" value={bpm} onChange={(event) => setBpm(event.target.value)} />
 
-      <label htmlFor="focusArea">Focus area</label>
+      <label htmlFor="focusArea">{t('practice.focusArea')}</label>
       <input id="focusArea" value={focusArea} onChange={(event) => setFocusArea(event.target.value)} />
 
-      <label htmlFor="reflection">Reflection</label>
+      <label htmlFor="reflection">{t('practice.reflection')}</label>
       <textarea id="reflection" value={reflection} onChange={(event) => setReflection(event.target.value)} />
 
-      <button type="submit">Save practice session</button>
+      <button type="submit">{t('practice.save')}</button>
     </form>
   );
 }

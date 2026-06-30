@@ -1,9 +1,13 @@
+import { useI18n } from '../../i18n/I18nProvider';
+
 export function InboxPage() {
+  const { t } = useI18n();
+
   return (
     <section>
-      <p className="eyebrow">Curate before it enters</p>
-      <h1>Import Inbox</h1>
-      <p>Search public music sources, then curate the result before it enters your archive.</p>
+      <p className="eyebrow">{t('inbox.eyebrow')}</p>
+      <h1>{t('inbox.title')}</h1>
+      <p>{t('inbox.description')}</p>
     </section>
   );
 }

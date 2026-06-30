@@ -1,20 +1,24 @@
+import { useI18n } from '../../i18n/I18nProvider';
+
 export function LibraryPage() {
+  const { t } = useI18n();
+
   return (
     <section>
-      <p className="eyebrow">Tapes, scores, and takes</p>
-      <h1>Library</h1>
+      <p className="eyebrow">{t('library.eyebrow')}</p>
+      <h1>{t('library.title')}</h1>
       <div>
         <article>
-          <h2>Videos</h2>
-          <p>Practice takes and rehearsal clips.</p>
+          <h2>{t('library.videos')}</h2>
+          <p>{t('library.videosDescription')}</p>
         </article>
         <article>
-          <h2>Scores</h2>
-          <p>PDF, Guitar Pro, MusicXML, and image scores.</p>
+          <h2>{t('library.scores')}</h2>
+          <p>{t('library.scoresDescription')}</p>
         </article>
         <article>
-          <h2>Audio</h2>
-          <p>Recordings, references, and backing tracks.</p>
+          <h2>{t('library.audio')}</h2>
+          <p>{t('library.audioDescription')}</p>
         </article>
       </div>
     </section>

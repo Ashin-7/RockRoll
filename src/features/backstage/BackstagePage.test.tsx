@@ -1,10 +1,11 @@
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
+import { renderWithI18n } from '../../test/render';
 import { BackstagePage } from './BackstagePage';
 
 describe('BackstagePage', () => {
   it('renders the local practice dashboard', () => {
-    render(<BackstagePage />);
+    renderWithI18n(<BackstagePage />);
 
     expect(screen.getByText('Your private music archive.')).toBeInTheDocument();
     expect(screen.getByLabelText('Today practice amp panel')).toBeInTheDocument();

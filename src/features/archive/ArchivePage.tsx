@@ -1,20 +1,24 @@
+import { useI18n } from '../../i18n/I18nProvider';
+
 export function ArchivePage() {
+  const { t } = useI18n();
+
   return (
     <section>
-      <p className="eyebrow">Personal liner notes</p>
-      <h1>Music Archive</h1>
+      <p className="eyebrow">{t('archive.eyebrow')}</p>
+      <h1>{t('archive.title')}</h1>
       <div>
         <article>
-          <h2>Artists</h2>
-          <p>Band, artist, and musician dossiers.</p>
+          <h2>{t('archive.artists')}</h2>
+          <p>{t('archive.artistsDescription')}</p>
         </article>
         <article>
-          <h2>Albums</h2>
-          <p>Records, EPs, live albums, and editions.</p>
+          <h2>{t('archive.albums')}</h2>
+          <p>{t('archive.albumsDescription')}</p>
         </article>
         <article>
-          <h2>Genres</h2>
-          <p>Rock, jazz, blues, funk, metal, classical, fusion, and more.</p>
+          <h2>{t('archive.genres')}</h2>
+          <p>{t('archive.genresDescription')}</p>
         </article>
       </div>
     </section>

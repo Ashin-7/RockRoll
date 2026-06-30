@@ -1,10 +1,11 @@
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
+import { renderWithI18n } from '../../test/render';
 import { ArchivePage } from './ArchivePage';
 
 describe('ArchivePage', () => {
   it('renders archive sections', () => {
-    render(<ArchivePage />);
+    renderWithI18n(<ArchivePage />);
 
     expect(screen.getByText('Music Archive')).toBeInTheDocument();
     expect(screen.getByText('Artists')).toBeInTheDocument();

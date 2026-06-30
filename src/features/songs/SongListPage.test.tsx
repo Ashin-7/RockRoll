@@ -1,5 +1,6 @@
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
+import { renderWithI18n } from '../../test/render';
 import { SongListPage } from './SongListPage';
 import { SongSummary } from './song.types';
 
@@ -15,7 +16,7 @@ describe('SongListPage', () => {
       },
     ];
 
-    render(<SongListPage songs={songs} />);
+    renderWithI18n(<SongListPage songs={songs} />);
 
     expect(screen.getByText('Songs')).toBeInTheDocument();
     expect(screen.getByText('Little Wing')).toBeInTheDocument();
@@ -24,7 +25,7 @@ describe('SongListPage', () => {
   });
 
   it('renders empty state when no songs exist', () => {
-    render(<SongListPage songs={[]} />);
+    renderWithI18n(<SongListPage songs={[]} />);
 
     expect(screen.getByText('No songs in the archive yet.')).toBeInTheDocument();
   });

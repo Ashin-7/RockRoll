@@ -1,6 +1,7 @@
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
+import { renderWithI18n } from '../../test/render';
 import { PracticeSessionForm } from './PracticeSessionForm';
 
 describe('PracticeSessionForm', () => {
@@ -8,7 +9,7 @@ describe('PracticeSessionForm', () => {
     const onSave = vi.fn().mockResolvedValue(undefined);
     const user = userEvent.setup();
 
-    render(<PracticeSessionForm onSave={onSave} />);
+    renderWithI18n(<PracticeSessionForm onSave={onSave} />);
 
     await user.type(screen.getByLabelText('Duration minutes'), '45');
     await user.type(screen.getByLabelText('BPM'), '92');

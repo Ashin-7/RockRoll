@@ -1,9 +1,13 @@
+import { useI18n } from '../../i18n/I18nProvider';
+
 export function SongDetailPage() {
+  const { t } = useI18n();
+
   return (
     <section>
-      <p className="eyebrow">Song dossier</p>
-      <h1>Song detail</h1>
-      <p>Practice records, media, notes, and archive links will collect here.</p>
+      <p className="eyebrow">{t('songDetail.eyebrow')}</p>
+      <h1>{t('songDetail.title')}</h1>
+      <p>{t('songDetail.description')}</p>
     </section>
   );
 }

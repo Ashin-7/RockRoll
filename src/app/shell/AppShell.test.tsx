@@ -1,10 +1,11 @@
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
+import { renderWithI18n } from '../../test/render';
 import { AppShell } from './AppShell';
 
 describe('AppShell', () => {
   it('renders primary navigation and content', () => {
-    render(
+    renderWithI18n(
       <AppShell>
         <h2>Today in the room</h2>
       </AppShell>,

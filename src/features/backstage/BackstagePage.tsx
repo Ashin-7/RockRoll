@@ -5,19 +5,20 @@ import {
   recentTapes,
 } from './backstage.mock';
 import './BackstagePage.css';
+import { useI18n } from '../../i18n/I18nProvider';
 
 export function BackstagePage() {
+  const { t } = useI18n();
+
   return (
     <section className="backstage-page">
       <div className="backstage-hero">
         <div className="backstage-hero__copy">
-          <p className="eyebrow">Backstage Archive</p>
-          <h1>Your private music archive.</h1>
-          <p>
-            Practice room, tape shelf, and liner notes for the songs you study.
-          </p>
+          <p className="eyebrow">{t('backstage.hero.eyebrow')}</p>
+          <h1>{t('backstage.hero.title')}</h1>
+          <p>{t('backstage.hero.description')}</p>
         </div>
-        <article className="amp-panel" aria-label="Today practice amp panel">
+        <article className="amp-panel" aria-label={t('backstage.amp.ariaLabel')}>
           <div className="amp-panel__topline">
             <span className="rec-light" aria-hidden="true" />
             <span>{practiceFocus.takeLabel}</span>
@@ -29,22 +30,24 @@ export function BackstagePage() {
           </div>
           <dl className="amp-panel__details">
             <div>
-              <dt>Focus</dt>
+              <dt>{t('backstage.amp.focus')}</dt>
               <dd>{practiceFocus.target}</dd>
             </div>
             <div>
-              <dt>Tempo</dt>
+              <dt>{t('backstage.amp.tempo')}</dt>
               <dd>{practiceFocus.tempo}</dd>
             </div>
             <div>
-              <dt>Room time</dt>
-              <dd>{practiceFocus.durationMinutes} min</dd>
+              <dt>{t('backstage.amp.roomTime')}</dt>
+              <dd>
+                {practiceFocus.durationMinutes} {t('backstage.amp.minutes')}
+              </dd>
             </div>
           </dl>
         </article>
       </div>
 
-      <div className="signal-grid" aria-label="Archive signals">
+      <div className="signal-grid" aria-label={t('backstage.signals.ariaLabel')}>
         {archiveSignals.map((signal) => (
           <article className="signal-card" key={signal.label}>
             <p>{signal.label}</p>
@@ -57,8 +60,8 @@ export function BackstagePage() {
       <div className="backstage-columns">
         <article className="tape-stack">
           <div className="section-heading">
-            <p className="eyebrow">Recent tapes</p>
-            <h2>Practice evidence</h2>
+            <p className="eyebrow">{t('backstage.sections.recentTapes')}</p>
+            <h2>{t('backstage.sections.practiceEvidence')}</h2>
           </div>
           {recentTapes.map((tape) => (
             <div className="tape-card" key={tape.title}>
@@ -73,8 +76,8 @@ export function BackstagePage() {
 
         <article className="inbox-board">
           <div className="section-heading">
-            <p className="eyebrow">Import inbox</p>
-            <h2>Curate before it enters</h2>
+            <p className="eyebrow">{t('backstage.sections.importInbox')}</p>
+            <h2>{t('backstage.sections.curate')}</h2>
           </div>
           {importDrafts.map((draft) => (
             <div className="draft-card" key={`${draft.source}-${draft.title}`}>

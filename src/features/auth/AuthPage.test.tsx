@@ -1,6 +1,7 @@
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
+import { renderWithI18n } from '../../test/render';
 import { AuthPage } from './AuthPage';
 
 describe('AuthPage', () => {
@@ -8,7 +9,7 @@ describe('AuthPage', () => {
     const signIn = vi.fn().mockResolvedValue(undefined);
     const user = userEvent.setup();
 
-    render(<AuthPage onSignIn={signIn} />);
+    renderWithI18n(<AuthPage onSignIn={signIn} />);
 
     await user.type(screen.getByLabelText('Email'), 'player@example.com');
     await user.click(screen.getByRole('button', { name: 'Send magic link' }));

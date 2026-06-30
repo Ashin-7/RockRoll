@@ -1,4 +1,5 @@
 import { FormEvent, useState } from 'react';
+import { useI18n } from '../../i18n/I18nProvider';
 import { signInWithEmail } from './auth.service';
 
 interface AuthPageProps {
@@ -6,6 +7,7 @@ interface AuthPageProps {
 }
 
 export function AuthPage({ onSignIn = signInWithEmail }: AuthPageProps) {
+  const { t } = useI18n();
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -17,19 +19,19 @@ export function AuthPage({ onSignIn = signInWithEmail }: AuthPageProps) {
 
     try {
       await onSignIn(email);
-      setMessage('Check your email for the login link.');
+      setMessage(t('auth.checkEmail'));
     } catch (caughtError) {
-      setError(caughtError instanceof Error ? caughtError.message : 'Unable to send login link.');
+      setError(caughtError instanceof Error ? caughtError.message : t('auth.errorFallback'));
     }
   }
 
   return (
     <main className="auth-page">
       <section>
-        <p className="eyebrow">Private backstage access</p>
-        <h1>Sign in to your archive.</h1>
+        <p className="eyebrow">{t('auth.eyebrow')}</p>
+        <h1>{t('auth.title')}</h1>
         <form onSubmit={handleSubmit}>
-          <label htmlFor="email">Email</label>
+          <label htmlFor="email">{t('auth.email')}</label>
           <input
             id="email"
             type="email"
@@ -37,7 +39,7 @@ export function AuthPage({ onSignIn = signInWithEmail }: AuthPageProps) {
             onChange={(event) => setEmail(event.target.value)}
             required
           />
-          <button type="submit">Send magic link</button>
+          <button type="submit">{t('auth.sendMagicLink')}</button>
         </form>
         {message ? <p role="status">{message}</p> : null}
         {error ? <p role="alert">{error}</p> : null}
