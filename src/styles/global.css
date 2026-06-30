@@ -1,0 +1,37 @@
+@import './tokens.css';
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  color: var(--color-paper);
+  background:
+    radial-gradient(circle at 20% 0%, rgba(242, 169, 59, 0.16), transparent 32rem),
+    radial-gradient(circle at 80% 20%, rgba(123, 30, 43, 0.22), transparent 28rem),
+    var(--color-coal);
+  font-family: var(--font-body);
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+a {
+  color: inherit;
+}
+
+.eyebrow {
+  color: var(--color-amber);
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}

@@ -1,0 +1,2 @@
+-- Local development seed data should be added only after a local Supabase project exists.
+-- Keep production secrets and real personal data out of this file.
