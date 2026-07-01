@@ -1,0 +1,107 @@
+.practice-history-page {
+  display: grid;
+  gap: var(--space-8);
+}
+
+.practice-history-hero h1 {
+  margin: var(--space-2) 0 0;
+  font-family: var(--font-display);
+  font-size: clamp(3rem, 7vw, 6rem);
+  line-height: 0.9;
+  text-transform: uppercase;
+}
+
+.practice-history-list {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.practice-history-card {
+  display: grid;
+  gap: var(--space-4);
+  border: 1px solid rgba(167, 162, 154, 0.16);
+  border-radius: var(--radius-panel);
+  background: rgba(34, 32, 31, 0.72);
+  padding: var(--space-6);
+}
+
+.practice-history-card__header {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.practice-history-card__header h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 2rem;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.practice-history-card__header p,
+.practice-history-card__header time,
+.practice-history-card__body {
+  color: var(--color-paper-muted);
+}
+
+.practice-history-card__header p {
+  margin: var(--space-2) 0 0;
+}
+
+.practice-history-card__meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+  margin: 0;
+}
+
+.practice-history-card__meta div {
+  border-top: 1px solid rgba(167, 162, 154, 0.16);
+  padding-top: var(--space-3);
+}
+
+.practice-history-card__meta dt {
+  color: var(--color-silver);
+  font-size: 0.74rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.practice-history-card__meta dd {
+  margin: var(--space-1) 0 0;
+}
+
+.practice-history-card__body {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.practice-history-card__body p,
+.practice-history-empty {
+  margin: 0;
+}
+
+.practice-history-card__body strong {
+  display: block;
+  color: var(--color-paper);
+  margin-bottom: var(--space-1);
+}
+
+.practice-history-empty {
+  border: 1px dashed rgba(167, 162, 154, 0.26);
+  border-radius: var(--radius-panel);
+  color: var(--color-paper-muted);
+  padding: var(--space-8);
+}
+
+@media (max-width: 720px) {
+  .practice-history-card__header,
+  .practice-history-card__meta {
+    grid-template-columns: 1fr;
+  }
+
+  .practice-history-card__header {
+    flex-direction: column;
+  }
+}
