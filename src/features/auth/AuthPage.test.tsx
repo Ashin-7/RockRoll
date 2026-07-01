@@ -26,6 +26,22 @@ describe('AuthPage', () => {
     expect(await screen.findByText('Check your email for the login link.')).toBeInTheDocument();
   });
 
+  it('prefills the configured test login email', async () => {
+    const user = userEvent.setup();
+
+    renderWithI18n(
+      <AuthPage
+        onGetCurrentSession={vi.fn().mockResolvedValue(null)}
+        onAuthStateChange={() => vi.fn()}
+        testLoginEmail="tester@example.com"
+      />,
+    );
+
+    await user.click(await screen.findByRole('button', { name: 'Use test email' }));
+
+    expect(screen.getByLabelText('Email')).toHaveValue('tester@example.com');
+  });
+
   it('shows the signed-in email when a session exists', async () => {
     renderWithI18n(
       <AuthPage

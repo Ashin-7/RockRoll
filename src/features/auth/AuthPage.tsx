@@ -13,6 +13,7 @@ interface AuthPageProps {
   onGetCurrentSession?: () => Promise<AuthSession | null>;
   onSignIn?: (email: string) => Promise<void>;
   onSignOut?: () => Promise<void>;
+  testLoginEmail?: string;
 }
 
 export function AuthPage({
@@ -20,6 +21,7 @@ export function AuthPage({
   onGetCurrentSession = getCurrentSession,
   onSignIn = signInWithEmail,
   onSignOut = signOut,
+  testLoginEmail = import.meta.env.VITE_TEST_LOGIN_EMAIL,
 }: AuthPageProps) {
   const { t } = useI18n();
   const [email, setEmail] = useState('');
@@ -129,6 +131,11 @@ export function AuthPage({
               required
             />
             <button type="submit">{t('auth.sendMagicLink')}</button>
+            {testLoginEmail ? (
+              <button type="button" onClick={() => setEmail(testLoginEmail)}>
+                {t('auth.useTestEmail')}
+              </button>
+            ) : null}
           </form>
         ) : null}
 
