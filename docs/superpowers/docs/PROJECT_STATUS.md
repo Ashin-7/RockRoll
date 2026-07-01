@@ -12,6 +12,7 @@ MVP Phase 1，Practice First。
 - Practice 表单已支持选择曲目并提交 `songId`，作为 Song 与 Practice 关联的前端最小闭环。
 - Practice History 已有独立 `#practice` mock 页面，通过本地数据展示最近练习记录。
 - Practice Statistics 已在 `#practice` 页面提供本地 mock 统计摘要。
+- Auth 已完成页面内最小闭环：可读取 session、展示当前邮箱、监听 auth 状态并退出登录。
 
 ## 最近完成
 
@@ -22,6 +23,7 @@ MVP Phase 1，Practice First。
 - 完成 Practice 表单级 Song 关联：可传入曲目列表，提交时带上 `songId`，service 写入 `song_id`。
 - 完成 Practice History mock 页面：新增 `#practice` 路由、导航入口、本地练习记录列表与空状态。
 - 完成 Practice Statistics mock 摘要：基于本地练习历史计算练习次数、总时长、练习曲目数、平均时长和最近练习日期。
+- 完成 Auth 最小闭环：`#auth` 页面支持未登录 magic link、已登录邮箱展示、auth 状态监听与退出登录。
 
 ## 验证方式
 
@@ -34,7 +36,7 @@ $env:PATH="$env:NVM_HOME\v20.20.2;$env:PATH"; npm run build
 
 ## 下一步建议
 
-1. Auth 最小闭环。
-2. Song Library。
-3. Artist Library。
-4. Metadata Inbox。
+1. Song Library。
+2. Artist Library。
+3. Metadata Inbox。
+4. Practice 数据接入真实查询。
