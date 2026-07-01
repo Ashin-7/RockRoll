@@ -1,5 +1,6 @@
 import { useI18n } from '../../i18n/I18nProvider';
 import { localPracticeHistory, PracticeHistoryItem } from './practice.mock';
+import { calculatePracticeStatistics } from './practiceStatistics';
 import './PracticeHistoryPage.css';
 
 interface PracticeHistoryPageProps {
@@ -8,6 +9,30 @@ interface PracticeHistoryPageProps {
 
 export function PracticeHistoryPage({ sessions = localPracticeHistory }: PracticeHistoryPageProps) {
   const { t } = useI18n();
+  const statistics = calculatePracticeStatistics(sessions);
+  const statisticItems = [
+    {
+      label: t('practiceStatistics.totalSessions'),
+      value: statistics.totalSessions.toString(),
+    },
+    {
+      label: t('practiceStatistics.totalMinutes'),
+      value: `${statistics.totalMinutes} ${t('practiceHistory.minutes')}`,
+    },
+    {
+      label: t('practiceStatistics.uniqueSongs'),
+      value: statistics.uniqueSongs.toString(),
+    },
+    {
+      label: t('practiceStatistics.averageMinutes'),
+      value: `${statistics.averageMinutes} ${t('practiceHistory.minutes')}`,
+    },
+    {
+      label: t('practiceStatistics.latestPractice'),
+      value: statistics.latestPracticeDate ?? t('practiceStatistics.noPractice'),
+    },
+  ];
+
 
   return (
     <section className="practice-history-page">
@@ -15,6 +40,18 @@ export function PracticeHistoryPage({ sessions = localPracticeHistory }: Practic
         <p className="eyebrow">{t('practiceHistory.eyebrow')}</p>
         <h1>{t('practiceHistory.title')}</h1>
       </div>
+
+      <section className="practice-statistics" aria-labelledby="practice-statistics-title">
+        <h2 id="practice-statistics-title">{t('practiceStatistics.title')}</h2>
+        <dl className="practice-statistics__grid">
+          {statisticItems.map((item) => (
+            <div className="practice-statistics__item" key={item.label}>
+              <dt>{item.label}</dt>
+              <dd>{item.value}</dd>
+            </div>
+          ))}
+        </dl>
+      </section>
 
       {sessions.length === 0 ? (
         <p className="practice-history-empty">{t('practiceHistory.empty')}</p>

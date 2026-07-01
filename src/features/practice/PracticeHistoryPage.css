@@ -11,6 +11,48 @@
   text-transform: uppercase;
 }
 
+.practice-statistics {
+  display: grid;
+  gap: var(--space-4);
+  border: 1px solid rgba(167, 162, 154, 0.16);
+  border-radius: var(--radius-panel);
+  background: rgba(34, 32, 31, 0.72);
+  padding: var(--space-6);
+}
+
+.practice-statistics h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.practice-statistics__grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--space-4);
+  margin: 0;
+}
+
+.practice-statistics__item {
+  border-top: 1px solid rgba(167, 162, 154, 0.16);
+  padding-top: var(--space-3);
+}
+
+.practice-statistics__item dt {
+  color: var(--color-silver);
+  font-size: 0.74rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.practice-statistics__item dd {
+  margin: var(--space-1) 0 0;
+  color: var(--color-paper);
+  font-size: 1.15rem;
+}
+
 .practice-history-list {
   display: grid;
   gap: var(--space-4);
@@ -96,6 +138,7 @@
 }
 
 @media (max-width: 720px) {
+  .practice-statistics__grid,
   .practice-history-card__header,
   .practice-history-card__meta {
     grid-template-columns: 1fr;
