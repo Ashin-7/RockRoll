@@ -5,6 +5,7 @@ import { AuthPage } from './features/auth/AuthPage';
 import { BackstagePage } from './features/backstage/BackstagePage';
 import { InboxPage } from './features/inbox/InboxPage';
 import { LibraryPage } from './features/library/LibraryPage';
+import { PracticeHistoryPage } from './features/practice/PracticeHistoryPage';
 import { SongListPage } from './features/songs/SongListPage';
 
 export default function App() {
@@ -17,6 +18,7 @@ export default function App() {
   const page = {
     backstage: <BackstagePage />,
     songs: <SongListPage />,
+    practice: <PracticeHistoryPage />,
     archive: <ArchivePage />,
     inbox: <InboxPage />,
     library: <LibraryPage />,

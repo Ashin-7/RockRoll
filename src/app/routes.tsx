@@ -1,9 +1,10 @@
-export type AppRoute = 'auth' | 'backstage' | 'songs' | 'archive' | 'inbox' | 'library';
+export type AppRoute = 'auth' | 'backstage' | 'songs' | 'practice' | 'archive' | 'inbox' | 'library';
 
 const routes: Record<string, AppRoute> = {
   '#auth': 'auth',
   '#backstage': 'backstage',
   '#songs': 'songs',
+  '#practice': 'practice',
   '#archive': 'archive',
   '#inbox': 'inbox',
   '#library': 'library',
