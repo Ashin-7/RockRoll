@@ -1,20 +1,33 @@
 import { useEffect, useState } from 'react';
 import { useI18n } from '../../i18n/I18nProvider';
+import { listSongs } from '../songs/songs.service';
+import { SongSummary } from '../songs/song.types';
 import { PracticeHistoryItem } from './practice.mock';
-import { listPracticeHistory } from './practice.service';
+import { createPracticeSession, listPracticeHistory } from './practice.service';
 import { calculatePracticeStatistics } from './practiceStatistics';
+import { PracticeSessionForm } from './PracticeSessionForm';
+import { PracticeSessionInput } from './practice.types';
 import './PracticeHistoryPage.css';
 
 interface PracticeHistoryPageProps {
   onLoadSessions?: () => Promise<PracticeHistoryItem[]>;
+  onLoadSongs?: () => Promise<SongSummary[]>;
+  onSaveSession?: (input: PracticeSessionInput) => Promise<void>;
   sessions?: PracticeHistoryItem[];
 }
 
-export function PracticeHistoryPage({ onLoadSessions = listPracticeHistory, sessions }: PracticeHistoryPageProps) {
+export function PracticeHistoryPage({
+  onLoadSessions = listPracticeHistory,
+  onLoadSongs = listSongs,
+  onSaveSession = createPracticeSession,
+  sessions,
+}: PracticeHistoryPageProps) {
   const { t } = useI18n();
   const hasProvidedSessions = Array.isArray(sessions);
   const [loadedSessions, setLoadedSessions] = useState<PracticeHistoryItem[]>(sessions ?? []);
+  const [songs, setSongs] = useState<SongSummary[]>([]);
   const [isLoading, setIsLoading] = useState(!hasProvidedSessions);
+  const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
   const displaySessions = hasProvidedSessions ? sessions : loadedSessions;
   const statistics = calculatePracticeStatistics(displaySessions);
@@ -79,12 +92,64 @@ export function PracticeHistoryPage({ onLoadSessions = listPracticeHistory, sess
     };
   }, [hasProvidedSessions, onLoadSessions, sessions, t]);
 
+  useEffect(() => {
+    if (hasProvidedSessions) {
+      setSongs([]);
+      return;
+    }
+
+    let isMounted = true;
+
+    async function loadSongOptions() {
+      try {
+        const nextSongs = await onLoadSongs();
+        if (isMounted) {
+          setSongs(nextSongs);
+        }
+      } catch (caughtError) {
+        if (isMounted) {
+          setSongs([]);
+          setError(caughtError instanceof Error ? caughtError.message : t('songs.loadError'));
+        }
+      }
+    }
+
+    loadSongOptions();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [hasProvidedSessions, onLoadSongs, t]);
+
+  async function handleSaveSession(input: PracticeSessionInput) {
+    setIsSaving(true);
+    setError('');
+
+    try {
+      await onSaveSession(input);
+      const nextSessions = await onLoadSessions();
+      setLoadedSessions(nextSessions);
+    } catch (caughtError) {
+      setError(caughtError instanceof Error ? caughtError.message : t('practiceHistory.saveError'));
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
   return (
     <section className="practice-history-page">
       <div className="practice-history-hero">
         <p className="eyebrow">{t('practiceHistory.eyebrow')}</p>
         <h1>{t('practiceHistory.title')}</h1>
       </div>
+
+      {!hasProvidedSessions ? (
+        <section className="practice-session-entry" aria-labelledby="practice-session-entry-title">
+          <h2 id="practice-session-entry-title">{t('practiceHistory.formTitle')}</h2>
+          <PracticeSessionForm onSave={handleSaveSession} songs={songs} />
+          {isSaving ? <p className="practice-history-loading">{t('practiceHistory.saving')}</p> : null}
+        </section>
+      ) : null}
 
       <section className="practice-statistics" aria-labelledby="practice-statistics-title">
         <h2 id="practice-statistics-title">{t('practiceStatistics.title')}</h2>

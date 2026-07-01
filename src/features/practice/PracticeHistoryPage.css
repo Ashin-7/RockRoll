@@ -11,6 +11,54 @@
   text-transform: uppercase;
 }
 
+.practice-session-entry {
+  display: grid;
+  gap: var(--space-4);
+  border: 1px solid rgba(167, 162, 154, 0.16);
+  border-radius: var(--radius-panel);
+  background: rgba(34, 32, 31, 0.72);
+  padding: var(--space-6);
+}
+
+.practice-session-entry h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.practice-session-entry form {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.practice-session-entry label {
+  color: var(--color-silver);
+  font-size: 0.74rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.practice-session-entry input,
+.practice-session-entry select,
+.practice-session-entry textarea {
+  border: 1px solid rgba(167, 162, 154, 0.26);
+  border-radius: var(--radius-control);
+  background: rgba(15, 15, 15, 0.54);
+  color: var(--color-paper);
+  padding: var(--space-3);
+}
+
+.practice-session-entry textarea {
+  min-height: 7rem;
+  resize: vertical;
+}
+
+.practice-session-entry button {
+  justify-self: start;
+}
+
 .practice-statistics {
   display: grid;
   gap: var(--space-4);

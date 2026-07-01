@@ -1,4 +1,5 @@
 import { screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { renderWithI18n } from '../../test/render';
 import { PracticeHistoryPage } from './PracticeHistoryPage';
@@ -52,6 +53,63 @@ describe('PracticeHistoryPage', () => {
 
     expect(await screen.findByRole('alert')).toHaveTextContent('practice failed');
     expect(screen.getByText('No practice sessions recorded yet.')).toBeInTheDocument();
+  });
+
+  it('saves a practice session and refreshes the loaded history', async () => {
+    const user = userEvent.setup();
+    const onLoadSongs = vi.fn().mockResolvedValue([
+      {
+        id: 'little-wing',
+        title: 'Little Wing',
+        artistName: 'Unknown artist',
+        status: 'learning',
+        difficulty: 4,
+      },
+    ]);
+    const onSaveSession = vi.fn().mockResolvedValue(undefined);
+    const onLoadSessions = vi
+      .fn()
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([
+        {
+          id: 'practice-2',
+          songTitle: 'Little Wing',
+          artistName: 'Unknown artist',
+          practicedOn: '2026-07-01',
+          durationMinutes: 30,
+          bpm: null,
+          focusArea: 'Clean chord changes',
+          reflection: 'Keep the metronome slower.',
+        },
+      ]);
+
+    renderWithI18n(
+      <PracticeHistoryPage
+        onLoadSessions={onLoadSessions}
+        onLoadSongs={onLoadSongs}
+        onSaveSession={onSaveSession}
+      />,
+    );
+
+    expect(await screen.findByText('No practice sessions recorded yet.')).toBeInTheDocument();
+    expect(await screen.findByRole('option', { name: 'Little Wing' })).toBeInTheDocument();
+
+    await user.selectOptions(screen.getByLabelText('Song'), 'little-wing');
+    await user.type(screen.getByLabelText('Duration minutes'), '30');
+    await user.type(screen.getByLabelText('Focus area'), 'Clean chord changes');
+    await user.type(screen.getByLabelText('Reflection'), 'Keep the metronome slower.');
+    await user.click(screen.getByRole('button', { name: 'Save practice session' }));
+
+    expect(onSaveSession).toHaveBeenCalledWith({
+      songId: 'little-wing',
+      durationMinutes: 30,
+      bpm: null,
+      focusArea: 'Clean chord changes',
+      reflection: 'Keep the metronome slower.',
+    });
+    expect(onLoadSessions).toHaveBeenCalledTimes(2);
+    expect(await screen.findByText('Clean chord changes')).toBeInTheDocument();
+    expect(screen.getAllByText('Little Wing')).toHaveLength(2);
   });
 
   it('renders Chinese messages', () => {
