@@ -22,13 +22,15 @@ Secrets must stay in local environment files and must not be committed.
 
 ## Test Login
 
-For local testing, create a test user in Supabase Auth and put its email in `.env.local`:
+For the quickest local testing, enable anonymous sign-ins in Supabase Auth, then use the `Anonymous test login` button on `#auth`. This creates a real Supabase session, so RLS-protected writes can work without a test inbox.
+
+If you still want a reusable test email, create a test user in Supabase Auth and put its email in `.env.local`:
 
 ```env
 VITE_TEST_LOGIN_EMAIL=player-test@example.com
 ```
 
-RcokRoll still uses magic link login, so the test email must be able to receive the login link. Do not commit passwords, service role keys, or real private inbox credentials.
+Magic link login still requires the test email to receive the login link. Do not commit passwords, service role keys, or real private inbox credentials.
 
 ## Verification
 

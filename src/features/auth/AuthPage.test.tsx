@@ -42,6 +42,33 @@ describe('AuthPage', () => {
     expect(screen.getByLabelText('Email')).toHaveValue('tester@example.com');
   });
 
+  it('signs in anonymously for quick testing', async () => {
+    const signInAnonymously = vi.fn().mockResolvedValue(undefined);
+    const user = userEvent.setup();
+    let authCallback: (session: typeof signedInSession | null) => void = () => undefined;
+
+    renderWithI18n(
+      <AuthPage
+        onGetCurrentSession={vi.fn().mockResolvedValue(null)}
+        onAuthStateChange={(callback) => {
+          authCallback = callback;
+          return vi.fn();
+        }}
+        onSignInAnonymously={signInAnonymously}
+      />,
+    );
+
+    await user.click(await screen.findByRole('button', { name: 'Anonymous test login' }));
+
+    expect(signInAnonymously).toHaveBeenCalledWith();
+
+    act(() => {
+      authCallback(signedInSession);
+    });
+
+    await waitFor(() => expect(screen.getByText(/player@example.com/)).toBeInTheDocument());
+  });
+
   it('shows the signed-in email when a session exists', async () => {
     renderWithI18n(
       <AuthPage

@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const authMock = {
   getSession: vi.fn(),
   onAuthStateChange: vi.fn(),
+  signInAnonymously: vi.fn(),
   signInWithOtp: vi.fn(),
   signOut: vi.fn(),
 };
@@ -31,6 +32,21 @@ describe('auth.service', () => {
     const { getCurrentSession } = await import('./auth.service');
 
     await expect(getCurrentSession()).rejects.toThrow('session failed');
+  });
+
+  it('signs in anonymously through Supabase auth', async () => {
+    authMock.signInAnonymously.mockResolvedValue({ error: null });
+    const { signInAnonymously } = await import('./auth.service');
+
+    await expect(signInAnonymously()).resolves.toBeUndefined();
+    expect(authMock.signInAnonymously).toHaveBeenCalledWith();
+  });
+
+  it('throws when anonymous sign in fails', async () => {
+    authMock.signInAnonymously.mockResolvedValue({ error: { message: 'anonymous disabled' } });
+    const { signInAnonymously } = await import('./auth.service');
+
+    await expect(signInAnonymously()).rejects.toThrow('anonymous disabled');
   });
 
   it('signs out through Supabase auth', async () => {

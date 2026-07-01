@@ -4,6 +4,7 @@ import {
   AuthSession,
   getCurrentSession,
   onAuthStateChange,
+  signInAnonymously,
   signInWithEmail,
   signOut,
 } from './auth.service';
@@ -11,6 +12,7 @@ import {
 interface AuthPageProps {
   onAuthStateChange?: (callback: (session: AuthSession | null) => void) => () => void;
   onGetCurrentSession?: () => Promise<AuthSession | null>;
+  onSignInAnonymously?: () => Promise<void>;
   onSignIn?: (email: string) => Promise<void>;
   onSignOut?: () => Promise<void>;
   testLoginEmail?: string;
@@ -19,6 +21,7 @@ interface AuthPageProps {
 export function AuthPage({
   onAuthStateChange: subscribeToAuthState = onAuthStateChange,
   onGetCurrentSession = getCurrentSession,
+  onSignInAnonymously = signInAnonymously,
   onSignIn = signInWithEmail,
   onSignOut = signOut,
   testLoginEmail = import.meta.env.VITE_TEST_LOGIN_EMAIL,
@@ -87,6 +90,17 @@ export function AuthPage({
     }
   }
 
+  async function handleAnonymousSignIn() {
+    setError('');
+    setMessage('');
+
+    try {
+      await onSignInAnonymously();
+    } catch (caughtError) {
+      setError(caughtError instanceof Error ? caughtError.message : t('auth.anonymousErrorFallback'));
+    }
+  }
+
   async function handleSignOut() {
     setError('');
     setMessage('');
@@ -131,6 +145,9 @@ export function AuthPage({
               required
             />
             <button type="submit">{t('auth.sendMagicLink')}</button>
+            <button type="button" onClick={handleAnonymousSignIn}>
+              {t('auth.anonymousTestLogin')}
+            </button>
             {testLoginEmail ? (
               <button type="button" onClick={() => setEmail(testLoginEmail)}>
                 {t('auth.useTestEmail')}

@@ -15,6 +15,7 @@ MVP Phase 1，Practice First。
 - Practice 保存入口已受登录状态保护：未登录仅提示登录，登录后才显示新增练习记录表单。
 - Practice Statistics 已在 `#practice` 页面基于当前练习记录提供统计摘要。
 - Auth 已完成页面内最小闭环：可读取 session、展示当前邮箱、监听 auth 状态并退出登录。
+- Auth 支持匿名测试登录，便于无需测试邮箱即可获得真实 Supabase session。
 - Auth 支持通过 `VITE_TEST_LOGIN_EMAIL` 配置本地测试邮箱快捷填充，便于手动测试 magic link 登录。
 
 ## 最近完成
@@ -32,6 +33,7 @@ MVP Phase 1，Practice First。
 - 完成 Practice 表单入口接入：`#practice` 页面加载当前用户曲目作为选项，保存练习记录后重新读取真实历史并更新统计摘要。
 - 完成 Practice 表单体验修正：未登录时隐藏保存表单并提示登录；练习时长和 BPM 使用自定义步进按钮替代浏览器原生 spinner。
 - 完成测试登录辅助：Auth 页面可从本地环境变量读取测试邮箱并一键填充，文档说明测试账号需在 Supabase Auth 中创建。
+- 完成匿名测试登录：Auth 页面可调用 Supabase anonymous sign-in，一键获得测试 session；README 说明需在 Supabase Auth 中启用匿名登录。
 
 ## 验证方式
 

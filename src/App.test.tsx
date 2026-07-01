@@ -7,6 +7,7 @@ import App from './App';
 vi.mock('./features/auth/auth.service', () => ({
   getCurrentSession: vi.fn().mockResolvedValue(null),
   onAuthStateChange: vi.fn(() => vi.fn()),
+  signInAnonymously: vi.fn().mockResolvedValue(undefined),
   signInWithEmail: vi.fn().mockResolvedValue(undefined),
   signOut: vi.fn().mockResolvedValue(undefined),
 }));

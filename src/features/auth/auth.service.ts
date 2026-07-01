@@ -20,6 +20,15 @@ export async function signInWithEmail(email: string): Promise<void> {
   }
 }
 
+export async function signInAnonymously(): Promise<void> {
+  const supabase = getSupabase();
+  const { error } = await supabase.auth.signInAnonymously();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+}
+
 export async function getCurrentSession(): Promise<AuthSession | null> {
   const supabase = getSupabase();
   const { data, error } = await supabase.auth.getSession();
