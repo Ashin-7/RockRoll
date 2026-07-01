@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+const getSupabaseMock = vi.fn();
 const authMock = {
   getSession: vi.fn(),
   onAuthStateChange: vi.fn(),
@@ -9,14 +10,16 @@ const authMock = {
 };
 
 vi.mock('../../lib/supabase', () => ({
-  getSupabase: () => ({
-    auth: authMock,
-  }),
+  getSupabase: () => getSupabaseMock(),
 }));
 
 describe('auth.service', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    window.localStorage.clear();
+    getSupabaseMock.mockReturnValue({
+      auth: authMock,
+    });
   });
 
   it('returns the current session', async () => {
@@ -42,6 +45,21 @@ describe('auth.service', () => {
     expect(authMock.signInAnonymously).toHaveBeenCalledWith();
   });
 
+  it('starts a local demo session when Supabase is not configured', async () => {
+    getSupabaseMock.mockImplementation(() => {
+      throw new Error('Missing VITE_SUPABASE_URL');
+    });
+    const { getCurrentSession, signInAnonymously } = await import('./auth.service');
+
+    await expect(signInAnonymously()).resolves.toBeUndefined();
+    await expect(getCurrentSession()).resolves.toEqual({
+      user: {
+        email: 'demo@rcokroll.local',
+        id: 'local-demo-user',
+      },
+    });
+  });
+
   it('throws when anonymous sign in fails', async () => {
     authMock.signInAnonymously.mockResolvedValue({ error: { message: 'anonymous disabled' } });
     const { signInAnonymously } = await import('./auth.service');
@@ -55,6 +73,18 @@ describe('auth.service', () => {
 
     await expect(signOut()).resolves.toBeUndefined();
     expect(authMock.signOut).toHaveBeenCalledWith();
+  });
+
+  it('clears the local demo session on sign out', async () => {
+    getSupabaseMock.mockImplementation(() => {
+      throw new Error('Missing VITE_SUPABASE_URL');
+    });
+    const { getCurrentSession, signInAnonymously, signOut } = await import('./auth.service');
+
+    await signInAnonymously();
+    await signOut();
+
+    await expect(getCurrentSession()).resolves.toBeNull();
   });
 
   it('throws when sign out fails', async () => {

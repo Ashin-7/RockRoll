@@ -4,9 +4,13 @@ import { PracticeSessionInput } from './practice.types';
 
 export interface PracticeAuthSession {
   user: {
+    id?: string;
     email?: string | null;
   };
 }
+
+const demoSessionStorageKey = 'rcokroll.demoSession';
+const demoPracticeHistoryStorageKey = 'rcokroll.demoPracticeHistory';
 
 interface PracticeSessionRow {
   id: string;
@@ -40,8 +44,53 @@ function mapPracticeSessionRow(row: PracticeSessionRow): PracticeHistoryItem {
   };
 }
 
+function isMissingSupabaseEnvError(error: unknown): boolean {
+  return error instanceof Error && error.message.startsWith('Missing VITE_SUPABASE_');
+}
+
+function readDemoSession(): PracticeAuthSession | null {
+  const storedSession = window.localStorage.getItem(demoSessionStorageKey);
+  return storedSession ? (JSON.parse(storedSession) as PracticeAuthSession) : null;
+}
+
+function readDemoPracticeHistory(): PracticeHistoryItem[] {
+  const storedHistory = window.localStorage.getItem(demoPracticeHistoryStorageKey);
+  return storedHistory ? (JSON.parse(storedHistory) as PracticeHistoryItem[]) : [];
+}
+
+function writeDemoPracticeHistory(sessions: PracticeHistoryItem[]) {
+  window.localStorage.setItem(demoPracticeHistoryStorageKey, JSON.stringify(sessions));
+}
+
+function createDemoPracticeSession(input: PracticeSessionInput) {
+  if (!readDemoSession()) {
+    throw new Error('Sign in before saving practice sessions.');
+  }
+
+  const nextSession: PracticeHistoryItem = {
+    id: `local-practice-${Date.now()}`,
+    songTitle: 'Local demo practice',
+    artistName: 'Local demo',
+    practicedOn: new Date().toISOString().slice(0, 10),
+    durationMinutes: input.durationMinutes,
+    bpm: input.bpm,
+    focusArea: input.focusArea,
+    reflection: input.reflection,
+  };
+
+  writeDemoPracticeHistory([nextSession, ...readDemoPracticeHistory()]);
+}
+
 export async function listPracticeHistory(): Promise<PracticeHistoryItem[]> {
-  const supabase = getSupabase();
+  let supabase: ReturnType<typeof getSupabase>;
+  try {
+    supabase = getSupabase();
+  } catch (caughtError) {
+    if (isMissingSupabaseEnvError(caughtError)) {
+      return readDemoPracticeHistory();
+    }
+    throw caughtError;
+  }
   const { data, error } = await supabase
     .from('practice_sessions')
     .select('id,song_id,practiced_on,duration_minutes,bpm,focus_area,reflection,songs(title)')
@@ -55,7 +104,16 @@ export async function listPracticeHistory(): Promise<PracticeHistoryItem[]> {
 }
 
 export async function createPracticeSession(input: PracticeSessionInput): Promise<void> {
-  const supabase = getSupabase();
+  let supabase: ReturnType<typeof getSupabase>;
+  try {
+    supabase = getSupabase();
+  } catch (caughtError) {
+    if (isMissingSupabaseEnvError(caughtError)) {
+      createDemoPracticeSession(input);
+      return;
+    }
+    throw caughtError;
+  }
   const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
 
   if (sessionError) {
@@ -83,7 +141,15 @@ export async function createPracticeSession(input: PracticeSessionInput): Promis
 }
 
 export async function getCurrentPracticeSession(): Promise<PracticeAuthSession | null> {
-  const supabase = getSupabase();
+  let supabase: ReturnType<typeof getSupabase>;
+  try {
+    supabase = getSupabase();
+  } catch (caughtError) {
+    if (isMissingSupabaseEnvError(caughtError)) {
+      return readDemoSession();
+    }
+    throw caughtError;
+  }
   const { data, error } = await supabase.auth.getSession();
 
   if (error) {
@@ -94,7 +160,16 @@ export async function getCurrentPracticeSession(): Promise<PracticeAuthSession |
 }
 
 export function onPracticeAuthStateChange(callback: (session: PracticeAuthSession | null) => void): () => void {
-  const supabase = getSupabase();
+  let supabase: ReturnType<typeof getSupabase>;
+  try {
+    supabase = getSupabase();
+  } catch (caughtError) {
+    if (isMissingSupabaseEnvError(caughtError)) {
+      callback(readDemoSession());
+      return () => undefined;
+    }
+    throw caughtError;
+  }
   const { data } = supabase.auth.onAuthStateChange((_event: string, session: PracticeAuthSession | null) => {
     callback(session);
   });

@@ -24,6 +24,8 @@ Secrets must stay in local environment files and must not be committed.
 
 For the quickest local testing, enable anonymous sign-ins in Supabase Auth, then use the `Anonymous test login` button on `#auth`. This creates a real Supabase session, so RLS-protected writes can work without a test inbox.
 
+If `.env.local` is not configured yet, the same button starts a local demo session. In local demo mode, songs and practice sessions are stored in browser `localStorage`, so you can test the MVP flow before setting up Supabase.
+
 If you still want a reusable test email, create a test user in Supabase Auth and put its email in `.env.local`:
 
 ```env

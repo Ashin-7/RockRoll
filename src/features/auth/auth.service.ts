@@ -2,8 +2,34 @@ import { getSupabase } from '../../lib/supabase';
 
 export interface AuthSession {
   user: {
+    id?: string;
     email?: string | null;
   };
+}
+
+const demoSessionStorageKey = 'rcokroll.demoSession';
+const demoSession: AuthSession = {
+  user: {
+    id: 'local-demo-user',
+    email: 'demo@rcokroll.local',
+  },
+};
+
+function isMissingSupabaseEnvError(error: unknown): boolean {
+  return error instanceof Error && error.message.startsWith('Missing VITE_SUPABASE_');
+}
+
+function readDemoSession(): AuthSession | null {
+  const storedSession = window.localStorage.getItem(demoSessionStorageKey);
+  return storedSession ? (JSON.parse(storedSession) as AuthSession) : null;
+}
+
+function writeDemoSession(session: AuthSession) {
+  window.localStorage.setItem(demoSessionStorageKey, JSON.stringify(session));
+}
+
+function clearDemoSession() {
+  window.localStorage.removeItem(demoSessionStorageKey);
 }
 
 export async function signInWithEmail(email: string): Promise<void> {
@@ -21,7 +47,16 @@ export async function signInWithEmail(email: string): Promise<void> {
 }
 
 export async function signInAnonymously(): Promise<void> {
-  const supabase = getSupabase();
+  let supabase: ReturnType<typeof getSupabase>;
+  try {
+    supabase = getSupabase();
+  } catch (caughtError) {
+    if (isMissingSupabaseEnvError(caughtError)) {
+      writeDemoSession(demoSession);
+      return;
+    }
+    throw caughtError;
+  }
   const { error } = await supabase.auth.signInAnonymously();
 
   if (error) {
@@ -30,7 +65,15 @@ export async function signInAnonymously(): Promise<void> {
 }
 
 export async function getCurrentSession(): Promise<AuthSession | null> {
-  const supabase = getSupabase();
+  let supabase: ReturnType<typeof getSupabase>;
+  try {
+    supabase = getSupabase();
+  } catch (caughtError) {
+    if (isMissingSupabaseEnvError(caughtError)) {
+      return readDemoSession();
+    }
+    throw caughtError;
+  }
   const { data, error } = await supabase.auth.getSession();
 
   if (error) {
@@ -41,7 +84,16 @@ export async function getCurrentSession(): Promise<AuthSession | null> {
 }
 
 export async function signOut(): Promise<void> {
-  const supabase = getSupabase();
+  let supabase: ReturnType<typeof getSupabase>;
+  try {
+    supabase = getSupabase();
+  } catch (caughtError) {
+    if (isMissingSupabaseEnvError(caughtError)) {
+      clearDemoSession();
+      return;
+    }
+    throw caughtError;
+  }
   const { error } = await supabase.auth.signOut();
 
   if (error) {
@@ -50,7 +102,16 @@ export async function signOut(): Promise<void> {
 }
 
 export function onAuthStateChange(callback: (session: AuthSession | null) => void): () => void {
-  const supabase = getSupabase();
+  let supabase: ReturnType<typeof getSupabase>;
+  try {
+    supabase = getSupabase();
+  } catch (caughtError) {
+    if (isMissingSupabaseEnvError(caughtError)) {
+      callback(readDemoSession());
+      return () => undefined;
+    }
+    throw caughtError;
+  }
   const { data } = supabase.auth.onAuthStateChange((_event: string, session: AuthSession | null) => {
     callback(session);
   });

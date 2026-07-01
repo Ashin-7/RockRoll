@@ -5,17 +5,23 @@ const selectMock = vi.fn(() => ({ order: orderMock }));
 const insertMock = vi.fn();
 const getSessionMock = vi.fn();
 const fromMock = vi.fn(() => ({ insert: insertMock, select: selectMock }));
+const getSupabaseMock = vi.fn(() => ({
+  auth: { getSession: getSessionMock },
+  from: fromMock,
+}));
 
 vi.mock('../../lib/supabase', () => ({
-  getSupabase: () => ({
-    auth: { getSession: getSessionMock },
-    from: fromMock,
-  }),
+  getSupabase: () => getSupabaseMock(),
 }));
 
 describe('practice.service', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    window.localStorage.clear();
+    getSupabaseMock.mockReturnValue({
+      auth: { getSession: getSessionMock },
+      from: fromMock,
+    });
   });
 
   it('lists practice history from Supabase', async () => {
@@ -118,5 +124,35 @@ describe('practice.service', () => {
         reflection: '',
       }),
     ).rejects.toThrow('Sign in before saving practice sessions.');
+  });
+
+  it('stores and lists local demo practice sessions when Supabase is not configured', async () => {
+    getSupabaseMock.mockImplementation(() => {
+      throw new Error('Missing VITE_SUPABASE_URL');
+    });
+    window.localStorage.setItem(
+      'rcokroll.demoSession',
+      JSON.stringify({ user: { id: 'local-demo-user', email: 'demo@rcokroll.local' } }),
+    );
+    const { createPracticeSession, listPracticeHistory } = await import('./practice.service');
+
+    await createPracticeSession({
+      songId: null,
+      durationMinutes: 28,
+      bpm: 60,
+      focusArea: 'Alternate picking',
+      reflection: 'Keep the wrist relaxed.',
+    });
+
+    await expect(listPracticeHistory()).resolves.toEqual([
+      expect.objectContaining({
+        songTitle: 'Local demo practice',
+        artistName: 'Local demo',
+        durationMinutes: 28,
+        bpm: 60,
+        focusArea: 'Alternate picking',
+        reflection: 'Keep the wrist relaxed.',
+      }),
+    ]);
   });
 });

@@ -5,17 +5,23 @@ const selectMock = vi.fn(() => ({ order: orderMock }));
 const insertMock = vi.fn();
 const getSessionMock = vi.fn();
 const fromMock = vi.fn(() => ({ select: selectMock, insert: insertMock }));
+const getSupabaseMock = vi.fn(() => ({
+  auth: { getSession: getSessionMock },
+  from: fromMock,
+}));
 
 vi.mock('../../lib/supabase', () => ({
-  getSupabase: () => ({
-    auth: { getSession: getSessionMock },
-    from: fromMock,
-  }),
+  getSupabase: () => getSupabaseMock(),
 }));
 
 describe('songs.service', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    window.localStorage.clear();
+    getSupabaseMock.mockReturnValue({
+      auth: { getSession: getSessionMock },
+      from: fromMock,
+    });
   });
 
   it('lists songs from Supabase', async () => {
@@ -78,5 +84,29 @@ describe('songs.service', () => {
     await expect(createSong({ title: 'New Song', status: 'planned', difficulty: null })).rejects.toThrow(
       'Sign in before adding songs.',
     );
+  });
+
+  it('uses local demo songs when Supabase is not configured', async () => {
+    getSupabaseMock.mockImplementation(() => {
+      throw new Error('Missing VITE_SUPABASE_URL');
+    });
+    window.localStorage.setItem(
+      'rcokroll.demoSession',
+      JSON.stringify({ user: { id: 'local-demo-user', email: 'demo@rcokroll.local' } }),
+    );
+    const { createSong, listSongs } = await import('./songs.service');
+
+    await expect(listSongs()).resolves.toEqual([]);
+
+    await createSong({ title: 'Demo Song', status: 'learning', difficulty: 2 });
+
+    await expect(listSongs()).resolves.toEqual([
+      expect.objectContaining({
+        title: 'Demo Song',
+        artistName: 'Local demo',
+        status: 'learning',
+        difficulty: 2,
+      }),
+    ]);
   });
 });

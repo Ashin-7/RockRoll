@@ -9,6 +9,8 @@ interface SongRow {
 }
 
 const songStatuses: SongStatus[] = ['planned', 'learning', 'polishing', 'archived'];
+const demoSessionStorageKey = 'rcokroll.demoSession';
+const demoSongsStorageKey = 'rcokroll.demoSongs';
 
 function toSongStatus(status: string): SongStatus {
   return songStatuses.includes(status as SongStatus) ? (status as SongStatus) : 'planned';
@@ -24,8 +26,33 @@ function mapSongRow(song: SongRow): SongSummary {
   };
 }
 
+function isMissingSupabaseEnvError(error: unknown): boolean {
+  return error instanceof Error && error.message.startsWith('Missing VITE_SUPABASE_');
+}
+
+function hasDemoSession(): boolean {
+  return Boolean(window.localStorage.getItem(demoSessionStorageKey));
+}
+
+function readDemoSongs(): SongSummary[] {
+  const storedSongs = window.localStorage.getItem(demoSongsStorageKey);
+  return storedSongs ? (JSON.parse(storedSongs) as SongSummary[]) : [];
+}
+
+function writeDemoSongs(songs: SongSummary[]) {
+  window.localStorage.setItem(demoSongsStorageKey, JSON.stringify(songs));
+}
+
 export async function listSongs(): Promise<SongSummary[]> {
-  const supabase = getSupabase();
+  let supabase: ReturnType<typeof getSupabase>;
+  try {
+    supabase = getSupabase();
+  } catch (caughtError) {
+    if (isMissingSupabaseEnvError(caughtError)) {
+      return readDemoSongs();
+    }
+    throw caughtError;
+  }
   const { data, error } = await supabase
     .from('songs')
     .select('id,title,status,difficulty')
@@ -39,7 +66,28 @@ export async function listSongs(): Promise<SongSummary[]> {
 }
 
 export async function createSong(input: CreateSongInput): Promise<void> {
-  const supabase = getSupabase();
+  let supabase: ReturnType<typeof getSupabase>;
+  try {
+    supabase = getSupabase();
+  } catch (caughtError) {
+    if (isMissingSupabaseEnvError(caughtError)) {
+      if (!hasDemoSession()) {
+        throw new Error('Sign in before adding songs.');
+      }
+      writeDemoSongs([
+        {
+          id: `local-song-${Date.now()}`,
+          title: input.title,
+          artistName: 'Local demo',
+          status: input.status,
+          difficulty: input.difficulty,
+        },
+        ...readDemoSongs(),
+      ]);
+      return;
+    }
+    throw caughtError;
+  }
   const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
 
   if (sessionError) {
