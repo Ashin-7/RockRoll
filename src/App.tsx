@@ -16,7 +16,7 @@ export default function App() {
 
   const page = {
     backstage: <BackstagePage />,
-    songs: <SongListPage songs={[]} />,
+    songs: <SongListPage />,
     archive: <ArchivePage />,
     inbox: <InboxPage />,
     library: <LibraryPage />,
