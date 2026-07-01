@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { AppShell } from './app/shell/AppShell';
 import { getRouteForHash } from './app/routes';
 import { ArchivePage } from './features/archive/ArchivePage';
+import { ArtistListPage } from './features/artists/ArtistListPage';
 import { AuthPage } from './features/auth/AuthPage';
 import { AuthSession, getCurrentSession, onAuthStateChange, signOut } from './features/auth/auth.service';
 import { BackstagePage } from './features/backstage/BackstagePage';
@@ -72,6 +73,7 @@ export default function App() {
   const page = {
     backstage: <BackstagePage />,
     songs: <SongListPage />,
+    artists: <ArtistListPage />,
     practice: <PracticeHistoryPage />,
     archive: <ArchivePage />,
     inbox: <InboxPage />,

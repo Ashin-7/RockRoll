@@ -8,6 +8,7 @@ describe('getRouteForHash', () => {
 
   it('resolves known routes', () => {
     expect(getRouteForHash('#songs')).toBe('songs');
+    expect(getRouteForHash('#artists')).toBe('artists');
     expect(getRouteForHash('#practice')).toBe('practice');
     expect(getRouteForHash('#archive')).toBe('archive');
     expect(getRouteForHash('#inbox')).toBe('inbox');
