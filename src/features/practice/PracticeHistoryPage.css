@@ -120,7 +120,9 @@
 }
 
 .practice-history-card__body p,
-.practice-history-empty {
+.practice-history-empty,
+.practice-history-error,
+.practice-history-loading {
   margin: 0;
 }
 
@@ -130,11 +132,18 @@
   margin-bottom: var(--space-1);
 }
 
-.practice-history-empty {
+.practice-history-empty,
+.practice-history-error,
+.practice-history-loading {
   border: 1px dashed rgba(167, 162, 154, 0.26);
   border-radius: var(--radius-panel);
   color: var(--color-paper-muted);
   padding: var(--space-8);
+}
+
+.practice-history-error {
+  border-color: rgba(138, 30, 45, 0.48);
+  color: var(--color-paper);
 }
 
 @media (max-width: 720px) {

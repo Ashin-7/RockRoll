@@ -1,15 +1,23 @@
+import { useEffect, useState } from 'react';
 import { useI18n } from '../../i18n/I18nProvider';
-import { localPracticeHistory, PracticeHistoryItem } from './practice.mock';
+import { PracticeHistoryItem } from './practice.mock';
+import { listPracticeHistory } from './practice.service';
 import { calculatePracticeStatistics } from './practiceStatistics';
 import './PracticeHistoryPage.css';
 
 interface PracticeHistoryPageProps {
+  onLoadSessions?: () => Promise<PracticeHistoryItem[]>;
   sessions?: PracticeHistoryItem[];
 }
 
-export function PracticeHistoryPage({ sessions = localPracticeHistory }: PracticeHistoryPageProps) {
+export function PracticeHistoryPage({ onLoadSessions = listPracticeHistory, sessions }: PracticeHistoryPageProps) {
   const { t } = useI18n();
-  const statistics = calculatePracticeStatistics(sessions);
+  const hasProvidedSessions = Array.isArray(sessions);
+  const [loadedSessions, setLoadedSessions] = useState<PracticeHistoryItem[]>(sessions ?? []);
+  const [isLoading, setIsLoading] = useState(!hasProvidedSessions);
+  const [error, setError] = useState('');
+  const displaySessions = hasProvidedSessions ? sessions : loadedSessions;
+  const statistics = calculatePracticeStatistics(displaySessions);
   const statisticItems = [
     {
       label: t('practiceStatistics.totalSessions'),
@@ -33,6 +41,43 @@ export function PracticeHistoryPage({ sessions = localPracticeHistory }: Practic
     },
   ];
 
+  useEffect(() => {
+    if (hasProvidedSessions) {
+      setLoadedSessions(sessions ?? []);
+      setIsLoading(false);
+      setError('');
+      return;
+    }
+
+    let isMounted = true;
+
+    async function loadSessions() {
+      setIsLoading(true);
+      setError('');
+
+      try {
+        const nextSessions = await onLoadSessions();
+        if (isMounted) {
+          setLoadedSessions(nextSessions);
+        }
+      } catch (caughtError) {
+        if (isMounted) {
+          setLoadedSessions([]);
+          setError(caughtError instanceof Error ? caughtError.message : t('practiceHistory.loadError'));
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    loadSessions();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [hasProvidedSessions, onLoadSessions, sessions, t]);
 
   return (
     <section className="practice-history-page">
@@ -53,11 +98,21 @@ export function PracticeHistoryPage({ sessions = localPracticeHistory }: Practic
         </dl>
       </section>
 
-      {sessions.length === 0 ? (
+      {error ? (
+        <p className="practice-history-error" role="alert">
+          {error}
+        </p>
+      ) : null}
+
+      {isLoading ? <p className="practice-history-loading">{t('practiceHistory.loading')}</p> : null}
+
+      {!isLoading && displaySessions.length === 0 ? (
         <p className="practice-history-empty">{t('practiceHistory.empty')}</p>
-      ) : (
+      ) : null}
+
+      {!isLoading && displaySessions.length > 0 ? (
         <div className="practice-history-list">
-          {sessions.map((session) => (
+          {displaySessions.map((session) => (
             <article className="practice-history-card" key={session.id}>
               <header className="practice-history-card__header">
                 <div>
@@ -93,7 +148,7 @@ export function PracticeHistoryPage({ sessions = localPracticeHistory }: Practic
             </article>
           ))}
         </div>
-      )}
+      ) : null}
     </section>
   );
 }
