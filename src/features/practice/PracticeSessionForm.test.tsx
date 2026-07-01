@@ -57,4 +57,20 @@ describe('PracticeSessionForm', () => {
       reflection: '',
     });
   });
+
+  it('adjusts numeric fields with stepper controls', async () => {
+    const user = userEvent.setup();
+
+    renderWithI18n(<PracticeSessionForm onSave={vi.fn()} />);
+
+    await user.type(screen.getByLabelText('Duration minutes'), '28');
+    await user.click(screen.getByRole('button', { name: 'Increase duration' }));
+    expect(screen.getByLabelText('Duration minutes')).toHaveValue(29);
+
+    await user.click(screen.getByRole('button', { name: 'Decrease duration' }));
+    expect(screen.getByLabelText('Duration minutes')).toHaveValue(28);
+
+    await user.click(screen.getByRole('button', { name: 'Increase BPM' }));
+    expect(screen.getByLabelText('BPM')).toHaveValue(1);
+  });
 });

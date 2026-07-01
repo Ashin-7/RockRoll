@@ -12,6 +12,7 @@ MVP Phase 1，Practice First。
 - Practice 表单已支持选择曲目并提交 `songId`，作为 Song 与 Practice 关联的前端最小闭环。
 - Practice History 已有独立 `#practice` 页面，默认从 Supabase `practice_sessions` 读取当前用户真实练习记录。
 - Practice 表单入口已接入 `#practice` 页面，新增练习记录后会刷新真实历史与统计摘要。
+- Practice 保存入口已受登录状态保护：未登录仅提示登录，登录后才显示新增练习记录表单。
 - Practice Statistics 已在 `#practice` 页面基于当前练习记录提供统计摘要。
 - Auth 已完成页面内最小闭环：可读取 session、展示当前邮箱、监听 auth 状态并退出登录。
 
@@ -28,6 +29,7 @@ MVP Phase 1，Practice First。
 - 完成 Auth 最小闭环：`#auth` 页面支持未登录 magic link、已登录邮箱展示、auth 状态监听与退出登录。
 - 完成 Practice History Supabase 真实查询：`#practice` 默认读取 `practice_sessions`，支持 loading/error/empty/list 状态，并修复练习记录写入缺少 `user_id` 的真实环境问题。
 - 完成 Practice 表单入口接入：`#practice` 页面加载当前用户曲目作为选项，保存练习记录后重新读取真实历史并更新统计摘要。
+- 完成 Practice 表单体验修正：未登录时隐藏保存表单并提示登录；练习时长和 BPM 使用自定义步进按钮替代浏览器原生 spinner。
 
 ## 验证方式
 

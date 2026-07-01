@@ -5,6 +5,8 @@ import { renderWithI18n } from '../../test/render';
 import { PracticeHistoryPage } from './PracticeHistoryPage';
 
 describe('PracticeHistoryPage', () => {
+  const signedInSession = { user: { email: 'player@example.com' } };
+
   it('loads practice history records and statistics by default', async () => {
     const onLoadSessions = vi.fn().mockResolvedValue([
       {
@@ -85,6 +87,8 @@ describe('PracticeHistoryPage', () => {
 
     renderWithI18n(
       <PracticeHistoryPage
+        onGetCurrentSession={vi.fn().mockResolvedValue(signedInSession)}
+        onAuthStateChange={() => vi.fn()}
         onLoadSessions={onLoadSessions}
         onLoadSongs={onLoadSongs}
         onSaveSession={onSaveSession}
@@ -110,6 +114,23 @@ describe('PracticeHistoryPage', () => {
     expect(onLoadSessions).toHaveBeenCalledTimes(2);
     expect(await screen.findByText('Clean chord changes')).toBeInTheDocument();
     expect(screen.getAllByText('Little Wing')).toHaveLength(2);
+  });
+
+  it('requires sign-in before rendering the practice session form', async () => {
+    const onLoadSongs = vi.fn().mockResolvedValue([]);
+
+    renderWithI18n(
+      <PracticeHistoryPage
+        onGetCurrentSession={vi.fn().mockResolvedValue(null)}
+        onAuthStateChange={() => vi.fn()}
+        onLoadSessions={vi.fn().mockResolvedValue([])}
+        onLoadSongs={onLoadSongs}
+      />,
+    );
+
+    expect(await screen.findByText('Sign in to save practice sessions.')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Save practice session' })).not.toBeInTheDocument();
+    expect(onLoadSongs).not.toHaveBeenCalled();
   });
 
   it('renders Chinese messages', () => {

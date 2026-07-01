@@ -17,6 +17,12 @@ export function PracticeSessionForm({ onSave = createPracticeSession, songs = []
   const [focusArea, setFocusArea] = useState('');
   const [reflection, setReflection] = useState('');
 
+  function adjustNumberValue(value: string, setValue: (nextValue: string) => void, delta: number) {
+    const numericValue = value ? Number(value) : 0;
+    const nextValue = Math.max(1, numericValue + delta);
+    setValue(String(nextValue));
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -46,17 +52,49 @@ export function PracticeSessionForm({ onSave = createPracticeSession, songs = []
       ) : null}
 
       <label htmlFor="durationMinutes">{t('practice.duration')}</label>
-      <input
-        id="durationMinutes"
-        type="number"
-        min="1"
-        value={durationMinutes}
-        onChange={(event) => setDurationMinutes(event.target.value)}
-        required
-      />
+      <div className="practice-number-field">
+        <input
+          id="durationMinutes"
+          type="number"
+          min="1"
+          value={durationMinutes}
+          onChange={(event) => setDurationMinutes(event.target.value)}
+          required
+        />
+        <div className="practice-number-field__controls">
+          <button
+            type="button"
+            aria-label={t('practice.decreaseDuration')}
+            onClick={() => adjustNumberValue(durationMinutes, setDurationMinutes, -1)}
+          >
+            -
+          </button>
+          <button
+            type="button"
+            aria-label={t('practice.increaseDuration')}
+            onClick={() => adjustNumberValue(durationMinutes, setDurationMinutes, 1)}
+          >
+            +
+          </button>
+        </div>
+      </div>
 
       <label htmlFor="bpm">{t('practice.bpm')}</label>
-      <input id="bpm" type="number" min="1" value={bpm} onChange={(event) => setBpm(event.target.value)} />
+      <div className="practice-number-field">
+        <input id="bpm" type="number" min="1" value={bpm} onChange={(event) => setBpm(event.target.value)} />
+        <div className="practice-number-field__controls">
+          <button
+            type="button"
+            aria-label={t('practice.decreaseBpm')}
+            onClick={() => adjustNumberValue(bpm, setBpm, -1)}
+          >
+            -
+          </button>
+          <button type="button" aria-label={t('practice.increaseBpm')} onClick={() => adjustNumberValue(bpm, setBpm, 1)}>
+            +
+          </button>
+        </div>
+      </div>
 
       <label htmlFor="focusArea">{t('practice.focusArea')}</label>
       <input id="focusArea" value={focusArea} onChange={(event) => setFocusArea(event.target.value)} />

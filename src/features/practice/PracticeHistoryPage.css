@@ -44,15 +44,66 @@
 .practice-session-entry select,
 .practice-session-entry textarea {
   border: 1px solid rgba(167, 162, 154, 0.26);
-  border-radius: var(--radius-control);
+  border-radius: 0.5rem;
   background: rgba(15, 15, 15, 0.54);
   color: var(--color-paper);
   padding: var(--space-3);
 }
 
+.practice-session-entry input[type='number'] {
+  appearance: textfield;
+}
+
+.practice-session-entry input[type='number']::-webkit-inner-spin-button,
+.practice-session-entry input[type='number']::-webkit-outer-spin-button {
+  margin: 0;
+  appearance: none;
+}
+
 .practice-session-entry textarea {
   min-height: 7rem;
   resize: vertical;
+}
+
+.practice-number-field {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  overflow: hidden;
+  border: 1px solid rgba(167, 162, 154, 0.26);
+  border-radius: 0.5rem;
+  background: rgba(15, 15, 15, 0.54);
+}
+
+.practice-number-field input {
+  min-width: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.practice-number-field__controls {
+  display: grid;
+  grid-template-columns: repeat(2, 2.4rem);
+  border-left: 1px solid rgba(167, 162, 154, 0.18);
+}
+
+.practice-number-field__controls button {
+  justify-self: stretch;
+  min-height: 100%;
+  border: 0;
+  border-radius: 0;
+  background: rgba(242, 169, 59, 0.08);
+  color: var(--color-paper);
+  padding: 0;
+}
+
+.practice-number-field__controls button + button {
+  border-left: 1px solid rgba(167, 162, 154, 0.14);
+}
+
+.practice-number-field__controls button:hover,
+.practice-number-field__controls button:focus-visible {
+  background: rgba(242, 169, 59, 0.2);
 }
 
 .practice-session-entry button {
@@ -170,6 +221,7 @@
 .practice-history-card__body p,
 .practice-history-empty,
 .practice-history-error,
+.practice-history-auth-required,
 .practice-history-loading {
   margin: 0;
 }
@@ -182,6 +234,7 @@
 
 .practice-history-empty,
 .practice-history-error,
+.practice-history-auth-required,
 .practice-history-loading {
   border: 1px dashed rgba(167, 162, 154, 0.26);
   border-radius: var(--radius-panel);

@@ -2,6 +2,12 @@ import { getSupabase } from '../../lib/supabase';
 import { PracticeHistoryItem } from './practice.mock';
 import { PracticeSessionInput } from './practice.types';
 
+export interface PracticeAuthSession {
+  user: {
+    email?: string | null;
+  };
+}
+
 interface PracticeSessionRow {
   id: string;
   song_id: string | null;
@@ -74,4 +80,24 @@ export async function createPracticeSession(input: PracticeSessionInput): Promis
   if (error) {
     throw new Error(error.message);
   }
+}
+
+export async function getCurrentPracticeSession(): Promise<PracticeAuthSession | null> {
+  const supabase = getSupabase();
+  const { data, error } = await supabase.auth.getSession();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data.session;
+}
+
+export function onPracticeAuthStateChange(callback: (session: PracticeAuthSession | null) => void): () => void {
+  const supabase = getSupabase();
+  const { data } = supabase.auth.onAuthStateChange((_event: string, session: PracticeAuthSession | null) => {
+    callback(session);
+  });
+
+  return () => data.subscription.unsubscribe();
 }
