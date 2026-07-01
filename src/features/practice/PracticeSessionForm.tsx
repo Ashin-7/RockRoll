@@ -1,14 +1,17 @@
 import { FormEvent, useState } from 'react';
 import { useI18n } from '../../i18n/I18nProvider';
+import { SongSummary } from '../songs/song.types';
 import { createPracticeSession } from './practice.service';
 import { PracticeSessionInput } from './practice.types';
 
 interface PracticeSessionFormProps {
   onSave?: (input: PracticeSessionInput) => Promise<void>;
+  songs?: SongSummary[];
 }
 
-export function PracticeSessionForm({ onSave = createPracticeSession }: PracticeSessionFormProps) {
+export function PracticeSessionForm({ onSave = createPracticeSession, songs = [] }: PracticeSessionFormProps) {
   const { t } = useI18n();
+  const [songId, setSongId] = useState('');
   const [durationMinutes, setDurationMinutes] = useState('');
   const [bpm, setBpm] = useState('');
   const [focusArea, setFocusArea] = useState('');
@@ -18,6 +21,7 @@ export function PracticeSessionForm({ onSave = createPracticeSession }: Practice
     event.preventDefault();
 
     await onSave({
+      songId: songId || null,
       durationMinutes: Number(durationMinutes),
       bpm: bpm ? Number(bpm) : null,
       focusArea,
@@ -27,6 +31,20 @@ export function PracticeSessionForm({ onSave = createPracticeSession }: Practice
 
   return (
     <form onSubmit={handleSubmit}>
+      {songs.length > 0 ? (
+        <>
+          <label htmlFor="songId">{t('practice.song')}</label>
+          <select id="songId" value={songId} onChange={(event) => setSongId(event.target.value)}>
+            <option value="">{t('practice.noSong')}</option>
+            {songs.map((song) => (
+              <option key={song.id} value={song.id}>
+                {song.title}
+              </option>
+            ))}
+          </select>
+        </>
+      ) : null}
+
       <label htmlFor="durationMinutes">{t('practice.duration')}</label>
       <input
         id="durationMinutes"

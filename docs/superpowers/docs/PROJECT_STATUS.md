@@ -9,6 +9,7 @@ MVP Phase 1，Practice First。
 - 已建立 React 18 + TypeScript + Vite + Vitest + Supabase 的基础项目。
 - 已有基础路由、AppShell、i18n、Auth、Backstage、Archive、Library、Inbox 与 Songs feature 雏形。
 - Songs 当前处于本地 mock MVP：不接 Supabase，不修改数据库，不修改 Practice 数据模型。
+- Practice 表单已支持选择曲目并提交 `songId`，作为 Song 与 Practice 关联的前端最小闭环。
 
 ## 最近完成
 
@@ -16,6 +17,7 @@ MVP Phase 1，Practice First。
 - 显示当前练习状态，并支持英文/中文状态文案。
 - App 导航进入 Songs 时展示本地 mock 曲目。
 - 已补充 Songs 页面测试覆盖默认 mock、空状态与中文文案。
+- 完成 Practice 表单级 Song 关联：可传入曲目列表，提交时带上 `songId`，service 写入 `song_id`。
 
 ## 验证方式
 
@@ -28,7 +30,7 @@ $env:PATH="$env:NVM_HOME\v20.20.2;$env:PATH"; npm run build
 
 ## 下一步建议
 
-1. Song 与 Practice 关联。
-2. Practice History。
-3. Practice Statistics。
-4. Auth 最小闭环。
+1. Practice History。
+2. Practice Statistics。
+3. Auth 最小闭环。
+4. Song Library。
