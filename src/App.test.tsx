@@ -17,4 +17,15 @@ describe('App', () => {
 
     expect(screen.getByRole('heading', { name: 'Practice History' })).toBeInTheDocument();
   });
+
+  it('opens the auth page from primary navigation', async () => {
+    window.location.hash = '#backstage';
+    const user = userEvent.setup();
+
+    renderWithI18n(<App />);
+
+    await user.click(screen.getByRole('link', { name: 'Auth' }));
+
+    expect(screen.getByRole('heading', { name: 'Sign in to your archive.' })).toBeInTheDocument();
+  });
 });

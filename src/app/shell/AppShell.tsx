@@ -9,6 +9,7 @@ interface AppShellProps {
 
 const navItems: Array<{ href: string; labelKey: MessageKey }> = [
   { href: '#backstage', labelKey: 'nav.backstage' },
+  { href: '#auth', labelKey: 'nav.auth' },
   { href: '#songs', labelKey: 'nav.songs' },
   { href: '#practice', labelKey: 'nav.practice' },
   { href: '#archive', labelKey: 'nav.archive' },
