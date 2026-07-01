@@ -1,51 +1,66 @@
-import { screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { describe, expect, it, vi } from 'vitest';
 import { renderWithI18n } from '../../test/render';
 import { SongListPage } from './SongListPage';
 import { SongSummary } from './song.types';
 
+const realSongs: SongSummary[] = [
+  {
+    id: 'song-1',
+    title: 'Little Wing',
+    artistName: 'Unknown artist',
+    status: 'learning',
+    difficulty: 4,
+  },
+];
+
 describe('SongListPage', () => {
-  it('renders the local song practice board by default', () => {
-    renderWithI18n(<SongListPage />);
+  it('loads and renders songs from the provided loader', async () => {
+    renderWithI18n(<SongListPage onLoadSongs={vi.fn().mockResolvedValue(realSongs)} />);
 
-    expect(screen.getByText('Current rotation')).toBeInTheDocument();
+    expect(screen.getByText('Loading songs...')).toBeInTheDocument();
+    expect(await screen.findByText('Little Wing')).toBeInTheDocument();
+    expect(screen.getByText('Unknown artist')).toBeInTheDocument();
+    expect(screen.getAllByText('Learning')).toHaveLength(2);
+  });
+
+  it('renders empty state when no real songs exist', async () => {
+    renderWithI18n(<SongListPage onLoadSongs={vi.fn().mockResolvedValue([])} />);
+
+    expect(await screen.findByText('No songs in the archive yet.')).toBeInTheDocument();
+  });
+
+  it('renders an error state when songs cannot load', async () => {
+    renderWithI18n(<SongListPage onLoadSongs={vi.fn().mockRejectedValue(new Error('network failed'))} />);
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('network failed');
+  });
+
+  it('creates a song and refreshes the list', async () => {
+    const loadSongs = vi.fn().mockResolvedValueOnce([]).mockResolvedValueOnce(realSongs);
+    const createSong = vi.fn().mockResolvedValue(undefined);
+    const user = userEvent.setup();
+
+    renderWithI18n(<SongListPage onCreateSong={createSong} onLoadSongs={loadSongs} />);
+
+    await user.type(await screen.findByLabelText('Title'), 'Little Wing');
+    await user.selectOptions(screen.getByLabelText('Status'), 'learning');
+    await user.selectOptions(screen.getByLabelText('Difficulty'), '4');
+    await user.click(screen.getByRole('button', { name: 'Add song' }));
+
+    expect(createSong).toHaveBeenCalledWith({ title: 'Little Wing', status: 'learning', difficulty: 4 });
+    await waitFor(() => expect(loadSongs).toHaveBeenCalledTimes(2));
+    expect(await screen.findByText('Song added.')).toBeInTheDocument();
     expect(screen.getByText('Little Wing')).toBeInTheDocument();
-    expect(screen.getByText('Autumn Leaves')).toBeInTheDocument();
-    expect(screen.getByText('Solo checkpoint')).toBeInTheDocument();
   });
 
-  it('renders songs and empty state', () => {
-    const songs: SongSummary[] = [
-      {
-        id: 'song-1',
-        title: 'Little Wing',
-        artistName: 'Jimi Hendrix',
-        status: 'learning',
-        difficulty: 4,
-      },
-    ];
-
-    renderWithI18n(<SongListPage songs={songs} />);
-
-    expect(screen.getByText('Songs')).toBeInTheDocument();
-    expect(screen.getByText('Little Wing')).toBeInTheDocument();
-    expect(screen.getByText('Jimi Hendrix')).toBeInTheDocument();
-    expect(screen.getByText('Learning')).toBeInTheDocument();
-  });
-
-  it('renders empty state when no songs exist', () => {
-    renderWithI18n(<SongListPage songs={[]} />);
-
-    expect(screen.getByText('No songs in the archive yet.')).toBeInTheDocument();
-  });
-
-  it('renders the local song board with Chinese messages', () => {
+  it('renders Chinese add-song messages', () => {
     window.localStorage.setItem('rcokroll.locale', 'zh-CN');
 
-    renderWithI18n(<SongListPage />);
+    renderWithI18n(<SongListPage songs={[]} />);
 
-    expect(screen.getByText('曲目')).toBeInTheDocument();
-    expect(screen.getByText('当前练习轮换')).toBeInTheDocument();
-    expect(screen.getByText('学习中')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: '新增曲目' })).toBeInTheDocument();
+    expect(screen.getByLabelText('标题')).toBeInTheDocument();
   });
 });

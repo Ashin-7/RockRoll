@@ -47,6 +47,68 @@
   font-size: 0.86rem;
 }
 
+.songs-add-form {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) auto;
+  gap: var(--space-3);
+  align-items: end;
+  border: 1px solid rgba(167, 162, 154, 0.16);
+  border-radius: var(--radius-panel);
+  background: rgba(34, 32, 31, 0.72);
+  padding: var(--space-5);
+}
+
+.songs-add-form h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.songs-add-form label {
+  display: grid;
+  gap: var(--space-2);
+  color: var(--color-silver);
+  font-size: 0.74rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.songs-add-form input,
+.songs-add-form select {
+  min-height: 2.5rem;
+  border: 1px solid rgba(167, 162, 154, 0.22);
+  border-radius: 0.5rem;
+  background: rgba(17, 16, 15, 0.74);
+  color: var(--color-paper);
+  padding: 0.65rem 0.75rem;
+}
+
+.songs-add-form button {
+  min-height: 2.5rem;
+  border: 1px solid rgba(242, 169, 59, 0.42);
+  border-radius: 0.5rem;
+  background: rgba(242, 169, 59, 0.16);
+  color: var(--color-paper);
+  padding: 0.65rem 1rem;
+}
+
+.songs-loading,
+.songs-message,
+.songs-error {
+  margin: 0;
+}
+
+.songs-loading,
+.songs-message {
+  color: var(--color-paper-muted);
+}
+
+.songs-error {
+  color: var(--color-amber);
+}
+
 .song-board {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -137,6 +199,7 @@
 }
 
 @media (max-width: 1080px) {
+  .songs-add-form,
   .song-board {
     grid-template-columns: 1fr;
   }
