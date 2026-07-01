@@ -20,4 +20,17 @@ describe('AppShell', () => {
     expect(screen.getByText('Library')).toBeInTheDocument();
     expect(screen.getByText('Today in the room')).toBeInTheDocument();
   });
+
+  it('marks the current hash route as active', () => {
+    window.location.hash = '#practice';
+
+    renderWithI18n(
+      <AppShell>
+        <h2>Practice history</h2>
+      </AppShell>,
+    );
+
+    expect(screen.getByRole('link', { name: 'Practice' })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByRole('link', { name: 'Songs' })).not.toHaveAttribute('aria-current');
+  });
 });

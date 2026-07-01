@@ -38,5 +38,5 @@ export default function App() {
     auth: <AuthPage />,
   }[route];
 
-  return <AppShell>{page}</AppShell>;
+  return <AppShell currentHash={hash}>{page}</AppShell>;
 }

@@ -64,6 +64,12 @@
   outline: none;
 }
 
+.app-shell__nav a.is-active {
+  border-color: var(--color-amber);
+  background: rgba(242, 169, 59, 0.14);
+  color: var(--color-paper);
+}
+
 .app-shell__main {
   padding: var(--space-8);
 }

@@ -4,6 +4,7 @@ import { MessageKey } from '../../i18n/messages';
 
 interface AppShellProps {
   children: React.ReactNode;
+  currentHash?: string;
 }
 
 const navItems: Array<{ href: string; labelKey: MessageKey }> = [
@@ -15,7 +16,7 @@ const navItems: Array<{ href: string; labelKey: MessageKey }> = [
   { href: '#library', labelKey: 'nav.library' },
 ];
 
-export function AppShell({ children }: AppShellProps) {
+export function AppShell({ children, currentHash = window.location.hash }: AppShellProps) {
   const { locale, setLocale, t } = useI18n();
 
   return (
@@ -37,7 +38,12 @@ export function AppShell({ children }: AppShellProps) {
         </button>
         <nav aria-label={t('nav.primary')} className="app-shell__nav">
           {navItems.map((item) => (
-            <a href={item.href} key={item.href}>
+            <a
+              aria-current={currentHash === item.href ? 'page' : undefined}
+              className={currentHash === item.href ? 'is-active' : undefined}
+              href={item.href}
+              key={item.href}
+            >
               {t(item.labelKey)}
             </a>
           ))}
