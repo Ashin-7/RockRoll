@@ -48,10 +48,21 @@ export function AuthPage({
       }
     }
 
-    const unsubscribe = subscribeToAuthState((nextSession) => {
-      setSession(nextSession);
-      setIsLoadingSession(false);
-    });
+    let unsubscribe: () => void = () => undefined;
+
+    try {
+      unsubscribe = subscribeToAuthState((nextSession) => {
+        if (isMounted) {
+          setSession(nextSession);
+          setIsLoadingSession(false);
+        }
+      });
+    } catch (caughtError) {
+      if (isMounted) {
+        setError(caughtError instanceof Error ? caughtError.message : t('auth.errorFallback'));
+        setIsLoadingSession(false);
+      }
+    }
 
     loadSession();
 

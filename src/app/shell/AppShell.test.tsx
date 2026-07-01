@@ -1,5 +1,5 @@
 import { screen, within } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { renderWithI18n } from '../../test/render';
 import { AppShell } from './AppShell';
 
@@ -19,6 +19,7 @@ describe('AppShell', () => {
     expect(screen.getByText('Inbox')).toBeInTheDocument();
     expect(screen.getByText('Library')).toBeInTheDocument();
     expect(within(screen.getByRole('navigation', { name: 'Primary' })).queryByRole('link', { name: 'Auth' })).toBeNull();
+    expect(screen.getByText('Guest')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Auth' })).toHaveAttribute('href', '#auth');
     expect(screen.getByText('Today in the room')).toBeInTheDocument();
   });
@@ -34,19 +35,21 @@ describe('AppShell', () => {
 
     expect(screen.getByRole('link', { name: 'Practice' })).toHaveAttribute('aria-current', 'page');
     expect(screen.getByRole('link', { name: 'Songs' })).not.toHaveAttribute('aria-current');
-    expect(screen.getByRole('link', { name: 'Auth' })).not.toHaveAttribute('aria-current');
+    expect(screen.getByTestId('account-menu')).not.toHaveAttribute('aria-current');
   });
 
-  it('marks the auth account link as active outside primary navigation', () => {
+  it('renders the signed-in account name and sign-out action', () => {
     window.location.hash = '#auth';
+    const onSignOut = vi.fn();
 
     renderWithI18n(
-      <AppShell currentHash="#auth">
+      <AppShell accountName="player@example.com" currentHash="#auth" isSignedIn onSignOut={onSignOut}>
         <h2>Auth page</h2>
       </AppShell>,
     );
 
-    expect(screen.getByRole('link', { name: 'Auth' })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByText('player@example.com')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Sign out' })).toBeInTheDocument();
     expect(within(screen.getByRole('navigation', { name: 'Primary' })).queryByRole('link', { name: 'Auth' })).toBeNull();
   });
 });

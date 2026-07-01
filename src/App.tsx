@@ -3,6 +3,7 @@ import { AppShell } from './app/shell/AppShell';
 import { getRouteForHash } from './app/routes';
 import { ArchivePage } from './features/archive/ArchivePage';
 import { AuthPage } from './features/auth/AuthPage';
+import { AuthSession, getCurrentSession, onAuthStateChange, signOut } from './features/auth/auth.service';
 import { BackstagePage } from './features/backstage/BackstagePage';
 import { InboxPage } from './features/inbox/InboxPage';
 import { LibraryPage } from './features/library/LibraryPage';
@@ -11,6 +12,7 @@ import { SongListPage } from './features/songs/SongListPage';
 
 export default function App() {
   const [hash, setHash] = useState(window.location.hash);
+  const [authSession, setAuthSession] = useState<AuthSession | null>(null);
 
   useEffect(() => {
     function handleHashChange() {
@@ -21,6 +23,49 @@ export default function App() {
 
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+    let unsubscribe: () => void = () => undefined;
+
+    try {
+      unsubscribe = onAuthStateChange((nextSession) => {
+        if (isMounted) {
+          setAuthSession(nextSession);
+        }
+      });
+    } catch {
+      setAuthSession(null);
+    }
+
+    async function loadSession() {
+      try {
+        const currentSession = await getCurrentSession();
+        if (isMounted) {
+          setAuthSession(currentSession);
+        }
+      } catch {
+        if (isMounted) {
+          setAuthSession(null);
+        }
+      }
+    }
+
+    loadSession();
+
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
+  }, []);
+
+  async function handleSignOut() {
+    try {
+      await signOut();
+    } finally {
+      setAuthSession(null);
+    }
+  }
 
   const route = getRouteForHash(hash);
 
@@ -34,5 +79,14 @@ export default function App() {
     auth: <AuthPage />,
   }[route];
 
-  return <AppShell currentHash={hash}>{page}</AppShell>;
+  return (
+    <AppShell
+      accountName={authSession?.user.email ?? undefined}
+      currentHash={hash}
+      isSignedIn={Boolean(authSession)}
+      onSignOut={handleSignOut}
+    >
+      {page}
+    </AppShell>
+  );
 }

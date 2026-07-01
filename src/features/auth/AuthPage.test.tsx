@@ -80,6 +80,20 @@ describe('AuthPage', () => {
     await waitFor(() => expect(screen.getByText(/player@example.com/)).toBeInTheDocument());
   });
 
+  it('shows an error instead of crashing when auth subscription fails', async () => {
+    renderWithI18n(
+      <AuthPage
+        onGetCurrentSession={vi.fn().mockResolvedValue(null)}
+        onAuthStateChange={() => {
+          throw new Error('Missing Supabase env');
+        }}
+      />,
+    );
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Missing Supabase env');
+    expect(screen.getByLabelText('Email')).toBeInTheDocument();
+  });
+
   it('renders Chinese signed-in copy', async () => {
     window.localStorage.setItem('rcokroll.locale', 'zh-CN');
 

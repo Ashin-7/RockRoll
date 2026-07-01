@@ -32,31 +32,68 @@
 
 .app-shell__language {
   width: 100%;
-  margin-top: var(--space-6);
+  margin-top: var(--space-4);
 }
 
 .app-shell__account {
-  display: block;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   margin-top: var(--space-3);
-  border: 1px solid rgba(167, 162, 154, 0.18);
-  border-radius: 999px;
   color: var(--color-paper-muted);
-  padding: var(--space-3) var(--space-4);
-  text-align: center;
+  font-size: 0.9rem;
+}
+
+.app-shell__account-name {
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--color-paper);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app-shell__account-actions {
+  position: absolute;
+  top: calc(100% + 0.35rem);
+  left: 0;
+  z-index: 2;
+  display: none;
+  min-width: 10rem;
+  border: 1px solid rgba(167, 162, 154, 0.2);
+  border-radius: 8px;
+  background: rgba(17, 16, 15, 0.96);
+  box-shadow: 0 0.85rem 1.5rem rgba(0, 0, 0, 0.28);
+  padding: var(--space-2);
+}
+
+.app-shell__account:hover .app-shell__account-actions,
+.app-shell__account:focus-within .app-shell__account-actions {
+  display: block;
+}
+
+.app-shell__account-actions a,
+.app-shell__account-actions button {
+  display: block;
+  width: 100%;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--color-paper-muted);
+  cursor: pointer;
+  font: inherit;
+  padding: var(--space-2) var(--space-3);
+  text-align: left;
   text-decoration: none;
 }
 
-.app-shell__account:hover,
-.app-shell__account:focus-visible {
-  border-color: var(--color-amber);
-  color: var(--color-paper);
-  outline: none;
-}
-
-.app-shell__account.is-active {
-  border-color: var(--color-amber);
+.app-shell__account-actions a:hover,
+.app-shell__account-actions a:focus-visible,
+.app-shell__account-actions button:hover,
+.app-shell__account-actions button:focus-visible {
   background: rgba(242, 169, 59, 0.14);
   color: var(--color-paper);
+  outline: none;
 }
 
 .app-shell__rec {

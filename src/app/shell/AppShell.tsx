@@ -3,8 +3,11 @@ import { useI18n } from '../../i18n/I18nProvider';
 import { MessageKey } from '../../i18n/messages';
 
 interface AppShellProps {
+  accountName?: string;
   children: React.ReactNode;
   currentHash?: string;
+  isSignedIn?: boolean;
+  onSignOut?: () => void | Promise<void>;
 }
 
 const navItems: Array<{ href: string; labelKey: MessageKey }> = [
@@ -16,8 +19,15 @@ const navItems: Array<{ href: string; labelKey: MessageKey }> = [
   { href: '#library', labelKey: 'nav.library' },
 ];
 
-export function AppShell({ children, currentHash = window.location.hash }: AppShellProps) {
+export function AppShell({
+  accountName,
+  children,
+  currentHash = window.location.hash,
+  isSignedIn = false,
+  onSignOut,
+}: AppShellProps) {
   const { locale, setLocale, t } = useI18n();
+  const displayName = accountName ?? t('auth.guest');
 
   return (
     <div className="app-shell">
@@ -29,6 +39,18 @@ export function AppShell({ children, currentHash = window.location.hash }: AppSh
             <small>{t('nav.privateRoom')}</small>
           </span>
         </div>
+        <div className="app-shell__account" data-testid="account-menu">
+          <span className="app-shell__account-name">{displayName}</span>
+          <div className="app-shell__account-actions">
+            {isSignedIn ? (
+              <button type="button" onClick={onSignOut}>
+                {t('auth.signOut')}
+              </button>
+            ) : (
+              <a href="#auth">{t('nav.auth')}</a>
+            )}
+          </div>
+        </div>
         <button
           className="app-shell__language"
           type="button"
@@ -36,13 +58,6 @@ export function AppShell({ children, currentHash = window.location.hash }: AppSh
         >
           {t('common.languageToggle')}
         </button>
-        <a
-          aria-current={currentHash === '#auth' ? 'page' : undefined}
-          className={currentHash === '#auth' ? 'app-shell__account is-active' : 'app-shell__account'}
-          href="#auth"
-        >
-          {t('nav.auth')}
-        </a>
         <nav aria-label={t('nav.primary')} className="app-shell__nav">
           {navItems.map((item) => (
             <a
