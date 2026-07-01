@@ -7,3 +7,9 @@ export interface SongSummary {
   status: SongStatus;
   difficulty: number | null;
 }
+
+export interface CreateSongInput {
+  title: string;
+  status: SongStatus;
+  difficulty: number | null;
+}
