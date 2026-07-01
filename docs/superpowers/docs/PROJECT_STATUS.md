@@ -11,6 +11,7 @@ MVP Phase 1，Practice First。
 - Songs 当前处于本地 mock MVP：不接 Supabase，不修改数据库，不修改 Practice 数据模型。
 - Practice 表单已支持选择曲目并提交 `songId`，作为 Song 与 Practice 关联的前端最小闭环。
 - Practice History 已有独立 `#practice` mock 页面，通过本地数据展示最近练习记录。
+- Practice Statistics 已在 `#practice` 页面提供本地 mock 统计摘要。
 
 ## 最近完成
 
@@ -20,6 +21,7 @@ MVP Phase 1，Practice First。
 - 已补充 Songs 页面测试覆盖默认 mock、空状态与中文文案。
 - 完成 Practice 表单级 Song 关联：可传入曲目列表，提交时带上 `songId`，service 写入 `song_id`。
 - 完成 Practice History mock 页面：新增 `#practice` 路由、导航入口、本地练习记录列表与空状态。
+- 完成 Practice Statistics mock 摘要：基于本地练习历史计算练习次数、总时长、练习曲目数、平均时长和最近练习日期。
 
 ## 验证方式
 
@@ -32,7 +34,7 @@ $env:PATH="$env:NVM_HOME\v20.20.2;$env:PATH"; npm run build
 
 ## 下一步建议
 
-1. Practice Statistics。
-2. Auth 最小闭环。
-3. Song Library。
-4. Artist Library。
+1. Auth 最小闭环。
+2. Song Library。
+3. Artist Library。
+4. Metadata Inbox。
