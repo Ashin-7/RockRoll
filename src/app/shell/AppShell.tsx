@@ -9,7 +9,6 @@ interface AppShellProps {
 
 const navItems: Array<{ href: string; labelKey: MessageKey }> = [
   { href: '#backstage', labelKey: 'nav.backstage' },
-  { href: '#auth', labelKey: 'nav.auth' },
   { href: '#songs', labelKey: 'nav.songs' },
   { href: '#practice', labelKey: 'nav.practice' },
   { href: '#archive', labelKey: 'nav.archive' },
@@ -37,6 +36,13 @@ export function AppShell({ children, currentHash = window.location.hash }: AppSh
         >
           {t('common.languageToggle')}
         </button>
+        <a
+          aria-current={currentHash === '#auth' ? 'page' : undefined}
+          className={currentHash === '#auth' ? 'app-shell__account is-active' : 'app-shell__account'}
+          href="#auth"
+        >
+          {t('nav.auth')}
+        </a>
         <nav aria-label={t('nav.primary')} className="app-shell__nav">
           {navItems.map((item) => (
             <a

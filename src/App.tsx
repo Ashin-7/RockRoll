@@ -24,10 +24,6 @@ export default function App() {
 
   const route = getRouteForHash(hash);
 
-  if (route === 'auth') {
-    return <AuthPage />;
-  }
-
   const page = {
     backstage: <BackstagePage />,
     songs: <SongListPage />,

@@ -88,7 +88,7 @@ export function AuthPage({
   }
 
   return (
-    <main className="auth-page">
+    <section className="auth-page">
       <section>
         <p className="eyebrow">{t('auth.eyebrow')}</p>
         <h1>{t('auth.title')}</h1>
@@ -124,6 +124,6 @@ export function AuthPage({
         {message ? <p role="status">{message}</p> : null}
         {error ? <p role="alert">{error}</p> : null}
       </section>
-    </main>
+    </section>
   );
 }

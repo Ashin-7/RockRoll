@@ -26,6 +26,7 @@ describe('App', () => {
 
     await user.click(screen.getByRole('link', { name: 'Auth' }));
 
+    expect(screen.getByText('RcokRoll')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Sign in to your archive.' })).toBeInTheDocument();
   });
 });

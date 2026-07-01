@@ -35,6 +35,30 @@
   margin-top: var(--space-6);
 }
 
+.app-shell__account {
+  display: block;
+  margin-top: var(--space-3);
+  border: 1px solid rgba(167, 162, 154, 0.18);
+  border-radius: 999px;
+  color: var(--color-paper-muted);
+  padding: var(--space-3) var(--space-4);
+  text-align: center;
+  text-decoration: none;
+}
+
+.app-shell__account:hover,
+.app-shell__account:focus-visible {
+  border-color: var(--color-amber);
+  color: var(--color-paper);
+  outline: none;
+}
+
+.app-shell__account.is-active {
+  border-color: var(--color-amber);
+  background: rgba(242, 169, 59, 0.14);
+  color: var(--color-paper);
+}
+
 .app-shell__rec {
   width: 0.75rem;
   height: 0.75rem;
