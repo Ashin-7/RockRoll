@@ -30,6 +30,7 @@ export function AuthPage({
   const [email, setEmail] = useState('');
   const [session, setSession] = useState<AuthSession | null>(null);
   const [isLoadingSession, setIsLoadingSession] = useState(true);
+  const [isSigningInAnonymously, setIsSigningInAnonymously] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
@@ -93,11 +94,17 @@ export function AuthPage({
   async function handleAnonymousSignIn() {
     setError('');
     setMessage('');
+    setIsSigningInAnonymously(true);
 
     try {
       await onSignInAnonymously();
+      const currentSession = await onGetCurrentSession();
+      setSession(currentSession);
+      setMessage(t('auth.anonymousSignedIn'));
     } catch (caughtError) {
       setError(caughtError instanceof Error ? caughtError.message : t('auth.anonymousErrorFallback'));
+    } finally {
+      setIsSigningInAnonymously(false);
     }
   }
 
@@ -145,8 +152,8 @@ export function AuthPage({
               required
             />
             <button type="submit">{t('auth.sendMagicLink')}</button>
-            <button type="button" onClick={handleAnonymousSignIn}>
-              {t('auth.anonymousTestLogin')}
+            <button type="button" onClick={handleAnonymousSignIn} disabled={isSigningInAnonymously}>
+              {isSigningInAnonymously ? t('auth.anonymousSigningIn') : t('auth.anonymousTestLogin')}
             </button>
             {testLoginEmail ? (
               <button type="button" onClick={() => setEmail(testLoginEmail)}>

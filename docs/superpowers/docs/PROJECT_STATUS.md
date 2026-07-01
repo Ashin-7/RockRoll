@@ -34,6 +34,7 @@ MVP Phase 1，Practice First。
 - 完成 Practice 表单体验修正：未登录时隐藏保存表单并提示登录；练习时长和 BPM 使用自定义步进按钮替代浏览器原生 spinner。
 - 完成测试登录辅助：Auth 页面可从本地环境变量读取测试邮箱并一键填充，文档说明测试账号需在 Supabase Auth 中创建。
 - 完成匿名测试登录：Auth 页面可调用 Supabase anonymous sign-in，一键获得测试 session；README 说明需在 Supabase Auth 中启用匿名登录。
+- 修正匿名测试登录反馈：点击后显示处理中，成功后主动刷新当前 session，失败时展示 Supabase 返回的错误。
 
 ## 验证方式
 

@@ -69,6 +69,26 @@ describe('AuthPage', () => {
     await waitFor(() => expect(screen.getByText(/player@example.com/)).toBeInTheDocument());
   });
 
+  it('refreshes the current session after anonymous sign-in', async () => {
+    const signInAnonymously = vi.fn().mockResolvedValue(undefined);
+    const getCurrentSession = vi.fn().mockResolvedValueOnce(null).mockResolvedValueOnce(signedInSession);
+    const user = userEvent.setup();
+
+    renderWithI18n(
+      <AuthPage
+        onGetCurrentSession={getCurrentSession}
+        onAuthStateChange={() => vi.fn()}
+        onSignInAnonymously={signInAnonymously}
+      />,
+    );
+
+    await user.click(await screen.findByRole('button', { name: 'Anonymous test login' }));
+
+    expect(signInAnonymously).toHaveBeenCalledWith();
+    expect(getCurrentSession).toHaveBeenCalledTimes(2);
+    expect(await screen.findByText(/player@example.com/)).toBeInTheDocument();
+  });
+
   it('shows the signed-in email when a session exists', async () => {
     renderWithI18n(
       <AuthPage
