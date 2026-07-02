@@ -25,6 +25,16 @@
   - Album List / Create / Detail / Edit / Delete
   - Supabase 与本地 Demo Mode 双路径
   - 接入 `#albums` 与 `#album/:id` 路由
+- 完成 Archive 管理 MVP 本地增量实现：
+  - Archive Collection List / Create
+  - Archive Collection Detail
+  - 手动添加 Album 类型 Archive Item
+  - Supabase 与本地 Demo Mode 双路径
+  - 接入 `#archive/:id` 路由
+- 完成匿名旅行者导入评估文档：
+  - 确认目标页存在公开 JSON API
+  - 当前不需要 Scrapling
+  - 明确 Artist / Album / Song / Archive 映射方案
 - 更新交接文档：
   - `docs/PROJECT_STATUS.md`
   - `docs/NEXT_TASKS.md`
@@ -83,6 +93,18 @@ Albums：
 - `src/features/albums/albums.service.test.ts`
 - `src/features/albums/albums.service.ts`
 
+Archive：
+
+- `src/features/archive/ArchiveDetailPage.css`
+- `src/features/archive/ArchiveDetailPage.test.tsx`
+- `src/features/archive/ArchiveDetailPage.tsx`
+- `src/features/archive/ArchivePage.css`
+- `src/features/archive/ArchivePage.test.tsx`
+- `src/features/archive/ArchivePage.tsx`
+- `src/features/archive/archive.service.test.ts`
+- `src/features/archive/archive.service.ts`
+- `src/features/archive/archive.types.ts`
+
 路由与文案：
 
 - `src/App.tsx`
@@ -91,17 +113,28 @@ Albums：
 - `src/features/archive/ArchivePage.tsx`
 - `src/i18n/messages.ts`
 
+导入评估与计划：
+
+- `docs/IMPORT_ANONTRAVELER.md`
+- `docs/superpowers/plans/2026-07-02-archive-mvp.md`
+
+Supabase：
+
+- `supabase/migrations/20260702153000_create_archive_collections.sql`
+
 ## 验证命令和结果
 
 本轮已运行并通过：
 
 ```powershell
 npm test -- --run src/features/albums src/app/routes.test.tsx src/features/archive/ArchivePage.test.tsx
+npm test -- --run src/features/archive src/app/routes.test.tsx
 ```
 
 结果：
 
 - 当前 shell Node.js 为 `v20.20.2`，Album / routes / Archive 相关测试通过：5 个测试文件，19 个用例。
+- 当前 shell Node.js 为 `v20.20.2`，Archive / routes 相关测试通过：4 个测试文件，16 个用例。
 
 本轮已执行轻量校验：
 
@@ -136,17 +169,21 @@ npm run build
 
 - 当前分支：`feature/mvp-foundation`
 - 跟踪分支：`origin/feature/mvp-foundation`
-- P0 CRUD 收尾改动已完成复核，准备提交到当前分支。
+- P0 CRUD、Supabase Schema 稳定化、Artist CRUD、Album CRUD 已提交并推送。
+- 本轮 Archive MVP 与匿名旅行者导入评估文档改动待提交。
 
 ## 未完成事项
 
+- Archive Item 编辑 / 删除尚未实现。
+- Archive Item 目前只提供 Album 类型的手动输入；Artist / Song 类型条目留待后续补齐。
+- 匿名旅行者导入仍停留在评估文档阶段，未写正式导入代码。
 - Practice / Song / Artist 新增 UI 文案存在硬编码英文，后续可按 i18n 策略统一处理。
 - 完整测试与构建尚未运行。
-- Supabase migration 尚未在真实 Supabase 实例上执行验证。
+- Supabase migrations 尚未在真实 Supabase 实例上执行验证。
 
 ## 下一轮推荐任务
 
-建议先做：Archive 管理。
+建议先做：Archive MVP 收尾复核与提交。
 
 之后再进入：Media Library。
 
@@ -161,10 +198,10 @@ npm run build
 - docs/SESSION_HANDOFF.md
 - src/features/archive
 
-继续 docs/NEXT_TASKS.md 中的 Archive 管理。
+继续 docs/NEXT_TASKS.md 中的 Archive MVP 收尾复核与提交。
 不要扫描整个仓库。
 不要运行 npm install。
 不要做架构重构。
-只运行与 Practice / Songs 相关的测试；如需要完整测试或构建，请先说明原因。
+只运行与 Archive 相关的测试；如需要完整测试或构建，请先说明原因。
 完成后中文总结。
 ```

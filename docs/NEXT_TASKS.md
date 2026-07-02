@@ -5,12 +5,9 @@
 ## 开发原则
 
 - 不进行架构重构。
-- 不引入新框架。
-- 不引入 Zustand、Redux、TanStack 等大型依赖。
-- 不开发 AI 功能。
-- 不开发 Tauri。
-- 不开发播放器。
-- 保持 MVP 思维，优先补齐核心 CRUD。
+- 不引入新的 UI 框架或状态管理库。
+- 不开发 AI、播放器、桌面端或高级统计。
+- 保持 MVP 思维，优先补齐核心 CRUD 与可维护数据模型。
 - 默认采用增量修改，不做仓库级分析。
 
 ## 会话读取范围
@@ -36,69 +33,35 @@
 - [x] P0 CRUD 最终复核与提交
 - [x] Supabase Schema 稳定化复核
 
-### P0 收尾建议
-
-目标：确认本地 P0 CRUD 修改可提交。
-
-建议读取：
-
-- `AGENTS.md`
-- `docs/PROJECT_STATUS.md`
-- `docs/NEXT_TASKS.md`
-- `docs/SESSION_HANDOFF.md`
-- `src/features/practice`
-- `src/features/songs`
-
-建议范围：
-
-- 快速复核 Practice / Song Edit / Delete 的实现与测试。
-- 如用户允许，运行相关 feature 测试。
-- 如准备提交，先确认 `git status`，只提交本轮相关文件。
-
 ## P1
 
 ### Artist CRUD
 
-目标：补齐 Artist 的编辑与删除，形成完整管理闭环。
-
 状态：已完成并提交。
-
-建议读取：
-
-- `AGENTS.md`
-- `docs/PROJECT_STATUS.md`
-- `docs/NEXT_TASKS.md`
-- `docs/SESSION_HANDOFF.md`
-- `src/features/artists`
-
-建议范围：
-
-- 复用现有 Artist 列表、创建与详情读取能力。
-- 新增 update / delete service。
-- Supabase 与本地 Demo Mode 路径保持一致。
-- 删除前提供确认交互。
-- 只运行 Artist 相关测试；如果没有相关测试，说明未运行原因。
 
 ### Album CRUD
 
-目标：建立 Album 基础管理能力。
+状态：已完成并提交。
+
+### Archive 管理 MVP
 
 状态：已完成本地增量实现，待提交。
 
-建议范围：
+已完成范围：
 
-- 使用现有 `albums` 表，不主动新增 schema，除非字段缺口被明确确认。
-- 优先支持列表、创建、详情、编辑、删除。
-- 不引入新依赖，不做架构重构。
+- Archive Collection 列表与创建。
+- Archive Collection 详情。
+- 手动添加 Album 类型 Archive Item。
+- Supabase 与本地 Demo Mode 双路径。
+- `#archive/:id` 路由。
 
-### 下一个推荐任务：Archive 管理
+未完成范围：
 
-目标：明确 Archive 实体与基础管理流程。
-
-建议范围：
-
-- 先补齐最小 CRUD。
-- 暂不开发复杂文件管理、播放器或高级统计。
+- Archive Item 编辑与删除。
+- Artist / Song 类型条目的 UI 输入。
+- 与 Album 列表的选择器联动。
+- 匿名旅行者正式导入代码。
+- 外部来源映射表扩展。
 
 ## P2
 
@@ -112,9 +75,27 @@
 - 使用现有 `media_assets` 与 `media_links` 表。
 - 支持按 Song / Practice / Artist / Album 关联媒体。
 
+### 匿名旅行者导入预览 MVP
+
+目标：基于 `docs/IMPORT_ANONTRAVELER.md` 做单 URL、低频、只读公开 JSON 的导入预览。
+
+前置条件：
+
+- Archive MVP 已具备 Collection / Item 基础模型。
+- 仍不写批量抓取，不绕过登录，不读取私人数据。
+
+建议范围：
+
+- 输入一个匿名旅行者公开 URL。
+- 请求一次 version JSON API。
+- 生成 Artist / Album / Archive Item 预览。
+- 用户确认前不写入数据库。
+- Song 暂时跳过。
+
 ## 推荐执行顺序
 
-1. Archive 管理。
+1. Archive MVP 收尾复核与提交。
 2. Media Library。
+3. 匿名旅行者导入预览 MVP。
 
-当前建议先开启新对话，从 Archive 管理开始，避免继续扩大当前上下文。
+当前建议先完成 Archive MVP 的提交，再开启新对话处理 Media Library。

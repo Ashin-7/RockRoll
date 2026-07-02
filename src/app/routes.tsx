@@ -9,6 +9,7 @@ export type AppRoute =
   | 'artistDetail'
   | 'practice'
   | 'archive'
+  | 'archiveDetail'
   | 'inbox'
   | 'library';
 
@@ -33,6 +34,10 @@ export function getRouteForHash(hash: string): AppRoute {
     return 'albumDetail';
   }
 
+  if (hash.startsWith('#archive/')) {
+    return 'archiveDetail';
+  }
+
   if (hash.startsWith('#artist/')) {
     return 'artistDetail';
   }
@@ -50,4 +55,8 @@ export function getAlbumIdForHash(hash: string): string | null {
 
 export function getArtistIdForHash(hash: string): string | null {
   return hash.startsWith('#artist/') ? decodeURIComponent(hash.slice('#artist/'.length)) : null;
+}
+
+export function getArchiveIdForHash(hash: string): string | null {
+  return hash.startsWith('#archive/') ? decodeURIComponent(hash.slice('#archive/'.length)) : null;
 }

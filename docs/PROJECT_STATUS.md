@@ -6,7 +6,7 @@
 
 MVP Foundation
 
-当前目标是稳定 MVP 基础能力，优先补齐 Song 与 Practice 的基础 CRUD，并保持 Supabase Schema、基础路由、Demo Mode 与测试体系可持续迭代。
+当前目标是稳定 MVP 基础能力，优先补齐核心资料管理能力，并保持 Supabase Schema、基础路由、Demo Mode 与测试体系可持续迭代。
 
 ## 本轮完成内容
 
@@ -28,12 +28,18 @@ MVP Foundation
   - Album List / Create / Detail / Edit / Delete
   - Supabase 与本地 Demo Mode 双路径
   - 接入 `#albums` 与 `#album/:id` 路由
+- 已完成 Archive 管理 MVP 增量实现：
+  - Archive Collection List / Create
+  - Archive Collection Detail
+  - 手动添加 Album 类型 Archive Item
+  - Supabase 与本地 Demo Mode 双路径
+  - 接入 `#archive/:id` 路由
 
 ## 当前分支状态
 
 - 当前分支：`feature/mvp-foundation`
 - 跟踪分支：`origin/feature/mvp-foundation`
-- 当前分支已包含 P0 CRUD、Supabase Schema 稳定化与 Artist CRUD 提交；本次 Album CRUD 改动待提交。
+- 当前分支已包含 P0 CRUD、Supabase Schema 稳定化、Artist CRUD 与 Album CRUD 提交；本次 Archive MVP 改动待提交。
 
 ## 已完成模块
 
@@ -42,6 +48,7 @@ MVP Foundation
 - Practice
 - Artists
 - Albums
+- Archive MVP
 - 基础路由
 - Demo Mode
 - Supabase 接入
@@ -49,7 +56,6 @@ MVP Foundation
 ## 部分完成模块
 
 - Song Detail：已补齐本地编辑/删除入口，但仍需后续确认 i18n、列表同步与完整构建验证。
-- Archive
 - Library
 - Inbox
 
@@ -87,8 +93,8 @@ MVP Foundation
 ### P1
 
 - Artist 管理：已补齐编辑与删除闭环。
-- Album 管理：已补齐列表、创建、详情、编辑与删除闭环，待提交。
-- Archive 管理
+- Album 管理：已补齐列表、创建、详情、编辑与删除闭环，已提交。
+- Archive 管理：已完成 Collection / Item 最小闭环。
 
 ### P2
 
@@ -119,11 +125,12 @@ MVP Foundation
 
 推荐开发顺序：
 
-1. Archive 管理。
-2. Practice Filter / Sort。
-3. Practice Goal Duration。
-4. Practice Completion。
-5. Practice Tags。
+1. Media Library。
+2. 匿名旅行者导入预览 MVP。
+3. Practice Filter / Sort。
+4. Practice Goal Duration。
+5. Practice Completion。
+6. Practice Tags。
 
 ## 当前验证结果
 
@@ -131,11 +138,13 @@ MVP Foundation
 
 ```powershell
 npm test -- --run src/features/albums src/app/routes.test.tsx src/features/archive/ArchivePage.test.tsx
+npm test -- --run src/features/archive src/app/routes.test.tsx
 ```
 
 结果：
 
 - 当前 shell Node.js 为 `v20.20.2`，Album / routes / Archive 相关测试通过：5 个测试文件，19 个用例。
+- 当前 shell Node.js 为 `v20.20.2`，Archive / routes 相关测试通过：4 个测试文件，16 个用例。
 
 本轮已执行轻量校验：
 
@@ -170,4 +179,4 @@ npm run build
 - 当前 shell 使用 Node.js v20.20.2 运行通过 Album 相关测试；若切回 Node.js v8.17.0，当前 Vite/Vitest 工具链仍不兼容。
 - Practice / Song / Artist 新增 UI 文案目前存在硬编码英文，后续可按 i18n 策略补齐。
 - 尚未运行完整测试与构建，合并前仍需至少执行一次。
-- Supabase migration 尚未在真实 Supabase 实例上执行验证。
+- Supabase migrations 尚未在真实 Supabase 实例上执行验证。

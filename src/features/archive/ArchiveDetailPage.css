@@ -1,0 +1,47 @@
+.archive-detail-page {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.archive-detail-meta,
+.archive-detail-form,
+.archive-detail-items {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.archive-detail-meta {
+  margin: 0;
+}
+
+.archive-detail-meta div {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.archive-detail-meta dt {
+  font-weight: 700;
+}
+
+.archive-detail-meta dd {
+  margin: 0;
+}
+
+.archive-detail-form {
+  max-width: 38rem;
+}
+
+.archive-detail-form label {
+  display: grid;
+  gap: 0.35rem;
+  font-weight: 600;
+}
+
+.archive-detail-form input,
+.archive-detail-form textarea {
+  width: 100%;
+}
+
+.archive-detail-form textarea {
+  min-height: 5rem;
+}
