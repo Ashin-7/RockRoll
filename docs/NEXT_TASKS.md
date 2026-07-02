@@ -45,7 +45,7 @@
 
 ### Archive 管理 MVP
 
-状态：已完成本地增量实现，待提交。
+状态：已完成并提交。
 
 已完成范围：
 
@@ -69,11 +69,23 @@
 
 目标：围绕媒体资产建立最小管理流程。
 
-建议范围：
+状态：已完成本地增量实现，待提交。
 
-- 先管理 media metadata，不急于做复杂上传和播放器。
+已完成范围：
+
+- 管理 media metadata，不处理真实文件上传和播放器。
 - 使用现有 `media_assets` 与 `media_links` 表。
-- 支持按 Song / Practice / Artist / Album 关联媒体。
+- 支持创建媒体资产，并可选关联 Song / Practice / Artist / Album。
+- Supabase 与本地 Demo Mode 双路径。
+- 收紧 `media_links` RLS，限制跨用户媒体关联。
+
+未完成范围：
+
+- Media Asset 编辑与删除。
+- Media Link 编辑与删除。
+- 实体选择器联动。
+- Supabase Storage 上传。
+- 播放器、预览器或复杂文件管理。
 
 ### 匿名旅行者导入预览 MVP
 
@@ -94,8 +106,8 @@
 
 ## 推荐执行顺序
 
-1. Archive MVP 收尾复核与提交。
-2. Media Library。
-3. 匿名旅行者导入预览 MVP。
+1. Media Library MVP 收尾复核与提交。
+2. 匿名旅行者导入预览 MVP。
+3. Practice Filter / Sort。
 
-当前建议先完成 Archive MVP 的提交，再开启新对话处理 Media Library。
+当前建议先完成 Media Library MVP 的提交，再开启新对话处理匿名旅行者导入预览 MVP。

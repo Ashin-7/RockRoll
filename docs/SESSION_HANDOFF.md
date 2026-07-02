@@ -35,6 +35,11 @@
   - 确认目标页存在公开 JSON API
   - 当前不需要 Scrapling
   - 明确 Artist / Album / Song / Archive 映射方案
+- 完成 Media Library MVP 本地增量实现：
+  - Media Asset List / Create
+  - 可选关联 Song / Practice / Artist / Album
+  - Supabase 与本地 Demo Mode 双路径
+  - 收紧 `media_links` RLS，限制跨用户媒体关联
 - 更新交接文档：
   - `docs/PROJECT_STATUS.md`
   - `docs/NEXT_TASKS.md`
@@ -121,6 +126,16 @@ Archive：
 Supabase：
 
 - `supabase/migrations/20260702153000_create_archive_collections.sql`
+- `supabase/migrations/20260702162000_stabilize_media_links.sql`
+
+Library：
+
+- `src/features/library/LibraryPage.css`
+- `src/features/library/LibraryPage.test.tsx`
+- `src/features/library/LibraryPage.tsx`
+- `src/features/library/media.service.test.ts`
+- `src/features/library/media.service.ts`
+- `src/features/library/media.types.ts`
 
 ## 验证命令和结果
 
@@ -129,12 +144,14 @@ Supabase：
 ```powershell
 npm test -- --run src/features/albums src/app/routes.test.tsx src/features/archive/ArchivePage.test.tsx
 npm test -- --run src/features/archive src/app/routes.test.tsx
+npm test -- --run src/features/library
 ```
 
 结果：
 
 - 当前 shell Node.js 为 `v20.20.2`，Album / routes / Archive 相关测试通过：5 个测试文件，19 个用例。
 - 当前 shell Node.js 为 `v20.20.2`，Archive / routes 相关测试通过：4 个测试文件，16 个用例。
+- 当前 shell Node.js 为 `v20.20.2`，Library 相关测试通过：2 个测试文件，7 个用例。
 
 本轮已执行轻量校验：
 
@@ -169,13 +186,16 @@ npm run build
 
 - 当前分支：`feature/mvp-foundation`
 - 跟踪分支：`origin/feature/mvp-foundation`
-- P0 CRUD、Supabase Schema 稳定化、Artist CRUD、Album CRUD 已提交并推送。
-- 本轮 Archive MVP 与匿名旅行者导入评估文档改动待提交。
+- P0 CRUD、Supabase Schema 稳定化、Artist CRUD、Album CRUD、Archive MVP 已提交并推送。
+- 本轮 Media Library MVP 改动待提交。
 
 ## 未完成事项
 
 - Archive Item 编辑 / 删除尚未实现。
 - Archive Item 目前只提供 Album 类型的手动输入；Artist / Song 类型条目留待后续补齐。
+- Media Asset 编辑 / 删除尚未实现。
+- Media Link 编辑 / 删除尚未实现。
+- Media Library 目前只管理元数据，不处理真实文件上传、播放器或 Supabase Storage bucket 初始化。
 - 匿名旅行者导入仍停留在评估文档阶段，未写正式导入代码。
 - Practice / Song / Artist 新增 UI 文案存在硬编码英文，后续可按 i18n 策略统一处理。
 - 完整测试与构建尚未运行。
@@ -183,9 +203,9 @@ npm run build
 
 ## 下一轮推荐任务
 
-建议先做：Archive MVP 收尾复核与提交。
+建议先做：Media Library MVP 收尾复核与提交。
 
-之后再进入：Media Library。
+之后再进入：匿名旅行者导入预览 MVP。
 
 ## 下一轮推荐提示词
 
@@ -196,12 +216,12 @@ npm run build
 - docs/PROJECT_STATUS.md
 - docs/NEXT_TASKS.md
 - docs/SESSION_HANDOFF.md
-- src/features/archive
+- src/features/library
 
-继续 docs/NEXT_TASKS.md 中的 Archive MVP 收尾复核与提交。
+继续 docs/NEXT_TASKS.md 中的 Media Library MVP 收尾复核与提交。
 不要扫描整个仓库。
 不要运行 npm install。
 不要做架构重构。
-只运行与 Archive 相关的测试；如需要完整测试或构建，请先说明原因。
+只运行与 Library 相关的测试；如需要完整测试或构建，请先说明原因。
 完成后中文总结。
 ```
