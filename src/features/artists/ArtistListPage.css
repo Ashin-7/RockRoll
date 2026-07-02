@@ -48,21 +48,64 @@
 
 .artists-add-form {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr)) auto;
-  gap: var(--space-3);
-  align-items: end;
+  gap: var(--space-5);
   border: 1px solid rgba(167, 162, 154, 0.16);
   border-radius: var(--radius-panel);
   background: rgba(34, 32, 31, 0.72);
   padding: var(--space-5);
 }
 
-.artists-add-form h2 {
+.artists-add-form__header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.artists-add-form h2,
+.artists-add-form h3 {
   margin: 0;
   font-family: var(--font-display);
-  font-size: 1.6rem;
   line-height: 1;
   text-transform: uppercase;
+}
+
+.artists-add-form h2 {
+  font-size: 1.6rem;
+}
+
+.artists-add-form h3 {
+  color: var(--color-silver);
+  font-size: 1.15rem;
+}
+
+.artists-add-form__section {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.artists-add-form__fields {
+  display: grid;
+  grid-template-columns: minmax(10rem, 1.5fr) minmax(8rem, 1fr) minmax(7rem, 0.8fr);
+  gap: var(--space-3);
+  align-items: end;
+}
+
+.artists-add-form__fields--notes {
+  grid-template-columns: minmax(12rem, 1fr) auto;
+}
+
+.artists-add-form__fields--notes label {
+  grid-column: 1 / -1;
+}
+
+.artists-add-form__fields--notes input {
+  grid-column: 1;
+}
+
+.artists-add-form__fields--notes button {
+  grid-column: 2;
+  grid-row: 2;
 }
 
 .artists-add-form label {
@@ -75,21 +118,96 @@
 }
 
 .artists-add-form input {
+  width: 100%;
+  line-height: 1;
+}
+
+.artists-add-form input,
+.artists-add-form button {
   min-height: 2.5rem;
-  border: 1px solid rgba(167, 162, 154, 0.22);
   border-radius: 0.5rem;
-  background: rgba(17, 16, 15, 0.74);
-  color: var(--color-paper);
   padding: 0.65rem 0.75rem;
 }
 
+.artists-add-form input {
+  border: 1px solid rgba(167, 162, 154, 0.22);
+  background: rgba(17, 16, 15, 0.74);
+  color: var(--color-paper);
+}
+
 .artists-add-form button {
-  min-height: 2.5rem;
   border: 1px solid rgba(242, 169, 59, 0.42);
-  border-radius: 0.5rem;
   background: rgba(242, 169, 59, 0.16);
   color: var(--color-paper);
-  padding: 0.65rem 1rem;
+  padding-inline: 1rem;
+  white-space: nowrap;
+}
+
+.artists-add-form input:focus-visible,
+.artists-add-form button:focus-visible,
+.artist-table a:focus-visible {
+  outline: 2px solid var(--color-amber);
+  outline-offset: 3px;
+}
+
+.artist-table-wrap {
+  overflow-x: auto;
+  border: 1px solid rgba(167, 162, 154, 0.16);
+  border-radius: var(--radius-panel);
+  background: rgba(34, 32, 31, 0.66);
+}
+
+.artist-table {
+  width: 100%;
+  min-width: 44rem;
+  border-collapse: collapse;
+}
+
+.artist-table th,
+.artist-table td {
+  border-bottom: 1px solid rgba(167, 162, 154, 0.12);
+  padding: var(--space-4);
+  text-align: left;
+  vertical-align: top;
+}
+
+.artist-table thead th {
+  color: var(--color-silver);
+  font-size: 0.74rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.artist-table tbody th {
+  width: 28%;
+  font-family: var(--font-display);
+  font-size: 1.55rem;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.artist-table tbody tr:last-child th,
+.artist-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.artist-table a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.artist-table a:hover {
+  color: var(--color-amber);
+}
+
+.artist-table td {
+  color: var(--color-paper-muted);
+}
+
+.artist-table td:nth-child(2),
+.artist-table td:nth-child(3) {
+  color: var(--color-paper);
+  white-space: nowrap;
 }
 
 .artists-loading,
@@ -107,79 +225,6 @@
   color: var(--color-amber);
 }
 
-.artist-board {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--space-4);
-}
-
-.artist-card {
-  display: grid;
-  gap: var(--space-4);
-  border: 1px solid rgba(167, 162, 154, 0.16);
-  border-radius: var(--radius-panel);
-  background:
-    linear-gradient(180deg, rgba(58, 54, 51, 0.76), rgba(17, 16, 15, 0.78)),
-    radial-gradient(circle at 100% 0%, rgba(123, 30, 43, 0.2), transparent 14rem);
-  padding: var(--space-6);
-}
-
-.artist-card__header {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--space-4);
-}
-
-.artist-card h2 {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: 2.4rem;
-  line-height: 0.95;
-  text-transform: uppercase;
-}
-
-.artist-card h2 a {
-  color: inherit;
-  text-decoration: none;
-}
-
-.artist-card h2 a:hover,
-.artist-card h2 a:focus-visible {
-  color: var(--color-amber);
-}
-
-.artist-card__header span {
-  align-self: flex-start;
-  border: 1px solid rgba(242, 169, 59, 0.3);
-  border-radius: 999px;
-  color: var(--color-amber);
-  font-size: 0.75rem;
-  letter-spacing: 0.08em;
-  padding: 0.35rem 0.7rem;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
-.artist-card__meta {
-  display: grid;
-  gap: var(--space-3);
-  margin: 0;
-  border-top: 1px solid rgba(167, 162, 154, 0.16);
-  padding-top: var(--space-4);
-}
-
-.artist-card__meta dt {
-  color: var(--color-silver);
-  font-size: 0.74rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.artist-card__meta dd {
-  margin: var(--space-1) 0 0;
-  color: var(--color-paper-muted);
-}
-
 .artists-empty {
   border: 1px dashed rgba(167, 162, 154, 0.26);
   border-radius: var(--radius-panel);
@@ -188,9 +233,15 @@
 }
 
 @media (max-width: 1080px) {
-  .artists-add-form,
-  .artist-board {
+  .artists-add-form__fields,
+  .artists-add-form__fields--notes {
     grid-template-columns: 1fr;
+  }
+
+  .artists-add-form__fields--notes input,
+  .artists-add-form__fields--notes button {
+    grid-column: auto;
+    grid-row: auto;
   }
 }
 
@@ -202,5 +253,10 @@
 
   .artists-hero__summary {
     text-align: left;
+  }
+
+  .artists-add-form__header {
+    align-items: start;
+    flex-direction: column;
   }
 }

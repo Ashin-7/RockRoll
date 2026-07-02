@@ -148,54 +148,85 @@ export function AlbumDetailPage({
             <div>
               <p className="eyebrow">{t('albumDetail.eyebrow')}</p>
               <h1>{album.title}</h1>
-              <p>{album.artistName}</p>
+              <p>{album.artistName || t('albums.unknown')}</p>
             </div>
             <div className="album-detail-hero__actions">
               <span>{t(albumTypeMessageKeys[album.albumType])}</span>
               <button aria-label="Edit album" onClick={() => startEditing(album)} type="button">
-                Edit
+                {t('albumDetail.edit')}
               </button>
               <button aria-label="Delete album" disabled={isDeleting} onClick={handleDeleteAlbum} type="button">
-                Delete
+                {t('albumDetail.delete')}
               </button>
             </div>
           </div>
 
           {isEditing ? (
             <form className="album-detail-edit-form" onSubmit={handleUpdateAlbum}>
-              <h2>Edit album</h2>
+              <div className="album-detail-edit-form__header">
+                <p>{t('albumDetail.formMode')}</p>
+                <h2>{t('albumDetail.editAlbum')}</h2>
+              </div>
 
-              <label htmlFor="album-detail-title">{t('albums.titleLabel')}</label>
-              <input id="album-detail-title" onChange={(event) => setTitle(event.target.value)} required value={title} />
+              <fieldset className="album-detail-form-section">
+                <legend>
+                  <h3>{t('albums.identitySection')}</h3>
+                </legend>
+                <label htmlFor="album-detail-title">
+                  {t('albums.titleLabel')}
+                  <input id="album-detail-title" onChange={(event) => setTitle(event.target.value)} required value={title} />
+                </label>
+              </fieldset>
 
-              <label htmlFor="album-detail-release-year">{t('albums.releaseYearLabel')}</label>
-              <input
-                id="album-detail-release-year"
-                min="0"
-                onChange={(event) => setReleaseYear(event.target.value)}
-                type="number"
-                value={releaseYear}
-              />
+              <fieldset className="album-detail-form-section">
+                <legend>
+                  <h3>{t('albumDetail.releaseProfileSection')}</h3>
+                </legend>
+                <div className="album-detail-form-grid">
+                  <label htmlFor="album-detail-release-year">
+                    {t('albums.releaseYearLabel')}
+                    <input
+                      id="album-detail-release-year"
+                      min="0"
+                      onChange={(event) => setReleaseYear(event.target.value)}
+                      type="number"
+                      value={releaseYear}
+                    />
+                  </label>
 
-              <label htmlFor="album-detail-type">{t('albums.typeLabel')}</label>
-              <select
-                id="album-detail-type"
-                onChange={(event) => setAlbumType(event.target.value as AlbumType)}
-                value={albumType}
-              >
-                {albumTypes.map((type) => (
-                  <option key={type} value={type}>
-                    {t(albumTypeMessageKeys[type])}
-                  </option>
-                ))}
-              </select>
+                  <label htmlFor="album-detail-type">
+                    {t('albums.typeLabel')}
+                    <select
+                      id="album-detail-type"
+                      onChange={(event) => setAlbumType(event.target.value as AlbumType)}
+                      value={albumType}
+                    >
+                      {albumTypes.map((type) => (
+                        <option key={type} value={type}>
+                          {t(albumTypeMessageKeys[type])}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+              </fieldset>
 
-              <label htmlFor="album-detail-notes">{t('albums.notesLabel')}</label>
-              <textarea id="album-detail-notes" onChange={(event) => setNotes(event.target.value)} value={notes} />
+              <fieldset className="album-detail-form-section">
+                <legend>
+                  <h3>{t('albums.notesSection')}</h3>
+                </legend>
+                <label htmlFor="album-detail-notes">
+                  {t('albums.notesLabel')}
+                  <textarea id="album-detail-notes" onChange={(event) => setNotes(event.target.value)} value={notes} />
+                </label>
+              </fieldset>
 
-              <button disabled={isSaving} type="submit">
-                Save album
-              </button>
+              <div className="album-detail-edit-form__actions">
+                <span>{t('albumDetail.unsavedHint')}</span>
+                <button disabled={isSaving} type="submit">
+                  {isSaving ? t('albumDetail.saving') : t('albumDetail.saveAlbum')}
+                </button>
+              </div>
             </form>
           ) : null}
 
@@ -205,15 +236,25 @@ export function AlbumDetailPage({
               <dd>{album.releaseYear ?? t('albums.unknown')}</dd>
             </div>
             <div>
-              <dt>{t('albums.typeLabel')}</dt>
+              <dt>{t('albumDetail.albumType')}</dt>
               <dd>{t(albumTypeMessageKeys[album.albumType])}</dd>
+            </div>
+            <div>
+              <dt>{t('albums.columnArtist')}</dt>
+              <dd>{album.artistName || t('albums.unknown')}</dd>
             </div>
           </dl>
 
-          <section className="album-detail-notes">
-            <h2>{t('albums.notes')}</h2>
-            <p>{album.notes || t('albums.noNotes')}</p>
-          </section>
+          <div className="album-detail-panels">
+            <section className="album-detail-panel">
+              <h2>{t('albums.notesSection')}</h2>
+              <p>{album.notes || t('albums.noNotes')}</p>
+            </section>
+            <section className="album-detail-panel">
+              <h2>{t('albumDetail.relatedSection')}</h2>
+              <p>{t('albumDetail.relatedHint')}</p>
+            </section>
+          </div>
         </>
       ) : null}
     </section>

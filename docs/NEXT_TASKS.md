@@ -65,6 +65,40 @@
 
 ## P2
 
+### CRUD UI Pattern 推广
+
+目标：以 Backstage 后台主页为视觉母版，将剩余 CRUD 模块逐步统一到 Figma 试点后的 Pattern。
+
+状态：进行中。
+
+本轮进展：
+
+- [x] Artists 列表 / 详情 / 表单 UI Pattern 已完成。
+- [x] Albums 列表 / 详情 / 表单 UI Pattern 已完成。
+- [x] Archive 列表 / 详情 / 添加条目 UI Pattern 已完成。
+- [ ] Library 媒体资产列表 / 创建表单 UI Pattern。
+- [ ] Inbox 导入候选 / Anontraveler 预览 UI Pattern。
+
+已完成范围：
+
+- Figma 试点文件：`https://www.figma.com/design/WDwfCn1vaZgWDNWUS70CgH`
+- Songs 列表页 / 详情页 / 编辑表单首轮替换。
+- Practice History / PracticeSessionForm 首轮替换。
+- Artists 列表页 / 详情页 / 新增与编辑表单首轮替换。
+- Albums 列表页 / 详情页 / 新增与编辑表单首轮替换。
+- Archive 列表页 / 详情页 / 添加条目表单首轮替换。
+
+未完成范围：
+
+- Library 媒体资产列表 / 创建表单 UI Pattern。
+- Inbox 导入候选 / Anontraveler 预览 UI Pattern。
+
+下一步建议先做：
+
+1. Library CRUD UI Pattern。
+2. Inbox 导入候选 / Anontraveler 预览 UI Pattern。
+3. Practice Filter / Sort。
+
 ### Media Library
 
 目标：围绕媒体资产建立最小管理流程。
@@ -127,8 +161,18 @@
 
 ## 推荐执行顺序
 
-1. 匿名旅行者导入预览 MVP 收尾复核与提交。
-2. Practice Filter / Sort。
-3. Practice Goal Duration。
+1. CRUD UI Pattern 推广：Library。
+2. CRUD UI Pattern 推广：Inbox。
+3. Practice Filter / Sort。
+4. Practice Goal Duration。
 
-当前建议先完成匿名旅行者导入预览 MVP 的提交，再开启新对话处理 Practice Filter / Sort。
+当前建议先开启新对话继续 Library CRUD UI Pattern，不扩大当前上下文。
+
+下一轮建议只读取：
+
+- `AGENTS.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/NEXT_TASKS.md`
+- `docs/SESSION_HANDOFF.md`
+- `src/features/library`
+- `src/i18n/messages.ts`

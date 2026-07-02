@@ -15,14 +15,18 @@ const album: AlbumDetail = {
 };
 
 describe('AlbumDetailPage', () => {
-  it('loads and renders an album detail', async () => {
+  it('loads and renders an album detail in the dossier pattern', async () => {
     renderWithI18n(<AlbumDetailPage albumId="album-1" onLoadAlbum={vi.fn().mockResolvedValue(album)} />);
 
     expect(screen.getByText('Loading album detail...')).toBeInTheDocument();
     expect(await screen.findByText('Axis: Bold as Love')).toBeInTheDocument();
-    expect(screen.getByText('Jimi Hendrix')).toBeInTheDocument();
+    expect(screen.getAllByText('Jimi Hendrix').length).toBeGreaterThan(0);
     expect(screen.getByText('1967')).toBeInTheDocument();
     expect(screen.getByText('Second studio album.')).toBeInTheDocument();
+    expect(screen.getByText('Album type')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Archive notes' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Related' })).toBeInTheDocument();
+    expect(screen.getByText('Songs, media links, archive collections, and artist relationships will collect here as the MVP grows.')).toBeInTheDocument();
   });
 
   it('edits an album and reloads its detail', async () => {
@@ -41,6 +45,12 @@ describe('AlbumDetailPage', () => {
     expect(await screen.findByText('Axis: Bold as Love')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Edit album' }));
+
+    expect(screen.getByText('Album / edit')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Identity' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Release profile' })).toBeInTheDocument();
+    expect(screen.getAllByRole('heading', { name: 'Archive notes' }).length).toBeGreaterThan(0);
+
     await user.clear(screen.getByLabelText('Title'));
     await user.type(screen.getByLabelText('Title'), 'Electric Ladyland');
     await user.clear(screen.getByLabelText('Release year'));

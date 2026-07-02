@@ -22,8 +22,12 @@ describe('ArtistListPage', () => {
 
     expect(screen.getByText('Loading artists...')).toBeInTheDocument();
     expect(await screen.findByText('Jimi Hendrix')).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Artist' })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Country' })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Activity' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Jimi Hendrix' })).toHaveAttribute('href', '#artist/artist-1');
     expect(screen.getByText('US')).toBeInTheDocument();
+    expect(screen.getByText('1942-1970')).toBeInTheDocument();
     expect(screen.getByText('Electric blues vocabulary.')).toBeInTheDocument();
   });
 
@@ -45,6 +49,9 @@ describe('ArtistListPage', () => {
     const user = userEvent.setup();
 
     renderWithI18n(<ArtistListPage onCreateArtist={createArtist} onLoadArtists={loadArtists} />);
+
+    expect(await screen.findByRole('heading', { name: 'Identity' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Archive notes' })).toBeInTheDocument();
 
     await user.type(await screen.findByLabelText('Name'), 'Jimi Hendrix');
     await user.type(screen.getByLabelText('Country'), 'US');

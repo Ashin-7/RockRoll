@@ -157,58 +157,85 @@ export function SongDetailPage({
             </div>
             <div className="song-detail-hero__actions">
               <span>{t(songStatusMessageKeys[song.status])}</span>
-              <button aria-label="Edit song" onClick={() => startEditing(song)} type="button">
-                Edit
+              <button aria-label={t('songDetail.editSong')} onClick={() => startEditing(song)} type="button">
+                {t('songDetail.edit')}
               </button>
-              <button aria-label="Delete song" disabled={isDeleting} onClick={handleDeleteSong} type="button">
-                Delete
+              <button aria-label={t('songDetail.deleteSong')} disabled={isDeleting} onClick={handleDeleteSong} type="button">
+                {t('songDetail.delete')}
               </button>
             </div>
           </div>
 
           {isEditing ? (
             <form className="song-detail-edit-form" onSubmit={handleUpdateSong}>
-              <h2>Edit song</h2>
+              <div className="song-detail-edit-form__header">
+                <p className="eyebrow">{t('songDetail.formMode')}</p>
+                <h2>{t('songDetail.editSong')}</h2>
+              </div>
 
-              <label htmlFor="song-detail-title">Title</label>
-              <input id="song-detail-title" onChange={(event) => setTitle(event.target.value)} required value={title} />
+              <section className="song-detail-edit-form__section">
+                <h3>{t('songDetail.identitySection')}</h3>
+                <div className="song-detail-edit-form__field">
+                  <label htmlFor="song-detail-title">{t('songs.titleLabel')}</label>
+                  <input id="song-detail-title" onChange={(event) => setTitle(event.target.value)} required value={title} />
+                </div>
+              </section>
 
-              <label htmlFor="song-detail-status">Status</label>
-              <select id="song-detail-status" onChange={(event) => setStatus(event.target.value as SongStatus)} value={status}>
-                {songStatuses.map((songStatus) => (
-                  <option key={songStatus} value={songStatus}>
-                    {t(songStatusMessageKeys[songStatus])}
-                  </option>
-                ))}
-              </select>
+              <section className="song-detail-edit-form__section song-detail-edit-form__section--grid">
+                <h3>{t('songDetail.practiceProfileSection')}</h3>
+                <div className="song-detail-edit-form__field">
+                  <label htmlFor="song-detail-status">{t('songs.statusLabel')}</label>
+                  <select id="song-detail-status" onChange={(event) => setStatus(event.target.value as SongStatus)} value={status}>
+                    {songStatuses.map((songStatus) => (
+                      <option key={songStatus} value={songStatus}>
+                        {t(songStatusMessageKeys[songStatus])}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-              <label htmlFor="song-detail-difficulty">Difficulty</label>
-              <input
-                id="song-detail-difficulty"
-                max="5"
-                min="1"
-                onChange={(event) => setDifficulty(event.target.value)}
-                type="number"
-                value={difficulty}
-              />
+                <div className="song-detail-edit-form__field">
+                  <label htmlFor="song-detail-difficulty">{t('songs.difficultyLabel')}</label>
+                  <input
+                    id="song-detail-difficulty"
+                    max="5"
+                    min="1"
+                    onChange={(event) => setDifficulty(event.target.value)}
+                    type="number"
+                    value={difficulty}
+                  />
+                </div>
 
-              <label htmlFor="song-detail-release-year">Release year</label>
-              <input
-                id="song-detail-release-year"
-                onChange={(event) => setReleaseYear(event.target.value)}
-                type="number"
-                value={releaseYear}
-              />
+                <div className="song-detail-edit-form__field">
+                  <label htmlFor="song-detail-release-year">{t('songDetail.releaseYear')}</label>
+                  <input
+                    id="song-detail-release-year"
+                    onChange={(event) => setReleaseYear(event.target.value)}
+                    type="number"
+                    value={releaseYear}
+                  />
+                </div>
 
-              <label htmlFor="song-detail-bpm">BPM</label>
-              <input id="song-detail-bpm" min="1" onChange={(event) => setBpm(event.target.value)} type="number" value={bpm} />
+                <div className="song-detail-edit-form__field">
+                  <label htmlFor="song-detail-bpm">{t('practice.bpm')}</label>
+                  <input id="song-detail-bpm" min="1" onChange={(event) => setBpm(event.target.value)} type="number" value={bpm} />
+                </div>
+              </section>
 
-              <label htmlFor="song-detail-notes">Notes</label>
-              <textarea id="song-detail-notes" onChange={(event) => setNotes(event.target.value)} value={notes} />
+              <section className="song-detail-edit-form__section">
+                <h3>{t('songDetail.notes')}</h3>
+                <div className="song-detail-edit-form__field">
+                  <label htmlFor="song-detail-notes">{t('songDetail.notes')}</label>
+                  <textarea id="song-detail-notes" onChange={(event) => setNotes(event.target.value)} value={notes} />
+                </div>
+              </section>
 
-              <button disabled={isSaving} type="submit">
-                Save song
-              </button>
+              <div className="song-detail-edit-form__actions">
+                <span>{isSaving ? t('songDetail.saving') : t('songDetail.unsavedHint')}</span>
+                <button disabled={isSaving} type="submit">
+                  {t('songDetail.saveSong')}
+                </button>
+              </div>
             </form>
           ) : null}
 
@@ -228,8 +255,14 @@ export function SongDetailPage({
           </dl>
 
           <section className="song-detail-notes">
-            <h2>{t('songDetail.notes')}</h2>
-            <p>{song.notes || t('songDetail.noNotes')}</p>
+            <div>
+              <h2>{t('songDetail.notes')}</h2>
+              <p>{song.notes || t('songDetail.noNotes')}</p>
+            </div>
+            <aside className="song-detail-related" aria-label={t('songDetail.related')}>
+              <h2>{t('songDetail.related')}</h2>
+              <p>{t('songDetail.relatedHint')}</p>
+            </aside>
           </section>
         </>
       ) : null}

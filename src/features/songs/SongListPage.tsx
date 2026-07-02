@@ -123,65 +123,85 @@ export function SongListPage({ songs, onCreateSong = createSong, onLoadSongs = l
 
       <form className="songs-add-form" onSubmit={handleCreateSong}>
         <h2>{t('songs.addTitle')}</h2>
-        <label htmlFor="song-title">{t('songs.titleLabel')}</label>
-        <input
-          id="song-title"
-          onChange={(event) => setTitle(event.target.value)}
-          required
-          type="text"
-          value={title}
-        />
 
-        <label htmlFor="song-status">{t('songs.statusLabel')}</label>
-        <select id="song-status" onChange={(event) => setStatus(event.target.value as SongStatus)} value={status}>
-          {songStatuses.map((songStatus) => (
-            <option key={songStatus} value={songStatus}>
-              {t(songStatusMessageKeys[songStatus])}
-            </option>
-          ))}
-        </select>
+        <div className="songs-add-form__field songs-add-form__field--title">
+          <label htmlFor="song-title">{t('songs.titleLabel')}</label>
+          <input
+            id="song-title"
+            onChange={(event) => setTitle(event.target.value)}
+            required
+            type="text"
+            value={title}
+          />
+        </div>
 
-        <label htmlFor="song-difficulty">{t('songs.difficultyLabel')}</label>
-        <select id="song-difficulty" onChange={(event) => setDifficulty(event.target.value)} value={difficulty}>
-          <option value="">{t('songs.noDifficulty')}</option>
-          {[1, 2, 3, 4, 5].map((value) => (
-            <option key={value} value={value}>
-              {value}
-            </option>
-          ))}
-        </select>
+        <div className="songs-add-form__field">
+          <label htmlFor="song-status">{t('songs.statusLabel')}</label>
+          <select id="song-status" onChange={(event) => setStatus(event.target.value as SongStatus)} value={status}>
+            {songStatuses.map((songStatus) => (
+              <option key={songStatus} value={songStatus}>
+                {t(songStatusMessageKeys[songStatus])}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="songs-add-form__field">
+          <label htmlFor="song-difficulty">{t('songs.difficultyLabel')}</label>
+          <select id="song-difficulty" onChange={(event) => setDifficulty(event.target.value)} value={difficulty}>
+            <option value="">{t('songs.noDifficulty')}</option>
+            {[1, 2, 3, 4, 5].map((value) => (
+              <option key={value} value={value}>
+                {value}
+              </option>
+            ))}
+          </select>
+        </div>
 
         <button type="submit">{t('songs.addSubmit')}</button>
       </form>
 
-      {message ? <p className="songs-message" role="status">{message}</p> : null}
-      {error ? <p className="songs-error" role="alert">{error}</p> : null}
-      {isLoading ? <p className="songs-loading">{t('songs.loading')}</p> : null}
+      <div className="songs-feedback">
+        {message ? <p className="songs-message" role="status">{message}</p> : null}
+        {error ? <p className="songs-error" role="alert">{error}</p> : null}
+        {isLoading ? <p className="songs-loading">{t('songs.loading')}</p> : null}
+      </div>
 
       {!isLoading && displaySongs.length === 0 ? (
         <p className="songs-empty">{t('songs.empty')}</p>
       ) : null}
 
       {!isLoading && displaySongs.length > 0 ? (
-        <div className="song-board">
+        <div className="song-board" role="list" aria-label={t('songs.title')}>
+          <div className="song-board__header" aria-hidden="true">
+            <span>{t('songs.titleLabel')}</span>
+            <span>{t('songs.statusLabel')}</span>
+            <span>{t('songs.difficultyLabel')}</span>
+            <span>{t('songs.openDetail')}</span>
+          </div>
           {displaySongs.map((song) => (
-            <article className="song-card" key={song.id}>
-              <div className="song-card__header">
+            <article className="song-card" key={song.id} role="listitem">
+              <div className="song-card__identity">
                 <div>
                   <h2>
                     <a href={`#song/${encodeURIComponent(song.id)}`}>{song.title}</a>
                   </h2>
                   <p className="song-card__artist">{song.artistName}</p>
                 </div>
-                <span className="song-card__status">{t(songStatusMessageKeys[song.status])}</span>
               </div>
+              <span className="song-card__status">{t(songStatusMessageKeys[song.status])}</span>
               <div className="song-card__meta">
                 {song.difficulty ? (
                   <span>
-                    {t('songs.difficulty')} {song.difficulty}/5
+                    {song.difficulty}/5
                   </span>
-                ) : null}
+                ) : (
+                  <span>{t('songs.noDifficulty')}</span>
+                )}
               </div>
+              <a className="song-card__action" href={`#song/${encodeURIComponent(song.id)}`}>
+                {t('songs.openDetail')}
+              </a>
             </article>
           ))}
         </div>

@@ -273,7 +273,7 @@ export function PracticeHistoryPage({
       {!hasProvidedSessions && !isLoadingSession && session ? (
         <section className="practice-session-entry" aria-labelledby="practice-session-entry-title">
           <h2 id="practice-session-entry-title">
-            {editingSession ? 'Edit practice session' : t('practiceHistory.formTitle')}
+            {editingSession ? t('practiceHistory.editTitle') : t('practiceHistory.formTitle')}
           </h2>
           <PracticeSessionForm
             initialValues={
@@ -320,6 +320,13 @@ export function PracticeHistoryPage({
 
       {!isLoading && displaySessions.length > 0 ? (
         <div className="practice-history-list">
+          <div className="practice-history-list__header" aria-hidden="true">
+            <span>{t('practice.song')}</span>
+            <span>{t('practiceHistory.duration')}</span>
+            <span>{t('practiceHistory.bpm')}</span>
+            <span>{t('practiceHistory.focus')}</span>
+            <span>{t('songs.openDetail')}</span>
+          </div>
           {displaySessions.map((session) => (
             <article className="practice-history-card" key={session.id}>
               <header className="practice-history-card__header">
@@ -356,19 +363,19 @@ export function PracticeHistoryPage({
 
               <div className="practice-history-card__actions">
                 <button
-                  aria-label="Edit practice session"
+                  aria-label={t('practiceHistory.editSession')}
                   onClick={() => setEditingSession(session)}
                   type="button"
                 >
-                  Edit
+                  {t('songDetail.edit')}
                 </button>
                 <button
-                  aria-label="Delete practice session"
+                  aria-label={t('practiceHistory.deleteSession')}
                   disabled={deletingSessionId === session.id}
                   onClick={() => handleDeleteSession(session.id)}
                   type="button"
                 >
-                  Delete
+                  {t('songDetail.delete')}
                 </button>
               </div>
             </article>

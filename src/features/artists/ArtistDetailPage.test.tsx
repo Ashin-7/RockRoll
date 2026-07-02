@@ -21,6 +21,8 @@ describe('ArtistDetailPage', () => {
     expect(screen.getByText('Loading artist detail...')).toBeInTheDocument();
     expect(await screen.findByText('Jimi Hendrix')).toBeInTheDocument();
     expect(screen.getByText('US')).toBeInTheDocument();
+    expect(screen.getByText('Timeline')).toBeInTheDocument();
+    expect(screen.getByText('Related')).toBeInTheDocument();
     expect(screen.getByText('1942')).toBeInTheDocument();
     expect(screen.getByText('1970')).toBeInTheDocument();
     expect(screen.getByText('Electric blues vocabulary.')).toBeInTheDocument();
@@ -63,6 +65,9 @@ describe('ArtistDetailPage', () => {
 
     await user.click(screen.getByRole('button', { name: 'Edit artist' }));
 
+    expect(screen.getByRole('heading', { name: 'Identity' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Timeline' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Archive notes' })).toBeInTheDocument();
     expect(screen.getByLabelText('Name')).toHaveValue('Jimi Hendrix');
     expect(screen.getByLabelText('Country')).toHaveValue('US');
     expect(screen.getByLabelText('Begin year')).toHaveValue(1942);

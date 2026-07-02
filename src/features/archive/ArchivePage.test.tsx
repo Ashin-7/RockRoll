@@ -24,6 +24,9 @@ describe('ArchivePage', () => {
     expect(screen.getByText('Artists')).toBeInTheDocument();
     expect(screen.getByText('Albums')).toBeInTheDocument();
     expect(screen.getByText('Genres')).toBeInTheDocument();
+    expect(screen.getByText('Collection / create')).toBeInTheDocument();
+    expect(screen.getByText('Identity')).toBeInTheDocument();
+    expect(screen.getByText('Source profile')).toBeInTheDocument();
   });
 
   it('loads and renders archive collections', async () => {
@@ -36,6 +39,10 @@ describe('ArchivePage', () => {
       '#archive/collection-1',
     );
     expect(screen.getByText('anontraveler')).toBeInTheDocument();
+    expect(screen.getByText('Collection')).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Source' })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Type' })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Description' })).toBeInTheDocument();
   });
 
   it('creates an archive collection and refreshes the list', async () => {

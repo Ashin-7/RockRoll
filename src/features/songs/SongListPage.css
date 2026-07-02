@@ -49,13 +49,13 @@
 
 .songs-add-form {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr)) auto;
+  grid-template-columns: minmax(9rem, 0.5fr) minmax(16rem, 1.4fr) minmax(10rem, 0.7fr) minmax(10rem, 0.7fr) auto;
   gap: var(--space-3);
   align-items: end;
   border: 1px solid rgba(167, 162, 154, 0.16);
   border-radius: var(--radius-panel);
   background: rgba(34, 32, 31, 0.72);
-  padding: var(--space-5);
+  padding: var(--space-6);
 }
 
 .songs-add-form h2 {
@@ -66,9 +66,16 @@
   text-transform: uppercase;
 }
 
-.songs-add-form label {
+.songs-add-form__field {
   display: grid;
   gap: var(--space-2);
+}
+
+.songs-add-form__field--title {
+  min-width: 0;
+}
+
+.songs-add-form label {
   color: var(--color-silver);
   font-size: 0.74rem;
   letter-spacing: 0.12em;
@@ -94,6 +101,16 @@
   padding: 0.65rem 1rem;
 }
 
+.songs-add-form button:hover,
+.songs-add-form button:focus-visible {
+  background: rgba(242, 169, 59, 0.24);
+}
+
+.songs-feedback {
+  display: grid;
+  gap: var(--space-2);
+}
+
 .songs-loading,
 .songs-message,
 .songs-error {
@@ -111,31 +128,53 @@
 
 .song-board {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
+  border: 1px solid rgba(167, 162, 154, 0.16);
+  border-radius: var(--radius-panel);
+  background: rgba(34, 32, 31, 0.72);
+  padding: var(--space-4);
+}
+
+.song-board__header {
+  display: grid;
+  grid-template-columns: minmax(16rem, 1.7fr) minmax(8rem, 0.75fr) minmax(7rem, 0.55fr) minmax(5rem, 0.4fr);
   gap: var(--space-4);
+  color: var(--color-silver);
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  padding: 0 var(--space-4);
+  text-transform: uppercase;
 }
 
 .song-card {
   display: grid;
+  grid-template-columns: minmax(16rem, 1.7fr) minmax(8rem, 0.75fr) minmax(7rem, 0.55fr) minmax(5rem, 0.4fr);
   gap: var(--space-4);
+  align-items: center;
   border: 1px solid rgba(167, 162, 154, 0.16);
-  border-radius: var(--radius-panel);
+  border-radius: 0.875rem;
   background:
     linear-gradient(180deg, rgba(58, 54, 51, 0.76), rgba(17, 16, 15, 0.78)),
-    radial-gradient(circle at 0% 0%, rgba(242, 169, 59, 0.14), transparent 14rem);
-  padding: var(--space-6);
+    radial-gradient(circle at 0% 0%, rgba(242, 169, 59, 0.12), transparent 12rem);
+  padding: var(--space-4);
 }
 
-.song-card__header {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--space-4);
+.song-card:hover,
+.song-card:focus-within {
+  border-color: rgba(242, 169, 59, 0.34);
+  background:
+    linear-gradient(180deg, rgba(58, 54, 51, 0.86), rgba(17, 16, 15, 0.82)),
+    radial-gradient(circle at 0% 0%, rgba(242, 169, 59, 0.16), transparent 12rem);
+}
+
+.song-card__identity {
+  min-width: 0;
 }
 
 .song-card h2 {
   margin: 0;
   font-family: var(--font-display);
-  font-size: 2.4rem;
+  font-size: clamp(1.7rem, 3vw, 2.25rem);
   line-height: 0.95;
   text-transform: uppercase;
 }
@@ -158,10 +197,13 @@
 
 .song-card__artist {
   margin: var(--space-2) 0 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .song-card__status {
-  align-self: flex-start;
+  justify-self: start;
   border: 1px solid rgba(242, 169, 59, 0.3);
   border-radius: 999px;
   color: var(--color-amber);
@@ -173,11 +215,8 @@
 }
 
 .song-card__meta {
-  display: grid;
-  gap: var(--space-2);
-  border-top: 1px solid rgba(167, 162, 154, 0.16);
-  border-bottom: 1px solid rgba(167, 162, 154, 0.16);
-  padding: var(--space-4) 0;
+  color: var(--color-paper);
+  font-weight: 700;
 }
 
 .song-card__focus {
@@ -201,6 +240,21 @@
   line-height: 1.6;
 }
 
+.song-card__action {
+  justify-self: end;
+  color: var(--color-amber);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.song-card__action:hover,
+.song-card__action:focus-visible {
+  color: var(--color-paper);
+}
+
 .songs-empty {
   border: 1px dashed rgba(167, 162, 154, 0.26);
   border-radius: var(--radius-panel);
@@ -209,9 +263,20 @@
 }
 
 @media (max-width: 1080px) {
-  .songs-add-form,
-  .song-board {
+  .songs-add-form {
     grid-template-columns: 1fr;
+  }
+
+  .song-board__header {
+    display: none;
+  }
+
+  .song-card {
+    grid-template-columns: 1fr;
+  }
+
+  .song-card__action {
+    justify-self: start;
   }
 }
 

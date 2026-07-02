@@ -25,6 +25,19 @@ describe('AlbumListPage', () => {
     expect(screen.getByRole('link', { name: 'Axis: Bold as Love' })).toHaveAttribute('href', '#album/album-1');
     expect(screen.getByText('Jimi Hendrix')).toBeInTheDocument();
     expect(screen.getByText('1967')).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Album' })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Artist' })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Release' })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Type' })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Notes' })).toBeInTheDocument();
+  });
+
+  it('renders the create form in CRUD pattern sections', async () => {
+    renderWithI18n(<AlbumListPage onLoadAlbums={vi.fn().mockResolvedValue([])} />);
+
+    expect(await screen.findByRole('heading', { name: 'Identity' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Archive notes' })).toBeInTheDocument();
+    expect(screen.getByText('Album / create')).toBeInTheDocument();
   });
 
   it('renders empty state when no albums exist', async () => {

@@ -10,6 +10,22 @@ interface ArtistListPageProps {
   onLoadArtists?: () => Promise<ArtistSummary[]>;
 }
 
+function formatArtistActivity(artist: ArtistSummary, unknownLabel: string, stillActiveLabel: string): string {
+  if (!artist.beginYear && !artist.endYear) {
+    return unknownLabel;
+  }
+
+  if (artist.beginYear && !artist.endYear) {
+    return `${artist.beginYear}-${stillActiveLabel}`;
+  }
+
+  if (!artist.beginYear && artist.endYear) {
+    return `${unknownLabel}-${artist.endYear}`;
+  }
+
+  return `${artist.beginYear}-${artist.endYear}`;
+}
+
 export function ArtistListPage({
   artists,
   onCreateArtist = createArtist,
@@ -119,26 +135,39 @@ export function ArtistListPage({
       </div>
 
       <form className="artists-add-form" onSubmit={handleCreateArtist}>
-        <h2>{t('artists.addTitle')}</h2>
-        <label htmlFor="artist-name">{t('artists.nameLabel')}</label>
-        <input id="artist-name" onChange={(event) => setName(event.target.value)} required type="text" value={name} />
+        <div className="artists-add-form__header">
+          <p className="eyebrow">{t('artists.formMode')}</p>
+          <h2>{t('artists.addTitle')}</h2>
+        </div>
 
-        <label htmlFor="artist-country">{t('artists.countryLabel')}</label>
-        <input id="artist-country" onChange={(event) => setCountry(event.target.value)} type="text" value={country} />
+        <div className="artists-add-form__section">
+          <h3>{t('artists.identitySection')}</h3>
+          <div className="artists-add-form__fields">
+            <label htmlFor="artist-name">{t('artists.nameLabel')}</label>
+            <input id="artist-name" onChange={(event) => setName(event.target.value)} required type="text" value={name} />
 
-        <label htmlFor="artist-begin-year">{t('artists.beginYearLabel')}</label>
-        <input
-          id="artist-begin-year"
-          min="0"
-          onChange={(event) => setBeginYear(event.target.value)}
-          type="number"
-          value={beginYear}
-        />
+            <label htmlFor="artist-country">{t('artists.countryLabel')}</label>
+            <input id="artist-country" onChange={(event) => setCountry(event.target.value)} type="text" value={country} />
 
-        <label htmlFor="artist-notes">{t('artists.notesLabel')}</label>
-        <input id="artist-notes" onChange={(event) => setNotes(event.target.value)} type="text" value={notes} />
+            <label htmlFor="artist-begin-year">{t('artists.beginYearLabel')}</label>
+            <input
+              id="artist-begin-year"
+              min="0"
+              onChange={(event) => setBeginYear(event.target.value)}
+              type="number"
+              value={beginYear}
+            />
+          </div>
+        </div>
 
-        <button type="submit">{t('artists.addSubmit')}</button>
+        <div className="artists-add-form__section">
+          <h3>{t('artists.notesSection')}</h3>
+          <div className="artists-add-form__fields artists-add-form__fields--notes">
+            <label htmlFor="artist-notes">{t('artists.notesLabel')}</label>
+            <input id="artist-notes" onChange={(event) => setNotes(event.target.value)} type="text" value={notes} />
+            <button type="submit">{t('artists.addSubmit')}</button>
+          </div>
+        </div>
       </form>
 
       {message ? <p className="artists-message" role="status">{message}</p> : null}
@@ -148,27 +177,29 @@ export function ArtistListPage({
       {!isLoading && displayArtists.length === 0 ? <p className="artists-empty">{t('artists.empty')}</p> : null}
 
       {!isLoading && displayArtists.length > 0 ? (
-        <div className="artist-board">
-          {displayArtists.map((artist) => (
-            <article className="artist-card" key={artist.id}>
-              <div className="artist-card__header">
-                <h2>
-                  <a href={`#artist/${encodeURIComponent(artist.id)}`}>{artist.name}</a>
-                </h2>
-                {artist.country ? <span>{artist.country}</span> : null}
-              </div>
-              <dl className="artist-card__meta">
-                <div>
-                  <dt>{t('artists.beginYear')}</dt>
-                  <dd>{artist.beginYear ?? t('artists.unknown')}</dd>
-                </div>
-                <div>
-                  <dt>{t('artists.notes')}</dt>
-                  <dd>{artist.notes || t('artists.noNotes')}</dd>
-                </div>
-              </dl>
-            </article>
-          ))}
+        <div className="artist-table-wrap">
+          <table className="artist-table">
+            <thead>
+              <tr>
+                <th scope="col">{t('artists.columnArtist')}</th>
+                <th scope="col">{t('artists.columnCountry')}</th>
+                <th scope="col">{t('artists.columnActivity')}</th>
+                <th scope="col">{t('artists.columnNotes')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {displayArtists.map((artist) => (
+                <tr key={artist.id}>
+                  <th scope="row">
+                    <a href={`#artist/${encodeURIComponent(artist.id)}`}>{artist.name}</a>
+                  </th>
+                  <td>{artist.country || t('artistDetail.unknownCountry')}</td>
+                  <td>{formatArtistActivity(artist, t('artists.unknown'), t('artistDetail.stillActive'))}</td>
+                  <td>{artist.notes || t('artists.noNotes')}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       ) : null}
     </section>

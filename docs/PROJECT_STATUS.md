@@ -1,6 +1,50 @@
 # RockRoll 项目状态
 
+## 本轮补充：Archive CRUD UI Pattern
+
+- 已完成 Archive CRUD UI Pattern 推广：
+  - Archive 首页调整为后台式 Hero、资料分区、Collection 行列表。
+  - Archive Collection 新增表单调整为 Identity / Source profile 分区。
+  - Archive Collection 详情页补齐对象 Hero、Source / Items filed / Source URL 指标卡。
+  - Archive Item 列表调整为行列表，添加 Album Item 表单调整为 Album link / Placement 分区。
+- 本轮仅运行 Archive 相关测试：
+  - `npm test -- --run src/features/archive`
+  - 结果：3 个测试文件、10 个用例通过。
+- 未运行完整测试与构建：
+  - 用户要求只运行 Archive 相关测试。
+  - 本轮未修改依赖、路由、Supabase schema 或构建配置。
+
 更新时间：2026-07-02
+
+## 本轮补充：Albums CRUD UI Pattern
+
+- 已完成 Albums CRUD UI Pattern 推广：
+  - Album 列表页由卡片网格调整为后台式行列表。
+  - Album 新增表单调整为 Identity / Archive notes 分区。
+  - Album 详情页补齐对象 Hero、指标卡、Archive notes / Related 面板。
+  - Album 编辑表单调整为 Identity / Release profile / Archive notes 分区。
+- 本轮仅运行 Albums 相关测试：
+  - `npm test -- --run src/features/albums`
+  - 结果：3 个测试文件、14 个用例通过。
+- 未运行完整测试与构建：
+  - 用户要求只运行 Albums 相关测试。
+  - 本轮未修改依赖、路由、Supabase schema 或构建配置。
+
+更新时间：2026-07-02
+
+## 本轮补充：Artists CRUD UI Pattern
+
+- 已完成 Artists CRUD UI Pattern 推广：
+  - Artist 列表页由卡片网格调整为后台式行列表。
+  - Artist 新增表单调整为 Identity / Archive notes 分区。
+  - Artist 详情页补齐对象 Hero、指标卡、Timeline / Notes / Related 面板。
+  - Artist 编辑表单调整为 Identity / Timeline / Archive notes 分区。
+- 本轮仅运行 Artists 相关测试：
+  - `npm test -- --run src/features/artists`
+  - 结果：3 个测试文件、21 个用例通过。
+- 未运行完整测试与构建：
+  - 用户要求只运行 Artists 相关测试。
+  - 本轮未修改依赖、路由、Supabase schema 或构建配置。
 
 ## 当前项目阶段
 
@@ -10,6 +54,18 @@ MVP Foundation
 
 ## 本轮完成内容
 
+- 已完成 Figma CRUD UI Pattern 试点：
+  - 以 Backstage 后台主页为视觉母版。
+  - 创建 Songs 列表页 / 详情页 / 表单页的 Figma 设计基准。
+  - Figma 文件：`https://www.figma.com/design/WDwfCn1vaZgWDNWUS70CgH`
+- 已完成 Songs CRUD UI Pattern 首轮代码落地：
+  - Songs 列表页改为后台式行列表。
+  - Song Detail 改为对象详情 Hero、指标卡、Notes / Related 双栏。
+  - Song 编辑表单改为分区表单与底部保存操作区。
+- 已完成 Practice CRUD UI Pattern 首轮代码落地：
+  - Practice History 改为练习台 Hero、分区表单、统计信号卡、take log 行列表。
+  - PracticeSessionForm 改为 Song link / Tempo and time / Focus notes 分区。
+  - 保留现有保存、编辑、删除、未登录提示行为。
 - 已补充 `AGENTS.md` 的上下文节省规则与多轮迭代会话切换规则。
 - 已完成本地 P0 CRUD 增量实现：
   - Practice Delete
@@ -67,7 +123,7 @@ MVP Foundation
 
 ## 部分完成模块
 
-- Song Detail：已补齐本地编辑/删除入口，但仍需后续确认 i18n、列表同步与完整构建验证。
+- CRUD UI Pattern 推广：Songs 与 Practice 已完成首轮替换；Artists / Albums / Archive / Library / Inbox 尚未按新 Pattern 统一。
 - Inbox：已具备导入候选列表与匿名旅行者只读预览。
 
 ## 未开始模块
@@ -146,6 +202,8 @@ MVP Foundation
 本轮已运行并通过：
 
 ```powershell
+npm test -- --run src/features/songs
+npm test -- --run src/features/practice src/features/songs
 npm test -- --run src/features/albums src/app/routes.test.tsx src/features/archive/ArchivePage.test.tsx
 npm test -- --run src/features/archive src/app/routes.test.tsx
 npm test -- --run src/features/library
@@ -154,6 +212,8 @@ npm test -- --run src/features/inbox
 
 结果：
 
+- 当前 shell Node.js 为 `v20.20.2`，Songs 相关测试通过：3 个测试文件，23 个用例。
+- 当前 shell Node.js 为 `v20.20.2`，Practice / Songs 相关测试通过：7 个测试文件，46 个用例。
 - 当前 shell Node.js 为 `v20.20.2`，Album / routes / Archive 相关测试通过：5 个测试文件，19 个用例。
 - 当前 shell Node.js 为 `v20.20.2`，Archive / routes 相关测试通过：4 个测试文件，16 个用例。
 - 当前 shell Node.js 为 `v20.20.2`，Library 相关测试通过：2 个测试文件，7 个用例。
@@ -192,6 +252,6 @@ npm run build
 - 当前 shell 使用 Node.js v20.20.2 运行通过 Album 相关测试；若切回 Node.js v8.17.0，当前 Vite/Vitest 工具链仍不兼容。
 - Media Library 当前只管理元数据，不处理真实文件上传、播放器或 Supabase Storage bucket 初始化。
 - 匿名旅行者当前只做预览，不执行写库、去重、确认导入或批量抓取。
-- Practice / Song / Artist 新增 UI 文案目前存在硬编码英文，后续可按 i18n 策略补齐。
+- Artists / Albums / Archive / Library / Inbox 尚未统一到新的 CRUD UI Pattern。
 - 尚未运行完整测试与构建，合并前仍需至少执行一次。
 - Supabase migrations 尚未在真实 Supabase 实例上执行验证。

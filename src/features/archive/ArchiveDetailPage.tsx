@@ -93,72 +93,102 @@ export function ArchiveDetailPage({
 
   return (
     <section className="archive-detail-page">
-      <a href="#archive">{t('archiveDetail.backToArchive')}</a>
-      <p className="eyebrow">{t('archiveDetail.eyebrow')}</p>
-      <h1>{collection.title}</h1>
-      <dl className="archive-detail-meta">
+      <header className="archive-detail-hero">
+        <div>
+          <a href="#archive">{t('archiveDetail.backToArchive')}</a>
+          <p className="eyebrow">{t('archiveDetail.eyebrow')}</p>
+          <h1>{collection.title}</h1>
+          {collection.description ? <p>{collection.description}</p> : null}
+        </div>
+      </header>
+
+      <dl className="archive-detail-stats">
         <div>
           <dt>{t('archive.sourceLabel')}</dt>
           <dd>{collection.source}</dd>
         </div>
-        {collection.sourceUrl ? (
-          <div>
-            <dt>{t('archive.sourceUrlLabel')}</dt>
-            <dd>
-              <a href={collection.sourceUrl}>{collection.sourceUrl}</a>
-            </dd>
-          </div>
-        ) : null}
+        <div>
+          <dt>{t('archiveDetail.itemsFiled')}</dt>
+          <dd>{collection.items.length}</dd>
+        </div>
+        <div>
+          <dt>{t('archive.sourceUrlLabel')}</dt>
+          <dd>
+            {collection.sourceUrl ? <a href={collection.sourceUrl}>{collection.sourceUrl}</a> : t('archive.noDescription')}
+          </dd>
+        </div>
       </dl>
-      {collection.description ? <p>{collection.description}</p> : null}
 
-      <form className="archive-detail-form" onSubmit={handleSubmit}>
-        <h2>{t('archiveDetail.addAlbumItemTitle')}</h2>
-        <label>
-          {t('archiveDetail.albumIdLabel')}
-          <input
-            required
-            value={form.entityId}
-            onChange={(event) => setForm((current) => ({ ...current, entityId: event.target.value }))}
-          />
-        </label>
-        <label>
-          {t('archiveDetail.displayTitleLabel')}
-          <input
-            required
-            value={form.displayTitle}
-            onChange={(event) => setForm((current) => ({ ...current, displayTitle: event.target.value }))}
-          />
-        </label>
-        <label>
-          {t('archiveDetail.positionLabel')}
-          <input
-            min="1"
-            type="number"
-            value={form.position}
-            onChange={(event) => setForm((current) => ({ ...current, position: event.target.value }))}
-          />
-        </label>
-        <label>
-          {t('archiveDetail.noteLabel')}
-          <textarea
-            value={form.note}
-            onChange={(event) => setForm((current) => ({ ...current, note: event.target.value }))}
-          />
-        </label>
-        <button type="submit">{t('archiveDetail.addAlbumItemSubmit')}</button>
-      </form>
+      <div className="archive-detail-layout">
+        <section className="archive-detail-items" aria-labelledby="archive-detail-items-title">
+          <div className="archive-detail-section-heading">
+            <p className="archive-detail-kicker">{t('archiveDetail.itemIndex')}</p>
+            <h2 id="archive-detail-items-title">{t('archiveDetail.itemsTitle')}</h2>
+          </div>
+          {collection.items.length === 0 ? <p>{t('archiveDetail.itemsEmpty')}</p> : null}
+          {collection.items.length > 0 ? (
+            <div className="archive-detail-table" role="table" aria-label={t('archiveDetail.itemsTitle')}>
+              <div className="archive-detail-table-row archive-detail-table-head" role="row">
+                <span role="columnheader">{t('archiveDetail.columnItem')}</span>
+                <span role="columnheader">{t('archiveDetail.columnPosition')}</span>
+                <span role="columnheader">{t('archiveDetail.columnNote')}</span>
+              </div>
+              {collection.items.map((item) => (
+                <article className="archive-detail-table-row" key={item.id} role="row">
+                  <h3 role="cell">{item.displayTitle}</h3>
+                  <p role="cell">{item.position ? `#${item.position}` : t('archiveDetail.noPosition')}</p>
+                  <p role="cell">{item.note || t('archiveDetail.noNote')}</p>
+                </article>
+              ))}
+            </div>
+          ) : null}
+        </section>
 
-      <div className="archive-detail-items">
-        <h2>{t('archiveDetail.itemsTitle')}</h2>
-        {collection.items.length === 0 ? <p>{t('archiveDetail.itemsEmpty')}</p> : null}
-        {collection.items.map((item) => (
-          <article key={item.id}>
-            <h3>{item.displayTitle}</h3>
-            {item.position ? <p>#{item.position}</p> : null}
-            {item.note ? <p>{item.note}</p> : null}
-          </article>
-        ))}
+        <form className="archive-detail-form" onSubmit={handleSubmit}>
+          <div className="archive-detail-form-heading">
+            <p className="archive-detail-form-mode">{t('archiveDetail.formMode')}</p>
+            <h2>{t('archiveDetail.addAlbumItemTitle')}</h2>
+          </div>
+          <fieldset>
+            <legend>{t('archiveDetail.albumLinkSection')}</legend>
+            <label>
+              {t('archiveDetail.albumIdLabel')}
+              <input
+                required
+                value={form.entityId}
+                onChange={(event) => setForm((current) => ({ ...current, entityId: event.target.value }))}
+              />
+            </label>
+            <label>
+              {t('archiveDetail.displayTitleLabel')}
+              <input
+                required
+                value={form.displayTitle}
+                onChange={(event) => setForm((current) => ({ ...current, displayTitle: event.target.value }))}
+              />
+            </label>
+          </fieldset>
+          <fieldset>
+            <legend>{t('archiveDetail.placementSection')}</legend>
+            <label>
+              {t('archiveDetail.positionLabel')}
+              <input
+                min="1"
+                type="number"
+                value={form.position}
+                onChange={(event) => setForm((current) => ({ ...current, position: event.target.value }))}
+              />
+            </label>
+            <label>
+              {t('archiveDetail.noteLabel')}
+              <textarea
+                value={form.note}
+                onChange={(event) => setForm((current) => ({ ...current, note: event.target.value }))}
+              />
+            </label>
+          </fieldset>
+          <button type="submit">{t('archiveDetail.addAlbumItemSubmit')}</button>
+        </form>
       </div>
     </section>
   );

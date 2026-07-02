@@ -47,73 +47,95 @@ export function PracticeSessionForm({ initialValues, onSave = createPracticeSess
   }
 
   return (
-    <form onSubmit={handleSubmit}>
-      {songs.length > 0 ? (
-        <>
-          <label htmlFor="songId">{t('practice.song')}</label>
-          <select id="songId" value={songId} onChange={(event) => setSongId(event.target.value)}>
-            <option value="">{t('practice.noSong')}</option>
-            {songs.map((song) => (
-              <option key={song.id} value={song.id}>
-                {song.title}
-              </option>
-            ))}
-          </select>
-        </>
-      ) : null}
+    <form className="practice-session-form" onSubmit={handleSubmit}>
+      <section className="practice-session-form__section">
+        <h3>{t('practiceHistory.formSongSection')}</h3>
+        {songs.length > 0 ? (
+          <div className="practice-session-form__field">
+            <label htmlFor="songId">{t('practice.song')}</label>
+            <select id="songId" value={songId} onChange={(event) => setSongId(event.target.value)}>
+              <option value="">{t('practice.noSong')}</option>
+              {songs.map((song) => (
+                <option key={song.id} value={song.id}>
+                  {song.title}
+                </option>
+              ))}
+            </select>
+          </div>
+        ) : (
+          <p className="practice-session-form__hint">{t('practice.noSong')}</p>
+        )}
+      </section>
 
-      <label htmlFor="durationMinutes">{t('practice.duration')}</label>
-      <div className="practice-number-field">
-        <input
-          id="durationMinutes"
-          type="number"
-          min="1"
-          value={durationMinutes}
-          onChange={(event) => setDurationMinutes(event.target.value)}
-          required
-        />
-        <div className="practice-number-field__controls">
-          <button
-            type="button"
-            aria-label={t('practice.decreaseDuration')}
-            onClick={() => adjustNumberValue(durationMinutes, setDurationMinutes, -1)}
-          >
-            -
-          </button>
-          <button
-            type="button"
-            aria-label={t('practice.increaseDuration')}
-            onClick={() => adjustNumberValue(durationMinutes, setDurationMinutes, 1)}
-          >
-            +
-          </button>
+      <section className="practice-session-form__section practice-session-form__section--grid">
+        <h3>{t('practiceHistory.formTempoSection')}</h3>
+        <div className="practice-session-form__field">
+          <label htmlFor="durationMinutes">{t('practice.duration')}</label>
+          <div className="practice-number-field">
+            <input
+              id="durationMinutes"
+              type="number"
+              min="1"
+              value={durationMinutes}
+              onChange={(event) => setDurationMinutes(event.target.value)}
+              required
+            />
+            <div className="practice-number-field__controls">
+              <button
+                type="button"
+                aria-label={t('practice.decreaseDuration')}
+                onClick={() => adjustNumberValue(durationMinutes, setDurationMinutes, -1)}
+              >
+                -
+              </button>
+              <button
+                type="button"
+                aria-label={t('practice.increaseDuration')}
+                onClick={() => adjustNumberValue(durationMinutes, setDurationMinutes, 1)}
+              >
+                +
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
 
-      <label htmlFor="bpm">{t('practice.bpm')}</label>
-      <div className="practice-number-field">
-        <input id="bpm" type="number" min="1" value={bpm} onChange={(event) => setBpm(event.target.value)} />
-        <div className="practice-number-field__controls">
-          <button
-            type="button"
-            aria-label={t('practice.decreaseBpm')}
-            onClick={() => adjustNumberValue(bpm, setBpm, -1)}
-          >
-            -
-          </button>
-          <button type="button" aria-label={t('practice.increaseBpm')} onClick={() => adjustNumberValue(bpm, setBpm, 1)}>
-            +
-          </button>
+        <div className="practice-session-form__field">
+          <label htmlFor="bpm">{t('practice.bpm')}</label>
+          <div className="practice-number-field">
+            <input id="bpm" type="number" min="1" value={bpm} onChange={(event) => setBpm(event.target.value)} />
+            <div className="practice-number-field__controls">
+              <button
+                type="button"
+                aria-label={t('practice.decreaseBpm')}
+                onClick={() => adjustNumberValue(bpm, setBpm, -1)}
+              >
+                -
+              </button>
+              <button type="button" aria-label={t('practice.increaseBpm')} onClick={() => adjustNumberValue(bpm, setBpm, 1)}>
+                +
+              </button>
+            </div>
+          </div>
         </div>
+      </section>
+
+      <section className="practice-session-form__section">
+        <h3>{t('practiceHistory.formNotesSection')}</h3>
+        <div className="practice-session-form__field">
+          <label htmlFor="focusArea">{t('practice.focusArea')}</label>
+          <input id="focusArea" value={focusArea} onChange={(event) => setFocusArea(event.target.value)} />
+        </div>
+
+        <div className="practice-session-form__field">
+          <label htmlFor="reflection">{t('practice.reflection')}</label>
+          <textarea id="reflection" value={reflection} onChange={(event) => setReflection(event.target.value)} />
+        </div>
+      </section>
+
+      <div className="practice-session-form__actions">
+        <span>{t('practiceHistory.formSaveHint')}</span>
+        <button type="submit">{t('practice.save')}</button>
       </div>
-
-      <label htmlFor="focusArea">{t('practice.focusArea')}</label>
-      <input id="focusArea" value={focusArea} onChange={(event) => setFocusArea(event.target.value)} />
-
-      <label htmlFor="reflection">{t('practice.reflection')}</label>
-      <textarea id="reflection" value={reflection} onChange={(event) => setReflection(event.target.value)} />
-
-      <button type="submit">{t('practice.save')}</button>
     </form>
   );
 }

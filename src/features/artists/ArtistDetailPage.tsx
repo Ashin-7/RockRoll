@@ -125,6 +125,22 @@ export function ArtistDetailPage({
     }
   }
 
+  function renderArtistActivity(nextArtist: ArtistDetail): string {
+    if (!nextArtist.beginYear && !nextArtist.endYear) {
+      return t('artists.unknown');
+    }
+
+    if (nextArtist.beginYear && !nextArtist.endYear) {
+      return `${nextArtist.beginYear}-${t('artistDetail.stillActive')}`;
+    }
+
+    if (!nextArtist.beginYear && nextArtist.endYear) {
+      return `${t('artists.unknown')}-${nextArtist.endYear}`;
+    }
+
+    return `${nextArtist.beginYear}-${nextArtist.endYear}`;
+  }
+
   return (
     <section className="artist-detail-page">
       <a className="artist-detail-page__back" href="#artists">
@@ -148,66 +164,104 @@ export function ArtistDetailPage({
             </div>
             <div className="artist-detail-hero__actions">
               <button aria-label="Edit artist" onClick={() => startEditing(artist)} type="button">
-                Edit
+                {t('artistDetail.edit')}
               </button>
               <button aria-label="Delete artist" disabled={isDeleting} onClick={handleDeleteArtist} type="button">
-                Delete
+                {t('artistDetail.delete')}
               </button>
             </div>
           </div>
 
           {isEditing ? (
             <form className="artist-detail-edit-form" onSubmit={handleUpdateArtist}>
-              <h2>Edit artist</h2>
+              <div className="artist-detail-edit-form__header">
+                <div>
+                  <p className="eyebrow">{t('artistDetail.formMode')}</p>
+                  <h2>{t('artistDetail.editArtist')}</h2>
+                </div>
+                <p>{t('artistDetail.unsavedHint')}</p>
+              </div>
 
-              <label htmlFor="artist-detail-name">Name</label>
-              <input id="artist-detail-name" onChange={(event) => setName(event.target.value)} required value={name} />
+              <div className="artist-detail-edit-form__section">
+                <h3>{t('artists.identitySection')}</h3>
+                <div className="artist-detail-edit-form__fields">
+                  <label htmlFor="artist-detail-name">{t('artists.nameLabel')}</label>
+                  <input id="artist-detail-name" onChange={(event) => setName(event.target.value)} required value={name} />
 
-              <label htmlFor="artist-detail-country">Country</label>
-              <input id="artist-detail-country" onChange={(event) => setCountry(event.target.value)} value={country} />
+                  <label htmlFor="artist-detail-country">{t('artists.countryLabel')}</label>
+                  <input id="artist-detail-country" onChange={(event) => setCountry(event.target.value)} value={country} />
+                </div>
+              </div>
 
-              <label htmlFor="artist-detail-begin-year">Begin year</label>
-              <input
-                id="artist-detail-begin-year"
-                min="0"
-                onChange={(event) => setBeginYear(event.target.value)}
-                type="number"
-                value={beginYear}
-              />
+              <div className="artist-detail-edit-form__section">
+                <h3>{t('artistDetail.timelineSection')}</h3>
+                <div className="artist-detail-edit-form__fields">
+                  <label htmlFor="artist-detail-begin-year">{t('artists.beginYearLabel')}</label>
+                  <input
+                    id="artist-detail-begin-year"
+                    min="0"
+                    onChange={(event) => setBeginYear(event.target.value)}
+                    type="number"
+                    value={beginYear}
+                  />
 
-              <label htmlFor="artist-detail-end-year">End year</label>
-              <input
-                id="artist-detail-end-year"
-                min="0"
-                onChange={(event) => setEndYear(event.target.value)}
-                type="number"
-                value={endYear}
-              />
+                  <label htmlFor="artist-detail-end-year">{t('artistDetail.endYear')}</label>
+                  <input
+                    id="artist-detail-end-year"
+                    min="0"
+                    onChange={(event) => setEndYear(event.target.value)}
+                    type="number"
+                    value={endYear}
+                  />
+                </div>
+              </div>
 
-              <label htmlFor="artist-detail-notes">Notes</label>
-              <textarea id="artist-detail-notes" onChange={(event) => setNotes(event.target.value)} value={notes} />
-
-              <button disabled={isSaving} type="submit">
-                Save artist
-              </button>
+              <div className="artist-detail-edit-form__section">
+                <h3>{t('artists.notesSection')}</h3>
+                <div className="artist-detail-edit-form__fields artist-detail-edit-form__fields--notes">
+                  <label htmlFor="artist-detail-notes">{t('artists.notesLabel')}</label>
+                  <textarea id="artist-detail-notes" onChange={(event) => setNotes(event.target.value)} value={notes} />
+                  <button disabled={isSaving} type="submit">
+                    {isSaving ? t('artistDetail.saving') : t('artistDetail.saveArtist')}
+                  </button>
+                </div>
+              </div>
             </form>
           ) : null}
 
-          <dl className="artist-detail-grid">
-            <div>
-              <dt>{t('artists.beginYear')}</dt>
-              <dd>{artist.beginYear ?? t('artists.unknown')}</dd>
-            </div>
-            <div>
-              <dt>{t('artistDetail.endYear')}</dt>
-              <dd>{artist.endYear ?? t('artistDetail.stillActive')}</dd>
-            </div>
-          </dl>
+          {!isEditing ? (
+            <>
+              <dl className="artist-detail-grid">
+                <div>
+                  <dt>{t('artists.beginYear')}</dt>
+                  <dd>{artist.beginYear ?? t('artists.unknown')}</dd>
+                </div>
+                <div>
+                  <dt>{t('artistDetail.endYear')}</dt>
+                  <dd>{artist.endYear ?? t('artistDetail.stillActive')}</dd>
+                </div>
+                <div>
+                  <dt>{t('artists.columnActivity')}</dt>
+                  <dd>{renderArtistActivity(artist)}</dd>
+                </div>
+              </dl>
 
-          <section className="artist-detail-notes">
-            <h2>{t('artists.notes')}</h2>
-            <p>{artist.notes || t('artists.noNotes')}</p>
-          </section>
+              <div className="artist-detail-panels">
+                <section className="artist-detail-panel">
+                  <h2>{t('artistDetail.timelineSection')}</h2>
+                  <p>{renderArtistActivity(artist)}</p>
+                </section>
+                <section className="artist-detail-panel">
+                  <h2>{t('artists.notes')}</h2>
+                  <p>{artist.notes || t('artists.noNotes')}</p>
+                </section>
+                <section className="artist-detail-panel">
+                  <h2>{t('artistDetail.relatedSection')}</h2>
+                  <p>{t('artistDetail.relatedHint')}</p>
+                </section>
+              </div>
+            </>
+          ) : null}
         </>
       ) : null}
     </section>

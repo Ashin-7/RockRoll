@@ -124,32 +124,58 @@ export function AlbumListPage({ albums, onCreateAlbum = createAlbum, onLoadAlbum
       </div>
 
       <form className="albums-add-form" onSubmit={handleCreateAlbum}>
-        <h2>{t('albums.addTitle')}</h2>
-        <label htmlFor="album-title">{t('albums.titleLabel')}</label>
-        <input id="album-title" onChange={(event) => setTitle(event.target.value)} required value={title} />
+        <div className="albums-add-form__header">
+          <p>{t('albums.formMode')}</p>
+          <h2>{t('albums.addTitle')}</h2>
+        </div>
 
-        <label htmlFor="album-release-year">{t('albums.releaseYearLabel')}</label>
-        <input
-          id="album-release-year"
-          min="0"
-          onChange={(event) => setReleaseYear(event.target.value)}
-          type="number"
-          value={releaseYear}
-        />
+        <fieldset className="albums-form-section">
+          <legend>
+            <h3>{t('albums.identitySection')}</h3>
+          </legend>
+          <div className="albums-form-grid">
+            <label htmlFor="album-title">
+              {t('albums.titleLabel')}
+              <input id="album-title" onChange={(event) => setTitle(event.target.value)} required value={title} />
+            </label>
 
-        <label htmlFor="album-type">{t('albums.typeLabel')}</label>
-        <select id="album-type" onChange={(event) => setAlbumType(event.target.value as AlbumType)} value={albumType}>
-          {albumTypes.map((type) => (
-            <option key={type} value={type}>
-              {t(albumTypeMessageKeys[type])}
-            </option>
-          ))}
-        </select>
+            <label htmlFor="album-release-year">
+              {t('albums.releaseYearLabel')}
+              <input
+                id="album-release-year"
+                min="0"
+                onChange={(event) => setReleaseYear(event.target.value)}
+                type="number"
+                value={releaseYear}
+              />
+            </label>
 
-        <label htmlFor="album-notes">{t('albums.notesLabel')}</label>
-        <input id="album-notes" onChange={(event) => setNotes(event.target.value)} value={notes} />
+            <label htmlFor="album-type">
+              {t('albums.typeLabel')}
+              <select id="album-type" onChange={(event) => setAlbumType(event.target.value as AlbumType)} value={albumType}>
+                {albumTypes.map((type) => (
+                  <option key={type} value={type}>
+                    {t(albumTypeMessageKeys[type])}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+        </fieldset>
 
-        <button type="submit">{t('albums.addSubmit')}</button>
+        <fieldset className="albums-form-section">
+          <legend>
+            <h3>{t('albums.notesSection')}</h3>
+          </legend>
+          <label htmlFor="album-notes">
+            {t('albums.notesLabel')}
+            <input id="album-notes" onChange={(event) => setNotes(event.target.value)} value={notes} />
+          </label>
+        </fieldset>
+
+        <div className="albums-add-form__actions">
+          <button type="submit">{t('albums.addSubmit')}</button>
+        </div>
       </form>
 
       {message ? <p className="albums-message" role="status">{message}</p> : null}
@@ -159,30 +185,33 @@ export function AlbumListPage({ albums, onCreateAlbum = createAlbum, onLoadAlbum
       {!isLoading && displayAlbums.length === 0 ? <p className="albums-empty">{t('albums.empty')}</p> : null}
 
       {!isLoading && displayAlbums.length > 0 ? (
-        <div className="album-board">
-          {displayAlbums.map((album) => (
-            <article className="album-card" key={album.id}>
-              <div className="album-card__header">
-                <div>
-                  <h2>
+        <div className="albums-table-wrap">
+          <table className="albums-table">
+            <thead>
+              <tr>
+                <th scope="col">{t('albums.columnAlbum')}</th>
+                <th scope="col">{t('albums.columnArtist')}</th>
+                <th scope="col">{t('albums.columnRelease')}</th>
+                <th scope="col">{t('albums.columnType')}</th>
+                <th scope="col">{t('albums.columnNotes')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {displayAlbums.map((album) => (
+                <tr key={album.id}>
+                  <td className="albums-table__title">
                     <a href={`#album/${encodeURIComponent(album.id)}`}>{album.title}</a>
-                  </h2>
-                  <p>{album.artistName}</p>
-                </div>
-                <span>{t(albumTypeMessageKeys[album.albumType])}</span>
-              </div>
-              <dl className="album-card__meta">
-                <div>
-                  <dt>{t('albums.releaseYear')}</dt>
-                  <dd>{album.releaseYear ?? t('albums.unknown')}</dd>
-                </div>
-                <div>
-                  <dt>{t('albums.notes')}</dt>
-                  <dd>{album.notes || t('albums.noNotes')}</dd>
-                </div>
-              </dl>
-            </article>
-          ))}
+                  </td>
+                  <td>{album.artistName || t('albums.unknown')}</td>
+                  <td>{album.releaseYear ?? t('albums.unknown')}</td>
+                  <td>
+                    <span className="albums-table__badge">{t(albumTypeMessageKeys[album.albumType])}</span>
+                  </td>
+                  <td>{album.notes || t('albums.noNotes')}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       ) : null}
     </section>

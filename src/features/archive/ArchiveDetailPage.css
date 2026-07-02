@@ -1,34 +1,109 @@
 .archive-detail-page {
   display: grid;
-  gap: 1.25rem;
+  gap: 1.5rem;
 }
 
-.archive-detail-meta,
-.archive-detail-form,
-.archive-detail-items {
+.archive-detail-hero {
   display: grid;
   gap: 0.75rem;
 }
 
-.archive-detail-meta {
+.archive-detail-hero h1,
+.archive-detail-section-heading h2,
+.archive-detail-form h2,
+.archive-detail-table-row h3,
+.archive-detail-table-row p {
   margin: 0;
 }
 
-.archive-detail-meta div {
+.archive-detail-stats {
   display: grid;
-  gap: 0.25rem;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  margin: 0;
 }
 
-.archive-detail-meta dt {
+.archive-detail-stats div {
+  border: 1px solid var(--color-border, #d7d7d7);
+  border-radius: 8px;
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+  padding: 0.75rem;
+}
+
+.archive-detail-stats dt {
+  color: var(--color-muted, #666);
+  font-size: 0.85rem;
   font-weight: 700;
 }
 
-.archive-detail-meta dd {
+.archive-detail-stats dd {
+  font-weight: 700;
   margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.archive-detail-layout {
+  align-items: start;
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(0, 1fr) minmax(18rem, 24rem);
+}
+
+.archive-detail-items,
+.archive-detail-form,
+.archive-detail-table {
+  display: grid;
+  gap: 1rem;
+}
+
+.archive-detail-kicker,
+.archive-detail-form-mode,
+.archive-detail-table-head {
+  color: var(--color-muted, #666);
+  font-size: 0.85rem;
+  font-weight: 700;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.archive-detail-table {
+  overflow-x: auto;
+}
+
+.archive-detail-table-row {
+  align-items: center;
+  border-bottom: 1px solid var(--color-border, #d7d7d7);
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(12rem, 1.4fr) minmax(7rem, 0.6fr) minmax(12rem, 1.4fr);
+  min-width: 34rem;
+  padding: 0.75rem 0;
+}
+
+.archive-detail-table-row h3 {
+  font-size: 1rem;
 }
 
 .archive-detail-form {
-  max-width: 38rem;
+  border: 1px solid var(--color-border, #d7d7d7);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.archive-detail-form fieldset {
+  border: 0;
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+}
+
+.archive-detail-form legend {
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+  padding: 0;
 }
 
 .archive-detail-form label {
@@ -44,4 +119,10 @@
 
 .archive-detail-form textarea {
   min-height: 5rem;
+}
+
+@media (max-width: 760px) {
+  .archive-detail-layout {
+    grid-template-columns: 1fr;
+  }
 }

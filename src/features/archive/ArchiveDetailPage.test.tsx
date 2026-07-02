@@ -35,9 +35,15 @@ describe('ArchiveDetailPage', () => {
     expect(screen.getByText('Loading archive collection...')).toBeInTheDocument();
     expect(await screen.findByText('Classic rock guide')).toBeInTheDocument();
     expect(screen.getByText('Albums to explore.')).toBeInTheDocument();
+    expect(screen.getByText('Source')).toBeInTheDocument();
+    expect(screen.getByText('Items filed')).toBeInTheDocument();
+    expect(screen.getByText('Source URL')).toBeInTheDocument();
     expect(screen.getByText('Please Please Me')).toBeInTheDocument();
     expect(screen.getByText('#1')).toBeInTheDocument();
     expect(screen.getByText('Beat music marker.')).toBeInTheDocument();
+    expect(screen.getByText('Item')).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Position' })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Note' })).toBeInTheDocument();
   });
 
   it('adds an album item and reloads the collection', async () => {
@@ -50,6 +56,9 @@ describe('ArchiveDetailPage', () => {
     );
 
     expect(await screen.findByText('Classic rock guide')).toBeInTheDocument();
+    expect(screen.getByText('Item / album')).toBeInTheDocument();
+    expect(screen.getByText('Album link')).toBeInTheDocument();
+    expect(screen.getByText('Placement')).toBeInTheDocument();
 
     await user.type(screen.getByLabelText('Album ID'), 'album-1');
     await user.type(screen.getByLabelText('Display title'), 'Please Please Me');
