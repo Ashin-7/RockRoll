@@ -3,10 +3,14 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const orderMock = vi.fn();
 const maybeSingleMock = vi.fn();
 const eqMock = vi.fn(() => ({ maybeSingle: maybeSingleMock }));
+const updateEqMock = vi.fn();
+const deleteEqMock = vi.fn();
 const selectMock = vi.fn();
 const insertMock = vi.fn();
+const updateMock = vi.fn(() => ({ eq: updateEqMock }));
+const deleteMock = vi.fn(() => ({ eq: deleteEqMock }));
 const getSessionMock = vi.fn();
-const fromMock = vi.fn(() => ({ select: selectMock, insert: insertMock }));
+const fromMock = vi.fn(() => ({ delete: deleteMock, select: selectMock, insert: insertMock, update: updateMock }));
 const getSupabaseMock = vi.fn(() => ({
   auth: { getSession: getSessionMock },
   from: fromMock,
@@ -122,6 +126,42 @@ describe('songs.service', () => {
     );
   });
 
+  it('updates a song in Supabase', async () => {
+    updateEqMock.mockResolvedValue({ error: null });
+    const { updateSong } = await import('./songs.service');
+
+    await updateSong('song-1', {
+      title: 'Little Wing',
+      status: 'polishing',
+      difficulty: 5,
+      releaseYear: 1967,
+      bpm: 96,
+      notes: 'Tighten the outro.',
+    });
+
+    expect(fromMock).toHaveBeenCalledWith('songs');
+    expect(updateMock).toHaveBeenCalledWith({
+      title: 'Little Wing',
+      status: 'polishing',
+      difficulty: 5,
+      release_year: 1967,
+      bpm: 96,
+      notes: 'Tighten the outro.',
+    });
+    expect(updateEqMock).toHaveBeenCalledWith('id', 'song-1');
+  });
+
+  it('deletes a song in Supabase', async () => {
+    deleteEqMock.mockResolvedValue({ error: null });
+    const { deleteSong } = await import('./songs.service');
+
+    await deleteSong('song-1');
+
+    expect(fromMock).toHaveBeenCalledWith('songs');
+    expect(deleteMock).toHaveBeenCalledWith();
+    expect(deleteEqMock).toHaveBeenCalledWith('id', 'song-1');
+  });
+
   it('uses local demo songs when Supabase is not configured', async () => {
     getSupabaseMock.mockImplementation(() => {
       throw new Error('Missing VITE_SUPABASE_URL');
@@ -175,5 +215,69 @@ describe('songs.service', () => {
       bpm: null,
       notes: '',
     });
+  });
+
+  it('updates local demo songs when Supabase is not configured', async () => {
+    getSupabaseMock.mockImplementation(() => {
+      throw new Error('Missing VITE_SUPABASE_URL');
+    });
+    window.localStorage.setItem('rockroll.demoSession', JSON.stringify({ user: { id: 'local-demo-user' } }));
+    window.localStorage.setItem(
+      'rockroll.demoSongs',
+      JSON.stringify([
+        {
+          id: 'local-song-1',
+          title: 'Demo Song',
+          artistName: 'Local demo',
+          status: 'learning',
+          difficulty: 2,
+        },
+      ]),
+    );
+    const { getSongById, updateSong } = await import('./songs.service');
+
+    await updateSong('local-song-1', {
+      title: 'Updated Demo Song',
+      status: 'polishing',
+      difficulty: 3,
+      releaseYear: 2026,
+      bpm: 120,
+      notes: 'Local edit.',
+    });
+
+    await expect(getSongById('local-song-1')).resolves.toEqual(
+      expect.objectContaining({
+        title: 'Updated Demo Song',
+        status: 'polishing',
+        difficulty: 3,
+        releaseYear: 2026,
+        bpm: 120,
+        notes: 'Local edit.',
+      }),
+    );
+  });
+
+  it('deletes local demo songs when Supabase is not configured', async () => {
+    getSupabaseMock.mockImplementation(() => {
+      throw new Error('Missing VITE_SUPABASE_URL');
+    });
+    window.localStorage.setItem('rockroll.demoSession', JSON.stringify({ user: { id: 'local-demo-user' } }));
+    window.localStorage.setItem(
+      'rockroll.demoSongs',
+      JSON.stringify([
+        {
+          id: 'local-song-1',
+          title: 'Demo Song',
+          artistName: 'Local demo',
+          status: 'learning',
+          difficulty: 2,
+        },
+      ]),
+    );
+    const { deleteSong, listSongs } = await import('./songs.service');
+
+    await deleteSong('local-song-1');
+
+    await expect(listSongs()).resolves.toEqual([]);
   });
 });

@@ -11,88 +11,71 @@
 - 不开发 Tauri。
 - 不开发播放器。
 - 保持 MVP 思维，优先补齐核心 CRUD。
+- 默认采用增量修改，不做仓库级分析。
+
+## 会话读取范围
+
+继续当前项目时，默认只读取：
+
+- `AGENTS.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/NEXT_TASKS.md`
+- `docs/SESSION_HANDOFF.md`
+- 当前任务相关目录
+
+不要默认扫描整个仓库。只有当前任务被阻塞且必须确认未知实现时，才补充读取最小必要文件。
 
 ## P0
 
-### Practice Edit
+当前 P0 CRUD 本地实现状态：
 
-目标：允许用户编辑已有练习记录。
+- [x] Practice Edit
+- [x] Practice Delete
+- [x] Song Edit
+- [x] Song Delete
+- [x] P0 CRUD 最终复核与提交
+- [ ] Supabase Schema 稳定化复核
 
-建议范围：
+### P0 收尾建议
 
-- 新增 `updatePracticeSession` service。
-- 复用现有 Practice 表单或抽取最小编辑表单状态。
-- 保存后刷新练习历史与统计信息。
-- 覆盖 service 与页面交互测试。
+目标：确认本地 P0 CRUD 修改可提交。
 
-验收标准：
+建议读取：
 
-- 用户可以从练习历史进入编辑状态。
-- 修改时长、BPM、关注点、反思、关联歌曲后可保存。
-- 保存后列表与统计同步更新。
-
-### Practice Delete
-
-目标：允许用户删除已有练习记录。
-
-建议范围：
-
-- 新增 `deletePracticeSession` service。
-- 页面提供删除入口与最小确认机制。
-- 删除后刷新练习历史与统计信息。
-- 覆盖删除成功、删除失败与空列表状态测试。
-
-验收标准：
-
-- 用户可以删除自己的练习记录。
-- 删除操作受 RLS 保护。
-- 删除后统计结果同步变化。
-
-### Song Edit
-
-目标：允许用户编辑歌曲基础信息。
+- `AGENTS.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/NEXT_TASKS.md`
+- `docs/SESSION_HANDOFF.md`
+- `src/features/practice`
+- `src/features/songs`
 
 建议范围：
 
-- 新增 `updateSong` service。
-- 在 Song Detail 或列表中提供最小编辑入口。
-- 支持标题、状态、难度、发行年份、BPM、备注等现有 schema 字段。
-- 覆盖 service 与页面测试。
-
-验收标准：
-
-- 用户可以编辑自己的歌曲。
-- 保存后详情页和列表展示一致。
-- 不影响 Practice 的 Song 关联读取。
-
-### Song Delete
-
-目标：允许用户删除歌曲。
-
-建议范围：
-
-- 新增 `deleteSong` service。
-- 删除前确认。
-- 明确关联 Practice 的表现：当前 schema 中 `practice_sessions.song_id` 为 `on delete set null`。
-- 覆盖删除后列表刷新与详情不存在状态测试。
-
-验收标准：
-
-- 用户可以删除自己的歌曲。
-- 删除歌曲后关联练习记录仍保留，歌曲显示为未知或无关联。
-- 列表与详情页状态正确刷新。
+- 快速复核 Practice / Song Edit / Delete 的实现与测试。
+- 如用户允许，运行相关 feature 测试。
+- 如准备提交，先确认 `git status`，只提交本轮相关文件。
 
 ## P1
 
-### Artist CRUD
+### 下一个推荐任务：Artist CRUD
 
 目标：补齐 Artist 的编辑与删除，形成完整管理闭环。
 
+建议读取：
+
+- `AGENTS.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/NEXT_TASKS.md`
+- `docs/SESSION_HANDOFF.md`
+- `src/features/artists`
+
 建议范围：
 
-- 复用现有 Artist 列表、创建、详情读取能力。
-- 新增 update/delete service。
-- 保持 localStorage Demo Mode 与 Supabase 路径一致。
+- 复用现有 Artist 列表、创建与详情读取能力。
+- 新增 update / delete service。
+- Supabase 与本地 Demo Mode 路径保持一致。
+- 删除前提供确认交互。
+- 只运行 Artist 相关测试；如果没有相关测试，说明未运行原因。
 
 ### Album CRUD
 
@@ -100,9 +83,18 @@
 
 建议范围：
 
-- 新增 Album feature 页面、类型与 service。
-- 使用现有 `albums` 表，不新增 schema，除非字段缺口被确认。
+- 使用现有 `albums` 表，不主动新增 schema，除非字段缺口被明确确认。
 - 优先支持列表、创建、详情、编辑、删除。
+- 不引入新依赖，不做架构重构。
+
+### Archive 管理
+
+目标：明确 Archive 实体与基础管理流程。
+
+建议范围：
+
+- 先补齐最小 CRUD。
+- 暂不开发复杂文件管理、播放器或高级统计。
 
 ## P2
 
@@ -118,12 +110,10 @@
 
 ## 推荐执行顺序
 
-1. Practice Delete。
-2. Practice Edit。
-3. Song Edit。
-4. Song Delete。
-5. Artist CRUD。
-6. Album CRUD。
-7. Media Library。
+1. Supabase Schema 稳定化复核。
+2. Artist CRUD。
+3. Album CRUD。
+4. Archive 管理。
+5. Media Library。
 
-优先先做 Practice Delete，是因为它范围最小，却能验证删除确认、RLS、列表刷新、统计同步这些后续 CRUD 都会复用的页面模式。
+当前建议先开启新对话，从 Supabase Schema 稳定化复核开始，避免继续扩大当前上下文。

@@ -1,3 +1,155 @@
+# Global Rules for Coding Agent
+
+## Operating Principles
+
+- Prefer small, reviewable diffs.
+
+- Avoid sweeping refactors unless explicitly requested.
+
+- Before editing, identify the file(s) to change and state the plan in 3-6 bullets.
+
+- When the request is ambiguous, choose the smallest safe interpretation and state the assumption before editing.
+
+- Never invent APIs, configs, file paths, or project conventions. Search the repository first if unsure.
+
+- Preserve backward compatibility unless explicitly requested.
+
+- Keep changes consistent with the existing architecture and coding style.
+
+- If multiple implementations are reasonable, briefly explain the trade-offs and choose the simplest maintainable solution.
+
+- Before making non-trivial changes, inspect the repository structure, existing patterns, and related implementations instead of assuming conventions.
+
+- If repository state is inconsistent, dependencies are missing, or required context is unavailable, stop and explain what is blocking progress instead of guessing.
+
+## Safety and Secrets
+
+- Never paste secrets, tokens, private keys, .env values, or credentials into code or logs.
+
+- If a task requires secrets, request that they be provided through environment variables.
+
+- Do not add analytics, telemetry, or network calls unless explicitly requested.
+
+## Code Quality
+
+- Add or update tests for behavior changes when the project has tests.
+
+- Prefer type safety and explicit error handling.
+
+- Add comments only when the intent is non-obvious.
+
+- Follow existing project conventions before introducing new patterns or abstractions.
+
+## Frontend & UI
+
+When working on frontend or UI tasks, act as a senior frontend engineer plus UI systems designer.
+
+Prioritize:
+
+- Build the actual usable interface first, not a marketing shell.
+
+- Match the existing project stack, component patterns, styling system, and file structure.
+
+- Use responsive, mobile-first layouts.
+
+- Use semantic HTML and accessible interaction patterns.
+
+- Follow WCAG 2.1 AA where practical.
+
+- Create consistent spacing, typography, color, and component states.
+
+- Prefer reusable components when they reduce real duplication.
+
+- Optimize performance: avoid unnecessary re-renders, oversized bundles, blocking assets, and layout shift.
+
+- Keep UI dense and task-focused for SaaS/admin/business tools.
+
+- Use polished visual design for consumer apps, landing pages, portfolios, and games.
+
+- Verify important UI changes in browser screenshots when possible.
+
+Frontend implementation rules:
+
+- Inspect existing components before adding new abstractions.
+
+- Use TypeScript types where the project already uses TypeScript.
+
+- Use existing design tokens, CSS variables, Tailwind config, theme files, or component libraries.
+
+- Add loading, empty, error, disabled, hover, focus, and active states where users would expect them.
+
+- Ensure text does not overflow buttons, cards, nav items, or compact panels.
+
+- Avoid decorative UI that reduces clarity.
+
+- Avoid nested cards and excessive card-heavy layouts.
+
+- Use icons for common tool actions when an icon library exists.
+
+UI design rules:
+
+- Establish clear visual hierarchy.
+
+- Use consistent spacing and alignment.
+
+- Keep color palettes balanced; avoid one-note palettes.
+
+- Make primary actions obvious and secondary actions quieter.
+
+- Use familiar controls: tabs for views, toggles for binary settings, sliders/inputs for numeric values, menus for option sets.
+
+- For dashboards and operational tools, prefer restrained, scannable, information-dense layouts.
+
+- For landing pages, show the product/place/person/object clearly in the first viewport.
+
+Verification:
+
+- Run lint/typecheck/tests when available.
+
+- For visual work, start the app and inspect desktop and mobile layouts.
+
+- Report what changed and what was verified.
+
+## Build and Run Etiquette
+
+- Unless explicitly requested otherwise, assume every project targets Node.js v8.17.0. Do not suggest or introduce features, syntax, dependencies, or tooling that require a newer Node.js version.
+
+- For legacy Vue/webpack projects under D:\Code, preserve Node.js v8.17.0, npm lockfileVersion 1, and existing dependency versions unless I explicitly ask for an upgrade.
+
+- For non-project automation, browser tooling, or one-off helper scripts, ask before using nvm to switch to a newer Node.js version, and keep those tools outside legacy project directories.
+
+- When suggesting commands for the user to run manually, provide the exact command and its purpose.
+
+- When changes may affect the build, run the fastest relevant check first.
+
+- Do not run expensive builds or full test suites unless they are necessary or explicitly requested.
+
+- Prefer concise Chinese comments for business logic, complex workflows, compatibility workarounds, and non-obvious implementation details. Avoid redundant comments that merely restate the code.
+
+## Output Formatting
+
+- For code changes: include a short summary and a list of files changed.
+
+- For debugging: include hypotheses, experiments run, and the minimal fix.
+
+- If assumptions were made, list them explicitly in the final response.
+
+## Communication Preferences
+
+- Use concise explanations, concrete steps, and copy-pastable commands.
+
+- Use the project or team's preferred language for explanations.
+
+## Git Hygiene
+
+- Keep commits logically scoped.
+
+- Do not modify unrelated files.
+
+- Avoid formatting-only changes unless requested.
+
+--- project-doc ---
+
 # AGENTS.md
 
 # 项目定位
@@ -549,6 +701,70 @@ README.md
 5. 给出中文计划
 6. 打开任务队列，并在执行过程中持续更新状态
 7. 小步修改
+
+上下文节省规则：
+
+- 继续当前任务时，优先沿用已有上下文和已确认的项目状态。
+- 默认只读取 `AGENTS.md`、`docs/PROJECT_STATUS.md`、`docs/NEXT_TASKS.md` 和当前任务目录。
+- 如果用户明确限定读取范围，只读取用户指定的文件或目录。
+- 禁止默认扫描整个仓库；只有当前任务被阻塞且必须确认未知实现时，才补充读取最小必要文件。
+- 不重新检查无关模块，优先聚焦当前 P0/P1/P2 任务涉及的 feature。
+- 除非 `package.json`、`pnpm-lock.yaml` 或 `package-lock.json` 发生变化，否则禁止运行 `npm install`。
+- 除非用户明确要求，否则禁止运行完整测试；优先运行与当前修改相关的最小测试。
+- 开发任务优先采用增量修改，不进行仓库级分析。
+- 文档和轻量计划变更不强制运行构建或测试；如未运行，结束时说明原因。
+
+多轮迭代会话切换规则：
+
+当满足以下任一条件时，应停止继续扩大当前对话上下文，并准备开启新一轮对话：
+
+1. 已连续完成 2 个以上开发任务。
+2. 当前对话已多次读取大量上下文。
+3. 本轮修改涉及 5 个以上文件。
+4. 当前任务已经完成，可以进入下一个 P0/P1 任务。
+5. 用户要求继续较多迭代。
+
+触发切换时，不要继续开发新功能，而是先执行交接：
+
+1. 更新 `docs/PROJECT_STATUS.md`
+   - 当前完成了什么
+   - 当前分支状态
+   - 当前风险
+   - 当前验证结果
+
+2. 更新 `docs/NEXT_TASKS.md`
+   - 标记已完成任务
+   - 写明下一个推荐任务
+   - 写明只需要读取哪些文件
+
+3. 如有必要，创建或更新 `docs/SESSION_HANDOFF.md`
+   内容包括：
+   - 本轮完成内容
+   - 修改文件列表
+   - 验证命令和结果
+   - 未完成事项
+   - 下一轮推荐提示词
+
+4. 最后输出一句：
+   “建议开启新对话，并粘贴以下提示词继续。”
+
+提示词格式：
+
+```text
+继续 RockRoll 项目开发。
+请只读取：
+- AGENTS.md
+- docs/PROJECT_STATUS.md
+- docs/NEXT_TASKS.md
+- docs/SESSION_HANDOFF.md
+- 当前任务相关目录
+
+继续 docs/NEXT_TASKS.md 中的下一个任务。
+不要扫描整个仓库。
+不要运行 npm install。
+不要做架构重构。
+完成后中文总结。
+```
 
 结束任务：
 

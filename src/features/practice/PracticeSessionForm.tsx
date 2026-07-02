@@ -1,21 +1,32 @@
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import { useI18n } from '../../i18n/I18nProvider';
 import { SongSummary } from '../songs/song.types';
 import { createPracticeSession } from './practice.service';
 import { PracticeSessionInput } from './practice.types';
 
 interface PracticeSessionFormProps {
+  initialValues?: PracticeSessionInput;
   onSave?: (input: PracticeSessionInput) => Promise<void>;
   songs?: SongSummary[];
 }
 
-export function PracticeSessionForm({ onSave = createPracticeSession, songs = [] }: PracticeSessionFormProps) {
+export function PracticeSessionForm({ initialValues, onSave = createPracticeSession, songs = [] }: PracticeSessionFormProps) {
   const { t } = useI18n();
-  const [songId, setSongId] = useState('');
-  const [durationMinutes, setDurationMinutes] = useState('');
-  const [bpm, setBpm] = useState('');
-  const [focusArea, setFocusArea] = useState('');
-  const [reflection, setReflection] = useState('');
+  const [songId, setSongId] = useState(initialValues?.songId ?? '');
+  const [durationMinutes, setDurationMinutes] = useState(
+    initialValues ? String(initialValues.durationMinutes) : '',
+  );
+  const [bpm, setBpm] = useState(initialValues?.bpm ? String(initialValues.bpm) : '');
+  const [focusArea, setFocusArea] = useState(initialValues?.focusArea ?? '');
+  const [reflection, setReflection] = useState(initialValues?.reflection ?? '');
+
+  useEffect(() => {
+    setSongId(initialValues?.songId ?? '');
+    setDurationMinutes(initialValues ? String(initialValues.durationMinutes) : '');
+    setBpm(initialValues?.bpm ? String(initialValues.bpm) : '');
+    setFocusArea(initialValues?.focusArea ?? '');
+    setReflection(initialValues?.reflection ?? '');
+  }, [initialValues]);
 
   function adjustNumberValue(value: string, setValue: (nextValue: string) => void, delta: number) {
     const numericValue = value ? Number(value) : 0;

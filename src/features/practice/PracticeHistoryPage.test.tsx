@@ -116,6 +116,157 @@ describe('PracticeHistoryPage', () => {
     expect(screen.getAllByText('Little Wing')).toHaveLength(2);
   });
 
+  it('deletes a practice session after confirmation and refreshes the loaded history', async () => {
+    const user = userEvent.setup();
+    const onDeleteSession = vi.fn().mockResolvedValue(undefined);
+    const onLoadSessions = vi
+      .fn()
+      .mockResolvedValueOnce([
+        {
+          id: 'practice-1',
+          songTitle: 'Little Wing',
+          artistName: 'Unknown artist',
+          practicedOn: '2026-07-01',
+          durationMinutes: 45,
+          bpm: 92,
+          focusArea: 'Verse rhythm and bends',
+          reflection: 'Timing is tighter than yesterday.',
+        },
+      ])
+      .mockResolvedValueOnce([]);
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+
+    renderWithI18n(
+      <PracticeHistoryPage
+        onDeleteSession={onDeleteSession}
+        onGetCurrentSession={vi.fn().mockResolvedValue(signedInSession)}
+        onAuthStateChange={() => vi.fn()}
+        onLoadSessions={onLoadSessions}
+      />,
+    );
+
+    expect(await screen.findByText('Little Wing')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Delete practice session' }));
+
+    expect(window.confirm).toHaveBeenCalledWith('Delete this practice session?');
+    expect(onDeleteSession).toHaveBeenCalledWith('practice-1');
+    expect(onLoadSessions).toHaveBeenCalledTimes(2);
+    expect(await screen.findByText('No practice sessions recorded yet.')).toBeInTheDocument();
+  });
+
+  it('edits a practice session and refreshes the loaded history', async () => {
+    const user = userEvent.setup();
+    const onLoadSongs = vi.fn().mockResolvedValue([
+      {
+        id: 'little-wing',
+        title: 'Little Wing',
+        artistName: 'Unknown artist',
+        status: 'learning',
+        difficulty: 4,
+      },
+    ]);
+    const onUpdateSession = vi.fn().mockResolvedValue(undefined);
+    const onLoadSessions = vi
+      .fn()
+      .mockResolvedValueOnce([
+        {
+          id: 'practice-1',
+          songId: 'little-wing',
+          songTitle: 'Little Wing',
+          artistName: 'Unknown artist',
+          practicedOn: '2026-07-01',
+          durationMinutes: 45,
+          bpm: 92,
+          focusArea: 'Verse rhythm and bends',
+          reflection: 'Timing is tighter than yesterday.',
+        },
+      ])
+      .mockResolvedValueOnce([
+        {
+          id: 'practice-1',
+          songId: 'little-wing',
+          songTitle: 'Little Wing',
+          artistName: 'Unknown artist',
+          practicedOn: '2026-07-01',
+          durationMinutes: 50,
+          bpm: 96,
+          focusArea: 'Outro timing',
+          reflection: 'Cleaner transition.',
+        },
+      ]);
+
+    renderWithI18n(
+      <PracticeHistoryPage
+        onGetCurrentSession={vi.fn().mockResolvedValue(signedInSession)}
+        onAuthStateChange={() => vi.fn()}
+        onLoadSessions={onLoadSessions}
+        onLoadSongs={onLoadSongs}
+        onUpdateSession={onUpdateSession}
+      />,
+    );
+
+    expect(await screen.findByText('Little Wing')).toBeInTheDocument();
+    expect(await screen.findByRole('option', { name: 'Little Wing' })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Edit practice session' }));
+
+    expect(screen.getByLabelText('Duration minutes')).toHaveValue(45);
+    expect(screen.getByLabelText('BPM')).toHaveValue(92);
+    expect(screen.getByLabelText('Focus area')).toHaveValue('Verse rhythm and bends');
+    expect(screen.getByLabelText('Reflection')).toHaveValue('Timing is tighter than yesterday.');
+
+    await user.clear(screen.getByLabelText('Duration minutes'));
+    await user.type(screen.getByLabelText('Duration minutes'), '50');
+    await user.clear(screen.getByLabelText('BPM'));
+    await user.type(screen.getByLabelText('BPM'), '96');
+    await user.clear(screen.getByLabelText('Focus area'));
+    await user.type(screen.getByLabelText('Focus area'), 'Outro timing');
+    await user.clear(screen.getByLabelText('Reflection'));
+    await user.type(screen.getByLabelText('Reflection'), 'Cleaner transition.');
+    await user.click(screen.getByRole('button', { name: 'Save practice session' }));
+
+    expect(onUpdateSession).toHaveBeenCalledWith('practice-1', {
+      songId: 'little-wing',
+      durationMinutes: 50,
+      bpm: 96,
+      focusArea: 'Outro timing',
+      reflection: 'Cleaner transition.',
+    });
+    expect(onLoadSessions).toHaveBeenCalledTimes(2);
+    expect(await screen.findByText('Outro timing')).toBeInTheDocument();
+  });
+
+  it('keeps a practice session when delete confirmation is cancelled', async () => {
+    const user = userEvent.setup();
+    const onDeleteSession = vi.fn().mockResolvedValue(undefined);
+    vi.spyOn(window, 'confirm').mockReturnValue(false);
+
+    renderWithI18n(
+      <PracticeHistoryPage
+        onDeleteSession={onDeleteSession}
+        sessions={[
+          {
+            id: 'practice-1',
+            songTitle: 'Little Wing',
+            artistName: 'Unknown artist',
+            practicedOn: '2026-07-01',
+            durationMinutes: 45,
+            bpm: 92,
+            focusArea: 'Verse rhythm and bends',
+            reflection: 'Timing is tighter than yesterday.',
+          },
+        ]}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Delete practice session' }));
+
+    expect(window.confirm).toHaveBeenCalledWith('Delete this practice session?');
+    expect(onDeleteSession).not.toHaveBeenCalled();
+    expect(screen.getByText('Little Wing')).toBeInTheDocument();
+  });
+
   it('requires sign-in before rendering the practice session form', async () => {
     const onLoadSongs = vi.fn().mockResolvedValue([]);
 

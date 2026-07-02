@@ -34,6 +34,7 @@ function getSongTitle(row: PracticeSessionRow): string {
 function mapPracticeSessionRow(row: PracticeSessionRow): PracticeHistoryItem {
   return {
     id: row.id,
+    songId: row.song_id,
     songTitle: getSongTitle(row),
     artistName: 'Unknown artist',
     practicedOn: row.practiced_on,
@@ -69,6 +70,7 @@ function createDemoPracticeSession(input: PracticeSessionInput) {
 
   const nextSession: PracticeHistoryItem = {
     id: `local-practice-${Date.now()}`,
+    songId: input.songId,
     songTitle: 'Local demo practice',
     artistName: 'Local demo',
     practicedOn: new Date().toISOString().slice(0, 10),
@@ -79,6 +81,35 @@ function createDemoPracticeSession(input: PracticeSessionInput) {
   };
 
   writeDemoPracticeHistory([nextSession, ...readDemoPracticeHistory()]);
+}
+
+function updateDemoPracticeSession(sessionId: string, input: PracticeSessionInput) {
+  if (!readDemoSession()) {
+    throw new Error('Sign in before updating practice sessions.');
+  }
+
+  writeDemoPracticeHistory(
+    readDemoPracticeHistory().map((session) =>
+      session.id === sessionId
+        ? {
+            ...session,
+            songId: input.songId,
+            durationMinutes: input.durationMinutes,
+            bpm: input.bpm,
+            focusArea: input.focusArea,
+            reflection: input.reflection,
+          }
+        : session,
+    ),
+  );
+}
+
+function deleteDemoPracticeSession(sessionId: string) {
+  if (!readDemoSession()) {
+    throw new Error('Sign in before deleting practice sessions.');
+  }
+
+  writeDemoPracticeHistory(readDemoPracticeHistory().filter((session) => session.id !== sessionId));
 }
 
 export async function listPracticeHistory(): Promise<PracticeHistoryItem[]> {
@@ -134,6 +165,53 @@ export async function createPracticeSession(input: PracticeSessionInput): Promis
     focus_area: input.focusArea,
     reflection: input.reflection,
   });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+}
+
+export async function deletePracticeSession(sessionId: string): Promise<void> {
+  let supabase: ReturnType<typeof getSupabase>;
+  try {
+    supabase = getSupabase();
+  } catch (caughtError) {
+    if (isMissingSupabaseEnvError(caughtError)) {
+      deleteDemoPracticeSession(sessionId);
+      return;
+    }
+    throw caughtError;
+  }
+
+  const { error } = await supabase.from('practice_sessions').delete().eq('id', sessionId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+}
+
+export async function updatePracticeSession(sessionId: string, input: PracticeSessionInput): Promise<void> {
+  let supabase: ReturnType<typeof getSupabase>;
+  try {
+    supabase = getSupabase();
+  } catch (caughtError) {
+    if (isMissingSupabaseEnvError(caughtError)) {
+      updateDemoPracticeSession(sessionId, input);
+      return;
+    }
+    throw caughtError;
+  }
+
+  const { error } = await supabase
+    .from('practice_sessions')
+    .update({
+      song_id: input.songId,
+      duration_minutes: input.durationMinutes,
+      bpm: input.bpm,
+      focus_area: input.focusArea,
+      reflection: input.reflection,
+    })
+    .eq('id', sessionId);
 
   if (error) {
     throw new Error(error.message);

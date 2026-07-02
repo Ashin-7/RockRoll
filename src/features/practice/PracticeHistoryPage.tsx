@@ -5,10 +5,12 @@ import { SongSummary } from '../songs/song.types';
 import { PracticeHistoryItem } from './practice.mock';
 import {
   createPracticeSession,
+  deletePracticeSession,
   getCurrentPracticeSession,
   listPracticeHistory,
   onPracticeAuthStateChange,
   PracticeAuthSession,
+  updatePracticeSession,
 } from './practice.service';
 import { calculatePracticeStatistics } from './practiceStatistics';
 import { PracticeSessionForm } from './PracticeSessionForm';
@@ -18,18 +20,22 @@ import './PracticeHistoryPage.css';
 interface PracticeHistoryPageProps {
   onAuthStateChange?: (callback: (session: PracticeAuthSession | null) => void) => () => void;
   onGetCurrentSession?: () => Promise<PracticeAuthSession | null>;
+  onDeleteSession?: (sessionId: string) => Promise<void>;
   onLoadSessions?: () => Promise<PracticeHistoryItem[]>;
   onLoadSongs?: () => Promise<SongSummary[]>;
   onSaveSession?: (input: PracticeSessionInput) => Promise<void>;
+  onUpdateSession?: (sessionId: string, input: PracticeSessionInput) => Promise<void>;
   sessions?: PracticeHistoryItem[];
 }
 
 export function PracticeHistoryPage({
   onAuthStateChange: subscribeToAuthState = onPracticeAuthStateChange,
+  onDeleteSession = deletePracticeSession,
   onGetCurrentSession = getCurrentPracticeSession,
   onLoadSessions = listPracticeHistory,
   onLoadSongs = listSongs,
   onSaveSession = createPracticeSession,
+  onUpdateSession = updatePracticeSession,
   sessions,
 }: PracticeHistoryPageProps) {
   const { t } = useI18n();
@@ -40,6 +46,8 @@ export function PracticeHistoryPage({
   const [isLoadingSession, setIsLoadingSession] = useState(!hasProvidedSessions);
   const [isLoading, setIsLoading] = useState(!hasProvidedSessions);
   const [isSaving, setIsSaving] = useState(false);
+  const [deletingSessionId, setDeletingSessionId] = useState('');
+  const [editingSession, setEditingSession] = useState<PracticeHistoryItem | null>(null);
   const [error, setError] = useState('');
   const displaySessions = hasProvidedSessions ? sessions : loadedSessions;
   const statistics = calculatePracticeStatistics(displaySessions);
@@ -198,6 +206,52 @@ export function PracticeHistoryPage({
     }
   }
 
+  async function handleUpdateSession(input: PracticeSessionInput) {
+    if (!editingSession) {
+      return;
+    }
+
+    setIsSaving(true);
+    setError('');
+
+    try {
+      await onUpdateSession(editingSession.id, input);
+      if (!hasProvidedSessions) {
+        const nextSessions = await onLoadSessions();
+        setLoadedSessions(nextSessions);
+      }
+      setEditingSession(null);
+    } catch (caughtError) {
+      setError(caughtError instanceof Error ? caughtError.message : t('practiceHistory.saveError'));
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  async function handleDeleteSession(sessionId: string) {
+    if (!window.confirm('Delete this practice session?')) {
+      return;
+    }
+
+    setDeletingSessionId(sessionId);
+    setError('');
+
+    try {
+      await onDeleteSession(sessionId);
+      if (!hasProvidedSessions) {
+        const nextSessions = await onLoadSessions();
+        setLoadedSessions(nextSessions);
+      }
+      if (editingSession?.id === sessionId) {
+        setEditingSession(null);
+      }
+    } catch (caughtError) {
+      setError(caughtError instanceof Error ? caughtError.message : t('practiceHistory.saveError'));
+    } finally {
+      setDeletingSessionId('');
+    }
+  }
+
   return (
     <section className="practice-history-page">
       <div className="practice-history-hero">
@@ -218,8 +272,24 @@ export function PracticeHistoryPage({
 
       {!hasProvidedSessions && !isLoadingSession && session ? (
         <section className="practice-session-entry" aria-labelledby="practice-session-entry-title">
-          <h2 id="practice-session-entry-title">{t('practiceHistory.formTitle')}</h2>
-          <PracticeSessionForm onSave={handleSaveSession} songs={songs} />
+          <h2 id="practice-session-entry-title">
+            {editingSession ? 'Edit practice session' : t('practiceHistory.formTitle')}
+          </h2>
+          <PracticeSessionForm
+            initialValues={
+              editingSession
+                ? {
+                    songId: editingSession.songId ?? null,
+                    durationMinutes: editingSession.durationMinutes,
+                    bpm: editingSession.bpm,
+                    focusArea: editingSession.focusArea,
+                    reflection: editingSession.reflection,
+                  }
+                : undefined
+            }
+            onSave={editingSession ? handleUpdateSession : handleSaveSession}
+            songs={songs}
+          />
           {isSaving ? <p className="practice-history-loading">{t('practiceHistory.saving')}</p> : null}
         </section>
       ) : null}
@@ -282,6 +352,24 @@ export function PracticeHistoryPage({
                   <strong>{t('practiceHistory.reflection')}</strong>
                   {session.reflection}
                 </p>
+              </div>
+
+              <div className="practice-history-card__actions">
+                <button
+                  aria-label="Edit practice session"
+                  onClick={() => setEditingSession(session)}
+                  type="button"
+                >
+                  Edit
+                </button>
+                <button
+                  aria-label="Delete practice session"
+                  disabled={deletingSessionId === session.id}
+                  onClick={() => handleDeleteSession(session.id)}
+                  type="button"
+                >
+                  Delete
+                </button>
               </div>
             </article>
           ))}

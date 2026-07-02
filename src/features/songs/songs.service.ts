@@ -1,5 +1,5 @@
 import { getSupabase } from '../../lib/supabase';
-import { CreateSongInput, SongDetail, SongStatus, SongSummary } from './song.types';
+import { CreateSongInput, SongDetail, SongStatus, SongSummary, UpdateSongInput } from './song.types';
 
 interface SongRow {
   id: string;
@@ -49,12 +49,12 @@ function hasDemoSession(): boolean {
   return Boolean(window.localStorage.getItem(demoSessionStorageKey));
 }
 
-function readDemoSongs(): SongSummary[] {
+function readDemoSongs(): SongDetail[] {
   const storedSongs = window.localStorage.getItem(demoSongsStorageKey);
-  return storedSongs ? (JSON.parse(storedSongs) as SongSummary[]) : [];
+  return storedSongs ? (JSON.parse(storedSongs) as SongDetail[]) : [];
 }
 
-function writeDemoSongs(songs: SongSummary[]) {
+function writeDemoSongs(songs: SongDetail[]) {
   window.localStorage.setItem(demoSongsStorageKey, JSON.stringify(songs));
 }
 
@@ -63,10 +63,10 @@ function findDemoSong(songId: string): SongDetail | null {
 
   return song
     ? {
-        ...song,
         releaseYear: null,
         bpm: null,
         notes: '',
+        ...song,
       }
     : null;
 }
@@ -109,6 +109,9 @@ export async function createSong(input: CreateSongInput): Promise<void> {
           artistName: 'Local demo',
           status: input.status,
           difficulty: input.difficulty,
+          releaseYear: null,
+          bpm: null,
+          notes: '',
         },
         ...readDemoSongs(),
       ]);
@@ -134,6 +137,74 @@ export async function createSong(input: CreateSongInput): Promise<void> {
     status: input.status,
     difficulty: input.difficulty,
   });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+}
+
+export async function updateSong(songId: string, input: UpdateSongInput): Promise<void> {
+  let supabase: ReturnType<typeof getSupabase>;
+  try {
+    supabase = getSupabase();
+  } catch (caughtError) {
+    if (isMissingSupabaseEnvError(caughtError)) {
+      if (!hasDemoSession()) {
+        throw new Error('Sign in before editing songs.');
+      }
+      writeDemoSongs(
+        readDemoSongs().map((song) =>
+          song.id === songId
+            ? {
+                ...song,
+                title: input.title,
+                status: input.status,
+                difficulty: input.difficulty,
+                releaseYear: input.releaseYear,
+                bpm: input.bpm,
+                notes: input.notes,
+              }
+            : song,
+        ),
+      );
+      return;
+    }
+    throw caughtError;
+  }
+
+  const { error } = await supabase
+    .from('songs')
+    .update({
+      title: input.title,
+      status: input.status,
+      difficulty: input.difficulty,
+      release_year: input.releaseYear,
+      bpm: input.bpm,
+      notes: input.notes,
+    })
+    .eq('id', songId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+}
+
+export async function deleteSong(songId: string): Promise<void> {
+  let supabase: ReturnType<typeof getSupabase>;
+  try {
+    supabase = getSupabase();
+  } catch (caughtError) {
+    if (isMissingSupabaseEnvError(caughtError)) {
+      if (!hasDemoSession()) {
+        throw new Error('Sign in before deleting songs.');
+      }
+      writeDemoSongs(readDemoSongs().filter((song) => song.id !== songId));
+      return;
+    }
+    throw caughtError;
+  }
+
+  const { error } = await supabase.from('songs').delete().eq('id', songId);
 
   if (error) {
     throw new Error(error.message);

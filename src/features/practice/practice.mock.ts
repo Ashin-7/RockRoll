@@ -1,5 +1,6 @@
 export interface PracticeHistoryItem {
   id: string;
+  songId?: string | null;
   songTitle: string;
   artistName: string;
   practicedOn: string;

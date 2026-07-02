@@ -225,6 +225,21 @@
   gap: var(--space-3);
 }
 
+.practice-history-card__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+}
+
+.practice-history-card__actions button {
+  color: var(--color-paper);
+}
+
+.practice-history-card__actions button:last-child {
+  border-color: rgba(138, 30, 45, 0.48);
+  color: var(--color-paper);
+}
+
 .practice-history-card__body p,
 .practice-history-empty,
 .practice-history-error,

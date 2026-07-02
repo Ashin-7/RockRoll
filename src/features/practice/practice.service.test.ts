@@ -3,8 +3,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const orderMock = vi.fn();
 const selectMock = vi.fn(() => ({ order: orderMock }));
 const insertMock = vi.fn();
+const updateMock = vi.fn(() => ({ eq: eqMock }));
+const eqMock = vi.fn();
+const deleteMock = vi.fn(() => ({ eq: eqMock }));
 const getSessionMock = vi.fn();
-const fromMock = vi.fn(() => ({ insert: insertMock, select: selectMock }));
+const fromMock = vi.fn(() => ({ delete: deleteMock, insert: insertMock, select: selectMock, update: updateMock }));
 const getSupabaseMock = vi.fn(() => ({
   auth: { getSession: getSessionMock },
   from: fromMock,
@@ -45,6 +48,7 @@ describe('practice.service', () => {
     await expect(listPracticeHistory()).resolves.toEqual([
       {
         id: 'practice-1',
+        songId: 'song-1',
         songTitle: 'Little Wing',
         artistName: 'Unknown artist',
         practicedOn: '2026-07-01',
@@ -152,6 +156,113 @@ describe('practice.service', () => {
         bpm: 60,
         focusArea: 'Alternate picking',
         reflection: 'Keep the wrist relaxed.',
+      }),
+    ]);
+  });
+
+  it('deletes a practice session from Supabase', async () => {
+    eqMock.mockResolvedValue({ error: null });
+    const { deletePracticeSession } = await import('./practice.service');
+
+    await deletePracticeSession('practice-1');
+
+    expect(fromMock).toHaveBeenCalledWith('practice_sessions');
+    expect(deleteMock).toHaveBeenCalledWith();
+    expect(eqMock).toHaveBeenCalledWith('id', 'practice-1');
+  });
+
+  it('updates a practice session in Supabase', async () => {
+    eqMock.mockResolvedValue({ error: null });
+    const { updatePracticeSession } = await import('./practice.service');
+
+    await updatePracticeSession('practice-1', {
+      songId: 'song-2',
+      durationMinutes: 50,
+      bpm: 96,
+      focusArea: 'Outro timing',
+      reflection: 'Cleaner transition.',
+    });
+
+    expect(fromMock).toHaveBeenCalledWith('practice_sessions');
+    expect(updateMock).toHaveBeenCalledWith({
+      song_id: 'song-2',
+      duration_minutes: 50,
+      bpm: 96,
+      focus_area: 'Outro timing',
+      reflection: 'Cleaner transition.',
+    });
+    expect(eqMock).toHaveBeenCalledWith('id', 'practice-1');
+  });
+
+  it('removes local demo practice sessions when Supabase is not configured', async () => {
+    getSupabaseMock.mockImplementation(() => {
+      throw new Error('Missing VITE_SUPABASE_URL');
+    });
+    window.localStorage.setItem(
+      'rockroll.demoSession',
+      JSON.stringify({ user: { id: 'local-demo-user', email: 'demo@rockroll.local' } }),
+    );
+    window.localStorage.setItem(
+      'rockroll.demoPracticeHistory',
+      JSON.stringify([
+        {
+          id: 'practice-1',
+          songTitle: 'Little Wing',
+          artistName: 'Local demo',
+          practicedOn: '2026-07-01',
+          durationMinutes: 28,
+          bpm: 60,
+          focusArea: 'Alternate picking',
+          reflection: 'Keep the wrist relaxed.',
+        },
+      ]),
+    );
+    const { deletePracticeSession, listPracticeHistory } = await import('./practice.service');
+
+    await deletePracticeSession('practice-1');
+
+    await expect(listPracticeHistory()).resolves.toEqual([]);
+  });
+
+  it('updates local demo practice sessions when Supabase is not configured', async () => {
+    getSupabaseMock.mockImplementation(() => {
+      throw new Error('Missing VITE_SUPABASE_URL');
+    });
+    window.localStorage.setItem(
+      'rockroll.demoSession',
+      JSON.stringify({ user: { id: 'local-demo-user', email: 'demo@rockroll.local' } }),
+    );
+    window.localStorage.setItem(
+      'rockroll.demoPracticeHistory',
+      JSON.stringify([
+        {
+          id: 'practice-1',
+          songTitle: 'Little Wing',
+          artistName: 'Local demo',
+          practicedOn: '2026-07-01',
+          durationMinutes: 28,
+          bpm: 60,
+          focusArea: 'Alternate picking',
+          reflection: 'Keep the wrist relaxed.',
+        },
+      ]),
+    );
+    const { listPracticeHistory, updatePracticeSession } = await import('./practice.service');
+
+    await updatePracticeSession('practice-1', {
+      songId: null,
+      durationMinutes: 35,
+      bpm: null,
+      focusArea: 'String crossing',
+      reflection: 'Cleaner at slow tempo.',
+    });
+
+    await expect(listPracticeHistory()).resolves.toEqual([
+      expect.objectContaining({
+        durationMinutes: 35,
+        bpm: null,
+        focusArea: 'String crossing',
+        reflection: 'Cleaner at slow tempo.',
       }),
     ]);
   });

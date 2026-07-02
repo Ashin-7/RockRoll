@@ -19,3 +19,9 @@ export interface CreateSongInput {
   status: SongStatus;
   difficulty: number | null;
 }
+
+export interface UpdateSongInput extends CreateSongInput {
+  releaseYear: number | null;
+  bpm: number | null;
+  notes: string;
+}
