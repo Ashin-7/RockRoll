@@ -57,9 +57,11 @@
 
 ## P1
 
-### 下一个推荐任务：Artist CRUD
+### Artist CRUD
 
 目标：补齐 Artist 的编辑与删除，形成完整管理闭环。
+
+状态：已完成本地增量实现，待提交。
 
 建议读取：
 
@@ -77,7 +79,7 @@
 - 删除前提供确认交互。
 - 只运行 Artist 相关测试；如果没有相关测试，说明未运行原因。
 
-### Album CRUD
+### 下一个推荐任务：Album CRUD
 
 目标：建立 Album 基础管理能力。
 
@@ -110,9 +112,8 @@
 
 ## 推荐执行顺序
 
-1. Artist CRUD。
-2. Album CRUD。
-3. Archive 管理。
-4. Media Library。
+1. Album CRUD。
+2. Archive 管理。
+3. Media Library。
 
-当前建议先开启新对话，从 Artist CRUD 开始，避免继续扩大当前上下文。
+当前建议先开启新对话，从 Album CRUD 开始，避免继续扩大当前上下文。

@@ -17,6 +17,10 @@
 - 完成 Supabase Schema 稳定化复核：
   - 新增 `songs` / `practice_sessions` 的 `updated_at` 自动刷新触发器。
   - 收紧 `practice_sessions` insert/update RLS，限制 `song_id` 只能引用当前用户自己的歌曲。
+- 完成 Artist CRUD 本地增量实现：
+  - Artist Delete
+  - Artist Edit
+  - Supabase 与本地 Demo Mode 双路径
 - 更新交接文档：
   - `docs/PROJECT_STATUS.md`
   - `docs/NEXT_TASKS.md`
@@ -54,6 +58,15 @@ Songs：
 - `src/features/songs/songs.service.test.ts`
 - `src/features/songs/songs.service.ts`
 
+Artists：
+
+- `src/features/artists/ArtistDetailPage.css`
+- `src/features/artists/ArtistDetailPage.test.tsx`
+- `src/features/artists/ArtistDetailPage.tsx`
+- `src/features/artists/artist.types.ts`
+- `src/features/artists/artists.service.test.ts`
+- `src/features/artists/artists.service.ts`
+
 ## 验证命令和结果
 
 本轮尝试运行：
@@ -61,13 +74,16 @@ Songs：
 ```powershell
 npm test -- --run src/features/practice
 npm test -- --run src/features/songs
+npm test -- --run src/features/artists/artists.service.test.ts
+npm test -- --run src/features/artists/ArtistDetailPage.test.tsx
+npm test -- --run src/features/artists
 ```
 
 结果：
 
-- 两条命令均在 Vitest 启动阶段失败。
+- 以上测试命令均在 Vitest 启动阶段失败。
 - 当前 Node.js 为 `v8.17.0`，Vitest 入口 `node_modules/vitest/vitest.mjs` 使用 ESM `import`，Node 8 无法解析。
-- 本轮未进入 Practice / Songs 测试用例执行阶段。
+- 本轮未进入相关测试用例执行阶段。
 
 本轮已执行轻量校验：
 
@@ -109,9 +125,9 @@ npm run build
 
 ## 下一轮推荐任务
 
-建议先做：Artist CRUD。
+建议先做：Album CRUD。
 
-之后再进入：Album CRUD。
+之后再进入：Archive 管理。
 
 ## 下一轮推荐提示词
 
@@ -122,9 +138,9 @@ npm run build
 - docs/PROJECT_STATUS.md
 - docs/NEXT_TASKS.md
 - docs/SESSION_HANDOFF.md
-- src/features/artists
+- src/features/albums
 
-继续 docs/NEXT_TASKS.md 中的 Artist CRUD。
+继续 docs/NEXT_TASKS.md 中的 Album CRUD。
 不要扫描整个仓库。
 不要运行 npm install。
 不要做架构重构。

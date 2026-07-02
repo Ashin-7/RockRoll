@@ -10,6 +10,10 @@
 }
 
 .artist-detail-hero {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-6);
   border: 1px solid rgba(167, 162, 154, 0.16);
   border-radius: calc(var(--radius-panel) * 1.4);
   background:
@@ -17,6 +21,28 @@
     repeating-linear-gradient(90deg, rgba(167, 162, 154, 0.05) 0 1px, transparent 1px 1.2rem);
   box-shadow: var(--shadow-stage);
   padding: clamp(1.5rem, 4vw, 3.5rem);
+}
+
+.artist-detail-hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.artist-detail-hero__actions button,
+.artist-detail-edit-form button {
+  min-height: 2.5rem;
+  border: 1px solid rgba(242, 169, 59, 0.42);
+  border-radius: 0.5rem;
+  background: rgba(242, 169, 59, 0.16);
+  color: var(--color-paper);
+  padding: 0.65rem 1rem;
+}
+
+.artist-detail-hero__actions button:disabled,
+.artist-detail-edit-form button:disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
 }
 
 .artist-detail-hero h1 {
@@ -35,6 +61,49 @@
 
 .artist-detail-page__error {
   color: var(--color-amber);
+}
+
+.artist-detail-edit-form {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr)) auto;
+  gap: var(--space-3);
+  align-items: end;
+  border: 1px solid rgba(167, 162, 154, 0.16);
+  border-radius: var(--radius-panel);
+  background: rgba(34, 32, 31, 0.72);
+  padding: var(--space-5);
+}
+
+.artist-detail-edit-form h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.artist-detail-edit-form label {
+  display: grid;
+  gap: var(--space-2);
+  color: var(--color-silver);
+  font-size: 0.74rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.artist-detail-edit-form input,
+.artist-detail-edit-form textarea {
+  min-height: 2.5rem;
+  border: 1px solid rgba(167, 162, 154, 0.22);
+  border-radius: 0.5rem;
+  background: rgba(17, 16, 15, 0.74);
+  color: var(--color-paper);
+  padding: 0.65rem 0.75rem;
+}
+
+.artist-detail-edit-form textarea {
+  min-height: 5rem;
+  resize: vertical;
 }
 
 .artist-detail-grid {
@@ -82,6 +151,12 @@
 }
 
 @media (max-width: 760px) {
+  .artist-detail-hero {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .artist-detail-edit-form,
   .artist-detail-grid {
     grid-template-columns: 1fr;
   }

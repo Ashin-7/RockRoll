@@ -15,3 +15,7 @@ export interface CreateArtistInput {
   beginYear: number | null;
   notes: string;
 }
+
+export interface UpdateArtistInput extends CreateArtistInput {
+  endYear: number | null;
+}

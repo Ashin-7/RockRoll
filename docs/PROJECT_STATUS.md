@@ -20,19 +20,24 @@ MVP Foundation
 - 已完成 Supabase Schema 稳定化复核，并新增 migration：
   - `songs` / `practice_sessions` 更新时自动刷新 `updated_at`。
   - `practice_sessions` 新增 insert/update 的 `song_id` 归属校验，避免跨用户引用歌曲。
+- 已完成 Artist CRUD 增量实现：
+  - Artist Edit
+  - Artist Delete
+  - Supabase 与本地 Demo Mode 双路径
 - 本轮在 Node.js v8.17.0 下重新运行 Practice 与 Songs 相关测试时，Vitest 因 ESM 入口无法启动，未进入用例执行。
 
 ## 当前分支状态
 
 - 当前分支：`feature/mvp-foundation`
 - 跟踪分支：`origin/feature/mvp-foundation`
-- 当前分支已包含 P0 CRUD 收尾提交；本次 Supabase Schema 复核改动待提交。
+- 当前分支已包含 P0 CRUD 与 Supabase Schema 稳定化提交；本次 Artist CRUD 改动待提交。
 
 ## 已完成模块
 
 - Auth
 - Songs
 - Practice
+- Artists
 - 基础路由
 - Demo Mode
 - Supabase 接入
@@ -40,7 +45,6 @@ MVP Foundation
 ## 部分完成模块
 
 - Song Detail：已补齐本地编辑/删除入口，但仍需后续确认 i18n、列表同步与完整构建验证。
-- Artist
 - Archive
 - Library
 - Inbox
@@ -78,7 +82,7 @@ MVP Foundation
 
 ### P1
 
-- Artist 管理
+- Artist 管理：已补齐编辑与删除闭环，待提交。
 - Album 管理
 - Archive 管理
 
@@ -111,12 +115,11 @@ MVP Foundation
 
 推荐开发顺序：
 
-1. Artist CRUD。
-2. Album CRUD。
-3. Practice Filter / Sort。
-4. Practice Goal Duration。
-5. Practice Completion。
-6. Practice Tags。
+1. Album CRUD。
+2. Practice Filter / Sort。
+3. Practice Goal Duration。
+4. Practice Completion。
+5. Practice Tags。
 
 ## 当前验证结果
 
@@ -125,12 +128,15 @@ MVP Foundation
 ```powershell
 npm test -- --run src/features/practice
 npm test -- --run src/features/songs
+npm test -- --run src/features/artists/artists.service.test.ts
+npm test -- --run src/features/artists/ArtistDetailPage.test.tsx
+npm test -- --run src/features/artists
 ```
 
 结果：
 
-- 两条命令均在 Vitest 启动阶段失败，错误为 Node.js v8.17.0 无法解析 `node_modules/vitest/vitest.mjs` 中的 ESM `import`。
-- 本轮未进入 Practice / Songs 测试用例执行阶段。
+- 以上测试命令均在 Vitest 启动阶段失败，错误为 Node.js v8.17.0 无法解析 `node_modules/vitest/vitest.mjs` 中的 ESM `import`。
+- 本轮未进入相关测试用例执行阶段。
 
 本轮已执行轻量校验：
 

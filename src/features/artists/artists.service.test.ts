@@ -3,10 +3,14 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const orderMock = vi.fn();
 const maybeSingleMock = vi.fn();
 const eqMock = vi.fn(() => ({ maybeSingle: maybeSingleMock }));
+const updateEqMock = vi.fn();
+const deleteEqMock = vi.fn();
 const selectMock = vi.fn();
 const insertMock = vi.fn();
+const updateMock = vi.fn(() => ({ eq: updateEqMock }));
+const deleteMock = vi.fn(() => ({ eq: deleteEqMock }));
 const getSessionMock = vi.fn();
-const fromMock = vi.fn(() => ({ select: selectMock, insert: insertMock }));
+const fromMock = vi.fn(() => ({ delete: deleteMock, select: selectMock, insert: insertMock, update: updateMock }));
 const getSupabaseMock = vi.fn(() => ({
   auth: { getSession: getSessionMock },
   from: fromMock,
@@ -114,6 +118,40 @@ describe('artists.service', () => {
     );
   });
 
+  it('updates an artist in Supabase', async () => {
+    updateEqMock.mockResolvedValue({ error: null });
+    const { updateArtist } = await import('./artists.service');
+
+    await updateArtist('artist-1', {
+      name: 'Jimi Hendrix Experience',
+      country: 'US',
+      beginYear: 1966,
+      endYear: 1970,
+      notes: 'Band context.',
+    });
+
+    expect(fromMock).toHaveBeenCalledWith('artists');
+    expect(updateMock).toHaveBeenCalledWith({
+      name: 'Jimi Hendrix Experience',
+      country: 'US',
+      begin_year: 1966,
+      end_year: 1970,
+      notes: 'Band context.',
+    });
+    expect(updateEqMock).toHaveBeenCalledWith('id', 'artist-1');
+  });
+
+  it('deletes an artist in Supabase', async () => {
+    deleteEqMock.mockResolvedValue({ error: null });
+    const { deleteArtist } = await import('./artists.service');
+
+    await deleteArtist('artist-1');
+
+    expect(fromMock).toHaveBeenCalledWith('artists');
+    expect(deleteMock).toHaveBeenCalledWith();
+    expect(deleteEqMock).toHaveBeenCalledWith('id', 'artist-1');
+  });
+
   it('uses local demo artists when Supabase is not configured', async () => {
     getSupabaseMock.mockImplementation(() => {
       throw new Error('Missing VITE_SUPABASE_URL');
@@ -166,5 +204,68 @@ describe('artists.service', () => {
       endYear: null,
       notes: 'Local reference.',
     });
+  });
+
+  it('updates local demo artists when Supabase is not configured', async () => {
+    getSupabaseMock.mockImplementation(() => {
+      throw new Error('Missing VITE_SUPABASE_URL');
+    });
+    window.localStorage.setItem('rockroll.demoSession', JSON.stringify({ user: { id: 'local-demo-user' } }));
+    window.localStorage.setItem(
+      'rockroll.demoArtists',
+      JSON.stringify([
+        {
+          id: 'local-artist-1',
+          name: 'Demo Artist',
+          country: 'JP',
+          beginYear: 1980,
+          endYear: null,
+          notes: 'Local reference.',
+        },
+      ]),
+    );
+    const { getArtistById, updateArtist } = await import('./artists.service');
+
+    await updateArtist('local-artist-1', {
+      name: 'Updated Demo Artist',
+      country: 'US',
+      beginYear: 1970,
+      endYear: 2020,
+      notes: 'Updated local reference.',
+    });
+
+    await expect(getArtistById('local-artist-1')).resolves.toEqual({
+      id: 'local-artist-1',
+      name: 'Updated Demo Artist',
+      country: 'US',
+      beginYear: 1970,
+      endYear: 2020,
+      notes: 'Updated local reference.',
+    });
+  });
+
+  it('deletes local demo artists when Supabase is not configured', async () => {
+    getSupabaseMock.mockImplementation(() => {
+      throw new Error('Missing VITE_SUPABASE_URL');
+    });
+    window.localStorage.setItem('rockroll.demoSession', JSON.stringify({ user: { id: 'local-demo-user' } }));
+    window.localStorage.setItem(
+      'rockroll.demoArtists',
+      JSON.stringify([
+        {
+          id: 'local-artist-1',
+          name: 'Demo Artist',
+          country: 'JP',
+          beginYear: 1980,
+          endYear: null,
+          notes: 'Local reference.',
+        },
+      ]),
+    );
+    const { deleteArtist, listArtists } = await import('./artists.service');
+
+    await deleteArtist('local-artist-1');
+
+    await expect(listArtists()).resolves.toEqual([]);
   });
 });

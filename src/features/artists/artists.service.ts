@@ -1,5 +1,5 @@
 import { getSupabase } from '../../lib/supabase';
-import { ArtistDetail, ArtistSummary, CreateArtistInput } from './artist.types';
+import { ArtistDetail, ArtistSummary, CreateArtistInput, UpdateArtistInput } from './artist.types';
 
 interface ArtistRow {
   id: string;
@@ -112,6 +112,72 @@ export async function createArtist(input: CreateArtistInput): Promise<void> {
     begin_year: input.beginYear,
     notes: input.notes,
   });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+}
+
+export async function updateArtist(artistId: string, input: UpdateArtistInput): Promise<void> {
+  let supabase: ReturnType<typeof getSupabase>;
+  try {
+    supabase = getSupabase();
+  } catch (caughtError) {
+    if (isMissingSupabaseEnvError(caughtError)) {
+      if (!hasDemoSession()) {
+        throw new Error('Sign in before editing artists.');
+      }
+      writeDemoArtists(
+        readDemoArtists().map((artist) =>
+          artist.id === artistId
+            ? {
+                ...artist,
+                name: input.name,
+                country: input.country,
+                beginYear: input.beginYear,
+                endYear: input.endYear,
+                notes: input.notes,
+              }
+            : artist,
+        ),
+      );
+      return;
+    }
+    throw caughtError;
+  }
+
+  const { error } = await supabase
+    .from('artists')
+    .update({
+      name: input.name,
+      country: input.country,
+      begin_year: input.beginYear,
+      end_year: input.endYear,
+      notes: input.notes,
+    })
+    .eq('id', artistId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+}
+
+export async function deleteArtist(artistId: string): Promise<void> {
+  let supabase: ReturnType<typeof getSupabase>;
+  try {
+    supabase = getSupabase();
+  } catch (caughtError) {
+    if (isMissingSupabaseEnvError(caughtError)) {
+      if (!hasDemoSession()) {
+        throw new Error('Sign in before deleting artists.');
+      }
+      writeDemoArtists(readDemoArtists().filter((artist) => artist.id !== artistId));
+      return;
+    }
+    throw caughtError;
+  }
+
+  const { error } = await supabase.from('artists').delete().eq('id', artistId);
 
   if (error) {
     throw new Error(error.message);
