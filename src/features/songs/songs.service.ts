@@ -1,11 +1,17 @@
 import { getSupabase } from '../../lib/supabase';
-import { CreateSongInput, SongStatus, SongSummary } from './song.types';
+import { CreateSongInput, SongDetail, SongStatus, SongSummary } from './song.types';
 
 interface SongRow {
   id: string;
   title: string;
   status: string;
   difficulty: number | null;
+}
+
+interface SongDetailRow extends SongRow {
+  release_year: number | null;
+  bpm: number | null;
+  notes: string;
 }
 
 const songStatuses: SongStatus[] = ['planned', 'learning', 'polishing', 'archived'];
@@ -26,6 +32,15 @@ function mapSongRow(song: SongRow): SongSummary {
   };
 }
 
+function mapSongDetailRow(song: SongDetailRow): SongDetail {
+  return {
+    ...mapSongRow(song),
+    releaseYear: song.release_year,
+    bpm: song.bpm,
+    notes: song.notes,
+  };
+}
+
 function isMissingSupabaseEnvError(error: unknown): boolean {
   return error instanceof Error && error.message.startsWith('Missing VITE_SUPABASE_');
 }
@@ -41,6 +56,19 @@ function readDemoSongs(): SongSummary[] {
 
 function writeDemoSongs(songs: SongSummary[]) {
   window.localStorage.setItem(demoSongsStorageKey, JSON.stringify(songs));
+}
+
+function findDemoSong(songId: string): SongDetail | null {
+  const song = readDemoSongs().find((demoSong) => demoSong.id === songId);
+
+  return song
+    ? {
+        ...song,
+        releaseYear: null,
+        bpm: null,
+        notes: '',
+      }
+    : null;
 }
 
 export async function listSongs(): Promise<SongSummary[]> {
@@ -110,4 +138,28 @@ export async function createSong(input: CreateSongInput): Promise<void> {
   if (error) {
     throw new Error(error.message);
   }
+}
+
+export async function getSongById(songId: string): Promise<SongDetail | null> {
+  let supabase: ReturnType<typeof getSupabase>;
+  try {
+    supabase = getSupabase();
+  } catch (caughtError) {
+    if (isMissingSupabaseEnvError(caughtError)) {
+      return findDemoSong(songId);
+    }
+    throw caughtError;
+  }
+
+  const { data, error } = await supabase
+    .from('songs')
+    .select('id,title,status,difficulty,release_year,bpm,notes')
+    .eq('id', songId)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data ? mapSongDetailRow(data as SongDetailRow) : null;
 }

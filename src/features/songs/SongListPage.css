@@ -140,6 +140,16 @@
   text-transform: uppercase;
 }
 
+.song-card h2 a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.song-card h2 a:hover,
+.song-card h2 a:focus-visible {
+  color: var(--color-amber);
+}
+
 .song-card__artist,
 .song-card__meta,
 .song-card__next {

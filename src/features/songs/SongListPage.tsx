@@ -168,7 +168,9 @@ export function SongListPage({ songs, onCreateSong = createSong, onLoadSongs = l
             <article className="song-card" key={song.id}>
               <div className="song-card__header">
                 <div>
-                  <h2>{song.title}</h2>
+                  <h2>
+                    <a href={`#song/${encodeURIComponent(song.id)}`}>{song.title}</a>
+                  </h2>
                   <p className="song-card__artist">{song.artistName}</p>
                 </div>
                 <span className="song-card__status">{t(songStatusMessageKeys[song.status])}</span>

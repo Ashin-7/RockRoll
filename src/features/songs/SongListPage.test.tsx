@@ -21,6 +21,7 @@ describe('SongListPage', () => {
 
     expect(screen.getByText('Loading songs...')).toBeInTheDocument();
     expect(await screen.findByText('Little Wing')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Little Wing' })).toHaveAttribute('href', '#song/song-1');
     expect(screen.getByText('Unknown artist')).toBeInTheDocument();
     expect(screen.getAllByText('Learning')).toHaveLength(2);
   });
