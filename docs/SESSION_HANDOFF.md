@@ -40,6 +40,11 @@
   - 可选关联 Song / Practice / Artist / Album
   - Supabase 与本地 Demo Mode 双路径
   - 收紧 `media_links` RLS，限制跨用户媒体关联
+- 完成匿名旅行者导入预览 MVP 本地增量实现：
+  - Inbox 内输入单个公开 Anontraveler rank version URL
+  - 只请求公开 JSON API 并生成预览
+  - 展示 Artist / Album / Archive Item 预览数量与专辑样例
+  - 不写入数据库，不创建导入候选，不抓取图片二进制
 - 更新交接文档：
   - `docs/PROJECT_STATUS.md`
   - `docs/NEXT_TASKS.md`
@@ -137,6 +142,15 @@ Library：
 - `src/features/library/media.service.ts`
 - `src/features/library/media.types.ts`
 
+Inbox / Anontraveler：
+
+- `src/features/inbox/InboxPage.css`
+- `src/features/inbox/InboxPage.test.tsx`
+- `src/features/inbox/InboxPage.tsx`
+- `src/features/inbox/anontraveler.service.test.ts`
+- `src/features/inbox/anontraveler.service.ts`
+- `src/features/inbox/anontraveler.types.ts`
+
 ## 验证命令和结果
 
 本轮已运行并通过：
@@ -145,6 +159,7 @@ Library：
 npm test -- --run src/features/albums src/app/routes.test.tsx src/features/archive/ArchivePage.test.tsx
 npm test -- --run src/features/archive src/app/routes.test.tsx
 npm test -- --run src/features/library
+npm test -- --run src/features/inbox
 ```
 
 结果：
@@ -152,6 +167,7 @@ npm test -- --run src/features/library
 - 当前 shell Node.js 为 `v20.20.2`，Album / routes / Archive 相关测试通过：5 个测试文件，19 个用例。
 - 当前 shell Node.js 为 `v20.20.2`，Archive / routes 相关测试通过：4 个测试文件，16 个用例。
 - 当前 shell Node.js 为 `v20.20.2`，Library 相关测试通过：2 个测试文件，7 个用例。
+- 当前 shell Node.js 为 `v20.20.2`，Inbox 相关测试通过：4 个测试文件，11 个用例。
 
 本轮已执行轻量校验：
 
@@ -186,8 +202,8 @@ npm run build
 
 - 当前分支：`feature/mvp-foundation`
 - 跟踪分支：`origin/feature/mvp-foundation`
-- P0 CRUD、Supabase Schema 稳定化、Artist CRUD、Album CRUD、Archive MVP 已提交并推送。
-- 本轮 Media Library MVP 改动待提交。
+- P0 CRUD、Supabase Schema 稳定化、Artist CRUD、Album CRUD、Archive MVP、Media Library MVP 已提交并推送。
+- 本轮匿名旅行者导入预览 MVP 改动待提交。
 
 ## 未完成事项
 
@@ -196,16 +212,16 @@ npm run build
 - Media Asset 编辑 / 删除尚未实现。
 - Media Link 编辑 / 删除尚未实现。
 - Media Library 目前只管理元数据，不处理真实文件上传、播放器或 Supabase Storage bucket 初始化。
-- 匿名旅行者导入仍停留在评估文档阶段，未写正式导入代码。
+- 匿名旅行者导入当前只做预览，不执行写库、去重、确认导入或批量抓取。
 - Practice / Song / Artist 新增 UI 文案存在硬编码英文，后续可按 i18n 策略统一处理。
 - 完整测试与构建尚未运行。
 - Supabase migrations 尚未在真实 Supabase 实例上执行验证。
 
 ## 下一轮推荐任务
 
-建议先做：Media Library MVP 收尾复核与提交。
+建议先做：匿名旅行者导入预览 MVP 收尾复核与提交。
 
-之后再进入：匿名旅行者导入预览 MVP。
+之后再进入：Practice Filter / Sort。
 
 ## 下一轮推荐提示词
 
@@ -216,12 +232,13 @@ npm run build
 - docs/PROJECT_STATUS.md
 - docs/NEXT_TASKS.md
 - docs/SESSION_HANDOFF.md
-- src/features/library
+- docs/IMPORT_ANONTRAVELER.md
+- src/features/inbox
 
-继续 docs/NEXT_TASKS.md 中的 Media Library MVP 收尾复核与提交。
+继续 docs/NEXT_TASKS.md 中的匿名旅行者导入预览 MVP 收尾复核与提交。
 不要扫描整个仓库。
 不要运行 npm install。
 不要做架构重构。
-只运行与 Library 相关的测试；如需要完整测试或构建，请先说明原因。
+只运行与 Inbox 相关的测试；如需要完整测试或构建，请先说明原因。
 完成后中文总结。
 ```

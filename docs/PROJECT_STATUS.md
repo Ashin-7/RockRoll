@@ -39,12 +39,17 @@ MVP Foundation
   - 可选关联 Song / Practice / Artist / Album
   - Supabase 与本地 Demo Mode 双路径
   - 收紧 `media_links` RLS，避免跨用户关联媒体
+- 已完成匿名旅行者导入预览 MVP 增量实现：
+  - Inbox 内输入单个公开 Anontraveler rank version URL
+  - 只请求公开 JSON API 并生成预览
+  - 展示 Artist / Album / Archive Item 预览数量与专辑样例
+  - 不写入数据库，不创建导入候选，不抓取图片二进制
 
 ## 当前分支状态
 
 - 当前分支：`feature/mvp-foundation`
 - 跟踪分支：`origin/feature/mvp-foundation`
-- 当前分支已包含 P0 CRUD、Supabase Schema 稳定化、Artist CRUD、Album CRUD 与 Archive MVP 提交；本次 Media Library MVP 改动待提交。
+- 当前分支已包含 P0 CRUD、Supabase Schema 稳定化、Artist CRUD、Album CRUD、Archive MVP 与 Media Library MVP 提交；本次匿名旅行者导入预览 MVP 改动待提交。
 
 ## 已完成模块
 
@@ -55,6 +60,7 @@ MVP Foundation
 - Albums
 - Archive MVP
 - Media Library MVP
+- 匿名旅行者导入预览 MVP
 - 基础路由
 - Demo Mode
 - Supabase 接入
@@ -62,7 +68,7 @@ MVP Foundation
 ## 部分完成模块
 
 - Song Detail：已补齐本地编辑/删除入口，但仍需后续确认 i18n、列表同步与完整构建验证。
-- Inbox
+- Inbox：已具备导入候选列表与匿名旅行者只读预览。
 
 ## 未开始模块
 
@@ -104,7 +110,7 @@ MVP Foundation
 ### P2
 
 - 文件管理：已完成 Media Asset 元数据与可选实体关联的最小闭环，待提交。
-- 外部元数据导入
+- 外部元数据导入：已完成匿名旅行者只读预览，正式导入尚未开始。
 
 ## Practice 模块状态评估
 
@@ -130,11 +136,10 @@ MVP Foundation
 
 推荐开发顺序：
 
-1. 匿名旅行者导入预览 MVP。
-2. Practice Filter / Sort。
-3. Practice Goal Duration。
-4. Practice Completion。
-5. Practice Tags。
+1. Practice Filter / Sort。
+2. Practice Goal Duration。
+3. Practice Completion。
+4. Practice Tags。
 
 ## 当前验证结果
 
@@ -144,6 +149,7 @@ MVP Foundation
 npm test -- --run src/features/albums src/app/routes.test.tsx src/features/archive/ArchivePage.test.tsx
 npm test -- --run src/features/archive src/app/routes.test.tsx
 npm test -- --run src/features/library
+npm test -- --run src/features/inbox
 ```
 
 结果：
@@ -151,6 +157,7 @@ npm test -- --run src/features/library
 - 当前 shell Node.js 为 `v20.20.2`，Album / routes / Archive 相关测试通过：5 个测试文件，19 个用例。
 - 当前 shell Node.js 为 `v20.20.2`，Archive / routes 相关测试通过：4 个测试文件，16 个用例。
 - 当前 shell Node.js 为 `v20.20.2`，Library 相关测试通过：2 个测试文件，7 个用例。
+- 当前 shell Node.js 为 `v20.20.2`，Inbox 相关测试通过：4 个测试文件，11 个用例。
 
 本轮已执行轻量校验：
 
@@ -184,6 +191,7 @@ npm run build
 
 - 当前 shell 使用 Node.js v20.20.2 运行通过 Album 相关测试；若切回 Node.js v8.17.0，当前 Vite/Vitest 工具链仍不兼容。
 - Media Library 当前只管理元数据，不处理真实文件上传、播放器或 Supabase Storage bucket 初始化。
+- 匿名旅行者当前只做预览，不执行写库、去重、确认导入或批量抓取。
 - Practice / Song / Artist 新增 UI 文案目前存在硬编码英文，后续可按 i18n 策略补齐。
 - 尚未运行完整测试与构建，合并前仍需至少执行一次。
 - Supabase migrations 尚未在真实 Supabase 实例上执行验证。

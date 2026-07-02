@@ -71,6 +71,55 @@
   padding: var(--space-8);
 }
 
+.inbox-anontraveler-form,
+.inbox-anontraveler-preview {
+  display: grid;
+  gap: var(--space-4);
+  border: 1px solid rgba(167, 162, 154, 0.16);
+  border-radius: var(--radius-panel);
+  background: rgba(17, 16, 15, 0.48);
+  padding: var(--space-6);
+}
+
+.inbox-anontraveler-form {
+  max-width: 44rem;
+}
+
+.inbox-anontraveler-form h2,
+.inbox-anontraveler-preview h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 2rem;
+  line-height: 0.95;
+  text-transform: uppercase;
+}
+
+.inbox-anontraveler-form label {
+  display: grid;
+  gap: var(--space-2);
+  font-weight: 700;
+}
+
+.inbox-anontraveler-form input {
+  width: 100%;
+}
+
+.inbox-anontraveler-preview__counts,
+.inbox-anontraveler-preview__albums {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.inbox-anontraveler-preview__counts {
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+}
+
+.inbox-anontraveler-preview__counts p,
+.inbox-anontraveler-preview__albums p {
+  margin: 0;
+  color: var(--color-paper-muted);
+}
+
 .inbox-candidate-list {
   display: grid;
   gap: var(--space-4);

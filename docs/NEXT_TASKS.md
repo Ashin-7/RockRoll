@@ -69,7 +69,7 @@
 
 目标：围绕媒体资产建立最小管理流程。
 
-状态：已完成本地增量实现，待提交。
+状态：已完成并提交。
 
 已完成范围：
 
@@ -91,12 +91,14 @@
 
 目标：基于 `docs/IMPORT_ANONTRAVELER.md` 做单 URL、低频、只读公开 JSON 的导入预览。
 
+状态：已完成本地增量实现，待提交。
+
 前置条件：
 
 - Archive MVP 已具备 Collection / Item 基础模型。
 - 仍不写批量抓取，不绕过登录，不读取私人数据。
 
-建议范围：
+已完成范围：
 
 - 输入一个匿名旅行者公开 URL。
 - 请求一次 version JSON API。
@@ -104,10 +106,29 @@
 - 用户确认前不写入数据库。
 - Song 暂时跳过。
 
+未完成范围：
+
+- 正式写库导入。
+- Artist / Album 去重确认。
+- Archive Collection / Item 写入。
+- 批量 URL 队列。
+- 外部来源映射表扩展。
+
+### Practice Filter / Sort
+
+目标：提高 Practice History 的查找与回看效率。
+
+建议范围：
+
+- 支持按 Song 过滤。
+- 支持按日期倒序 / 正序排序。
+- 支持按 focus area 简单文本过滤。
+- 不做复杂标签、统计图表或高级搜索。
+
 ## 推荐执行顺序
 
-1. Media Library MVP 收尾复核与提交。
-2. 匿名旅行者导入预览 MVP。
-3. Practice Filter / Sort。
+1. 匿名旅行者导入预览 MVP 收尾复核与提交。
+2. Practice Filter / Sort。
+3. Practice Goal Duration。
 
-当前建议先完成 Media Library MVP 的提交，再开启新对话处理匿名旅行者导入预览 MVP。
+当前建议先完成匿名旅行者导入预览 MVP 的提交，再开启新对话处理 Practice Filter / Sort。

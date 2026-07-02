@@ -155,12 +155,27 @@ https://www.anontraveler.com/rank/version/65f3e6194e5b897fbb0a7bfa
 
 ## 推荐导入流程
 
-后续正式实现时建议分四步：
+预览 MVP 已采用以下前两步：
 
 1. 输入匿名旅行者公开 URL，解析 `rank/version/:versionId`。
 2. 请求 `/api/rank/version/:versionId`，只读取公开 JSON。
 3. 在 RockRoll 内生成预览：将创建的 Artist、Album、跳过的 Song、待归档的 Archive 集合。
 4. 用户确认后执行导入，记录来源 ID 和冲突处理结果。
+
+当前已完成：
+
+- Inbox 内单 URL 预览表单。
+- 只读公开 JSON API。
+- Artist / Album / Archive Item 预览。
+- Song 跳过提示。
+- 用户确认前不写入数据库。
+
+当前未完成：
+
+- 正式导入写库。
+- Artist / Album 去重确认。
+- Archive Collection / Item 写入。
+- 外部来源映射表。
 
 冲突策略：
 
@@ -179,4 +194,4 @@ https://www.anontraveler.com/rank/version/65f3e6194e5b897fbb0a7bfa
 
 ## 建议下一步
 
-短期不写导入代码。建议先完成 RockRoll Archive 管理的最小模型，再决定是否增加外部来源映射表。等 Archive/Genre 能力明确后，再做匿名旅行者导入的 MVP：单 URL、单次请求、预览确认、只创建 Artist / Album。
+短期继续保持“预览先行”。正式导入前建议先补外部来源映射表或确认临时去重策略，再实现用户确认后的 Artist / Album / Archive 写入。

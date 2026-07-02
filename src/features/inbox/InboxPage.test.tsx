@@ -1,7 +1,9 @@
 import { screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { renderWithI18n } from '../../test/render';
 import { InboxPage } from './InboxPage';
+import { AnontravelerPreview } from './anontraveler.types';
 import { ImportCandidateSummary } from './inbox.types';
 
 const candidates: ImportCandidateSummary[] = [
@@ -13,6 +15,38 @@ const candidates: ImportCandidateSummary[] = [
     sourceName: 'musicbrainz',
   },
 ];
+
+const anontravelerPreview: AnontravelerPreview = {
+  versionId: 'version-1',
+  sourceUrl: 'https://www.anontraveler.com/rank/version/version-1',
+  collection: {
+    externalId: 'version-1',
+    title: 'Classic rock guide',
+    description: 'Albums to explore.',
+    source: 'anontraveler',
+    collectionType: 'album_rank',
+  },
+  artists: [{ externalId: 'artist-1', name: 'The Beatles' }],
+  albums: [
+    {
+      externalId: 'album-1',
+      title: 'Please Please Me',
+      artistName: 'The Beatles',
+      releaseYear: 1963,
+      note: 'Beat music marker.',
+    },
+  ],
+  archiveItems: [
+    {
+      externalId: 'item-1',
+      albumExternalId: 'album-1',
+      displayTitle: 'Please Please Me',
+      position: 1,
+      note: 'Beat music marker.',
+    },
+  ],
+  skippedSongs: 0,
+};
 
 describe('InboxPage', () => {
   it('loads and renders import candidates from the provided loader', async () => {
@@ -44,5 +78,31 @@ describe('InboxPage', () => {
 
     expect(screen.getByText('导入收件箱')).toBeInTheDocument();
     expect(screen.getByText('还没有待确认的导入候选。')).toBeInTheDocument();
+  });
+
+  it('previews a public Anontraveler URL without writing import candidates', async () => {
+    const user = userEvent.setup();
+    const onPreviewAnontraveler = vi.fn().mockResolvedValue(anontravelerPreview);
+
+    renderWithI18n(
+      <InboxPage
+        candidates={[]}
+        onPreviewAnontraveler={onPreviewAnontraveler}
+      />,
+    );
+
+    await user.type(
+      screen.getByLabelText('Anontraveler rank version URL'),
+      'https://www.anontraveler.com/rank/version/version-1',
+    );
+    await user.click(screen.getByRole('button', { name: 'Preview Anontraveler' }));
+
+    expect(onPreviewAnontraveler).toHaveBeenCalledWith('https://www.anontraveler.com/rank/version/version-1');
+    expect(await screen.findByText('Classic rock guide')).toBeInTheDocument();
+    expect(screen.getByText('Artists to preview: 1')).toBeInTheDocument();
+    expect(screen.getByText('Albums to preview: 1')).toBeInTheDocument();
+    expect(screen.getByText('Archive items to preview: 1')).toBeInTheDocument();
+    expect(screen.getByText('Songs skipped: 0')).toBeInTheDocument();
+    expect(screen.getByText('Please Please Me')).toBeInTheDocument();
   });
 });
