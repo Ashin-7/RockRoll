@@ -56,3 +56,4 @@ $env:PATH="$env:NVM_HOME\v20.20.2;$env:PATH"; npm run build
 1. Song Detail 真实数据。
 2. Artist Detail / Album Detail 基础信息。
 3. Metadata Inbox 候选确认/入库动作。
+4. AnonTraveler 榜单页面导入解析器：从榜单 HTML 解析艺人、专辑、年份、风格、封面和来源链接，写入 `import_candidates` 候选；长篇原创评语仅保留来源链接或短摘要，用户确认后再入库。
