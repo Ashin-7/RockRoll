@@ -3,6 +3,8 @@ export type AppRoute =
   | 'backstage'
   | 'songs'
   | 'songDetail'
+  | 'albums'
+  | 'albumDetail'
   | 'artists'
   | 'artistDetail'
   | 'practice'
@@ -14,6 +16,7 @@ const routes: Record<string, AppRoute> = {
   '#auth': 'auth',
   '#backstage': 'backstage',
   '#songs': 'songs',
+  '#albums': 'albums',
   '#artists': 'artists',
   '#practice': 'practice',
   '#archive': 'archive',
@@ -26,6 +29,10 @@ export function getRouteForHash(hash: string): AppRoute {
     return 'songDetail';
   }
 
+  if (hash.startsWith('#album/')) {
+    return 'albumDetail';
+  }
+
   if (hash.startsWith('#artist/')) {
     return 'artistDetail';
   }
@@ -35,6 +42,10 @@ export function getRouteForHash(hash: string): AppRoute {
 
 export function getSongIdForHash(hash: string): string | null {
   return hash.startsWith('#song/') ? decodeURIComponent(hash.slice('#song/'.length)) : null;
+}
+
+export function getAlbumIdForHash(hash: string): string | null {
+  return hash.startsWith('#album/') ? decodeURIComponent(hash.slice('#album/'.length)) : null;
 }
 
 export function getArtistIdForHash(hash: string): string | null {

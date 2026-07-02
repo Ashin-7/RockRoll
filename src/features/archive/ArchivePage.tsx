@@ -13,7 +13,9 @@ export function ArchivePage() {
           <p>{t('archive.artistsDescription')}</p>
         </article>
         <article>
-          <h2>{t('archive.albums')}</h2>
+          <h2>
+            <a href="#albums">{t('archive.albums')}</a>
+          </h2>
           <p>{t('archive.albumsDescription')}</p>
         </article>
         <article>

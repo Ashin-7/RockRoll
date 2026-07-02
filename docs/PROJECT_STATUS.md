@@ -24,13 +24,16 @@ MVP Foundation
   - Artist Edit
   - Artist Delete
   - Supabase 与本地 Demo Mode 双路径
-- 本轮在 Node.js v8.17.0 下重新运行 Practice 与 Songs 相关测试时，Vitest 因 ESM 入口无法启动，未进入用例执行。
+- 已完成 Album CRUD 增量实现：
+  - Album List / Create / Detail / Edit / Delete
+  - Supabase 与本地 Demo Mode 双路径
+  - 接入 `#albums` 与 `#album/:id` 路由
 
 ## 当前分支状态
 
 - 当前分支：`feature/mvp-foundation`
 - 跟踪分支：`origin/feature/mvp-foundation`
-- 当前分支已包含 P0 CRUD 与 Supabase Schema 稳定化提交；本次 Artist CRUD 改动待提交。
+- 当前分支已包含 P0 CRUD、Supabase Schema 稳定化与 Artist CRUD 提交；本次 Album CRUD 改动待提交。
 
 ## 已完成模块
 
@@ -38,6 +41,7 @@ MVP Foundation
 - Songs
 - Practice
 - Artists
+- Albums
 - 基础路由
 - Demo Mode
 - Supabase 接入
@@ -82,8 +86,8 @@ MVP Foundation
 
 ### P1
 
-- Artist 管理：已补齐编辑与删除闭环，待提交。
-- Album 管理
+- Artist 管理：已补齐编辑与删除闭环。
+- Album 管理：已补齐列表、创建、详情、编辑与删除闭环，待提交。
 - Archive 管理
 
 ### P2
@@ -115,7 +119,7 @@ MVP Foundation
 
 推荐开发顺序：
 
-1. Album CRUD。
+1. Archive 管理。
 2. Practice Filter / Sort。
 3. Practice Goal Duration。
 4. Practice Completion。
@@ -123,32 +127,30 @@ MVP Foundation
 
 ## 当前验证结果
 
-本轮尝试运行：
+本轮已运行并通过：
 
 ```powershell
-npm test -- --run src/features/practice
-npm test -- --run src/features/songs
-npm test -- --run src/features/artists/artists.service.test.ts
-npm test -- --run src/features/artists/ArtistDetailPage.test.tsx
-npm test -- --run src/features/artists
+npm test -- --run src/features/albums src/app/routes.test.tsx src/features/archive/ArchivePage.test.tsx
 ```
 
 结果：
 
-- 以上测试命令均在 Vitest 启动阶段失败，错误为 Node.js v8.17.0 无法解析 `node_modules/vitest/vitest.mjs` 中的 ESM `import`。
-- 本轮未进入相关测试用例执行阶段。
+- 当前 shell Node.js 为 `v20.20.2`，Album / routes / Archive 相关测试通过：5 个测试文件，19 个用例。
 
 本轮已执行轻量校验：
 
 ```powershell
 git diff --check
 supabase --version
+node -v
+npm -v
 ```
 
 结果：
 
 - `git diff --check` 未发现空白错误。
 - 当前环境未安装 Supabase CLI，无法执行本地 migration lint 或迁移演练。
+- 当前 shell Node.js 为 `v20.20.2`，npm 为 `10.8.2`。
 
 未运行：
 
@@ -165,7 +167,7 @@ npm run build
 
 ## 当前风险
 
-- 当前工具链的 Vitest 入口与 Node.js v8.17.0 不兼容，本轮相关测试无法完成。
-- Practice / Song 新增 UI 文案目前存在硬编码英文，后续可按 i18n 策略补齐。
+- 当前 shell 使用 Node.js v20.20.2 运行通过 Album 相关测试；若切回 Node.js v8.17.0，当前 Vite/Vitest 工具链仍不兼容。
+- Practice / Song / Artist 新增 UI 文案目前存在硬编码英文，后续可按 i18n 策略补齐。
 - 尚未运行完整测试与构建，合并前仍需至少执行一次。
 - Supabase migration 尚未在真实 Supabase 实例上执行验证。

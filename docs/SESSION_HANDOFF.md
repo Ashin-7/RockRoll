@@ -21,6 +21,10 @@
   - Artist Delete
   - Artist Edit
   - Supabase 与本地 Demo Mode 双路径
+- 完成 Album CRUD 本地增量实现：
+  - Album List / Create / Detail / Edit / Delete
+  - Supabase 与本地 Demo Mode 双路径
+  - 接入 `#albums` 与 `#album/:id` 路由
 - 更新交接文档：
   - `docs/PROJECT_STATUS.md`
   - `docs/NEXT_TASKS.md`
@@ -67,35 +71,52 @@ Artists：
 - `src/features/artists/artists.service.test.ts`
 - `src/features/artists/artists.service.ts`
 
+Albums：
+
+- `src/features/albums/AlbumDetailPage.css`
+- `src/features/albums/AlbumDetailPage.test.tsx`
+- `src/features/albums/AlbumDetailPage.tsx`
+- `src/features/albums/AlbumListPage.css`
+- `src/features/albums/AlbumListPage.test.tsx`
+- `src/features/albums/AlbumListPage.tsx`
+- `src/features/albums/album.types.ts`
+- `src/features/albums/albums.service.test.ts`
+- `src/features/albums/albums.service.ts`
+
+路由与文案：
+
+- `src/App.tsx`
+- `src/app/routes.test.tsx`
+- `src/app/routes.tsx`
+- `src/features/archive/ArchivePage.tsx`
+- `src/i18n/messages.ts`
+
 ## 验证命令和结果
 
-本轮尝试运行：
+本轮已运行并通过：
 
 ```powershell
-npm test -- --run src/features/practice
-npm test -- --run src/features/songs
-npm test -- --run src/features/artists/artists.service.test.ts
-npm test -- --run src/features/artists/ArtistDetailPage.test.tsx
-npm test -- --run src/features/artists
+npm test -- --run src/features/albums src/app/routes.test.tsx src/features/archive/ArchivePage.test.tsx
 ```
 
 结果：
 
-- 以上测试命令均在 Vitest 启动阶段失败。
-- 当前 Node.js 为 `v8.17.0`，Vitest 入口 `node_modules/vitest/vitest.mjs` 使用 ESM `import`，Node 8 无法解析。
-- 本轮未进入相关测试用例执行阶段。
+- 当前 shell Node.js 为 `v20.20.2`，Album / routes / Archive 相关测试通过：5 个测试文件，19 个用例。
 
 本轮已执行轻量校验：
 
 ```powershell
 git diff --check
 supabase --version
+node -v
+npm -v
 ```
 
 结果：
 
 - `git diff --check` 未发现空白错误。
 - 当前环境未安装 Supabase CLI，无法执行本地 migration lint 或迁移演练。
+- 当前 shell Node.js 为 `v20.20.2`，npm 为 `10.8.2`。
 
 未运行：
 
@@ -119,15 +140,15 @@ npm run build
 
 ## 未完成事项
 
-- Practice / Song 新增 UI 文案存在硬编码英文，后续可按 i18n 策略统一处理。
+- Practice / Song / Artist 新增 UI 文案存在硬编码英文，后续可按 i18n 策略统一处理。
 - 完整测试与构建尚未运行。
 - Supabase migration 尚未在真实 Supabase 实例上执行验证。
 
 ## 下一轮推荐任务
 
-建议先做：Album CRUD。
+建议先做：Archive 管理。
 
-之后再进入：Archive 管理。
+之后再进入：Media Library。
 
 ## 下一轮推荐提示词
 
@@ -138,9 +159,9 @@ npm run build
 - docs/PROJECT_STATUS.md
 - docs/NEXT_TASKS.md
 - docs/SESSION_HANDOFF.md
-- src/features/albums
+- src/features/archive
 
-继续 docs/NEXT_TASKS.md 中的 Album CRUD。
+继续 docs/NEXT_TASKS.md 中的 Archive 管理。
 不要扫描整个仓库。
 不要运行 npm install。
 不要做架构重构。

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getArtistIdForHash, getRouteForHash, getSongIdForHash } from './routes';
+import { getAlbumIdForHash, getArtistIdForHash, getRouteForHash, getSongIdForHash } from './routes';
 
 describe('getRouteForHash', () => {
   it('uses backstage as the default route', () => {
@@ -11,6 +11,8 @@ describe('getRouteForHash', () => {
     expect(getRouteForHash('#song/song-1')).toBe('songDetail');
     expect(getRouteForHash('#artists')).toBe('artists');
     expect(getRouteForHash('#artist/artist-1')).toBe('artistDetail');
+    expect(getRouteForHash('#albums')).toBe('albums');
+    expect(getRouteForHash('#album/album-1')).toBe('albumDetail');
     expect(getRouteForHash('#practice')).toBe('practice');
     expect(getRouteForHash('#archive')).toBe('archive');
     expect(getRouteForHash('#inbox')).toBe('inbox');
@@ -28,5 +30,11 @@ describe('getRouteForHash', () => {
     expect(getArtistIdForHash('#artist/artist-1')).toBe('artist-1');
     expect(getArtistIdForHash('#artist/artist%20with%20space')).toBe('artist with space');
     expect(getArtistIdForHash('#artists')).toBeNull();
+  });
+
+  it('reads album ids from album detail hashes', () => {
+    expect(getAlbumIdForHash('#album/album-1')).toBe('album-1');
+    expect(getAlbumIdForHash('#album/album%20with%20space')).toBe('album with space');
+    expect(getAlbumIdForHash('#albums')).toBeNull();
   });
 });
