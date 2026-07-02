@@ -7,11 +7,11 @@ export interface AuthSession {
   };
 }
 
-const demoSessionStorageKey = 'rcokroll.demoSession';
+const demoSessionStorageKey = 'rockroll.demoSession';
 const demoSession: AuthSession = {
   user: {
     id: 'local-demo-user',
-    email: 'demo@rcokroll.local',
+    email: 'demo@rockroll.local',
   },
 };
 

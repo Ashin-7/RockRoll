@@ -131,8 +131,8 @@ describe('practice.service', () => {
       throw new Error('Missing VITE_SUPABASE_URL');
     });
     window.localStorage.setItem(
-      'rcokroll.demoSession',
-      JSON.stringify({ user: { id: 'local-demo-user', email: 'demo@rcokroll.local' } }),
+      'rockroll.demoSession',
+      JSON.stringify({ user: { id: 'local-demo-user', email: 'demo@rockroll.local' } }),
     );
     const { createPracticeSession, listPracticeHistory } = await import('./practice.service');
 

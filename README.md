@@ -1,4 +1,4 @@
-# RcokRoll
+# RockRoll
 
 Private cloud-first music archive and practice tracking app.
 

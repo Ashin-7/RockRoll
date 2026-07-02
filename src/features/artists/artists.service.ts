@@ -10,8 +10,8 @@ interface ArtistRow {
   notes: string;
 }
 
-const demoSessionStorageKey = 'rcokroll.demoSession';
-const demoArtistsStorageKey = 'rcokroll.demoArtists';
+const demoSessionStorageKey = 'rockroll.demoSession';
+const demoArtistsStorageKey = 'rockroll.demoArtists';
 
 function mapArtistRow(artist: ArtistRow): ArtistSummary {
   return {

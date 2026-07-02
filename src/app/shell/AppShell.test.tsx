@@ -11,7 +11,7 @@ describe('AppShell', () => {
       </AppShell>,
     );
 
-    expect(screen.getByText('RcokRoll')).toBeInTheDocument();
+    expect(screen.getByText('RockRoll')).toBeInTheDocument();
     expect(screen.getByRole('navigation', { name: 'Primary' })).toBeInTheDocument();
     expect(screen.getByText('Backstage')).toBeInTheDocument();
     expect(screen.getByText('Songs')).toBeInTheDocument();

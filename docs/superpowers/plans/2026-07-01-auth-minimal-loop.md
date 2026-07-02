@@ -1,4 +1,4 @@
-# Auth Minimal Loop Implementation Plan
+﻿# Auth Minimal Loop Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -298,7 +298,7 @@ describe('AuthPage', () => {
   });
 
   it('renders Chinese signed-in copy', async () => {
-    window.localStorage.setItem('rcokroll.locale', 'zh-CN');
+    window.localStorage.setItem('rockroll.locale', 'zh-CN');
 
     renderWithI18n(
       <AuthPage

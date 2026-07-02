@@ -158,7 +158,7 @@ describe('AuthPage', () => {
   });
 
   it('renders Chinese signed-in copy', async () => {
-    window.localStorage.setItem('rcokroll.locale', 'zh-CN');
+    window.localStorage.setItem('rockroll.locale', 'zh-CN');
 
     renderWithI18n(
       <AuthPage

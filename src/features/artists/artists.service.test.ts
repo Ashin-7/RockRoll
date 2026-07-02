@@ -86,8 +86,8 @@ describe('artists.service', () => {
       throw new Error('Missing VITE_SUPABASE_URL');
     });
     window.localStorage.setItem(
-      'rcokroll.demoSession',
-      JSON.stringify({ user: { id: 'local-demo-user', email: 'demo@rcokroll.local' } }),
+      'rockroll.demoSession',
+      JSON.stringify({ user: { id: 'local-demo-user', email: 'demo@rockroll.local' } }),
     );
     const { createArtist, listArtists } = await import('./artists.service');
 

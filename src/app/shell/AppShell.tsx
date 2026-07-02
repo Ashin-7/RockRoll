@@ -36,7 +36,7 @@ export function AppShell({
         <div className="app-shell__brand">
           <span className="app-shell__rec" aria-hidden="true" />
           <span>
-            RcokRoll
+            RockRoll
             <small>{t('nav.privateRoom')}</small>
           </span>
         </div>

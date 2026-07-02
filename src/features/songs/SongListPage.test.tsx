@@ -56,7 +56,7 @@ describe('SongListPage', () => {
   });
 
   it('renders Chinese add-song messages', () => {
-    window.localStorage.setItem('rcokroll.locale', 'zh-CN');
+    window.localStorage.setItem('rockroll.locale', 'zh-CN');
 
     renderWithI18n(<SongListPage songs={[]} />);
 

@@ -63,7 +63,7 @@ describe('ArtistListPage', () => {
   });
 
   it('renders Chinese add-artist messages', () => {
-    window.localStorage.setItem('rcokroll.locale', 'zh-CN');
+    window.localStorage.setItem('rockroll.locale', 'zh-CN');
 
     renderWithI18n(<ArtistListPage artists={[]} />);
 

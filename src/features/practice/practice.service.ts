@@ -9,8 +9,8 @@ export interface PracticeAuthSession {
   };
 }
 
-const demoSessionStorageKey = 'rcokroll.demoSession';
-const demoPracticeHistoryStorageKey = 'rcokroll.demoPracticeHistory';
+const demoSessionStorageKey = 'rockroll.demoSession';
+const demoPracticeHistoryStorageKey = 'rockroll.demoPracticeHistory';
 
 interface PracticeSessionRow {
   id: string;

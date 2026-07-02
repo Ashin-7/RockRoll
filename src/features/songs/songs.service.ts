@@ -9,8 +9,8 @@ interface SongRow {
 }
 
 const songStatuses: SongStatus[] = ['planned', 'learning', 'polishing', 'archived'];
-const demoSessionStorageKey = 'rcokroll.demoSession';
-const demoSongsStorageKey = 'rcokroll.demoSongs';
+const demoSessionStorageKey = 'rockroll.demoSession';
+const demoSongsStorageKey = 'rockroll.demoSongs';
 
 function toSongStatus(status: string): SongStatus {
   return songStatuses.includes(status as SongStatus) ? (status as SongStatus) : 'planned';

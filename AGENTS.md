@@ -2,7 +2,7 @@
 
 # 项目定位
 
-RcokRoll 是一个私有云优先（Private Cloud First）的音乐档案与练习追踪应用。
+RockRoll 是一个私有云优先（Private Cloud First）的音乐档案与练习追踪应用。
 
 项目核心目标：
 

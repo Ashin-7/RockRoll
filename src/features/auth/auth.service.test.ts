@@ -54,7 +54,7 @@ describe('auth.service', () => {
     await expect(signInAnonymously()).resolves.toBeUndefined();
     await expect(getCurrentSession()).resolves.toEqual({
       user: {
-        email: 'demo@rcokroll.local',
+        email: 'demo@rockroll.local',
         id: 'local-demo-user',
       },
     });

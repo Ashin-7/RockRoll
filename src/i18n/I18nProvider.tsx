@@ -7,7 +7,7 @@ interface I18nContextValue {
   t: (key: MessageKey) => string;
 }
 
-const storageKey = 'rcokroll.locale';
+const storageKey = 'rockroll.locale';
 const I18nContext = createContext<I18nContextValue | undefined>(undefined);
 
 function readStoredLocale(): Locale {
