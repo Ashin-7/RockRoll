@@ -18,6 +18,7 @@ MVP Phase 1，Practice First。
 - Auth 支持匿名测试登录，便于无需测试邮箱即可获得真实 Supabase session。
 - 未配置 Supabase 时支持本地演示模式：匿名测试登录创建本地 session，Songs 与 Practice 写入浏览器 localStorage。
 - Artist Library 已接入最小真实数据闭环：`#artists` 可读取当前用户艺人，并新增最小艺人记录；本地演示模式写入 localStorage。
+- Metadata Inbox 已接入候选列表读取：`#inbox` 可读取 Supabase `import_candidates` 并展示 loading/error/empty/list 状态；本地演示模式可读取 localStorage。
 - Auth 支持通过 `VITE_TEST_LOGIN_EMAIL` 配置本地测试邮箱快捷填充，便于手动测试 magic link 登录。
 
 ## 最近完成
@@ -39,6 +40,7 @@ MVP Phase 1，Practice First。
 - 修正匿名测试登录反馈：点击后显示处理中，成功后主动刷新当前 session，失败时展示 Supabase 返回的错误。
 - 完成本地演示模式：缺少 `.env.local` 时匿名测试登录仍可进入演示 session，并用 localStorage 测试 Songs / Practice 真实页面闭环。
 - 完成 Artist Library 最小闭环：新增 `#artists` 路由、主导航入口、艺人列表读取、新增艺人表单、i18n 文案与测试覆盖。
+- 完成 Metadata Inbox 候选列表读取：`#inbox` 接入 `listImportCandidates`，可展示导入候选项来源、实体类型、标题与副标题。
 
 ## 验证方式
 
@@ -51,6 +53,6 @@ $env:PATH="$env:NVM_HOME\v20.20.2;$env:PATH"; npm run build
 
 ## 下一步建议
 
-1. Metadata Inbox。
-2. Song Detail 真实数据。
-3. Artist Detail / Album Detail 基础信息。
+1. Song Detail 真实数据。
+2. Artist Detail / Album Detail 基础信息。
+3. Metadata Inbox 候选确认/入库动作。
