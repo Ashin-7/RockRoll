@@ -14,6 +14,9 @@
   - Practice Edit
   - Song Edit
   - Song Delete
+- 完成 Supabase Schema 稳定化复核：
+  - 新增 `songs` / `practice_sessions` 的 `updated_at` 自动刷新触发器。
+  - 收紧 `practice_sessions` insert/update RLS，限制 `song_id` 只能引用当前用户自己的歌曲。
 - 更新交接文档：
   - `docs/PROJECT_STATUS.md`
   - `docs/NEXT_TASKS.md`
@@ -27,6 +30,10 @@
 - `docs/PROJECT_STATUS.md`
 - `docs/NEXT_TASKS.md`
 - `docs/SESSION_HANDOFF.md`
+
+Supabase：
+
+- `supabase/migrations/20260702143722_stabilize_practice_song_schema.sql`
 
 Practice：
 
@@ -62,6 +69,18 @@ npm test -- --run src/features/songs
 - 当前 Node.js 为 `v8.17.0`，Vitest 入口 `node_modules/vitest/vitest.mjs` 使用 ESM `import`，Node 8 无法解析。
 - 本轮未进入 Practice / Songs 测试用例执行阶段。
 
+本轮已执行轻量校验：
+
+```powershell
+git diff --check
+supabase --version
+```
+
+结果：
+
+- `git diff --check` 未发现空白错误。
+- 当前环境未安装 Supabase CLI，无法执行本地 migration lint 或迁移演练。
+
 未运行：
 
 ```powershell
@@ -84,15 +103,15 @@ npm run build
 
 ## 未完成事项
 
-- Supabase Schema 稳定化尚未复核。
 - Practice / Song 新增 UI 文案存在硬编码英文，后续可按 i18n 策略统一处理。
 - 完整测试与构建尚未运行。
+- Supabase migration 尚未在真实 Supabase 实例上执行验证。
 
 ## 下一轮推荐任务
 
-建议先做：Supabase Schema 稳定化复核。
+建议先做：Artist CRUD。
 
-如果用户希望继续开发新能力，再进入：Artist CRUD。
+之后再进入：Album CRUD。
 
 ## 下一轮推荐提示词
 
@@ -103,11 +122,9 @@ npm run build
 - docs/PROJECT_STATUS.md
 - docs/NEXT_TASKS.md
 - docs/SESSION_HANDOFF.md
-- supabase
-- src/features/practice
-- src/features/songs
+- src/features/artists
 
-继续 docs/NEXT_TASKS.md 中的 Supabase Schema 稳定化复核。
+继续 docs/NEXT_TASKS.md 中的 Artist CRUD。
 不要扫描整个仓库。
 不要运行 npm install。
 不要做架构重构。

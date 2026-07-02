@@ -34,7 +34,7 @@
 - [x] Song Edit
 - [x] Song Delete
 - [x] P0 CRUD 最终复核与提交
-- [ ] Supabase Schema 稳定化复核
+- [x] Supabase Schema 稳定化复核
 
 ### P0 收尾建议
 
@@ -110,10 +110,9 @@
 
 ## 推荐执行顺序
 
-1. Supabase Schema 稳定化复核。
-2. Artist CRUD。
-3. Album CRUD。
-4. Archive 管理。
-5. Media Library。
+1. Artist CRUD。
+2. Album CRUD。
+3. Archive 管理。
+4. Media Library。
 
-当前建议先开启新对话，从 Supabase Schema 稳定化复核开始，避免继续扩大当前上下文。
+当前建议先开启新对话，从 Artist CRUD 开始，避免继续扩大当前上下文。

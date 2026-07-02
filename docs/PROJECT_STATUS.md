@@ -17,13 +17,16 @@ MVP Foundation
   - Song Edit
   - Song Delete
 - 已完成 P0 CRUD 最终复核，并准备纳入本地提交。
+- 已完成 Supabase Schema 稳定化复核，并新增 migration：
+  - `songs` / `practice_sessions` 更新时自动刷新 `updated_at`。
+  - `practice_sessions` 新增 insert/update 的 `song_id` 归属校验，避免跨用户引用歌曲。
 - 本轮在 Node.js v8.17.0 下重新运行 Practice 与 Songs 相关测试时，Vitest 因 ESM 入口无法启动，未进入用例执行。
 
 ## 当前分支状态
 
 - 当前分支：`feature/mvp-foundation`
 - 跟踪分支：`origin/feature/mvp-foundation`
-- 本次 P0 CRUD 收尾改动将提交到当前分支。
+- 当前分支已包含 P0 CRUD 收尾提交；本次 Supabase Schema 复核改动待提交。
 
 ## 已完成模块
 
@@ -71,7 +74,7 @@ MVP Foundation
 
 - Practice CRUD 完整化：已完成 Edit / Delete 本地实现与最终复核。
 - Song CRUD 完整化：已完成 Edit / Delete 本地实现与最终复核。
-- Supabase Schema 稳定化：仍需后续确认字段与 RLS 是否满足 MVP。
+- Supabase Schema 稳定化：已完成 P0 Practice / Songs 相关字段、RLS 与 `updated_at` 复核。
 
 ### P1
 
@@ -108,13 +111,12 @@ MVP Foundation
 
 推荐开发顺序：
 
-1. Supabase Schema 稳定化复核。
-2. Artist CRUD。
-3. Album CRUD。
-4. Practice Filter / Sort。
-5. Practice Goal Duration。
-6. Practice Completion。
-7. Practice Tags。
+1. Artist CRUD。
+2. Album CRUD。
+3. Practice Filter / Sort。
+4. Practice Goal Duration。
+5. Practice Completion。
+6. Practice Tags。
 
 ## 当前验证结果
 
@@ -129,6 +131,18 @@ npm test -- --run src/features/songs
 
 - 两条命令均在 Vitest 启动阶段失败，错误为 Node.js v8.17.0 无法解析 `node_modules/vitest/vitest.mjs` 中的 ESM `import`。
 - 本轮未进入 Practice / Songs 测试用例执行阶段。
+
+本轮已执行轻量校验：
+
+```powershell
+git diff --check
+supabase --version
+```
+
+结果：
+
+- `git diff --check` 未发现空白错误。
+- 当前环境未安装 Supabase CLI，无法执行本地 migration lint 或迁移演练。
 
 未运行：
 
@@ -148,4 +162,4 @@ npm run build
 - 当前工具链的 Vitest 入口与 Node.js v8.17.0 不兼容，本轮相关测试无法完成。
 - Practice / Song 新增 UI 文案目前存在硬编码英文，后续可按 i18n 策略补齐。
 - 尚未运行完整测试与构建，合并前仍需至少执行一次。
-- Supabase Schema 稳定化尚未完成最终复核。
+- Supabase migration 尚未在真实 Supabase 实例上执行验证。
