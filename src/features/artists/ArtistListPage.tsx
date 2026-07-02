@@ -152,7 +152,9 @@ export function ArtistListPage({
           {displayArtists.map((artist) => (
             <article className="artist-card" key={artist.id}>
               <div className="artist-card__header">
-                <h2>{artist.name}</h2>
+                <h2>
+                  <a href={`#artist/${encodeURIComponent(artist.id)}`}>{artist.name}</a>
+                </h2>
                 {artist.country ? <span>{artist.country}</span> : null}
               </div>
               <dl className="artist-card__meta">

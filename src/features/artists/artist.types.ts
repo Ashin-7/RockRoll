@@ -7,6 +7,8 @@ export interface ArtistSummary {
   notes: string;
 }
 
+export type ArtistDetail = ArtistSummary;
+
 export interface CreateArtistInput {
   name: string;
   country: string | null;

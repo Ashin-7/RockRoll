@@ -22,6 +22,7 @@ describe('ArtistListPage', () => {
 
     expect(screen.getByText('Loading artists...')).toBeInTheDocument();
     expect(await screen.findByText('Jimi Hendrix')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Jimi Hendrix' })).toHaveAttribute('href', '#artist/artist-1');
     expect(screen.getByText('US')).toBeInTheDocument();
     expect(screen.getByText('Electric blues vocabulary.')).toBeInTheDocument();
   });

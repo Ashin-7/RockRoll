@@ -20,6 +20,7 @@ MVP Phase 1，Practice First。
 - Artist Library 已接入最小真实数据闭环：`#artists` 可读取当前用户艺人，并新增最小艺人记录；本地演示模式写入 localStorage。
 - Metadata Inbox 已接入候选列表读取：`#inbox` 可读取 Supabase `import_candidates` 并展示 loading/error/empty/list 状态；本地演示模式可读取 localStorage。
 - Song Detail 已接入最小真实数据读取：`#song/{id}` 可读取 Supabase 单条曲目详情，并从 Songs 列表进入；本地演示模式可读取 localStorage 曲目。
+- Artist Detail 已接入最小真实数据读取：`#artist/{id}` 可读取 Supabase 单条艺人详情，并从 Artists 列表进入；本地演示模式可读取 localStorage 艺人。
 - Auth 支持通过 `VITE_TEST_LOGIN_EMAIL` 配置本地测试邮箱快捷填充，便于手动测试 magic link 登录。
 
 ## 最近完成
@@ -43,6 +44,7 @@ MVP Phase 1，Practice First。
 - 完成 Artist Library 最小闭环：新增 `#artists` 路由、主导航入口、艺人列表读取、新增艺人表单、i18n 文案与测试覆盖。
 - 完成 Metadata Inbox 候选列表读取：`#inbox` 接入 `listImportCandidates`，可展示导入候选项来源、实体类型、标题与副标题。
 - 完成 Song Detail 最小真实读取：Songs 列表标题可进入 `#song/{id}`，详情页展示状态、难度、发行年份、BPM 和笔记。
+- 完成 Artist Detail 最小真实读取：Artists 列表标题可进入 `#artist/{id}`，详情页展示国家/地区、开始年份、结束年份和笔记。
 
 ## 验证方式
 
@@ -55,6 +57,6 @@ $env:PATH="$env:NVM_HOME\v20.20.2;$env:PATH"; npm run build
 
 ## 下一步建议
 
-1. Artist Detail / Album Detail 基础信息。
+1. Album Detail 基础信息。
 2. Metadata Inbox 候选确认/入库动作。
 3. AnonTraveler 榜单页面导入解析器：从榜单 HTML 解析艺人、专辑、年份、风格、封面和来源链接，写入 `import_candidates` 候选；长篇原创评语仅保留来源链接或短摘要，用户确认后再入库。

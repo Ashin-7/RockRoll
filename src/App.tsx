@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { AppShell } from './app/shell/AppShell';
-import { getRouteForHash, getSongIdForHash } from './app/routes';
+import { getArtistIdForHash, getRouteForHash, getSongIdForHash } from './app/routes';
 import { ArchivePage } from './features/archive/ArchivePage';
+import { ArtistDetailPage } from './features/artists/ArtistDetailPage';
 import { ArtistListPage } from './features/artists/ArtistListPage';
 import { AuthPage } from './features/auth/AuthPage';
 import { AuthSession, getCurrentSession, onAuthStateChange, signOut } from './features/auth/auth.service';
@@ -76,6 +77,7 @@ export default function App() {
     songs: <SongListPage />,
     songDetail: <SongDetailPage songId={getSongIdForHash(hash)} />,
     artists: <ArtistListPage />,
+    artistDetail: <ArtistDetailPage artistId={getArtistIdForHash(hash)} />,
     practice: <PracticeHistoryPage />,
     archive: <ArchivePage />,
     inbox: <InboxPage />,

@@ -1,5 +1,5 @@
 import { getSupabase } from '../../lib/supabase';
-import { ArtistSummary, CreateArtistInput } from './artist.types';
+import { ArtistDetail, ArtistSummary, CreateArtistInput } from './artist.types';
 
 interface ArtistRow {
   id: string;
@@ -39,6 +39,10 @@ function readDemoArtists(): ArtistSummary[] {
 
 function writeDemoArtists(artists: ArtistSummary[]) {
   window.localStorage.setItem(demoArtistsStorageKey, JSON.stringify(artists));
+}
+
+function findDemoArtist(artistId: string): ArtistDetail | null {
+  return readDemoArtists().find((demoArtist) => demoArtist.id === artistId) ?? null;
 }
 
 export async function listArtists(): Promise<ArtistSummary[]> {
@@ -112,4 +116,28 @@ export async function createArtist(input: CreateArtistInput): Promise<void> {
   if (error) {
     throw new Error(error.message);
   }
+}
+
+export async function getArtistById(artistId: string): Promise<ArtistDetail | null> {
+  let supabase: ReturnType<typeof getSupabase>;
+  try {
+    supabase = getSupabase();
+  } catch (caughtError) {
+    if (isMissingSupabaseEnvError(caughtError)) {
+      return findDemoArtist(artistId);
+    }
+    throw caughtError;
+  }
+
+  const { data, error } = await supabase
+    .from('artists')
+    .select('id,name,country,begin_year,end_year,notes')
+    .eq('id', artistId)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data ? mapArtistRow(data as ArtistRow) : null;
 }

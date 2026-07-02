@@ -4,6 +4,7 @@ export type AppRoute =
   | 'songs'
   | 'songDetail'
   | 'artists'
+  | 'artistDetail'
   | 'practice'
   | 'archive'
   | 'inbox'
@@ -25,9 +26,17 @@ export function getRouteForHash(hash: string): AppRoute {
     return 'songDetail';
   }
 
+  if (hash.startsWith('#artist/')) {
+    return 'artistDetail';
+  }
+
   return routes[hash] ?? 'backstage';
 }
 
 export function getSongIdForHash(hash: string): string | null {
   return hash.startsWith('#song/') ? decodeURIComponent(hash.slice('#song/'.length)) : null;
+}
+
+export function getArtistIdForHash(hash: string): string | null {
+  return hash.startsWith('#artist/') ? decodeURIComponent(hash.slice('#artist/'.length)) : null;
 }

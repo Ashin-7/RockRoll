@@ -1,7 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const orderMock = vi.fn();
-const selectMock = vi.fn(() => ({ order: orderMock }));
+const maybeSingleMock = vi.fn();
+const eqMock = vi.fn(() => ({ maybeSingle: maybeSingleMock }));
+const selectMock = vi.fn();
 const insertMock = vi.fn();
 const getSessionMock = vi.fn();
 const fromMock = vi.fn(() => ({ select: selectMock, insert: insertMock }));
@@ -18,6 +20,8 @@ describe('artists.service', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     window.localStorage.clear();
+    selectMock.mockImplementation(() => ({ order: orderMock }));
+    eqMock.mockImplementation(() => ({ maybeSingle: maybeSingleMock }));
     getSupabaseMock.mockReturnValue({
       auth: { getSession: getSessionMock },
       from: fromMock,
@@ -53,6 +57,35 @@ describe('artists.service', () => {
     expect(fromMock).toHaveBeenCalledWith('artists');
     expect(selectMock).toHaveBeenCalledWith('id,name,country,begin_year,end_year,notes');
     expect(orderMock).toHaveBeenCalledWith('updated_at', { ascending: false });
+  });
+
+  it('loads an artist detail from Supabase', async () => {
+    selectMock.mockReturnValue({ eq: eqMock });
+    maybeSingleMock.mockResolvedValue({
+      data: {
+        id: 'artist-1',
+        name: 'Jimi Hendrix',
+        country: 'US',
+        begin_year: 1942,
+        end_year: 1970,
+        notes: 'Electric blues vocabulary.',
+      },
+      error: null,
+    });
+    const { getArtistById } = await import('./artists.service');
+
+    await expect(getArtistById('artist-1')).resolves.toEqual({
+      id: 'artist-1',
+      name: 'Jimi Hendrix',
+      country: 'US',
+      beginYear: 1942,
+      endYear: 1970,
+      notes: 'Electric blues vocabulary.',
+    });
+    expect(fromMock).toHaveBeenCalledWith('artists');
+    expect(selectMock).toHaveBeenCalledWith('id,name,country,begin_year,end_year,notes');
+    expect(eqMock).toHaveBeenCalledWith('id', 'artist-1');
+    expect(maybeSingleMock).toHaveBeenCalledWith();
   });
 
   it('creates an artist for the current user', async () => {
@@ -97,11 +130,41 @@ describe('artists.service', () => {
 
     await expect(listArtists()).resolves.toEqual([
       expect.objectContaining({
+        id: expect.any(String),
         name: 'Demo Artist',
         country: 'JP',
         beginYear: 1980,
         notes: 'Local reference.',
       }),
     ]);
+  });
+
+  it('loads local demo artist details when Supabase is not configured', async () => {
+    getSupabaseMock.mockImplementation(() => {
+      throw new Error('Missing VITE_SUPABASE_URL');
+    });
+    window.localStorage.setItem(
+      'rockroll.demoArtists',
+      JSON.stringify([
+        {
+          id: 'local-artist-1',
+          name: 'Demo Artist',
+          country: 'JP',
+          beginYear: 1980,
+          endYear: null,
+          notes: 'Local reference.',
+        },
+      ]),
+    );
+    const { getArtistById } = await import('./artists.service');
+
+    await expect(getArtistById('local-artist-1')).resolves.toEqual({
+      id: 'local-artist-1',
+      name: 'Demo Artist',
+      country: 'JP',
+      beginYear: 1980,
+      endYear: null,
+      notes: 'Local reference.',
+    });
   });
 });
