@@ -65,9 +65,26 @@ export async function signInWithEmail(email: string): Promise<void> {
   }
 }
 
-export async function signUpWithPassword(email: string, password: string): Promise<void> {
+export async function signUpWithPassword(email: string, password: string): Promise<AuthSession | null> {
   const supabase = getSupabase();
-  const { error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      emailRedirectTo: window.location.origin,
+    },
+  });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data.session;
+}
+
+export async function signInWithPassword(email: string, password: string): Promise<void> {
+  const supabase = getSupabase();
+  const { error } = await supabase.auth.signInWithPassword({
     email,
     password,
   });
@@ -77,11 +94,14 @@ export async function signUpWithPassword(email: string, password: string): Promi
   }
 }
 
-export async function signInWithPassword(email: string, password: string): Promise<void> {
+export async function resendSignupConfirmation(email: string): Promise<void> {
   const supabase = getSupabase();
-  const { error } = await supabase.auth.signInWithPassword({
+  const { error } = await supabase.auth.resend({
+    type: 'signup',
     email,
-    password,
+    options: {
+      emailRedirectTo: window.location.origin,
+    },
   });
 
   if (error) {

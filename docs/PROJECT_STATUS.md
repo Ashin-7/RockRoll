@@ -1,135 +1,117 @@
-# RockRoll 项目状态
-
-## 本轮补充：Archive Collection Edit / Delete
-
-- 已完成 Archive Collection 编辑与删除最小闭环：
-  - Archive collection 列表增加 Edit / Delete 操作列。
-  - 点击 Edit 会回填 collection 表单，并切换到 Collection / edit 模式。
-  - 编辑提交会更新 title、source、sourceUrl、description、collectionType。
-  - 点击 Delete 会删除指定 collection 并刷新列表。
-  - Demo Mode 删除 collection 时会同步清理该 collection 下的本地 archive items。
-  - Supabase 与 Demo Mode 均支持 collection 编辑 / 删除。
-- 本轮未修改 Supabase schema、路由、依赖或构建配置。
-- 验证结果：
-  - `npm test -- --run src/features/archive`
-  - 结果：3 个测试文件、18 个用例通过。
-  - `npm run build`
-  - 结果：通过。
-- 环境说明：
-  - 使用本机已有 Node `v20.20.2` 的 npm 完成测试与构建。
-  - 未运行 `npm install`。
+﻿# RockRoll 项目状态
 
 更新时间：2026-07-03
 
-## 本轮补充：Media Link Edit / Delete
+## 当前阶段
 
-- 已完成 Media Link 独立编辑与删除最小闭环：
-  - Library 媒体资产列表的 Linked entity 单元格增加 Edit link / Delete link 操作。
-  - 点击 Edit link 会在当前 link 行内打开小型编辑表单。
-  - 编辑提交只更新 `media_links.entity_type` 与 `media_links.entity_id`，不改媒体资产字段。
-  - 点击 Delete link 会删除指定 media link 并刷新列表。
-  - Supabase 与 Demo Mode 均支持 media link 编辑 / 删除。
-- 本轮未修改 Supabase schema、路由、依赖或构建配置。
-- 验证结果：
-  - `npm test -- --run src/features/library`
-  - 结果：2 个测试文件、16 个用例通过。
-  - `npm run build`
-  - 结果：通过。
-- 环境说明：
-  - 使用本机已有 Node `v20.20.2` 的 npm 完成测试与构建。
-  - 未运行 `npm install`。
+RockRoll 处于 MVP Phase 1，当前策略仍是 Practice First。
 
-更新时间：2026-07-03
+当前最高优先级已经从继续扩展功能，调整为先验证真实 Supabase Auth + 当前用户数据 CRUD 闭环。
 
-## 本轮补充：Archive Item Edit / Delete
+## 本轮完成：Auth + Supabase CRUD 最小真实闭环
 
-- 已完成 Archive collection detail 中条目的编辑与删除最小闭环：
-  - Archive item 行增加 Edit / Delete 操作。
-  - 点击 Edit 会回填条目表单，并切换到 Item / edit 模式。
-  - 编辑提交会更新条目的 entity、展示标题、排序、备注与外部来源字段。
-  - 点击 Delete 会删除条目并刷新当前 collection。
-  - Supabase 与 Demo Mode 均支持编辑 / 删除。
-- 本轮未修改 Supabase schema、路由、依赖或构建配置。
-- 验证结果：
-  - `npm test -- --run src/features/archive`
-  - 结果：3 个测试文件、14 个用例通过。
-  - `npm run build`
-  - 结果：通过。
-- 环境说明：
-  - 默认 shell 起始为 Node `v8.17.0`，Vitest 无法在该版本启动。
-  - 本轮沿用既有项目验证方式，切换到本机已有 Node `v20.20.2` 后完成测试与构建。
-  - 未运行 `npm install`。
+已完成真实 Supabase Auth 登录链路验证：
 
-更新时间：2026-07-03
+- `.env.local` 已连接真实 Supabase 项目。
+- 密码注册 / 登录已在真实 Supabase session 下跑通。
+- Demo Mode 保留，但不会因为缺少 `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` 自动伪造登录。
+- Demo Mode 仅在 `VITE_ENABLE_DEMO_MODE=true` 时允许写入和读取 `rockroll.demoSession`。
 
-## 本轮补充：Media Asset Edit / Delete
+已完成真实登录用户的 Supabase CRUD smoke test：
 
-- 已完成 Media Asset 编辑与删除最小闭环：
-  - Library 媒体资产行增加 Edit / Delete 操作。
-  - 点击 Edit 会回填表单，并切换到 Media / edit 模式。
-  - 编辑提交会更新媒体资产字段，并替换可选实体关联。
-  - 点击 Delete 会删除媒体资产并刷新列表。
-  - Supabase 与 Demo Mode 均支持编辑 / 删除。
-- 本轮未修改 Supabase schema、路由、依赖或构建配置。
-- 验证结果：
-  - `npm test -- --run src/features/library`
-  - 结果：2 个测试文件、12 个用例通过。
-  - `npm run build`
-  - 结果：通过。
+- 测试表：`practice_sessions`。
+- 测试用户：真实 Supabase user id `727c9005-4e86-4ab0-8226-5bf7da1ed5e6`。
+- insert 成功：测试行 `510d47a3-572d-48b5-abbe-805f1b017b0b`。
+- select 成功：读取到当前用户绑定数据。
+- update 成功：`focus_area = supabase-smoke-update`。
+- delete 成功：页面显示 `Deleted: yes`。
 
-更新时间：2026-07-03
+本轮没有修改 Supabase schema，没有使用 service role key，没有绕过 RLS。
 
-## 本轮补充：Inbox / Library CRUD UI Pattern
+## Auth 当前状态
 
-- 已完成 Inbox 与 Library 的 CRUD UI Pattern 收口：
-  - Inbox 首页补齐后台式指标区、Import workflow 分区、Preview output 分区和候选导入行列表。
-  - Inbox Anontraveler 预览结果补充 Preview collection 与 Album samples 展示。
-  - Library 首页补齐 Assets filed / Linked assets / Media types 指标区。
-  - Library 媒体创建表单调整为 Asset identity / Storage profile / Optional link 分区。
-  - Library 媒体资产列表调整为 Asset / Media type / Storage / Linked entity / Notes 行列表。
-- 本轮未修改 Supabase schema、路由、依赖或构建配置。
-- 验证结果：
-  - `npm test -- --run src/features/inbox src/features/library`
-  - 结果：6 个测试文件、19 个用例通过。
+已完成：
 
-更新时间：2026-07-03
+- 独立 Auth 页面入口。
+- 密码登录。
+- 密码注册。
+- Magic link 登录入口保留。
+- 注册需要邮箱确认时，页面会明确提示。
+- 注册确认邮件可重发。
+- 真实 Supabase CRUD smoke test 入口。
+- Smoke test 成功后显示 user id、inserted row、updated focus、deleted 状态。
+- Demo Mode UI 明确标识当前不是 Supabase 真实登录。
 
-## 本轮补充：Practice Supabase Progress Fields
+注意事项：
 
-- 已完成 Practice 目标时长、完成度与标签的真实 Supabase 持久化映射：
-  - 新增 migration，为 `practice_sessions` 增加 `goal_duration_minutes`、`completion_percent`、`tags`。
-  - `goal_duration_minutes` 允许为空，非空时必须大于 0。
-  - `completion_percent` 允许为空，非空时必须在 0-100。
-  - `tags` 使用 `text[] not null default '{}'::text[]`，兼容旧数据。
-  - Practice service 的 list/create/update 已映射这些字段。
-- 本轮修改了 Supabase 稳定区：
-  - 原因：Practice 前端与 Demo Mode 已具备字段能力，P0 数据闭环需要真实持久化。
-  - 风险：远程 Supabase 实例已完成 migration 应用与字段/约束验证；后续仍需注意不要提交任何密钥或环境变量。
-  - 替代方案：继续只在 Demo Mode 保留字段，但线上数据会丢失新增信息。
-  - 影响范围：仅 `practice_sessions` 兼容新增字段与 Practice service 字段映射。
-- 本轮补充了一个构建修复：
-  - `src/features/songs/songs.service.ts` 中 Demo Mode 旧数据默认值合并顺序调整，避免 TypeScript 5.7 报重复字段覆盖错误。
-  - 行为保持兼容：旧本地歌曲缺少 `releaseYear`、`bpm`、`notes` 时继续补默认值。
-- 验证结果：
-  - `npm test -- --run src/features/practice`：4 个测试文件、24 个用例通过。
-  - `node -v`：`v20.20.2`。
-  - `npm -v`：`10.8.2`。
-  - `npm test -- --run src/features/songs`：3 个测试文件、23 个用例通过。
-  - `npm test -- --run`：31 个测试文件、146 个用例通过。
-  - `npm run build`：通过。
-- Supabase CLI / Docker 状态：
-  - 已安装 Supabase CLI `2.109.0` 到用户本地目录，并加入用户 PATH。
-  - 已链接远程 Supabase 项目 `ubijnnfqlasqlwqbazfa`。
-  - `supabase db push` 已成功应用全部 5 个 migrations 到远程项目。
-  - `supabase migration list --linked` 显示本地与远程 migration 版本一致。
-  - 远程查询确认 `practice_sessions` 已包含 `goal_duration_minutes`、`completion_percent`、`tags`。
-  - 远程查询确认目标时长与完成度 check 约束存在。
-  - 远程插入包含新增字段的练习记录成功，非法 `completion_percent = 120` 被 check 约束拒绝。
-  - 远程验证用测试数据已清理。
-- 额外说明：
-  - 早前在 Node `v8.17.0` 下尝试完整测试与构建失败，原因是当前 Vite/Vitest/TypeScript 工具链需要现代 Node。
-  - 已切换到 Node `v20.20.2` 后完成完整验证。
-  - `npm install` 未运行，本轮未修改依赖或 lockfile。
-  - 未读取、记录或提交 Supabase token / 数据库密码。
+- Supabase 后台如果开启 Confirm email，密码注册后必须先确认邮箱。
+- Supabase 后台如果关闭 Confirm email，新注册用户应直接获得 session。
+- 之前遇到的 `User already registered` + `Invalid login credentials` 是测试用户历史状态导致，删除该 Auth 用户后重新注册已跑通。
 
-更新时间：2026-07-03
+## 已完成的历史能力摘要
+
+以下为当前已完成能力的高层摘要，详细实现以代码和测试为准：
+
+- Practice progress fields 已接入 Supabase：`goal_duration_minutes`、`completion_percent`、`tags`。
+- Practice service 已支持相关字段的 list / create / update 映射。
+- Supabase migrations 已推送到远程项目并完成字段与约束验证。
+- Inbox / Library CRUD UI pattern 已完成一轮收口。
+- Media Asset Edit / Delete 已完成。
+- Media Link Edit / Delete 已完成。
+- Archive Item Edit / Delete 已完成。
+- Archive Collection Edit / Delete 已完成。
+
+## 匿名旅行者导入评估
+
+既有文档已更新：`docs/IMPORT_ANONTRAVELER.md`。
+
+当前结论：
+
+- 现阶段不建议立刻自建完整后端。
+- 短期继续采用 Supabase Database + Supabase Storage + RLS。
+- 匿名旅行者导入应采用 Import Inbox-first，而不是前端直接写正式库。
+- 图片、视频、音频文件进入 Storage 或未来私有对象存储，Postgres 只保存 metadata、路径和关联关系。
+- 大规模导入、转码、波形分析、后台队列等需求明确后，再引入 Edge Functions、独立 worker 或自建后端。
+- 进入导入 MVP 前，先完成真实 Supabase session 下的 Practice CRUD UI 验证。
+
+## 验证记录
+
+本轮 Auth 验证命令：
+
+```powershell
+npm test -- --run src/features/auth/AuthPage.test.tsx
+npm test -- --run src/features/auth
+npm run build
+```
+
+结果：
+
+- `AuthPage.test.tsx`：15 个用例通过。
+- `src/features/auth`：2 个测试文件、35 个用例通过。
+- `npm run build`：通过。
+
+真实浏览器验证：
+
+- 登录账号：`15779799065@163.com`。
+- Supabase user id：`727c9005-4e86-4ab0-8226-5bf7da1ed5e6`。
+- CRUD smoke test：insert / select / update / delete 通过，页面显示 `Deleted: yes`。
+
+## 当前风险
+
+- 需要继续验证真实 Supabase session 下的 Practice 正式 UI CRUD，而不仅是 smoke test。
+- 如果 Practice UI 遇到 RLS / permission 错误，只能修正 policy，不能使用 service role key，不能绕过 RLS。
+- 当前部分 Auth 页面文案仍为英文，可后续单独整理，不建议在 CRUD 验证前扩大 UI/i18n 修改。
+- 历史文档曾出现编码乱码，本文件已重新写成干净 UTF-8 中文。
+
+## 下一步建议
+
+下一步优先做：真实 Supabase session 下的 Practice CRUD UI 验证。
+
+范围：
+
+- 使用当前真实登录用户。
+- 在 Practice 页面执行创建、读取、更新、删除练习记录。
+- 测试数据必须绑定当前 Supabase user id。
+- 如遇 RLS 错误，修 policy，不绕过权限。
+
+Practice 真实 CRUD UI 验证通过后，再启动匿名旅行者导入 MVP。

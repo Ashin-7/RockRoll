@@ -1,220 +1,95 @@
-# RockRoll 下一阶段任务
+﻿# RockRoll 下一步任务
 
-## 本轮完成：Archive Collection Edit / Delete
+更新时间：2026-07-03
 
-状态：已完成本地增量实现，待提交。
+## 本轮完成：Auth + Supabase CRUD 最小真实闭环
+
+状态：已完成，并已通过真实 Supabase session 手动验证。
 
 完成范围：
-- Archive collection 列表增加 Edit / Delete 操作。
-- 点击 Edit 会回填表单，并切换到 Collection / edit 模式。
-- 编辑提交会更新 collection 字段并刷新列表。
-- 点击 Delete 会删除 collection 并刷新列表。
-- Demo Mode 删除 collection 时会同步清理该 collection 下的本地 archive items。
-- Supabase 与 Demo Mode 均支持 collection 编辑 / 删除。
-- 不包含正式导入写库、批量操作、删除确认弹窗、恢复功能或 Supabase schema 变更。
+
+- 真实密码注册 / 登录链路已跑通。
+- Demo Mode 边界已收紧：仅 `VITE_ENABLE_DEMO_MODE=true` 时允许本地 demo session。
+- 缺少 Supabase 环境变量且未开启 Demo Mode 时，不再伪造登录成功。
+- Auth 页面新增独立登录 / 注册体验与密码注册支持。
+- Auth 页面补充注册需邮箱确认时的明确提示与重发确认邮件入口。
+- Auth 页面补充 Supabase CRUD smoke test 成功结果展示。
+- 真实登录用户已完成 `practice_sessions` insert / select / update / delete smoke test。
 
 验证：
-- `npm test -- --run src/features/archive`
-- 结果：3 个测试文件、18 个用例通过。
-- `npm run build`
-- 结果：通过。
 
-下一步建议先做：
-1. 提交 Archive Collection Edit / Delete。
-2. 进入正式导入写库的最小闭环设计，或补充 Archive / Library 删除确认交互。
+- `npm test -- --run src/features/auth/AuthPage.test.tsx`：15 个用例通过。
+- `npm test -- --run src/features/auth`：2 个测试文件、35 个用例通过。
+- `npm run build`：通过。
+- 浏览器真实 Supabase session smoke test：`Deleted: yes`。
 
-下一轮建议只读取：
+## 导入架构评估结果
+
+既有文档已更新：`docs/IMPORT_ANONTRAVELER.md`。
+
+结论：
+
+- 暂不自建完整后端。
+- 继续使用 Supabase 作为主后端。
+- 匿名旅行者导入采用 Import Inbox-first。
+- 图片、视频、音频采用 Media metadata-first。
+- 大规模后台导入、转码、队列、重试等需求明确后，再引入 Edge Functions、独立 worker 或自建服务。
+
+导入 MVP 排在 Practice 真实 CRUD UI 验证之后。
+
+## 当前最高优先级
+
+继续验证真实 Supabase session 下的 Practice CRUD UI。
+
+目标：
+
+- 使用真实 Supabase 登录用户。
+- 在 Practice 页面完成最小 UI 闭环：create / list / update / delete。
+- 数据必须绑定当前登录用户 `user_id`。
+- 不使用 Demo Mode 伪造通过。
+- 不使用 service role key。
+- 如遇 RLS / permission 错误，只修 policy，不绕过 RLS。
+
+## 推荐执行顺序
+
+1. 只读取 Practice 相关实现：`src/features/practice`。
+2. 确认 Practice service 当前 Supabase CRUD 是否已经绑定当前用户。
+3. 检查 Practice 页面是否已有 create / list / update / delete UI。
+4. 使用浏览器真实登录 session 操作 Practice 页面。
+5. 如果 UI 缺少编辑 / 删除入口，只做最小入口补齐，不做大规模 UI 重构。
+6. 如果报 RLS 错误，定位缺少的 policy：select / insert / update / delete。
+7. 验证通过后更新本文档和交接文档。
+8. 下一阶段再启动匿名旅行者导入 MVP。
+
+## 下一轮建议只读取
+
 - `AGENTS.md`
 - `docs/PROJECT_STATUS.md`
 - `docs/NEXT_TASKS.md`
 - `docs/SESSION_HANDOFF.md`
-- 当前任务相关 feature 目录
+- `docs/IMPORT_ANONTRAVELER.md`
+- `src/features/auth`
+- `src/features/practice`
+- `supabase/migrations`
 
-更新日期：2026-07-03
+## 不要做
 
-## 本轮完成：Media Link Edit / Delete
+- 不要扫描整个仓库。
+- 不要运行 `npm install`。
+- 不要做架构重构。
+- 不要扩展新业务功能。
+- 不要引入新的 UI 框架。
+- 不要使用 service role key。
+- 不要绕过 RLS。
 
-状态：已完成、已提交并推送。
+## 后续候选任务
 
-完成范围：
-- Library 媒体资产列表的 Linked entity 单元格增加 Edit link / Delete link 操作。
-- 点击 Edit link 会在当前 link 行内打开编辑表单。
-- 编辑提交只更新 media link 的关联对象类型与关联对象 ID。
-- 点击 Delete link 会删除指定 media link 并刷新列表。
-- Supabase 与 Demo Mode 均支持 media link 编辑 / 删除。
-- 不包含真实文件上传、播放器、预览器、批量操作或 Supabase Storage bucket 初始化。
+在 Practice 真实 CRUD UI 验证通过后，优先考虑：
 
-验证：
-- `npm test -- --run src/features/library`
-- 结果：2 个测试文件、16 个用例通过。
-- `npm run build`
-- 结果：通过。
-
-下一步建议先做：
-1. 提交 Media Link Edit / Delete。
-2. 继续 Archive Collection 编辑 / 删除，或进入正式导入写库的最小闭环设计。
-
-下一轮建议只读取：
-- `AGENTS.md`
-- `docs/PROJECT_STATUS.md`
-- `docs/NEXT_TASKS.md`
-- `docs/SESSION_HANDOFF.md`
-- 当前任务相关 feature 目录
-
-更新日期：2026-07-03
-
-## 本轮完成：Archive Item Edit / Delete
-
-状态：已完成、已提交并推送。
-
-完成范围：
-- Archive collection detail 的条目行增加 Edit / Delete 操作。
-- 点击 Edit 会回填表单，并切换到 Item / edit 模式。
-- 编辑提交会更新 archive item 字段并刷新 collection detail。
-- 点击 Delete 会删除 archive item 并刷新 collection detail。
-- Supabase 与 Demo Mode 均支持编辑 / 删除。
-- 不包含 Archive Collection 编辑 / 删除、Media Link 独立编辑 / 删除、真实导入写库、文件上传、播放器或预览器。
-
-验证：
-- `npm test -- --run src/features/archive`
-- 结果：3 个测试文件、14 个用例通过。
-- `npm run build`
-- 结果：通过。
-
-下一步建议先做：
-1. 提交 Archive Item Edit / Delete。
-2. 继续 Media Link 编辑 / 删除，或 Archive Collection 编辑 / 删除。
-
-下一轮建议只读取：
-- `AGENTS.md`
-- `docs/PROJECT_STATUS.md`
-- `docs/NEXT_TASKS.md`
-- `docs/SESSION_HANDOFF.md`
-- 当前任务相关 feature 目录
-
-更新日期：2026-07-03
-
-## 本轮完成：Media Asset Edit / Delete
-
-状态：已完成本地增量实现，待提交。
-
-完成范围：
-- Library 媒体资产行增加 Edit / Delete 操作。
-- 点击 Edit 会回填表单，并切换到 Media / edit 模式。
-- 编辑提交会更新媒体资产字段，并替换可选实体关联。
-- 点击 Delete 会删除媒体资产并刷新列表。
-- Supabase 与 Demo Mode 均支持编辑 / 删除。
-- 不包含真实文件上传、播放器、预览器、批量操作或 Supabase Storage bucket 初始化。
-
-验证：
-- `npm test -- --run src/features/library`
-- 结果：2 个测试文件、12 个用例通过。
-- `npm run build`
-- 结果：通过。
-
-下一步建议先做：
-1. 提交 Media Asset Edit / Delete。
-2. 继续 Archive Item 编辑 / 删除，或进入 Media Link 编辑 / 删除。
-
-下一轮建议只读取：
-- `AGENTS.md`
-- `docs/PROJECT_STATUS.md`
-- `docs/NEXT_TASKS.md`
-- `docs/SESSION_HANDOFF.md`
-- 当前任务相关 feature 目录
-
-更新日期：2026-07-03
-
-## 本轮完成：Inbox / Library CRUD UI Pattern
-
-状态：已完成并已提交推送。
-
-完成范围：
-- Inbox 首页补齐后台式指标区、Import workflow 分区、Preview output 分区和候选导入行列表。
-- Inbox Anontraveler 预览结果补充 Preview collection 与 Album samples 展示。
-- Library 首页补齐 Assets filed / Linked assets / Media types 指标区。
-- Library 媒体创建表单调整为 Asset identity / Storage profile / Optional link 分区。
-- Library 媒体资产列表调整为 Asset / Media type / Storage / Linked entity / Notes 行列表。
-- 不包含 Media Asset 编辑 / 删除，不包含正式导入写库，不包含 Supabase schema 变更。
-
-验证：
-- `npm test -- --run src/features/inbox src/features/library`
-- 结果：6 个测试文件、19 个用例通过。
-
-下一步建议先做：
-1. Media Asset 编辑 / 删除。
-2. Archive Item 编辑 / 删除。
-
-下一轮建议只读取：
-- `AGENTS.md`
-- `docs/PROJECT_STATUS.md`
-- `docs/NEXT_TASKS.md`
-- `docs/SESSION_HANDOFF.md`
-- 当前任务相关 feature 目录
-
-更新日期：2026-07-03
-
-## 本轮完成：Practice Supabase Progress Fields
-
-状态：已完成本地代码映射、完整测试、构建、本地 Docker Postgres 手动验证，并已推送到远程 Supabase 项目完成验证。
-
-完成范围：
-- 新增 `practice_sessions.goal_duration_minutes`。
-- 新增 `practice_sessions.completion_percent`。
-- 新增 `practice_sessions.tags`。
-- Practice service 读取、创建、更新均映射目标时长、完成度和标签。
-- 修复 `src/features/songs/songs.service.ts` 中 Demo Mode 旧数据默认值合并导致的 TypeScript 重复字段构建错误。
-- 安装 Supabase CLI `2.109.0` 到用户本地目录并加入用户 PATH。
-- 安装 Docker Desktop `4.80.0`。
-- 链接远程 Supabase 项目 `ubijnnfqlasqlwqbazfa`。
-- 执行 `supabase db push`，将 5 个本地 migrations 应用到远程 Supabase。
-- 远程验证 Practice progress fields 的字段、约束、有效插入和非法值拒绝。
-- 清理远程验证用测试数据。
-- 不包含标签管理器、标签统计、高级搜索或 UI 重构。
-
-验证：
-- `npm test -- --run src/features/practice`
-- 结果：4 个测试文件、24 个用例通过。
-- `node -v`：`v20.20.2`。
-- `npm -v`：`10.8.2`。
-- `npm test -- --run src/features/songs`
-- 结果：3 个测试文件、23 个用例通过。
-- `npm test -- --run`
-- 结果：31 个测试文件、146 个用例通过。
-- `npm run build`
-- 结果：通过。
-- `supabase --version`
-- 结果：`2.109.0`。
-- `docker run --rm hello-world`
-- 结果：通过。
-- 本地 Docker Postgres 手动应用 `supabase/migrations/*.sql`
-- 结果：全部成功，包括 `20260703095000_add_practice_progress_fields.sql`。
-- `supabase db push`
-- 结果：远程成功应用 `0001_initial_schema.sql`、`20260702143722_stabilize_practice_song_schema.sql`、`20260702153000_create_archive_collections.sql`、`20260702162000_stabilize_media_links.sql`、`20260703095000_add_practice_progress_fields.sql`。
-- `supabase migration list --linked`
-- 结果：本地与远程 5 个 migration 版本一致。
-- 远程字段查询
-- 结果：`goal_duration_minutes`、`completion_percent`、`tags` 存在，`tags` 默认值为 `'{}'::text[]`。
-- 远程约束查询
-- 结果：目标时长和完成度 check 约束存在。
-- 远程插入包含新增字段的练习记录
-- 结果：成功。
-- 远程插入非法 `completion_percent = 120`
-- 结果：被 check 约束拒绝，符合预期。
-- 远程测试数据清理
-- 结果：成功。
-
-剩余事项：
-- `supabase db reset --local --no-seed` 在本机仍返回 `error running container: exit 139`；已用本地 Postgres 容器 `psql` 手动应用 migrations 验证 SQL。
-- 如需要合并当前阶段，先确认工作区中 Inbox / Library 等既有改动是否一并纳入本次提交。
-- 不要提交 Supabase token、数据库密码或本机 CLI 配置。
-
-下一轮建议只读取：
-- `AGENTS.md`
-- `docs/PROJECT_STATUS.md`
-- `docs/NEXT_TASKS.md`
-- `docs/SESSION_HANDOFF.md`
-- 如需继续 Practice，只读取 `src/features/practice`、`src/i18n/messages.ts` 和 `supabase/`
-- 如需处理提交范围，再读取 `git status` 中相关文件
-
-更新日期：2026-07-03
+1. 匿名旅行者导入 MVP：小型 JSON / CSV 进入 Inbox preview。
+2. 用户确认后分批写入正式库。
+3. 图片外链或手动上传到 Storage。
+4. 视频 / 音频先保存 metadata 和 Storage path，不做转码。
+5. Song 与 Practice 关联的真实 UI 验证。
+6. Practice History 最小列表。
+7. Practice Statistics 最小统计。

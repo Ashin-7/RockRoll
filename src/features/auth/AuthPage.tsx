@@ -2,12 +2,14 @@ import { FormEvent, useEffect, useState } from 'react';
 import { useI18n } from '../../i18n/I18nProvider';
 import {
   AuthSession,
+  SupabaseCrudSmokeResult,
   getCurrentSession,
   onAuthStateChange,
   runSupabaseCrudSmokeTest,
   signInAnonymously,
   signInWithEmail,
   signInWithPassword,
+  resendSignupConfirmation,
   signUpWithPassword,
   signOut,
 } from './auth.service';
@@ -18,7 +20,8 @@ interface AuthPageProps {
   onSignInAnonymously?: () => Promise<void>;
   onSignIn?: (email: string) => Promise<void>;
   onSignInWithPassword?: (email: string, password: string) => Promise<void>;
-  onSignUpWithPassword?: (email: string, password: string) => Promise<void>;
+  onSignUpWithPassword?: (email: string, password: string) => Promise<AuthSession | null>;
+  onResendSignupConfirmation?: (email: string) => Promise<void>;
   onRunSupabaseCrudSmokeTest?: () => Promise<unknown>;
   onSignOut?: () => Promise<void>;
   testLoginEmail?: string;
@@ -31,6 +34,7 @@ export function AuthPage({
   onSignIn = signInWithEmail,
   onSignInWithPassword = signInWithPassword,
   onSignUpWithPassword = signUpWithPassword,
+  onResendSignupConfirmation = resendSignupConfirmation,
   onRunSupabaseCrudSmokeTest = runSupabaseCrudSmokeTest,
   onSignOut = signOut,
   testLoginEmail = import.meta.env.VITE_TEST_LOGIN_EMAIL,
@@ -44,8 +48,11 @@ export function AuthPage({
   const [isLoadingSession, setIsLoadingSession] = useState(true);
   const [isSendingMagicLink, setIsSendingMagicLink] = useState(false);
   const [isSubmittingPassword, setIsSubmittingPassword] = useState(false);
+  const [isResendingConfirmation, setIsResendingConfirmation] = useState(false);
   const [isSigningInAnonymously, setIsSigningInAnonymously] = useState(false);
   const [isRunningSmokeTest, setIsRunningSmokeTest] = useState(false);
+  const [smokeTestResult, setSmokeTestResult] = useState<SupabaseCrudSmokeResult | null>(null);
+  const [pendingConfirmationEmail, setPendingConfirmationEmail] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
@@ -105,12 +112,18 @@ export function AuthPage({
           await onSignInWithPassword(email, password);
           const currentSession = await onGetCurrentSession();
           setSession(currentSession);
+          setPendingConfirmationEmail('');
           setMessage('Signed in.');
         } else {
-          await onSignUpWithPassword(email, password);
-          const currentSession = await onGetCurrentSession();
-          setSession(currentSession);
-          setMessage('Account created. Check your email if confirmation is required.');
+          const nextSession = await onSignUpWithPassword(email, password);
+          if (nextSession) {
+            setSession(nextSession);
+            setPendingConfirmationEmail('');
+            setMessage('Signed in.');
+          } else {
+            setPendingConfirmationEmail(email);
+            setMessage('Email confirmation required. Check your inbox before signing in.');
+          }
         }
       } catch (caughtError) {
         setError(caughtError instanceof Error ? caughtError.message : t('auth.errorFallback'));
@@ -123,11 +136,29 @@ export function AuthPage({
     try {
       setIsSendingMagicLink(true);
       await onSignIn(email);
+      setPendingConfirmationEmail('');
       setMessage(t('auth.checkEmail'));
     } catch (caughtError) {
       setError(caughtError instanceof Error ? caughtError.message : t('auth.errorFallback'));
     } finally {
       setIsSendingMagicLink(false);
+    }
+  }
+
+  async function handleResendConfirmation() {
+    const confirmationEmail = pendingConfirmationEmail || email;
+    setError('');
+    setMessage('');
+    setIsResendingConfirmation(true);
+
+    try {
+      await onResendSignupConfirmation(confirmationEmail);
+      setPendingConfirmationEmail(confirmationEmail);
+      setMessage('Confirmation email resent.');
+    } catch (caughtError) {
+      setError(caughtError instanceof Error ? caughtError.message : t('auth.errorFallback'));
+    } finally {
+      setIsResendingConfirmation(false);
     }
   }
 
@@ -140,6 +171,7 @@ export function AuthPage({
       await onSignInAnonymously();
       const currentSession = await onGetCurrentSession();
       setSession(currentSession);
+      setPendingConfirmationEmail('');
       setMessage(t('auth.anonymousSignedIn'));
     } catch (caughtError) {
       setError(caughtError instanceof Error ? caughtError.message : t('auth.anonymousErrorFallback'));
@@ -155,6 +187,7 @@ export function AuthPage({
     try {
       await onSignOut();
       setSession(null);
+      setPendingConfirmationEmail('');
       setMessage(t('auth.signedOut'));
     } catch (caughtError) {
       setError(caughtError instanceof Error ? caughtError.message : t('auth.errorFallback'));
@@ -164,10 +197,12 @@ export function AuthPage({
   async function handleRunSmokeTest() {
     setError('');
     setMessage('');
+    setSmokeTestResult(null);
     setIsRunningSmokeTest(true);
 
     try {
-      await onRunSupabaseCrudSmokeTest();
+      const result = await onRunSupabaseCrudSmokeTest();
+      setSmokeTestResult(result as SupabaseCrudSmokeResult);
       setMessage('Supabase CRUD smoke test passed.');
     } catch (caughtError) {
       setError(caughtError instanceof Error ? caughtError.message : 'Supabase CRUD smoke test failed.');
@@ -199,6 +234,14 @@ export function AuthPage({
                 {isRunningSmokeTest ? 'Running Supabase CRUD smoke test...' : 'Run Supabase CRUD smoke test'}
               </button>
             ) : null}
+            {smokeTestResult ? (
+              <div role="status">
+                <p>Smoke test user: {smokeTestResult.userId}</p>
+                <p>Inserted row: {smokeTestResult.insertedId}</p>
+                <p>Updated focus: {smokeTestResult.updatedFocusArea}</p>
+                <p>Deleted: {smokeTestResult.deleted ? 'yes' : 'no'}</p>
+              </div>
+            ) : null}
             <button type="button" onClick={handleSignOut}>
               {t('auth.signOut')}
             </button>
@@ -216,6 +259,7 @@ export function AuthPage({
                   setShowMagicLink(false);
                   setError('');
                   setMessage('');
+                  setPendingConfirmationEmail('');
                 }}
               >
                 Use existing account
@@ -228,6 +272,7 @@ export function AuthPage({
                   setShowMagicLink(false);
                   setError('');
                   setMessage('');
+                  setPendingConfirmationEmail('');
                 }}
               >
                 Register new account
@@ -263,6 +308,11 @@ export function AuthPage({
                       ? 'Sign in'
                       : 'Create account'}
                 </button>
+                {pendingConfirmationEmail ? (
+                  <button type="button" onClick={handleResendConfirmation} disabled={isResendingConfirmation}>
+                    {isResendingConfirmation ? 'Resending confirmation email...' : 'Resend confirmation email'}
+                  </button>
+                ) : null}
                 <button type="button" onClick={() => setShowMagicLink(true)}>
                   Send a magic link instead
                 </button>

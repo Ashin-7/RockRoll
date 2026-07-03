@@ -16,6 +16,7 @@ const authMock = {
   signInAnonymously: vi.fn(),
   signInWithPassword: vi.fn(),
   signInWithOtp: vi.fn(),
+  resend: vi.fn(),
   signUp: vi.fn(),
   signOut: vi.fn(),
 };
@@ -69,14 +70,46 @@ describe('auth.service', () => {
   });
 
   it('signs up with email and password through Supabase auth', async () => {
-    authMock.signUp.mockResolvedValue({ error: null });
+    const session = { user: { id: 'user-1', email: 'player@example.com' } };
+    authMock.signUp.mockResolvedValue({ data: { session }, error: null });
     const { signUpWithPassword } = await import('./auth.service');
 
-    await expect(signUpWithPassword('player@example.com', 'secret123')).resolves.toBeUndefined();
+    await expect(signUpWithPassword('player@example.com', 'secret123')).resolves.toEqual(session);
     expect(authMock.signUp).toHaveBeenCalledWith({
       email: 'player@example.com',
       password: 'secret123',
+      options: {
+        emailRedirectTo: window.location.origin,
+      },
     });
+  });
+
+  it('returns null when password sign up requires email confirmation', async () => {
+    authMock.signUp.mockResolvedValue({ data: { session: null }, error: null });
+    const { signUpWithPassword } = await import('./auth.service');
+
+    await expect(signUpWithPassword('player@example.com', 'secret123')).resolves.toBeNull();
+  });
+
+  it('resends the signup confirmation email', async () => {
+    authMock.resend.mockResolvedValue({ error: null });
+    const { resendSignupConfirmation } = await import('./auth.service');
+
+    await expect(resendSignupConfirmation('player@example.com')).resolves.toBeUndefined();
+    expect(authMock.resend).toHaveBeenCalledWith({
+      type: 'signup',
+      email: 'player@example.com',
+      options: {
+        emailRedirectTo: window.location.origin,
+      },
+    });
+  });
+
+  it('throws when resending signup confirmation fails', async () => {
+    authMock.resend.mockResolvedValue({ error: { message: 'Email rate limit exceeded' } });
+    const { resendSignupConfirmation } = await import('./auth.service');
+
+    await expect(resendSignupConfirmation('player@example.com')).rejects.toThrow('Email rate limit exceeded');
   });
 
   it('throws when password sign up fails', async () => {
