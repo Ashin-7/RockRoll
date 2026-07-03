@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useI18n } from '../../i18n/I18nProvider';
 import { listSongs } from '../songs/songs.service';
 import { SongSummary } from '../songs/song.types';
@@ -28,6 +28,8 @@ interface PracticeHistoryPageProps {
   sessions?: PracticeHistoryItem[];
 }
 
+type PracticeHistorySort = 'date-desc' | 'date-asc';
+
 export function PracticeHistoryPage({
   onAuthStateChange: subscribeToAuthState = onPracticeAuthStateChange,
   onDeleteSession = deletePracticeSession,
@@ -48,8 +50,44 @@ export function PracticeHistoryPage({
   const [isSaving, setIsSaving] = useState(false);
   const [deletingSessionId, setDeletingSessionId] = useState('');
   const [editingSession, setEditingSession] = useState<PracticeHistoryItem | null>(null);
+  const [songFilter, setSongFilter] = useState('');
+  const [focusFilter, setFocusFilter] = useState('');
+  const [sortOrder, setSortOrder] = useState<PracticeHistorySort>('date-desc');
   const [error, setError] = useState('');
   const displaySessions = hasProvidedSessions ? sessions : loadedSessions;
+  const songFilterOptions = useMemo(() => {
+    const options = new Map<string, string>();
+
+    displaySessions.forEach((session) => {
+      const value = session.songId ?? session.songTitle;
+
+      if (!options.has(value)) {
+        options.set(value, session.songTitle);
+      }
+    });
+
+    return Array.from(options, ([value, label]) => ({ value, label })).sort((left, right) =>
+      left.label.localeCompare(right.label),
+    );
+  }, [displaySessions]);
+  const visibleSessions = useMemo(() => {
+    const normalizedFocusFilter = focusFilter.trim().toLowerCase();
+
+    return displaySessions
+      .filter((session) => {
+        const sessionSongValue = session.songId ?? session.songTitle;
+        const matchesSong = songFilter ? sessionSongValue === songFilter : true;
+        const matchesFocus = normalizedFocusFilter
+          ? session.focusArea.toLowerCase().includes(normalizedFocusFilter)
+          : true;
+
+        return matchesSong && matchesFocus;
+      })
+      .sort((left, right) => {
+        const comparedDate = left.practicedOn.localeCompare(right.practicedOn);
+        return sortOrder === 'date-asc' ? comparedDate : -comparedDate;
+      });
+  }, [displaySessions, focusFilter, songFilter, sortOrder]);
   const statistics = calculatePracticeStatistics(displaySessions);
   const statisticItems = [
     {
@@ -281,7 +319,10 @@ export function PracticeHistoryPage({
                 ? {
                     songId: editingSession.songId ?? null,
                     durationMinutes: editingSession.durationMinutes,
+                    goalDurationMinutes: editingSession.goalDurationMinutes ?? null,
+                    completionPercent: editingSession.completionPercent ?? null,
                     bpm: editingSession.bpm,
+                    tags: editingSession.tags ?? [],
                     focusArea: editingSession.focusArea,
                     reflection: editingSession.reflection,
                   }
@@ -314,20 +355,64 @@ export function PracticeHistoryPage({
 
       {isLoading ? <p className="practice-history-loading">{t('practiceHistory.loading')}</p> : null}
 
+      {!isLoading && displaySessions.length > 0 ? (
+        <section className="practice-history-filters" aria-labelledby="practice-history-filters-title">
+          <h2 id="practice-history-filters-title">{t('practiceHistory.filtersTitle')}</h2>
+          <div className="practice-history-filters__grid">
+            <label>
+              <span>{t('practiceHistory.songFilterLabel')}</span>
+              <select value={songFilter} onChange={(event) => setSongFilter(event.target.value)}>
+                <option value="">{t('practiceHistory.allSongs')}</option>
+                {songFilterOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              <span>{t('practiceHistory.focusFilterLabel')}</span>
+              <input
+                type="search"
+                value={focusFilter}
+                onChange={(event) => setFocusFilter(event.target.value)}
+                placeholder={t('practiceHistory.focusFilterPlaceholder')}
+              />
+            </label>
+            <label>
+              <span>{t('practiceHistory.sortLabel')}</span>
+              <select
+                value={sortOrder}
+                onChange={(event) => setSortOrder(event.target.value as PracticeHistorySort)}
+              >
+                <option value="date-desc">{t('practiceHistory.sortDateDesc')}</option>
+                <option value="date-asc">{t('practiceHistory.sortDateAsc')}</option>
+              </select>
+            </label>
+          </div>
+        </section>
+      ) : null}
+
       {!isLoading && displaySessions.length === 0 ? (
         <p className="practice-history-empty">{t('practiceHistory.empty')}</p>
       ) : null}
 
-      {!isLoading && displaySessions.length > 0 ? (
+      {!isLoading && displaySessions.length > 0 && visibleSessions.length === 0 ? (
+        <p className="practice-history-empty">{t('practiceHistory.noFilterResults')}</p>
+      ) : null}
+
+      {!isLoading && visibleSessions.length > 0 ? (
         <div className="practice-history-list">
           <div className="practice-history-list__header" aria-hidden="true">
             <span>{t('practice.song')}</span>
             <span>{t('practiceHistory.duration')}</span>
+            <span>{t('practiceHistory.goal')}</span>
+            <span>{t('practiceHistory.completion')}</span>
             <span>{t('practiceHistory.bpm')}</span>
             <span>{t('practiceHistory.focus')}</span>
             <span>{t('songs.openDetail')}</span>
           </div>
-          {displaySessions.map((session) => (
+          {visibleSessions.map((session) => (
             <article className="practice-history-card" key={session.id}>
               <header className="practice-history-card__header">
                 <div>
@@ -345,6 +430,22 @@ export function PracticeHistoryPage({
                   </dd>
                 </div>
                 <div>
+                  <dt>{t('practiceHistory.goal')}</dt>
+                  <dd>
+                    {session.goalDurationMinutes
+                      ? `${session.goalDurationMinutes} ${t('practiceHistory.minutes')}`
+                      : t('practiceHistory.noGoal')}
+                  </dd>
+                </div>
+                <div>
+                  <dt>{t('practiceHistory.completion')}</dt>
+                  <dd>
+                    {session.completionPercent !== undefined && session.completionPercent !== null
+                      ? `${session.completionPercent}%`
+                      : t('practiceHistory.noCompletion')}
+                  </dd>
+                </div>
+                <div>
                   <dt>{t('practiceHistory.bpm')}</dt>
                   <dd>{session.bpm === null ? t('practiceHistory.noBpm') : `${session.bpm} BPM`}</dd>
                 </div>
@@ -355,6 +456,13 @@ export function PracticeHistoryPage({
                   <strong>{t('practiceHistory.focus')}</strong>
                   {session.focusArea}
                 </p>
+                <div className="practice-history-card__tags" aria-label={t('practiceHistory.tags')}>
+                  {(session.tags ?? []).length > 0 ? (
+                    session.tags?.map((tag) => <span key={tag}>{tag}</span>)
+                  ) : (
+                    <span>{t('practiceHistory.noTags')}</span>
+                  )}
+                </div>
                 <p>
                   <strong>{t('practiceHistory.reflection')}</strong>
                   {session.reflection}

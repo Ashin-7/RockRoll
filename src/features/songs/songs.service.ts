@@ -63,10 +63,10 @@ function findDemoSong(songId: string): SongDetail | null {
 
   return song
     ? {
-        releaseYear: null,
-        bpm: null,
-        notes: '',
         ...song,
+        releaseYear: song.releaseYear ?? null,
+        bpm: song.bpm ?? null,
+        notes: song.notes ?? '',
       }
     : null;
 }

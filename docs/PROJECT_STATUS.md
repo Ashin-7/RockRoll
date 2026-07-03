@@ -1,257 +1,41 @@
 # RockRoll 项目状态
 
-## 本轮补充：Archive CRUD UI Pattern
+## 本轮补充：Practice Supabase Progress Fields
 
-- 已完成 Archive CRUD UI Pattern 推广：
-  - Archive 首页调整为后台式 Hero、资料分区、Collection 行列表。
-  - Archive Collection 新增表单调整为 Identity / Source profile 分区。
-  - Archive Collection 详情页补齐对象 Hero、Source / Items filed / Source URL 指标卡。
-  - Archive Item 列表调整为行列表，添加 Album Item 表单调整为 Album link / Placement 分区。
-- 本轮仅运行 Archive 相关测试：
-  - `npm test -- --run src/features/archive`
-  - 结果：3 个测试文件、10 个用例通过。
-- 未运行完整测试与构建：
-  - 用户要求只运行 Archive 相关测试。
-  - 本轮未修改依赖、路由、Supabase schema 或构建配置。
+- 已完成 Practice 目标时长、完成度与标签的真实 Supabase 持久化映射：
+  - 新增 migration，为 `practice_sessions` 增加 `goal_duration_minutes`、`completion_percent`、`tags`。
+  - `goal_duration_minutes` 允许为空，非空时必须大于 0。
+  - `completion_percent` 允许为空，非空时必须在 0-100。
+  - `tags` 使用 `text[] not null default '{}'::text[]`，兼容旧数据。
+  - Practice service 的 list/create/update 已映射这些字段。
+- 本轮修改了 Supabase 稳定区：
+  - 原因：Practice 前端与 Demo Mode 已具备字段能力，P0 数据闭环需要真实持久化。
+  - 风险：远程 Supabase 实例已完成 migration 应用与字段/约束验证；后续仍需注意不要提交任何密钥或环境变量。
+  - 替代方案：继续只在 Demo Mode 保留字段，但线上数据会丢失新增信息。
+  - 影响范围：仅 `practice_sessions` 兼容新增字段与 Practice service 字段映射。
+- 本轮补充了一个构建修复：
+  - `src/features/songs/songs.service.ts` 中 Demo Mode 旧数据默认值合并顺序调整，避免 TypeScript 5.7 报重复字段覆盖错误。
+  - 行为保持兼容：旧本地歌曲缺少 `releaseYear`、`bpm`、`notes` 时继续补默认值。
+- 验证结果：
+  - `npm test -- --run src/features/practice`：4 个测试文件、24 个用例通过。
+  - `node -v`：`v20.20.2`。
+  - `npm -v`：`10.8.2`。
+  - `npm test -- --run src/features/songs`：3 个测试文件、23 个用例通过。
+  - `npm test -- --run`：31 个测试文件、146 个用例通过。
+  - `npm run build`：通过。
+- Supabase CLI / Docker 状态：
+  - 已安装 Supabase CLI `2.109.0` 到用户本地目录，并加入用户 PATH。
+  - 已链接远程 Supabase 项目 `ubijnnfqlasqlwqbazfa`。
+  - `supabase db push` 已成功应用全部 5 个 migrations 到远程项目。
+  - `supabase migration list --linked` 显示本地与远程 migration 版本一致。
+  - 远程查询确认 `practice_sessions` 已包含 `goal_duration_minutes`、`completion_percent`、`tags`。
+  - 远程查询确认目标时长与完成度 check 约束存在。
+  - 远程插入包含新增字段的练习记录成功，非法 `completion_percent = 120` 被 check 约束拒绝。
+  - 远程验证用测试数据已清理。
+- 额外说明：
+  - 早前在 Node `v8.17.0` 下尝试完整测试与构建失败，原因是当前 Vite/Vitest/TypeScript 工具链需要现代 Node。
+  - 已切换到 Node `v20.20.2` 后完成完整验证。
+  - `npm install` 未运行，本轮未修改依赖或 lockfile。
+  - 未读取、记录或提交 Supabase token / 数据库密码。
 
-更新时间：2026-07-02
-
-## 本轮补充：Albums CRUD UI Pattern
-
-- 已完成 Albums CRUD UI Pattern 推广：
-  - Album 列表页由卡片网格调整为后台式行列表。
-  - Album 新增表单调整为 Identity / Archive notes 分区。
-  - Album 详情页补齐对象 Hero、指标卡、Archive notes / Related 面板。
-  - Album 编辑表单调整为 Identity / Release profile / Archive notes 分区。
-- 本轮仅运行 Albums 相关测试：
-  - `npm test -- --run src/features/albums`
-  - 结果：3 个测试文件、14 个用例通过。
-- 未运行完整测试与构建：
-  - 用户要求只运行 Albums 相关测试。
-  - 本轮未修改依赖、路由、Supabase schema 或构建配置。
-
-更新时间：2026-07-02
-
-## 本轮补充：Artists CRUD UI Pattern
-
-- 已完成 Artists CRUD UI Pattern 推广：
-  - Artist 列表页由卡片网格调整为后台式行列表。
-  - Artist 新增表单调整为 Identity / Archive notes 分区。
-  - Artist 详情页补齐对象 Hero、指标卡、Timeline / Notes / Related 面板。
-  - Artist 编辑表单调整为 Identity / Timeline / Archive notes 分区。
-- 本轮仅运行 Artists 相关测试：
-  - `npm test -- --run src/features/artists`
-  - 结果：3 个测试文件、21 个用例通过。
-- 未运行完整测试与构建：
-  - 用户要求只运行 Artists 相关测试。
-  - 本轮未修改依赖、路由、Supabase schema 或构建配置。
-
-## 当前项目阶段
-
-MVP Foundation
-
-当前目标是稳定 MVP 基础能力，优先补齐核心资料管理能力，并保持 Supabase Schema、基础路由、Demo Mode 与测试体系可持续迭代。
-
-## 本轮完成内容
-
-- 已完成 Figma CRUD UI Pattern 试点：
-  - 以 Backstage 后台主页为视觉母版。
-  - 创建 Songs 列表页 / 详情页 / 表单页的 Figma 设计基准。
-  - Figma 文件：`https://www.figma.com/design/WDwfCn1vaZgWDNWUS70CgH`
-- 已完成 Songs CRUD UI Pattern 首轮代码落地：
-  - Songs 列表页改为后台式行列表。
-  - Song Detail 改为对象详情 Hero、指标卡、Notes / Related 双栏。
-  - Song 编辑表单改为分区表单与底部保存操作区。
-- 已完成 Practice CRUD UI Pattern 首轮代码落地：
-  - Practice History 改为练习台 Hero、分区表单、统计信号卡、take log 行列表。
-  - PracticeSessionForm 改为 Song link / Tempo and time / Focus notes 分区。
-  - 保留现有保存、编辑、删除、未登录提示行为。
-- 已补充 `AGENTS.md` 的上下文节省规则与多轮迭代会话切换规则。
-- 已完成本地 P0 CRUD 增量实现：
-  - Practice Delete
-  - Practice Edit
-  - Song Edit
-  - Song Delete
-- 已完成 P0 CRUD 最终复核，并准备纳入本地提交。
-- 已完成 Supabase Schema 稳定化复核，并新增 migration：
-  - `songs` / `practice_sessions` 更新时自动刷新 `updated_at`。
-  - `practice_sessions` 新增 insert/update 的 `song_id` 归属校验，避免跨用户引用歌曲。
-- 已完成 Artist CRUD 增量实现：
-  - Artist Edit
-  - Artist Delete
-  - Supabase 与本地 Demo Mode 双路径
-- 已完成 Album CRUD 增量实现：
-  - Album List / Create / Detail / Edit / Delete
-  - Supabase 与本地 Demo Mode 双路径
-  - 接入 `#albums` 与 `#album/:id` 路由
-- 已完成 Archive 管理 MVP 增量实现：
-  - Archive Collection List / Create
-  - Archive Collection Detail
-  - 手动添加 Album 类型 Archive Item
-  - Supabase 与本地 Demo Mode 双路径
-  - 接入 `#archive/:id` 路由
-- 已完成 Media Library MVP 增量实现：
-  - Media Asset List / Create
-  - 可选关联 Song / Practice / Artist / Album
-  - Supabase 与本地 Demo Mode 双路径
-  - 收紧 `media_links` RLS，避免跨用户关联媒体
-- 已完成匿名旅行者导入预览 MVP 增量实现：
-  - Inbox 内输入单个公开 Anontraveler rank version URL
-  - 只请求公开 JSON API 并生成预览
-  - 展示 Artist / Album / Archive Item 预览数量与专辑样例
-  - 不写入数据库，不创建导入候选，不抓取图片二进制
-
-## 当前分支状态
-
-- 当前分支：`feature/mvp-foundation`
-- 跟踪分支：`origin/feature/mvp-foundation`
-- 当前分支已包含 P0 CRUD、Supabase Schema 稳定化、Artist CRUD、Album CRUD、Archive MVP 与 Media Library MVP 提交；本次匿名旅行者导入预览 MVP 改动待提交。
-
-## 已完成模块
-
-- Auth
-- Songs
-- Practice
-- Artists
-- Albums
-- Archive MVP
-- Media Library MVP
-- 匿名旅行者导入预览 MVP
-- 基础路由
-- Demo Mode
-- Supabase 接入
-
-## 部分完成模块
-
-- CRUD UI Pattern 推广：Songs 与 Practice 已完成首轮替换；Artists / Albums / Archive / Library / Inbox 尚未按新 Pattern 统一。
-- Inbox：已具备导入候选列表与匿名旅行者只读预览。
-
-## 未开始模块
-
-- 媒体管理
-- 元数据导入
-- 成长分析
-- AI 功能
-
-## 当前技术栈
-
-- React
-- TypeScript
-- Vite
-- Supabase
-- Vitest
-- Testing Library
-
-## 当前架构原则
-
-- Private Cloud First
-- Feature First
-- Simple First
-- Long-term Maintainability
-
-## 当前 MVP 优先级
-
-### P0
-
-- Practice CRUD 完整化：已完成 Edit / Delete 本地实现与最终复核。
-- Song CRUD 完整化：已完成 Edit / Delete 本地实现与最终复核。
-- Supabase Schema 稳定化：已完成 P0 Practice / Songs 相关字段、RLS 与 `updated_at` 复核。
-
-### P1
-
-- Artist 管理：已补齐编辑与删除闭环。
-- Album 管理：已补齐列表、创建、详情、编辑与删除闭环，已提交。
-- Archive 管理：已完成 Collection / Item 最小闭环。
-
-### P2
-
-- 文件管理：已完成 Media Asset 元数据与可选实体关联的最小闭环，待提交。
-- 外部元数据导入：已完成匿名旅行者只读预览，正式导入尚未开始。
-
-## Practice 模块状态评估
-
-当前完成度：约 70%。
-
-已具备能力：
-
-- 创建练习记录
-- 查看练习记录
-- 编辑练习记录
-- 删除练习记录
-- 基础统计信息
-- Song 关联
-- Supabase 与本地 Demo Mode 双路径
-
-主要缺口：
-
-- 筛选与排序
-- 标签
-- 目标时长
-- 完成度
-- 更完整的 i18n 文案
-
-推荐开发顺序：
-
-1. Practice Filter / Sort。
-2. Practice Goal Duration。
-3. Practice Completion。
-4. Practice Tags。
-
-## 当前验证结果
-
-本轮已运行并通过：
-
-```powershell
-npm test -- --run src/features/songs
-npm test -- --run src/features/practice src/features/songs
-npm test -- --run src/features/albums src/app/routes.test.tsx src/features/archive/ArchivePage.test.tsx
-npm test -- --run src/features/archive src/app/routes.test.tsx
-npm test -- --run src/features/library
-npm test -- --run src/features/inbox
-```
-
-结果：
-
-- 当前 shell Node.js 为 `v20.20.2`，Songs 相关测试通过：3 个测试文件，23 个用例。
-- 当前 shell Node.js 为 `v20.20.2`，Practice / Songs 相关测试通过：7 个测试文件，46 个用例。
-- 当前 shell Node.js 为 `v20.20.2`，Album / routes / Archive 相关测试通过：5 个测试文件，19 个用例。
-- 当前 shell Node.js 为 `v20.20.2`，Archive / routes 相关测试通过：4 个测试文件，16 个用例。
-- 当前 shell Node.js 为 `v20.20.2`，Library 相关测试通过：2 个测试文件，7 个用例。
-- 当前 shell Node.js 为 `v20.20.2`，Inbox 相关测试通过：4 个测试文件，11 个用例。
-
-本轮已执行轻量校验：
-
-```powershell
-git diff --check
-supabase --version
-node -v
-npm -v
-```
-
-结果：
-
-- `git diff --check` 未发现空白错误。
-- 当前环境未安装 Supabase CLI，无法执行本地 migration lint 或迁移演练。
-- 当前 shell Node.js 为 `v20.20.2`，npm 为 `10.8.2`。
-
-未运行：
-
-```powershell
-npm install
-npm test -- --run
-npm run build
-```
-
-原因：
-
-- `package.json`、`pnpm-lock.yaml`、`package-lock.json` 未在本轮要求中发生变化，不运行 `npm install`。
-- 用户要求节省上下文和避免完整测试，本轮未运行完整测试与构建。
-
-## 当前风险
-
-- 当前 shell 使用 Node.js v20.20.2 运行通过 Album 相关测试；若切回 Node.js v8.17.0，当前 Vite/Vitest 工具链仍不兼容。
-- Media Library 当前只管理元数据，不处理真实文件上传、播放器或 Supabase Storage bucket 初始化。
-- 匿名旅行者当前只做预览，不执行写库、去重、确认导入或批量抓取。
-- Artists / Albums / Archive / Library / Inbox 尚未统一到新的 CRUD UI Pattern。
-- 尚未运行完整测试与构建，合并前仍需至少执行一次。
-- Supabase migrations 尚未在真实 Supabase 实例上执行验证。
+更新时间：2026-07-03

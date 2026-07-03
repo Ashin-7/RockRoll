@@ -12,7 +12,10 @@ describe('PracticeSessionForm', () => {
     renderWithI18n(<PracticeSessionForm onSave={onSave} />);
 
     await user.type(screen.getByLabelText('Duration minutes'), '45');
+    await user.type(screen.getByLabelText('Goal duration minutes'), '60');
+    await user.type(screen.getByLabelText('Completion percent'), '75');
     await user.type(screen.getByLabelText('BPM'), '92');
+    await user.type(screen.getByLabelText('Practice tags'), 'rhythm, bends');
     await user.type(screen.getByLabelText('Focus area'), 'Verse rhythm and bends');
     await user.type(screen.getByLabelText('Reflection'), 'Timing is tighter than yesterday.');
     await user.click(screen.getByRole('button', { name: 'Save practice session' }));
@@ -20,7 +23,10 @@ describe('PracticeSessionForm', () => {
     expect(onSave).toHaveBeenCalledWith({
       songId: null,
       durationMinutes: 45,
+      goalDurationMinutes: 60,
+      completionPercent: 75,
       bpm: 92,
+      tags: ['rhythm', 'bends'],
       focusArea: 'Verse rhythm and bends',
       reflection: 'Timing is tighter than yesterday.',
     });
@@ -52,7 +58,10 @@ describe('PracticeSessionForm', () => {
     expect(onSave).toHaveBeenCalledWith({
       songId: 'little-wing',
       durationMinutes: 30,
+      goalDurationMinutes: null,
+      completionPercent: null,
       bpm: null,
+      tags: [],
       focusArea: '',
       reflection: '',
     });
@@ -69,6 +78,12 @@ describe('PracticeSessionForm', () => {
 
     await user.click(screen.getByRole('button', { name: 'Decrease duration' }));
     expect(screen.getByLabelText('Duration minutes')).toHaveValue(28);
+
+    await user.click(screen.getByRole('button', { name: 'Increase goal duration' }));
+    expect(screen.getByLabelText('Goal duration minutes')).toHaveValue(1);
+
+    await user.click(screen.getByRole('button', { name: 'Increase completion percent' }));
+    expect(screen.getByLabelText('Completion percent')).toHaveValue(1);
 
     await user.click(screen.getByRole('button', { name: 'Increase BPM' }));
     expect(screen.getByLabelText('BPM')).toHaveValue(1);

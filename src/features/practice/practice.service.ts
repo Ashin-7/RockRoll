@@ -17,7 +17,10 @@ interface PracticeSessionRow {
   song_id: string | null;
   practiced_on: string;
   duration_minutes: number;
+  goal_duration_minutes: number | null;
+  completion_percent: number | null;
   bpm: number | null;
+  tags: string[] | null;
   focus_area: string;
   reflection: string;
   songs: { title: string } | Array<{ title: string }> | null;
@@ -39,7 +42,10 @@ function mapPracticeSessionRow(row: PracticeSessionRow): PracticeHistoryItem {
     artistName: 'Unknown artist',
     practicedOn: row.practiced_on,
     durationMinutes: row.duration_minutes,
+    goalDurationMinutes: row.goal_duration_minutes,
+    completionPercent: row.completion_percent,
     bpm: row.bpm,
+    tags: row.tags ?? [],
     focusArea: row.focus_area,
     reflection: row.reflection,
   };
@@ -75,7 +81,10 @@ function createDemoPracticeSession(input: PracticeSessionInput) {
     artistName: 'Local demo',
     practicedOn: new Date().toISOString().slice(0, 10),
     durationMinutes: input.durationMinutes,
+    goalDurationMinutes: input.goalDurationMinutes ?? null,
+    completionPercent: input.completionPercent ?? null,
     bpm: input.bpm,
+    tags: input.tags ?? [],
     focusArea: input.focusArea,
     reflection: input.reflection,
   };
@@ -95,7 +104,10 @@ function updateDemoPracticeSession(sessionId: string, input: PracticeSessionInpu
             ...session,
             songId: input.songId,
             durationMinutes: input.durationMinutes,
+            goalDurationMinutes: input.goalDurationMinutes ?? null,
+            completionPercent: input.completionPercent ?? null,
             bpm: input.bpm,
+            tags: input.tags ?? [],
             focusArea: input.focusArea,
             reflection: input.reflection,
           }
@@ -124,7 +136,9 @@ export async function listPracticeHistory(): Promise<PracticeHistoryItem[]> {
   }
   const { data, error } = await supabase
     .from('practice_sessions')
-    .select('id,song_id,practiced_on,duration_minutes,bpm,focus_area,reflection,songs(title)')
+    .select(
+      'id,song_id,practiced_on,duration_minutes,goal_duration_minutes,completion_percent,bpm,tags,focus_area,reflection,songs(title)',
+    )
     .order('practiced_on', { ascending: false });
 
   if (error) {
@@ -161,7 +175,10 @@ export async function createPracticeSession(input: PracticeSessionInput): Promis
     user_id: userId,
     song_id: input.songId,
     duration_minutes: input.durationMinutes,
+    goal_duration_minutes: input.goalDurationMinutes ?? null,
+    completion_percent: input.completionPercent ?? null,
     bpm: input.bpm,
+    tags: input.tags ?? [],
     focus_area: input.focusArea,
     reflection: input.reflection,
   });
@@ -207,7 +224,10 @@ export async function updatePracticeSession(sessionId: string, input: PracticeSe
     .update({
       song_id: input.songId,
       duration_minutes: input.durationMinutes,
+      goal_duration_minutes: input.goalDurationMinutes ?? null,
+      completion_percent: input.completionPercent ?? null,
       bpm: input.bpm,
+      tags: input.tags ?? [],
       focus_area: input.focusArea,
       reflection: input.reflection,
     })

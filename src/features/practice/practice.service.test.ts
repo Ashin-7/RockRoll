@@ -35,7 +35,10 @@ describe('practice.service', () => {
           song_id: 'song-1',
           practiced_on: '2026-07-01',
           duration_minutes: 45,
+          goal_duration_minutes: 60,
+          completion_percent: 75,
           bpm: 92,
+          tags: ['rhythm', 'bends'],
           focus_area: 'Verse rhythm and bends',
           reflection: 'Timing is tighter.',
           songs: { title: 'Little Wing' },
@@ -53,14 +56,17 @@ describe('practice.service', () => {
         artistName: 'Unknown artist',
         practicedOn: '2026-07-01',
         durationMinutes: 45,
+        goalDurationMinutes: 60,
+        completionPercent: 75,
         bpm: 92,
+        tags: ['rhythm', 'bends'],
         focusArea: 'Verse rhythm and bends',
         reflection: 'Timing is tighter.',
       },
     ]);
     expect(fromMock).toHaveBeenCalledWith('practice_sessions');
     expect(selectMock).toHaveBeenCalledWith(
-      'id,song_id,practiced_on,duration_minutes,bpm,focus_area,reflection,songs(title)',
+      'id,song_id,practiced_on,duration_minutes,goal_duration_minutes,completion_percent,bpm,tags,focus_area,reflection,songs(title)',
     );
     expect(orderMock).toHaveBeenCalledWith('practiced_on', { ascending: false });
   });
@@ -99,7 +105,10 @@ describe('practice.service', () => {
     await createPracticeSession({
       songId: 'song-1',
       durationMinutes: 45,
+      goalDurationMinutes: 60,
+      completionPercent: 75,
       bpm: 92,
+      tags: ['rhythm', 'bends'],
       focusArea: 'Verse rhythm and bends',
       reflection: 'Timing is tighter.',
     });
@@ -109,7 +118,10 @@ describe('practice.service', () => {
       user_id: 'user-1',
       song_id: 'song-1',
       duration_minutes: 45,
+      goal_duration_minutes: 60,
+      completion_percent: 75,
       bpm: 92,
+      tags: ['rhythm', 'bends'],
       focus_area: 'Verse rhythm and bends',
       reflection: 'Timing is tighter.',
     });
@@ -143,7 +155,10 @@ describe('practice.service', () => {
     await createPracticeSession({
       songId: null,
       durationMinutes: 28,
+      goalDurationMinutes: 40,
+      completionPercent: 70,
       bpm: 60,
+      tags: ['technique', 'warmup'],
       focusArea: 'Alternate picking',
       reflection: 'Keep the wrist relaxed.',
     });
@@ -153,7 +168,10 @@ describe('practice.service', () => {
         songTitle: 'Local demo practice',
         artistName: 'Local demo',
         durationMinutes: 28,
+        goalDurationMinutes: 40,
+        completionPercent: 70,
         bpm: 60,
+        tags: ['technique', 'warmup'],
         focusArea: 'Alternate picking',
         reflection: 'Keep the wrist relaxed.',
       }),
@@ -178,7 +196,10 @@ describe('practice.service', () => {
     await updatePracticeSession('practice-1', {
       songId: 'song-2',
       durationMinutes: 50,
+      goalDurationMinutes: 55,
+      completionPercent: 80,
       bpm: 96,
+      tags: ['timing'],
       focusArea: 'Outro timing',
       reflection: 'Cleaner transition.',
     });
@@ -187,7 +208,10 @@ describe('practice.service', () => {
     expect(updateMock).toHaveBeenCalledWith({
       song_id: 'song-2',
       duration_minutes: 50,
+      goal_duration_minutes: 55,
+      completion_percent: 80,
       bpm: 96,
+      tags: ['timing'],
       focus_area: 'Outro timing',
       reflection: 'Cleaner transition.',
     });
@@ -252,7 +276,10 @@ describe('practice.service', () => {
     await updatePracticeSession('practice-1', {
       songId: null,
       durationMinutes: 35,
+      goalDurationMinutes: 45,
+      completionPercent: 85,
       bpm: null,
+      tags: ['coordination'],
       focusArea: 'String crossing',
       reflection: 'Cleaner at slow tempo.',
     });
@@ -260,7 +287,10 @@ describe('practice.service', () => {
     await expect(listPracticeHistory()).resolves.toEqual([
       expect.objectContaining({
         durationMinutes: 35,
+        goalDurationMinutes: 45,
+        completionPercent: 85,
         bpm: null,
+        tags: ['coordination'],
         focusArea: 'String crossing',
         reflection: 'Cleaner at slow tempo.',
       }),
