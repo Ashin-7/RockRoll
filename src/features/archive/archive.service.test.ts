@@ -24,6 +24,7 @@ vi.mock('../../lib/supabase', () => ({
 describe('archive.service', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.unstubAllEnvs();
     window.localStorage.clear();
     getSupabaseMock.mockReturnValue({
       auth: { getSession: getSessionMock },
@@ -246,6 +247,7 @@ describe('archive.service', () => {
   });
 
   it('uses local demo archive collections when Supabase is not configured', async () => {
+    vi.stubEnv('VITE_ENABLE_DEMO_MODE', 'true');
     getSupabaseMock.mockImplementation(() => {
       throw new Error('Missing VITE_SUPABASE_URL');
     });

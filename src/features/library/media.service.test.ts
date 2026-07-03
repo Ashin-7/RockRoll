@@ -23,6 +23,7 @@ vi.mock('../../lib/supabase', () => ({
 describe('media.service', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.unstubAllEnvs();
     window.localStorage.clear();
     selectMock.mockImplementation(() => ({ order: orderMock }));
     insertMock.mockResolvedValue({ error: null });
@@ -217,6 +218,7 @@ describe('media.service', () => {
   });
 
   it('uses local demo media assets when Supabase is not configured', async () => {
+    vi.stubEnv('VITE_ENABLE_DEMO_MODE', 'true');
     getSupabaseMock.mockImplementation(() => {
       throw new Error('Missing VITE_SUPABASE_URL');
     });
@@ -281,6 +283,7 @@ describe('media.service', () => {
   });
 
   it('updates and deletes local demo media assets when Supabase is not configured', async () => {
+    vi.stubEnv('VITE_ENABLE_DEMO_MODE', 'true');
     getSupabaseMock.mockImplementation(() => {
       throw new Error('Missing VITE_SUPABASE_URL');
     });

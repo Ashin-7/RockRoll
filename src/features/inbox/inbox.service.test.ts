@@ -14,6 +14,7 @@ vi.mock('../../lib/supabase', () => ({
 describe('inbox.service', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.unstubAllEnvs();
     window.localStorage.clear();
     getSupabaseMock.mockReturnValue({
       from: fromMock,
@@ -50,6 +51,7 @@ describe('inbox.service', () => {
   });
 
   it('uses local demo import candidates when Supabase is not configured', async () => {
+    vi.stubEnv('VITE_ENABLE_DEMO_MODE', 'true');
     getSupabaseMock.mockImplementation(() => {
       throw new Error('Missing VITE_SUPABASE_URL');
     });

@@ -23,6 +23,7 @@ export default function App() {
   useEffect(() => {
     function handleHashChange() {
       setHash(window.location.hash);
+      window.scrollTo({ left: 0, top: 0 });
     }
 
     window.addEventListener('hashchange', handleHashChange);

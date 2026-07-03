@@ -1,11 +1,22 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const getSupabaseMock = vi.fn();
+const queryBuilderMock = {
+  delete: vi.fn(),
+  eq: vi.fn(),
+  insert: vi.fn(),
+  maybeSingle: vi.fn(),
+  select: vi.fn(),
+  single: vi.fn(),
+  update: vi.fn(),
+};
 const authMock = {
   getSession: vi.fn(),
   onAuthStateChange: vi.fn(),
   signInAnonymously: vi.fn(),
+  signInWithPassword: vi.fn(),
   signInWithOtp: vi.fn(),
+  signUp: vi.fn(),
   signOut: vi.fn(),
 };
 
@@ -17,8 +28,20 @@ describe('auth.service', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     window.localStorage.clear();
+    vi.unstubAllEnvs();
+    queryBuilderMock.delete.mockReturnValue(queryBuilderMock);
+    queryBuilderMock.eq.mockReturnValue(queryBuilderMock);
+    queryBuilderMock.insert.mockReturnValue(queryBuilderMock);
+    queryBuilderMock.maybeSingle.mockResolvedValue({ data: null, error: null });
+    queryBuilderMock.select.mockReturnValue(queryBuilderMock);
+    queryBuilderMock.single.mockResolvedValue({
+      data: { id: 'practice-1', user_id: 'user-1', focus_area: 'selected' },
+      error: null,
+    });
+    queryBuilderMock.update.mockReturnValue(queryBuilderMock);
     getSupabaseMock.mockReturnValue({
       auth: authMock,
+      from: vi.fn(() => queryBuilderMock),
     });
   });
 
@@ -45,7 +68,61 @@ describe('auth.service', () => {
     expect(authMock.signInAnonymously).toHaveBeenCalledWith();
   });
 
-  it('starts a local demo session when Supabase is not configured', async () => {
+  it('signs up with email and password through Supabase auth', async () => {
+    authMock.signUp.mockResolvedValue({ error: null });
+    const { signUpWithPassword } = await import('./auth.service');
+
+    await expect(signUpWithPassword('player@example.com', 'secret123')).resolves.toBeUndefined();
+    expect(authMock.signUp).toHaveBeenCalledWith({
+      email: 'player@example.com',
+      password: 'secret123',
+    });
+  });
+
+  it('throws when password sign up fails', async () => {
+    authMock.signUp.mockResolvedValue({ error: { message: 'User already registered' } });
+    const { signUpWithPassword } = await import('./auth.service');
+
+    await expect(signUpWithPassword('player@example.com', 'secret123')).rejects.toThrow('User already registered');
+  });
+
+  it('signs in with email and password through Supabase auth', async () => {
+    authMock.signInWithPassword.mockResolvedValue({ error: null });
+    const { signInWithPassword } = await import('./auth.service');
+
+    await expect(signInWithPassword('player@example.com', 'secret123')).resolves.toBeUndefined();
+    expect(authMock.signInWithPassword).toHaveBeenCalledWith({
+      email: 'player@example.com',
+      password: 'secret123',
+    });
+  });
+
+  it('throws when password sign in fails', async () => {
+    authMock.signInWithPassword.mockResolvedValue({ error: { message: 'Invalid login credentials' } });
+    const { signInWithPassword } = await import('./auth.service');
+
+    await expect(signInWithPassword('player@example.com', 'secret123')).rejects.toThrow(
+      'Invalid login credentials',
+    );
+  });
+
+  it('does not start a local demo session when Supabase is not configured without the demo flag', async () => {
+    getSupabaseMock.mockImplementation(() => {
+      throw new Error('Missing VITE_SUPABASE_URL');
+    });
+    const { getCurrentSession, signInAnonymously } = await import('./auth.service');
+
+    await expect(signInAnonymously()).rejects.toThrow(
+      'Missing VITE_SUPABASE_URL. Configure Supabase or set VITE_ENABLE_DEMO_MODE=true for local demo mode.',
+    );
+    await expect(getCurrentSession()).rejects.toThrow(
+      'Missing VITE_SUPABASE_URL. Configure Supabase or set VITE_ENABLE_DEMO_MODE=true for local demo mode.',
+    );
+    expect(window.localStorage.getItem('rockroll.demoSession')).toBeNull();
+  });
+
+  it('starts a local demo session only when demo mode is enabled', async () => {
+    vi.stubEnv('VITE_ENABLE_DEMO_MODE', 'true');
     getSupabaseMock.mockImplementation(() => {
       throw new Error('Missing VITE_SUPABASE_URL');
     });
@@ -53,6 +130,7 @@ describe('auth.service', () => {
 
     await expect(signInAnonymously()).resolves.toBeUndefined();
     await expect(getCurrentSession()).resolves.toEqual({
+      isDemo: true,
       user: {
         email: 'demo@rockroll.local',
         id: 'local-demo-user',
@@ -76,6 +154,7 @@ describe('auth.service', () => {
   });
 
   it('clears the local demo session on sign out', async () => {
+    vi.stubEnv('VITE_ENABLE_DEMO_MODE', 'true');
     getSupabaseMock.mockImplementation(() => {
       throw new Error('Missing VITE_SUPABASE_URL');
     });
@@ -109,5 +188,54 @@ describe('auth.service', () => {
     expect(callback).toHaveBeenCalledWith(session);
     stopListening();
     expect(unsubscribe).toHaveBeenCalledWith();
+  });
+
+  it('rejects the Supabase CRUD smoke test without a real user id', async () => {
+    authMock.getSession.mockResolvedValue({ data: { session: null }, error: null });
+    const { runSupabaseCrudSmokeTest } = await import('./auth.service');
+
+    await expect(runSupabaseCrudSmokeTest()).rejects.toThrow(
+      'A real Supabase session is required before running the CRUD smoke test.',
+    );
+    expect(queryBuilderMock.insert).not.toHaveBeenCalled();
+  });
+
+  it('rejects the Supabase CRUD smoke test for local demo users', async () => {
+    authMock.getSession.mockResolvedValue({ data: { session: { user: { id: 'local-demo-user' } } }, error: null });
+    const { runSupabaseCrudSmokeTest } = await import('./auth.service');
+
+    await expect(runSupabaseCrudSmokeTest()).rejects.toThrow(
+      'A real Supabase session is required before running the CRUD smoke test.',
+    );
+    expect(queryBuilderMock.insert).not.toHaveBeenCalled();
+  });
+
+  it('runs insert select update and delete in the Supabase CRUD smoke test', async () => {
+    authMock.getSession.mockResolvedValue({ data: { session: { user: { id: 'user-1' } } }, error: null });
+    queryBuilderMock.single
+      .mockResolvedValueOnce({
+        data: { id: 'practice-1', user_id: 'user-1', focus_area: 'supabase-smoke-insert' },
+        error: null,
+      })
+      .mockResolvedValueOnce({
+        data: { id: 'practice-1', user_id: 'user-1', focus_area: 'supabase-smoke-insert' },
+        error: null,
+      })
+      .mockResolvedValueOnce({
+        data: { id: 'practice-1', user_id: 'user-1', focus_area: 'supabase-smoke-update' },
+        error: null,
+      });
+    const { runSupabaseCrudSmokeTest } = await import('./auth.service');
+
+    await expect(runSupabaseCrudSmokeTest()).resolves.toEqual({
+      deleted: true,
+      insertedId: 'practice-1',
+      selectedUserId: 'user-1',
+      updatedFocusArea: 'supabase-smoke-update',
+      userId: 'user-1',
+    });
+    expect(queryBuilderMock.insert).toHaveBeenCalledWith(expect.objectContaining({ user_id: 'user-1' }));
+    expect(queryBuilderMock.update).toHaveBeenCalledWith({ focus_area: 'supabase-smoke-update' });
+    expect(queryBuilderMock.delete).toHaveBeenCalled();
   });
 });

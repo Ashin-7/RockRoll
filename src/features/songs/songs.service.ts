@@ -1,3 +1,4 @@
+import { getMissingSupabaseEnvMessage, isDemoModeEnabled } from '../../config/env';
 import { getSupabase } from '../../lib/supabase';
 import { CreateSongInput, SongDetail, SongStatus, SongSummary, UpdateSongInput } from './song.types';
 
@@ -45,6 +46,14 @@ function isMissingSupabaseEnvError(error: unknown): boolean {
   return error instanceof Error && error.message.startsWith('Missing VITE_SUPABASE_');
 }
 
+function shouldUseDemoMode(error: unknown): boolean {
+  return isMissingSupabaseEnvError(error) && isDemoModeEnabled();
+}
+
+function throwSupabaseEnvError(error: unknown): never {
+  throw isMissingSupabaseEnvError(error) ? new Error(getMissingSupabaseEnvMessage(error)) : error;
+}
+
 function hasDemoSession(): boolean {
   return Boolean(window.localStorage.getItem(demoSessionStorageKey));
 }
@@ -76,10 +85,10 @@ export async function listSongs(): Promise<SongSummary[]> {
   try {
     supabase = getSupabase();
   } catch (caughtError) {
-    if (isMissingSupabaseEnvError(caughtError)) {
+    if (shouldUseDemoMode(caughtError)) {
       return readDemoSongs();
     }
-    throw caughtError;
+    throwSupabaseEnvError(caughtError);
   }
   const { data, error } = await supabase
     .from('songs')
@@ -98,7 +107,7 @@ export async function createSong(input: CreateSongInput): Promise<void> {
   try {
     supabase = getSupabase();
   } catch (caughtError) {
-    if (isMissingSupabaseEnvError(caughtError)) {
+    if (shouldUseDemoMode(caughtError)) {
       if (!hasDemoSession()) {
         throw new Error('Sign in before adding songs.');
       }
@@ -117,7 +126,7 @@ export async function createSong(input: CreateSongInput): Promise<void> {
       ]);
       return;
     }
-    throw caughtError;
+    throwSupabaseEnvError(caughtError);
   }
   const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
 
@@ -148,7 +157,7 @@ export async function updateSong(songId: string, input: UpdateSongInput): Promis
   try {
     supabase = getSupabase();
   } catch (caughtError) {
-    if (isMissingSupabaseEnvError(caughtError)) {
+    if (shouldUseDemoMode(caughtError)) {
       if (!hasDemoSession()) {
         throw new Error('Sign in before editing songs.');
       }
@@ -169,7 +178,7 @@ export async function updateSong(songId: string, input: UpdateSongInput): Promis
       );
       return;
     }
-    throw caughtError;
+    throwSupabaseEnvError(caughtError);
   }
 
   const { error } = await supabase
@@ -194,14 +203,14 @@ export async function deleteSong(songId: string): Promise<void> {
   try {
     supabase = getSupabase();
   } catch (caughtError) {
-    if (isMissingSupabaseEnvError(caughtError)) {
+    if (shouldUseDemoMode(caughtError)) {
       if (!hasDemoSession()) {
         throw new Error('Sign in before deleting songs.');
       }
       writeDemoSongs(readDemoSongs().filter((song) => song.id !== songId));
       return;
     }
-    throw caughtError;
+    throwSupabaseEnvError(caughtError);
   }
 
   const { error } = await supabase.from('songs').delete().eq('id', songId);
@@ -216,10 +225,10 @@ export async function getSongById(songId: string): Promise<SongDetail | null> {
   try {
     supabase = getSupabase();
   } catch (caughtError) {
-    if (isMissingSupabaseEnvError(caughtError)) {
+    if (shouldUseDemoMode(caughtError)) {
       return findDemoSong(songId);
     }
-    throw caughtError;
+    throwSupabaseEnvError(caughtError);
   }
 
   const { data, error } = await supabase

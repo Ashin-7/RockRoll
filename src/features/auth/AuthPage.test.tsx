@@ -5,6 +5,7 @@ import { renderWithI18n } from '../../test/render';
 import { AuthPage } from './AuthPage';
 
 const signedInSession = { user: { email: 'player@example.com' } };
+const demoSession = { isDemo: true, user: { email: 'demo@rockroll.local', id: 'local-demo-user' } };
 
 describe('AuthPage', () => {
   it('submits email magic link request', async () => {
@@ -20,9 +21,36 @@ describe('AuthPage', () => {
     );
 
     await user.type(await screen.findByLabelText('Email'), 'player@example.com');
+    await user.click(screen.getByRole('button', { name: 'Send a magic link instead' }));
     await user.click(screen.getByRole('button', { name: 'Send magic link' }));
 
     expect(signIn).toHaveBeenCalledWith('player@example.com');
+    expect(await screen.findByText('Check your email for the login link.')).toBeInTheDocument();
+  });
+
+  it('shows pending feedback while sending an email magic link', async () => {
+    let resolveSignIn: () => void = () => undefined;
+    const signIn = vi.fn(() => new Promise<void>((resolve) => {
+      resolveSignIn = resolve;
+    }));
+    const user = userEvent.setup();
+
+    renderWithI18n(
+      <AuthPage
+        onGetCurrentSession={vi.fn().mockResolvedValue(null)}
+        onAuthStateChange={() => vi.fn()}
+        onSignIn={signIn}
+      />,
+    );
+
+    await user.type(await screen.findByLabelText('Email'), 'player@example.com');
+    await user.click(screen.getByRole('button', { name: 'Send a magic link instead' }));
+    await user.click(screen.getByRole('button', { name: 'Send magic link' }));
+
+    expect(await screen.findByRole('status')).toHaveTextContent('Sending magic link...');
+    expect(screen.getByRole('button', { name: 'Sending magic link...' })).toBeDisabled();
+
+    resolveSignIn();
     expect(await screen.findByText('Check your email for the login link.')).toBeInTheDocument();
   });
 
@@ -40,6 +68,48 @@ describe('AuthPage', () => {
     await user.click(await screen.findByRole('button', { name: 'Use test email' }));
 
     expect(screen.getByLabelText('Email')).toHaveValue('tester@example.com');
+  });
+
+  it('signs in with email and password', async () => {
+    const signInWithPassword = vi.fn().mockResolvedValue(undefined);
+    const getCurrentSession = vi.fn().mockResolvedValueOnce(null).mockResolvedValueOnce(signedInSession);
+    const user = userEvent.setup();
+
+    renderWithI18n(
+      <AuthPage
+        onGetCurrentSession={getCurrentSession}
+        onAuthStateChange={() => vi.fn()}
+        onSignInWithPassword={signInWithPassword}
+      />,
+    );
+
+    await user.type(await screen.findByLabelText('Email'), 'player@example.com');
+    await user.type(screen.getByLabelText('Password'), 'secret123');
+    await user.click(screen.getByRole('button', { name: 'Sign in' }));
+
+    expect(signInWithPassword).toHaveBeenCalledWith('player@example.com', 'secret123');
+    expect(await screen.findByText(/player@example.com/)).toBeInTheDocument();
+  });
+
+  it('signs up with email and password', async () => {
+    const signUpWithPassword = vi.fn().mockResolvedValue(undefined);
+    const user = userEvent.setup();
+
+    renderWithI18n(
+      <AuthPage
+        onGetCurrentSession={vi.fn().mockResolvedValue(null)}
+        onAuthStateChange={() => vi.fn()}
+        onSignUpWithPassword={signUpWithPassword}
+      />,
+    );
+
+    await user.click(await screen.findByRole('button', { name: 'Register new account' }));
+    await user.type(screen.getByLabelText('Email'), 'player@example.com');
+    await user.type(screen.getByLabelText('Password'), 'secret123');
+    await user.click(screen.getByRole('button', { name: 'Create account' }));
+
+    expect(signUpWithPassword).toHaveBeenCalledWith('player@example.com', 'secret123');
+    expect(await screen.findByText('Account created. Check your email if confirmation is required.')).toBeInTheDocument();
   });
 
   it('signs in anonymously for quick testing', async () => {
@@ -99,7 +169,38 @@ describe('AuthPage', () => {
 
     expect(await screen.findByText('Signed in')).toBeInTheDocument();
     expect(screen.getByText(/player@example.com/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Run Supabase CRUD smoke test' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Sign out' })).toBeInTheDocument();
+  });
+
+  it('marks demo mode as not being a real Supabase login', async () => {
+    renderWithI18n(
+      <AuthPage
+        onGetCurrentSession={vi.fn().mockResolvedValue(demoSession)}
+        onAuthStateChange={() => vi.fn()}
+      />,
+    );
+
+    expect(await screen.findByText('Demo Mode：当前不是 Supabase 真实登录')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Run Supabase CRUD smoke test' })).not.toBeInTheDocument();
+  });
+
+  it('runs the Supabase CRUD smoke test for a real session', async () => {
+    const runSmokeTest = vi.fn().mockResolvedValue(undefined);
+    const user = userEvent.setup();
+
+    renderWithI18n(
+      <AuthPage
+        onGetCurrentSession={vi.fn().mockResolvedValue(signedInSession)}
+        onAuthStateChange={() => vi.fn()}
+        onRunSupabaseCrudSmokeTest={runSmokeTest}
+      />,
+    );
+
+    await user.click(await screen.findByRole('button', { name: 'Run Supabase CRUD smoke test' }));
+
+    expect(runSmokeTest).toHaveBeenCalledWith();
+    expect(await screen.findByText('Supabase CRUD smoke test passed.')).toBeInTheDocument();
   });
 
   it('signs out and returns to the email form', async () => {

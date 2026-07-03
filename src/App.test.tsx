@@ -7,12 +7,27 @@ import App from './App';
 vi.mock('./features/auth/auth.service', () => ({
   getCurrentSession: vi.fn().mockResolvedValue(null),
   onAuthStateChange: vi.fn(() => vi.fn()),
+  runSupabaseCrudSmokeTest: vi.fn().mockResolvedValue(undefined),
   signInAnonymously: vi.fn().mockResolvedValue(undefined),
+  signInWithPassword: vi.fn().mockResolvedValue(undefined),
   signInWithEmail: vi.fn().mockResolvedValue(undefined),
+  signUpWithPassword: vi.fn().mockResolvedValue(undefined),
   signOut: vi.fn().mockResolvedValue(undefined),
 }));
 
 describe('App', () => {
+  it('scrolls to the top after hash navigation', async () => {
+    window.location.hash = '#library';
+    const scrollTo = vi.spyOn(window, 'scrollTo').mockImplementation(() => undefined);
+    const user = userEvent.setup();
+
+    renderWithI18n(<App />);
+
+    await user.click(screen.getByRole('link', { name: 'Auth' }));
+
+    expect(scrollTo).toHaveBeenCalledWith({ left: 0, top: 0 });
+  });
+
   it('updates the rendered page when hash navigation changes', async () => {
     window.location.hash = '#library';
     const user = userEvent.setup();

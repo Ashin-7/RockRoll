@@ -1,3 +1,4 @@
+import { getMissingSupabaseEnvMessage, isDemoModeEnabled } from '../../config/env';
 import { getSupabase } from '../../lib/supabase';
 import { PracticeHistoryItem } from './practice.mock';
 import { PracticeSessionInput } from './practice.types';
@@ -53,6 +54,14 @@ function mapPracticeSessionRow(row: PracticeSessionRow): PracticeHistoryItem {
 
 function isMissingSupabaseEnvError(error: unknown): boolean {
   return error instanceof Error && error.message.startsWith('Missing VITE_SUPABASE_');
+}
+
+function shouldUseDemoMode(error: unknown): boolean {
+  return isMissingSupabaseEnvError(error) && isDemoModeEnabled();
+}
+
+function throwSupabaseEnvError(error: unknown): never {
+  throw isMissingSupabaseEnvError(error) ? new Error(getMissingSupabaseEnvMessage(error)) : error;
 }
 
 function readDemoSession(): PracticeAuthSession | null {
@@ -129,10 +138,10 @@ export async function listPracticeHistory(): Promise<PracticeHistoryItem[]> {
   try {
     supabase = getSupabase();
   } catch (caughtError) {
-    if (isMissingSupabaseEnvError(caughtError)) {
+    if (shouldUseDemoMode(caughtError)) {
       return readDemoPracticeHistory();
     }
-    throw caughtError;
+    throwSupabaseEnvError(caughtError);
   }
   const { data, error } = await supabase
     .from('practice_sessions')
@@ -153,11 +162,11 @@ export async function createPracticeSession(input: PracticeSessionInput): Promis
   try {
     supabase = getSupabase();
   } catch (caughtError) {
-    if (isMissingSupabaseEnvError(caughtError)) {
+    if (shouldUseDemoMode(caughtError)) {
       createDemoPracticeSession(input);
       return;
     }
-    throw caughtError;
+    throwSupabaseEnvError(caughtError);
   }
   const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
 
@@ -193,11 +202,11 @@ export async function deletePracticeSession(sessionId: string): Promise<void> {
   try {
     supabase = getSupabase();
   } catch (caughtError) {
-    if (isMissingSupabaseEnvError(caughtError)) {
+    if (shouldUseDemoMode(caughtError)) {
       deleteDemoPracticeSession(sessionId);
       return;
     }
-    throw caughtError;
+    throwSupabaseEnvError(caughtError);
   }
 
   const { error } = await supabase.from('practice_sessions').delete().eq('id', sessionId);
@@ -212,11 +221,11 @@ export async function updatePracticeSession(sessionId: string, input: PracticeSe
   try {
     supabase = getSupabase();
   } catch (caughtError) {
-    if (isMissingSupabaseEnvError(caughtError)) {
+    if (shouldUseDemoMode(caughtError)) {
       updateDemoPracticeSession(sessionId, input);
       return;
     }
-    throw caughtError;
+    throwSupabaseEnvError(caughtError);
   }
 
   const { error } = await supabase
@@ -243,10 +252,10 @@ export async function getCurrentPracticeSession(): Promise<PracticeAuthSession |
   try {
     supabase = getSupabase();
   } catch (caughtError) {
-    if (isMissingSupabaseEnvError(caughtError)) {
+    if (shouldUseDemoMode(caughtError)) {
       return readDemoSession();
     }
-    throw caughtError;
+    throwSupabaseEnvError(caughtError);
   }
   const { data, error } = await supabase.auth.getSession();
 
@@ -262,11 +271,11 @@ export function onPracticeAuthStateChange(callback: (session: PracticeAuthSessio
   try {
     supabase = getSupabase();
   } catch (caughtError) {
-    if (isMissingSupabaseEnvError(caughtError)) {
+    if (shouldUseDemoMode(caughtError)) {
       callback(readDemoSession());
       return () => undefined;
     }
-    throw caughtError;
+    throwSupabaseEnvError(caughtError);
   }
   const { data } = supabase.auth.onAuthStateChange((_event: string, session: PracticeAuthSession | null) => {
     callback(session);

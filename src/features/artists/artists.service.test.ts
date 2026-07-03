@@ -23,6 +23,7 @@ vi.mock('../../lib/supabase', () => ({
 describe('artists.service', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.unstubAllEnvs();
     window.localStorage.clear();
     selectMock.mockImplementation(() => ({ order: orderMock }));
     eqMock.mockImplementation(() => ({ maybeSingle: maybeSingleMock }));
@@ -153,6 +154,7 @@ describe('artists.service', () => {
   });
 
   it('uses local demo artists when Supabase is not configured', async () => {
+    vi.stubEnv('VITE_ENABLE_DEMO_MODE', 'true');
     getSupabaseMock.mockImplementation(() => {
       throw new Error('Missing VITE_SUPABASE_URL');
     });
@@ -178,6 +180,7 @@ describe('artists.service', () => {
   });
 
   it('loads local demo artist details when Supabase is not configured', async () => {
+    vi.stubEnv('VITE_ENABLE_DEMO_MODE', 'true');
     getSupabaseMock.mockImplementation(() => {
       throw new Error('Missing VITE_SUPABASE_URL');
     });
@@ -207,6 +210,7 @@ describe('artists.service', () => {
   });
 
   it('updates local demo artists when Supabase is not configured', async () => {
+    vi.stubEnv('VITE_ENABLE_DEMO_MODE', 'true');
     getSupabaseMock.mockImplementation(() => {
       throw new Error('Missing VITE_SUPABASE_URL');
     });
@@ -245,6 +249,7 @@ describe('artists.service', () => {
   });
 
   it('deletes local demo artists when Supabase is not configured', async () => {
+    vi.stubEnv('VITE_ENABLE_DEMO_MODE', 'true');
     getSupabaseMock.mockImplementation(() => {
       throw new Error('Missing VITE_SUPABASE_URL');
     });

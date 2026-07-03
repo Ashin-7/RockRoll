@@ -20,6 +20,7 @@ vi.mock('../../lib/supabase', () => ({
 describe('practice.service', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.unstubAllEnvs();
     window.localStorage.clear();
     getSupabaseMock.mockReturnValue({
       auth: { getSession: getSessionMock },
@@ -143,6 +144,7 @@ describe('practice.service', () => {
   });
 
   it('stores and lists local demo practice sessions when Supabase is not configured', async () => {
+    vi.stubEnv('VITE_ENABLE_DEMO_MODE', 'true');
     getSupabaseMock.mockImplementation(() => {
       throw new Error('Missing VITE_SUPABASE_URL');
     });
@@ -219,6 +221,7 @@ describe('practice.service', () => {
   });
 
   it('removes local demo practice sessions when Supabase is not configured', async () => {
+    vi.stubEnv('VITE_ENABLE_DEMO_MODE', 'true');
     getSupabaseMock.mockImplementation(() => {
       throw new Error('Missing VITE_SUPABASE_URL');
     });
@@ -249,6 +252,7 @@ describe('practice.service', () => {
   });
 
   it('updates local demo practice sessions when Supabase is not configured', async () => {
+    vi.stubEnv('VITE_ENABLE_DEMO_MODE', 'true');
     getSupabaseMock.mockImplementation(() => {
       throw new Error('Missing VITE_SUPABASE_URL');
     });

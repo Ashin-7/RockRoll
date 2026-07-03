@@ -42,7 +42,7 @@ export function AppShell({
         </div>
         <div className="app-shell__account" data-testid="account-menu">
           <span className="app-shell__account-name">{displayName}</span>
-          <div className="app-shell__account-actions">
+          <div className="app-shell__account-actions" aria-label={isSignedIn ? t('auth.signedIn') : t('auth.guest')}>
             {isSignedIn ? (
               <button type="button" onClick={onSignOut}>
                 {t('auth.signOut')}

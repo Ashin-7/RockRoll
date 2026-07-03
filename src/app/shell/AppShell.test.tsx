@@ -22,6 +22,7 @@ describe('AppShell', () => {
     expect(within(screen.getByRole('navigation', { name: 'Primary' })).queryByRole('link', { name: 'Auth' })).toBeNull();
     expect(screen.getByText('Guest')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Auth' })).toHaveAttribute('href', '#auth');
+    expect(within(screen.getByTestId('account-menu')).getByRole('link', { name: 'Auth' })).toBeVisible();
     expect(screen.getByText('Today in the room')).toBeInTheDocument();
   });
 
