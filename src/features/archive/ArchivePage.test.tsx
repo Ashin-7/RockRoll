@@ -43,6 +43,7 @@ describe('ArchivePage', () => {
     expect(screen.getByRole('columnheader', { name: 'Source' })).toBeInTheDocument();
     expect(screen.getByRole('columnheader', { name: 'Type' })).toBeInTheDocument();
     expect(screen.getByRole('columnheader', { name: 'Description' })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Actions' })).toBeInTheDocument();
   });
 
   it('creates an archive collection and refreshes the list', async () => {
@@ -67,5 +68,48 @@ describe('ArchivePage', () => {
     });
     await waitFor(() => expect(loadCollections).toHaveBeenCalledTimes(2));
     expect(await screen.findByText('Archive collection added.')).toBeInTheDocument();
+  });
+
+  it('edits an archive collection and refreshes the list', async () => {
+    const user = userEvent.setup();
+    const loadCollections = vi.fn().mockResolvedValue(collections);
+    const updateCollection = vi.fn().mockResolvedValue(undefined);
+
+    renderWithI18n(<ArchivePage onLoadCollections={loadCollections} onUpdateCollection={updateCollection} />);
+
+    await screen.findByText('Classic rock guide');
+    await user.click(screen.getByRole('button', { name: 'Edit Classic rock guide' }));
+    expect(screen.getByText('Collection / edit')).toBeInTheDocument();
+
+    await user.clear(screen.getByLabelText('Title'));
+    await user.type(screen.getByLabelText('Title'), 'Updated classic rock guide');
+    await user.clear(screen.getByLabelText('Description'));
+    await user.type(screen.getByLabelText('Description'), 'Updated albums to explore.');
+    await user.click(screen.getByRole('button', { name: 'Update collection' }));
+
+    expect(updateCollection).toHaveBeenCalledWith('collection-1', {
+      title: 'Updated classic rock guide',
+      source: 'anontraveler',
+      sourceUrl: 'https://example.test/rank/version/1',
+      description: 'Updated albums to explore.',
+      collectionType: 'album_rank',
+    });
+    await waitFor(() => expect(loadCollections).toHaveBeenCalledTimes(2));
+    expect(await screen.findByText('Archive collection updated.')).toBeInTheDocument();
+  });
+
+  it('deletes an archive collection and refreshes the list', async () => {
+    const user = userEvent.setup();
+    const loadCollections = vi.fn().mockResolvedValueOnce(collections).mockResolvedValueOnce([]);
+    const deleteCollection = vi.fn().mockResolvedValue(undefined);
+
+    renderWithI18n(<ArchivePage onDeleteCollection={deleteCollection} onLoadCollections={loadCollections} />);
+
+    await screen.findByText('Classic rock guide');
+    await user.click(screen.getByRole('button', { name: 'Delete Classic rock guide' }));
+
+    expect(deleteCollection).toHaveBeenCalledWith('collection-1');
+    await waitFor(() => expect(loadCollections).toHaveBeenCalledTimes(2));
+    expect(await screen.findByText('Archive collection deleted.')).toBeInTheDocument();
   });
 });

@@ -87,6 +87,40 @@ describe('archive.service', () => {
     });
   });
 
+  it('updates an archive collection in Supabase', async () => {
+    updateEqMock.mockResolvedValue({ error: null });
+    const { updateArchiveCollection } = await import('./archive.service');
+
+    await updateArchiveCollection('collection-1', {
+      title: 'Updated guide',
+      source: 'manual',
+      sourceUrl: 'https://example.test/updated',
+      description: 'Updated albums to explore.',
+      collectionType: 'album_rank',
+    });
+
+    expect(fromMock).toHaveBeenCalledWith('archive_collections');
+    expect(updateMock).toHaveBeenCalledWith({
+      title: 'Updated guide',
+      source: 'manual',
+      source_url: 'https://example.test/updated',
+      description: 'Updated albums to explore.',
+      collection_type: 'album_rank',
+    });
+    expect(updateEqMock).toHaveBeenCalledWith('id', 'collection-1');
+  });
+
+  it('deletes an archive collection from Supabase', async () => {
+    deleteEqMock.mockResolvedValue({ error: null });
+    const { deleteArchiveCollection } = await import('./archive.service');
+
+    await deleteArchiveCollection('collection-1');
+
+    expect(fromMock).toHaveBeenCalledWith('archive_collections');
+    expect(deleteMock).toHaveBeenCalled();
+    expect(deleteEqMock).toHaveBeenCalledWith('id', 'collection-1');
+  });
+
   it('loads a collection detail with ordered items from Supabase', async () => {
     selectMock.mockReturnValueOnce({ eq: eqMaybeSingleMock }).mockReturnValueOnce({ eq: eqOrderMock });
     maybeSingleMock.mockResolvedValue({
@@ -219,9 +253,11 @@ describe('archive.service', () => {
     const {
       addArchiveItem,
       createArchiveCollection,
+      deleteArchiveCollection,
       deleteArchiveItem,
       getArchiveCollectionById,
       listArchiveCollections,
+      updateArchiveCollection,
       updateArchiveItem,
     } = await import('./archive.service');
 
@@ -235,6 +271,23 @@ describe('archive.service', () => {
     const collections = await listArchiveCollections();
 
     expect(collections).toHaveLength(1);
+    await updateArchiveCollection(collections[0].id, {
+      title: 'Updated demo guide',
+      source: 'manual',
+      sourceUrl: 'https://example.test/demo',
+      description: 'Updated local list.',
+      collectionType: 'album_rank',
+    });
+
+    await expect(listArchiveCollections()).resolves.toEqual([
+      expect.objectContaining({
+        id: collections[0].id,
+        title: 'Updated demo guide',
+        sourceUrl: 'https://example.test/demo',
+        description: 'Updated local list.',
+      }),
+    ]);
+
     await addArchiveItem({
       collectionId: collections[0].id,
       entityType: 'album',
@@ -248,7 +301,7 @@ describe('archive.service', () => {
 
     await expect(getArchiveCollectionById(collections[0].id)).resolves.toEqual(
       expect.objectContaining({
-        title: 'Demo guide',
+        title: 'Updated demo guide',
         items: [
           expect.objectContaining({
             displayTitle: 'Demo Album',
@@ -291,5 +344,21 @@ describe('archive.service', () => {
         items: [],
       }),
     );
+
+    await addArchiveItem({
+      collectionId: collections[0].id,
+      entityType: 'album',
+      entityId: 'local-album-3',
+      displayTitle: 'Delete Demo Album',
+      position: 3,
+      note: 'Delete with collection.',
+      externalSource: null,
+      externalId: null,
+    });
+
+    await deleteArchiveCollection(collections[0].id);
+
+    await expect(listArchiveCollections()).resolves.toEqual([]);
+    await expect(getArchiveCollectionById(collections[0].id)).resolves.toBeNull();
   });
 });

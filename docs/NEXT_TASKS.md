@@ -1,8 +1,40 @@
 # RockRoll 下一阶段任务
 
-## 本轮完成：Media Link Edit / Delete
+## 本轮完成：Archive Collection Edit / Delete
 
 状态：已完成本地增量实现，待提交。
+
+完成范围：
+- Archive collection 列表增加 Edit / Delete 操作。
+- 点击 Edit 会回填表单，并切换到 Collection / edit 模式。
+- 编辑提交会更新 collection 字段并刷新列表。
+- 点击 Delete 会删除 collection 并刷新列表。
+- Demo Mode 删除 collection 时会同步清理该 collection 下的本地 archive items。
+- Supabase 与 Demo Mode 均支持 collection 编辑 / 删除。
+- 不包含正式导入写库、批量操作、删除确认弹窗、恢复功能或 Supabase schema 变更。
+
+验证：
+- `npm test -- --run src/features/archive`
+- 结果：3 个测试文件、18 个用例通过。
+- `npm run build`
+- 结果：通过。
+
+下一步建议先做：
+1. 提交 Archive Collection Edit / Delete。
+2. 进入正式导入写库的最小闭环设计，或补充 Archive / Library 删除确认交互。
+
+下一轮建议只读取：
+- `AGENTS.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/NEXT_TASKS.md`
+- `docs/SESSION_HANDOFF.md`
+- 当前任务相关 feature 目录
+
+更新日期：2026-07-03
+
+## 本轮完成：Media Link Edit / Delete
+
+状态：已完成、已提交并推送。
 
 完成范围：
 - Library 媒体资产列表的 Linked entity 单元格增加 Edit link / Delete link 操作。

@@ -38,6 +38,8 @@ export interface CreateArchiveCollectionInput {
   collectionType: string;
 }
 
+export type UpdateArchiveCollectionInput = CreateArchiveCollectionInput;
+
 export interface CreateArchiveItemInput {
   collectionId: string;
   entityType: ArchiveEntityType;

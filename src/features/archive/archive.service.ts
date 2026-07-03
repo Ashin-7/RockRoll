@@ -7,6 +7,7 @@ import {
   ArchiveCountSummary,
   CreateArchiveCollectionInput,
   CreateArchiveItemInput,
+  UpdateArchiveCollectionInput,
   UpdateArchiveItemInput,
 } from './archive.types';
 
@@ -169,6 +170,76 @@ export async function createArchiveCollection(input: CreateArchiveCollectionInpu
     description: input.description,
     collection_type: input.collectionType,
   });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+}
+
+export async function updateArchiveCollection(
+  collectionId: string,
+  input: UpdateArchiveCollectionInput,
+): Promise<void> {
+  let supabase: ReturnType<typeof getSupabase>;
+  try {
+    supabase = getSupabase();
+  } catch (caughtError) {
+    if (isMissingSupabaseEnvError(caughtError)) {
+      if (!hasDemoSession()) {
+        throw new Error('Sign in before editing archive collections.');
+      }
+      writeDemoCollections(
+        readDemoCollections().map((collection) =>
+          collection.id === collectionId
+            ? {
+                ...collection,
+                title: input.title,
+                source: input.source,
+                sourceUrl: input.sourceUrl,
+                description: input.description,
+                collectionType: input.collectionType,
+              }
+            : collection,
+        ),
+      );
+      return;
+    }
+    throw caughtError;
+  }
+
+  const { error } = await supabase
+    .from('archive_collections')
+    .update({
+      title: input.title,
+      source: input.source,
+      source_url: input.sourceUrl,
+      description: input.description,
+      collection_type: input.collectionType,
+    })
+    .eq('id', collectionId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+}
+
+export async function deleteArchiveCollection(collectionId: string): Promise<void> {
+  let supabase: ReturnType<typeof getSupabase>;
+  try {
+    supabase = getSupabase();
+  } catch (caughtError) {
+    if (isMissingSupabaseEnvError(caughtError)) {
+      if (!hasDemoSession()) {
+        throw new Error('Sign in before deleting archive collections.');
+      }
+      writeDemoCollections(readDemoCollections().filter((collection) => collection.id !== collectionId));
+      writeDemoItems(readDemoItems().filter((item) => item.collectionId !== collectionId));
+      return;
+    }
+    throw caughtError;
+  }
+
+  const { error } = await supabase.from('archive_collections').delete().eq('id', collectionId);
 
   if (error) {
     throw new Error(error.message);

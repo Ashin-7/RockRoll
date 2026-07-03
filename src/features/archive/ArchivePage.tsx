@@ -1,12 +1,19 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { useI18n } from '../../i18n/I18nProvider';
-import { ArchiveCollectionSummary, CreateArchiveCollectionInput } from './archive.types';
-import { createArchiveCollection, listArchiveCollections } from './archive.service';
+import { ArchiveCollectionSummary, CreateArchiveCollectionInput, UpdateArchiveCollectionInput } from './archive.types';
+import {
+  createArchiveCollection,
+  deleteArchiveCollection,
+  listArchiveCollections,
+  updateArchiveCollection,
+} from './archive.service';
 import './ArchivePage.css';
 
 interface ArchivePageProps {
   onCreateCollection?: (input: CreateArchiveCollectionInput) => Promise<void>;
+  onDeleteCollection?: (collectionId: string) => Promise<void>;
   onLoadCollections?: () => Promise<ArchiveCollectionSummary[]>;
+  onUpdateCollection?: (collectionId: string, input: UpdateArchiveCollectionInput) => Promise<void>;
 }
 
 const initialForm: CreateArchiveCollectionInput = {
@@ -19,11 +26,14 @@ const initialForm: CreateArchiveCollectionInput = {
 
 export function ArchivePage({
   onCreateCollection = createArchiveCollection,
+  onDeleteCollection = deleteArchiveCollection,
   onLoadCollections = listArchiveCollections,
+  onUpdateCollection = updateArchiveCollection,
 }: ArchivePageProps) {
   const { t } = useI18n();
   const [collections, setCollections] = useState<ArchiveCollectionSummary[]>([]);
   const [form, setForm] = useState<CreateArchiveCollectionInput>(initialForm);
+  const [editingCollectionId, setEditingCollectionId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -47,17 +57,53 @@ export function ArchivePage({
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setMessage(null);
-    await onCreateCollection({
+    const input = {
       ...form,
       title: form.title.trim(),
       source: form.source.trim() || 'manual',
       sourceUrl: form.sourceUrl.trim(),
       description: form.description.trim(),
       collectionType: form.collectionType.trim() || 'album_rank',
-    });
+    };
+
+    if (editingCollectionId) {
+      await onUpdateCollection(editingCollectionId, input);
+    } else {
+      await onCreateCollection(input);
+    }
     setForm(initialForm);
-    setMessage(t('archive.collectionAdded'));
+    setEditingCollectionId(null);
+    setMessage(editingCollectionId ? t('archive.collectionUpdated') : t('archive.collectionAdded'));
     await loadCollections();
+  }
+
+  function handleEditCollection(collection: ArchiveCollectionSummary) {
+    setEditingCollectionId(collection.id);
+    setMessage(null);
+    setForm({
+      title: collection.title,
+      source: collection.source,
+      sourceUrl: collection.sourceUrl,
+      description: collection.description,
+      collectionType: collection.collectionType,
+    });
+  }
+
+  async function handleDeleteCollection(collection: ArchiveCollectionSummary) {
+    setMessage(null);
+    await onDeleteCollection(collection.id);
+    if (editingCollectionId === collection.id) {
+      setEditingCollectionId(null);
+      setForm(initialForm);
+    }
+    setMessage(t('archive.collectionDeleted'));
+    await loadCollections();
+  }
+
+  function handleCancelEdit() {
+    setEditingCollectionId(null);
+    setForm(initialForm);
+    setMessage(null);
   }
 
   return (
@@ -108,6 +154,7 @@ export function ArchivePage({
                 <span role="columnheader">{t('archive.columnSource')}</span>
                 <span role="columnheader">{t('archive.columnType')}</span>
                 <span role="columnheader">{t('archive.columnDescription')}</span>
+                <span role="columnheader">{t('archive.columnActions')}</span>
               </div>
               {collections.map((collection) => (
                 <article className="archive-table-row" key={collection.id} role="row">
@@ -117,6 +164,22 @@ export function ArchivePage({
                   <p role="cell">{collection.source}</p>
                   <p role="cell">{collection.collectionType}</p>
                   <p role="cell">{collection.description || t('archive.noDescription')}</p>
+                  <div className="archive-row-actions" role="cell">
+                    <button
+                      type="button"
+                      aria-label={`${t('archive.editAction')} ${collection.title}`}
+                      onClick={() => handleEditCollection(collection)}
+                    >
+                      {t('archive.editAction')}
+                    </button>
+                    <button
+                      type="button"
+                      aria-label={`${t('archive.deleteAction')} ${collection.title}`}
+                      onClick={() => handleDeleteCollection(collection)}
+                    >
+                      {t('archive.deleteAction')}
+                    </button>
+                  </div>
                 </article>
               ))}
             </div>
@@ -125,8 +188,8 @@ export function ArchivePage({
 
         <form className="archive-form" onSubmit={handleSubmit}>
           <div className="archive-form-heading">
-            <p className="archive-form-mode">{t('archive.formMode')}</p>
-            <h2>{t('archive.addCollectionTitle')}</h2>
+            <p className="archive-form-mode">{editingCollectionId ? t('archive.editMode') : t('archive.formMode')}</p>
+            <h2>{editingCollectionId ? t('archive.editCollectionTitle') : t('archive.addCollectionTitle')}</h2>
           </div>
           <fieldset>
             <legend>{t('archive.identitySection')}</legend>
@@ -164,7 +227,14 @@ export function ArchivePage({
             </label>
           </fieldset>
           <div className="archive-form-actions">
-            <button type="submit">{t('archive.addCollectionSubmit')}</button>
+            {editingCollectionId ? (
+              <button type="button" onClick={handleCancelEdit}>
+                {t('archive.cancelEdit')}
+              </button>
+            ) : null}
+            <button type="submit">
+              {editingCollectionId ? t('archive.updateCollectionSubmit') : t('archive.addCollectionSubmit')}
+            </button>
             {message ? <p role="status">{message}</p> : null}
           </div>
         </form>

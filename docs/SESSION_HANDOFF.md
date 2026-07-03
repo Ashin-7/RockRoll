@@ -1,5 +1,72 @@
 # RockRoll 会话交接
 
+## 本轮补充：Archive Collection Edit / Delete
+
+### 完成内容
+
+- Archive collection 列表增加 Edit / Delete 操作列。
+- 点击 Edit 会回填 collection 表单，并切换到 Collection / edit 模式。
+- 编辑提交会更新 title、source、sourceUrl、description、collectionType。
+- 点击 Delete 会删除指定 collection 并刷新列表。
+- Demo Mode 删除 collection 时会同步清理该 collection 下的本地 archive items。
+- Supabase 与 Demo Mode 均支持 collection 编辑 / 删除。
+- 补充英文与中文 i18n 文案。
+- 补充 Archive service 与 Archive page 测试。
+
+### 修改文件
+
+- `docs/PROJECT_STATUS.md`
+- `docs/NEXT_TASKS.md`
+- `docs/SESSION_HANDOFF.md`
+- `src/features/archive/ArchivePage.css`
+- `src/features/archive/ArchivePage.test.tsx`
+- `src/features/archive/ArchivePage.tsx`
+- `src/features/archive/archive.service.test.ts`
+- `src/features/archive/archive.service.ts`
+- `src/features/archive/archive.types.ts`
+- `src/i18n/messages.ts`
+
+### 验证命令和结果
+
+```powershell
+npm test -- --run src/features/archive
+npm run build
+```
+
+结果：
+- Archive 测试通过：3 个测试文件、18 个用例。
+- 构建通过。
+
+环境说明：
+- 使用本机已有 Node `v20.20.2` 的 npm 完成验证。
+- 未运行 `npm install`。
+
+### 未完成事项
+
+- 正式导入写库尚未实现。
+- Archive / Library 删除确认弹窗尚未实现。
+- 文件上传、播放器、预览器仍未实现。
+
+### 下一轮推荐提示词
+
+```text
+继续 RockRoll 项目开发。
+请只读取：
+- AGENTS.md
+- docs/PROJECT_STATUS.md
+- docs/NEXT_TASKS.md
+- docs/SESSION_HANDOFF.md
+- 当前任务相关 feature 目录
+
+继续 docs/NEXT_TASKS.md 中的下一个任务。
+不要扫描整个仓库。
+不要运行 npm install。
+不要做架构重构。
+完成后中文总结。
+```
+
+更新时间：2026-07-03
+
 ## 本轮补充：Media Link Edit / Delete
 
 ### 完成内容

@@ -1,5 +1,26 @@
 # RockRoll 项目状态
 
+## 本轮补充：Archive Collection Edit / Delete
+
+- 已完成 Archive Collection 编辑与删除最小闭环：
+  - Archive collection 列表增加 Edit / Delete 操作列。
+  - 点击 Edit 会回填 collection 表单，并切换到 Collection / edit 模式。
+  - 编辑提交会更新 title、source、sourceUrl、description、collectionType。
+  - 点击 Delete 会删除指定 collection 并刷新列表。
+  - Demo Mode 删除 collection 时会同步清理该 collection 下的本地 archive items。
+  - Supabase 与 Demo Mode 均支持 collection 编辑 / 删除。
+- 本轮未修改 Supabase schema、路由、依赖或构建配置。
+- 验证结果：
+  - `npm test -- --run src/features/archive`
+  - 结果：3 个测试文件、18 个用例通过。
+  - `npm run build`
+  - 结果：通过。
+- 环境说明：
+  - 使用本机已有 Node `v20.20.2` 的 npm 完成测试与构建。
+  - 未运行 `npm install`。
+
+更新时间：2026-07-03
+
 ## 本轮补充：Media Link Edit / Delete
 
 - 已完成 Media Link 独立编辑与删除最小闭环：

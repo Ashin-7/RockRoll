@@ -80,8 +80,8 @@
   border-bottom: 1px solid var(--color-border, #d7d7d7);
   display: grid;
   gap: 1rem;
-  grid-template-columns: minmax(11rem, 1.5fr) minmax(7rem, 0.8fr) minmax(7rem, 0.8fr) minmax(12rem, 1.4fr);
-  min-width: 44rem;
+  grid-template-columns: minmax(11rem, 1.4fr) minmax(7rem, 0.7fr) minmax(7rem, 0.7fr) minmax(12rem, 1.2fr) minmax(9rem, 0.7fr);
+  min-width: 54rem;
   padding: 0.75rem 0;
 }
 
@@ -133,6 +133,16 @@
 
 .archive-form-actions p {
   margin: 0;
+}
+
+.archive-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.archive-row-actions button {
+  white-space: nowrap;
 }
 
 @media (max-width: 760px) {
