@@ -1,13 +1,15 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { useI18n } from '../../i18n/I18nProvider';
-import { addArchiveItem, getArchiveCollectionById } from './archive.service';
-import { ArchiveCollectionDetail, CreateArchiveItemInput } from './archive.types';
+import { addArchiveItem, deleteArchiveItem, getArchiveCollectionById, updateArchiveItem } from './archive.service';
+import { ArchiveCollectionDetail, ArchiveItemSummary, CreateArchiveItemInput, UpdateArchiveItemInput } from './archive.types';
 import './ArchiveDetailPage.css';
 
 interface ArchiveDetailPageProps {
   archiveId: string | null;
   onAddItem?: (input: CreateArchiveItemInput) => Promise<void>;
+  onDeleteItem?: (itemId: string) => Promise<void>;
   onLoadCollection?: (archiveId: string) => Promise<ArchiveCollectionDetail | null>;
+  onUpdateItem?: (input: UpdateArchiveItemInput) => Promise<void>;
 }
 
 interface ItemFormState {
@@ -27,17 +29,21 @@ const initialItemForm: ItemFormState = {
 export function ArchiveDetailPage({
   archiveId,
   onAddItem = addArchiveItem,
+  onDeleteItem = deleteArchiveItem,
   onLoadCollection = getArchiveCollectionById,
+  onUpdateItem = updateArchiveItem,
 }: ArchiveDetailPageProps) {
   const { t } = useI18n();
   const [collection, setCollection] = useState<ArchiveCollectionDetail | null>(null);
   const [form, setForm] = useState<ItemFormState>(initialItemForm);
+  const [editingItem, setEditingItem] = useState<ArchiveItemSummary | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   async function loadCollection() {
     if (!archiveId) {
       setCollection(null);
+      setEditingItem(null);
       setIsLoading(false);
       return;
     }
@@ -65,18 +71,54 @@ export function ArchiveDetailPage({
     }
 
     const parsedPosition = Number.parseInt(form.position, 10);
-    await onAddItem({
-      collectionId: archiveId,
-      entityType: 'album',
+    const itemInput = {
+      entityType: 'album' as const,
       entityId: form.entityId.trim(),
       displayTitle: form.displayTitle.trim(),
       position: Number.isNaN(parsedPosition) ? null : parsedPosition,
       note: form.note.trim(),
-      externalSource: null,
-      externalId: null,
-    });
+      externalSource: editingItem?.externalSource ?? null,
+      externalId: editingItem?.externalId ?? null,
+    };
+
+    if (editingItem) {
+      await onUpdateItem({
+        itemId: editingItem.id,
+        ...itemInput,
+      });
+    } else {
+      await onAddItem({
+        collectionId: archiveId,
+        ...itemInput,
+      });
+    }
     setForm(initialItemForm);
+    setEditingItem(null);
     await loadCollection();
+  }
+
+  function handleEditItem(item: ArchiveItemSummary) {
+    setEditingItem(item);
+    setForm({
+      entityId: item.entityId,
+      displayTitle: item.displayTitle,
+      position: item.position === null ? '' : String(item.position),
+      note: item.note,
+    });
+  }
+
+  async function handleDeleteItem(itemId: string) {
+    await onDeleteItem(itemId);
+    if (editingItem?.id === itemId) {
+      setEditingItem(null);
+      setForm(initialItemForm);
+    }
+    await loadCollection();
+  }
+
+  function handleCancelEdit() {
+    setEditingItem(null);
+    setForm(initialItemForm);
   }
 
   if (isLoading) {
@@ -132,12 +174,21 @@ export function ArchiveDetailPage({
                 <span role="columnheader">{t('archiveDetail.columnItem')}</span>
                 <span role="columnheader">{t('archiveDetail.columnPosition')}</span>
                 <span role="columnheader">{t('archiveDetail.columnNote')}</span>
+                <span role="columnheader">{t('archiveDetail.columnActions')}</span>
               </div>
               {collection.items.map((item) => (
                 <article className="archive-detail-table-row" key={item.id} role="row">
                   <h3 role="cell">{item.displayTitle}</h3>
                   <p role="cell">{item.position ? `#${item.position}` : t('archiveDetail.noPosition')}</p>
                   <p role="cell">{item.note || t('archiveDetail.noNote')}</p>
+                  <div className="archive-detail-row-actions" role="cell">
+                    <button type="button" onClick={() => handleEditItem(item)}>
+                      {t('archiveDetail.editAction')}
+                    </button>
+                    <button type="button" onClick={() => handleDeleteItem(item.id)}>
+                      {t('archiveDetail.deleteAction')}
+                    </button>
+                  </div>
                 </article>
               ))}
             </div>
@@ -146,8 +197,10 @@ export function ArchiveDetailPage({
 
         <form className="archive-detail-form" onSubmit={handleSubmit}>
           <div className="archive-detail-form-heading">
-            <p className="archive-detail-form-mode">{t('archiveDetail.formMode')}</p>
-            <h2>{t('archiveDetail.addAlbumItemTitle')}</h2>
+            <p className="archive-detail-form-mode">
+              {editingItem ? t('archiveDetail.editMode') : t('archiveDetail.formMode')}
+            </p>
+            <h2>{editingItem ? t('archiveDetail.editAlbumItemTitle') : t('archiveDetail.addAlbumItemTitle')}</h2>
           </div>
           <fieldset>
             <legend>{t('archiveDetail.albumLinkSection')}</legend>
@@ -187,7 +240,16 @@ export function ArchiveDetailPage({
               />
             </label>
           </fieldset>
-          <button type="submit">{t('archiveDetail.addAlbumItemSubmit')}</button>
+          <div className="archive-detail-form-actions">
+            <button type="submit">
+              {editingItem ? t('archiveDetail.updateAlbumItemSubmit') : t('archiveDetail.addAlbumItemSubmit')}
+            </button>
+            {editingItem ? (
+              <button type="button" onClick={handleCancelEdit}>
+                {t('archiveDetail.cancelEdit')}
+              </button>
+            ) : null}
+          </div>
         </form>
       </div>
     </section>

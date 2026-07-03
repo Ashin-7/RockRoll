@@ -7,6 +7,7 @@ import {
   ArchiveCountSummary,
   CreateArchiveCollectionInput,
   CreateArchiveItemInput,
+  UpdateArchiveItemInput,
 } from './archive.types';
 
 interface ArchiveCollectionRow {
@@ -278,6 +279,69 @@ export async function addArchiveItem(input: CreateArchiveItemInput): Promise<voi
     external_source: input.externalSource,
     external_id: input.externalId,
   });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+}
+
+export async function updateArchiveItem(input: UpdateArchiveItemInput): Promise<void> {
+  let supabase: ReturnType<typeof getSupabase>;
+  try {
+    supabase = getSupabase();
+  } catch (caughtError) {
+    if (isMissingSupabaseEnvError(caughtError)) {
+      const items = readDemoItems().map((item) =>
+        item.id === input.itemId
+          ? {
+              ...item,
+              entityType: input.entityType,
+              entityId: input.entityId,
+              displayTitle: input.displayTitle,
+              position: input.position,
+              note: input.note,
+              externalSource: input.externalSource,
+              externalId: input.externalId,
+            }
+          : item,
+      );
+      writeDemoItems(items);
+      return;
+    }
+    throw caughtError;
+  }
+
+  const { error } = await supabase
+    .from('archive_items')
+    .update({
+      entity_type: input.entityType,
+      entity_id: input.entityId,
+      display_title: input.displayTitle,
+      position: input.position,
+      note: input.note,
+      external_source: input.externalSource,
+      external_id: input.externalId,
+    })
+    .eq('id', input.itemId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+}
+
+export async function deleteArchiveItem(itemId: string): Promise<void> {
+  let supabase: ReturnType<typeof getSupabase>;
+  try {
+    supabase = getSupabase();
+  } catch (caughtError) {
+    if (isMissingSupabaseEnvError(caughtError)) {
+      writeDemoItems(readDemoItems().filter((item) => item.id !== itemId));
+      return;
+    }
+    throw caughtError;
+  }
+
+  const { error } = await supabase.from('archive_items').delete().eq('id', itemId);
 
   if (error) {
     throw new Error(error.message);

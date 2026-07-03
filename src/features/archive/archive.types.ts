@@ -48,3 +48,14 @@ export interface CreateArchiveItemInput {
   externalSource: string | null;
   externalId: string | null;
 }
+
+export interface UpdateArchiveItemInput {
+  itemId: string;
+  entityType: ArchiveEntityType;
+  entityId: string;
+  displayTitle: string;
+  position: number | null;
+  note: string;
+  externalSource: string | null;
+  externalId: string | null;
+}

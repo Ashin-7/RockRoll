@@ -2,12 +2,16 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const orderMock = vi.fn();
 const maybeSingleMock = vi.fn();
+const updateEqMock = vi.fn();
+const deleteEqMock = vi.fn();
 const eqOrderMock = vi.fn(() => ({ order: orderMock }));
 const eqMaybeSingleMock = vi.fn(() => ({ maybeSingle: maybeSingleMock }));
 const selectMock = vi.fn();
 const insertMock = vi.fn();
+const updateMock = vi.fn(() => ({ eq: updateEqMock }));
+const deleteMock = vi.fn(() => ({ eq: deleteEqMock }));
 const getSessionMock = vi.fn();
-const fromMock = vi.fn(() => ({ insert: insertMock, select: selectMock }));
+const fromMock = vi.fn(() => ({ delete: deleteMock, insert: insertMock, select: selectMock, update: updateMock }));
 const getSupabaseMock = vi.fn(() => ({
   auth: { getSession: getSessionMock },
   from: fromMock,
@@ -168,14 +172,58 @@ describe('archive.service', () => {
     });
   });
 
+  it('updates an archive item in Supabase', async () => {
+    updateEqMock.mockResolvedValue({ error: null });
+    const { updateArchiveItem } = await import('./archive.service');
+
+    await updateArchiveItem({
+      itemId: 'item-1',
+      entityType: 'album',
+      entityId: 'album-2',
+      displayTitle: 'With the Beatles',
+      position: 2,
+      note: 'Updated note.',
+      externalSource: 'anontraveler',
+      externalId: 'external-item-2',
+    });
+
+    expect(fromMock).toHaveBeenCalledWith('archive_items');
+    expect(updateMock).toHaveBeenCalledWith({
+      entity_type: 'album',
+      entity_id: 'album-2',
+      display_title: 'With the Beatles',
+      position: 2,
+      note: 'Updated note.',
+      external_source: 'anontraveler',
+      external_id: 'external-item-2',
+    });
+    expect(updateEqMock).toHaveBeenCalledWith('id', 'item-1');
+  });
+
+  it('deletes an archive item from Supabase', async () => {
+    deleteEqMock.mockResolvedValue({ error: null });
+    const { deleteArchiveItem } = await import('./archive.service');
+
+    await deleteArchiveItem('item-1');
+
+    expect(fromMock).toHaveBeenCalledWith('archive_items');
+    expect(deleteMock).toHaveBeenCalled();
+    expect(deleteEqMock).toHaveBeenCalledWith('id', 'item-1');
+  });
+
   it('uses local demo archive collections when Supabase is not configured', async () => {
     getSupabaseMock.mockImplementation(() => {
       throw new Error('Missing VITE_SUPABASE_URL');
     });
     window.localStorage.setItem('rockroll.demoSession', JSON.stringify({ user: { id: 'local-demo-user' } }));
-    const { addArchiveItem, createArchiveCollection, getArchiveCollectionById, listArchiveCollections } = await import(
-      './archive.service'
-    );
+    const {
+      addArchiveItem,
+      createArchiveCollection,
+      deleteArchiveItem,
+      getArchiveCollectionById,
+      listArchiveCollections,
+      updateArchiveItem,
+    } = await import('./archive.service');
 
     await createArchiveCollection({
       title: 'Demo guide',
@@ -208,6 +256,39 @@ describe('archive.service', () => {
             position: 1,
           }),
         ],
+      }),
+    );
+
+    const detail = await getArchiveCollectionById(collections[0].id);
+    const itemId = detail?.items[0].id ?? '';
+    await updateArchiveItem({
+      itemId,
+      entityType: 'album',
+      entityId: 'local-album-2',
+      displayTitle: 'Updated Demo Album',
+      position: 2,
+      note: 'Updated local note.',
+      externalSource: null,
+      externalId: null,
+    });
+
+    await expect(getArchiveCollectionById(collections[0].id)).resolves.toEqual(
+      expect.objectContaining({
+        items: [
+          expect.objectContaining({
+            displayTitle: 'Updated Demo Album',
+            entityId: 'local-album-2',
+            position: 2,
+          }),
+        ],
+      }),
+    );
+
+    await deleteArchiveItem(itemId);
+
+    await expect(getArchiveCollectionById(collections[0].id)).resolves.toEqual(
+      expect.objectContaining({
+        items: [],
       }),
     );
   });

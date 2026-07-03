@@ -1,5 +1,26 @@
 # RockRoll 项目状态
 
+## 本轮补充：Archive Item Edit / Delete
+
+- 已完成 Archive collection detail 中条目的编辑与删除最小闭环：
+  - Archive item 行增加 Edit / Delete 操作。
+  - 点击 Edit 会回填条目表单，并切换到 Item / edit 模式。
+  - 编辑提交会更新条目的 entity、展示标题、排序、备注与外部来源字段。
+  - 点击 Delete 会删除条目并刷新当前 collection。
+  - Supabase 与 Demo Mode 均支持编辑 / 删除。
+- 本轮未修改 Supabase schema、路由、依赖或构建配置。
+- 验证结果：
+  - `npm test -- --run src/features/archive`
+  - 结果：3 个测试文件、14 个用例通过。
+  - `npm run build`
+  - 结果：通过。
+- 环境说明：
+  - 默认 shell 起始为 Node `v8.17.0`，Vitest 无法在该版本启动。
+  - 本轮沿用既有项目验证方式，切换到本机已有 Node `v20.20.2` 后完成测试与构建。
+  - 未运行 `npm install`。
+
+更新时间：2026-07-03
+
 ## 本轮补充：Media Asset Edit / Delete
 
 - 已完成 Media Asset 编辑与删除最小闭环：

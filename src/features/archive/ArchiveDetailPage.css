@@ -77,8 +77,8 @@
   border-bottom: 1px solid var(--color-border, #d7d7d7);
   display: grid;
   gap: 1rem;
-  grid-template-columns: minmax(12rem, 1.4fr) minmax(7rem, 0.6fr) minmax(12rem, 1.4fr);
-  min-width: 34rem;
+  grid-template-columns: minmax(12rem, 1.3fr) minmax(7rem, 0.55fr) minmax(12rem, 1.2fr) minmax(9rem, 0.75fr);
+  min-width: 44rem;
   padding: 0.75rem 0;
 }
 
@@ -119,6 +119,13 @@
 
 .archive-detail-form textarea {
   min-height: 5rem;
+}
+
+.archive-detail-row-actions,
+.archive-detail-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 
 @media (max-width: 760px) {

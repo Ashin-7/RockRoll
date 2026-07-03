@@ -44,6 +44,7 @@ describe('ArchiveDetailPage', () => {
     expect(screen.getByText('Item')).toBeInTheDocument();
     expect(screen.getByRole('columnheader', { name: 'Position' })).toBeInTheDocument();
     expect(screen.getByRole('columnheader', { name: 'Note' })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Actions' })).toBeInTheDocument();
   });
 
   it('adds an album item and reloads the collection', async () => {
@@ -76,6 +77,64 @@ describe('ArchiveDetailPage', () => {
       externalSource: null,
       externalId: null,
     });
+    await waitFor(() => expect(onLoadCollection).toHaveBeenCalledTimes(2));
+  });
+
+  it('edits an archive item and reloads the collection', async () => {
+    const user = userEvent.setup();
+    const onUpdateItem = vi.fn().mockResolvedValue(undefined);
+    const onLoadCollection = vi.fn().mockResolvedValue(collection);
+
+    renderWithI18n(
+      <ArchiveDetailPage
+        archiveId="collection-1"
+        onLoadCollection={onLoadCollection}
+        onUpdateItem={onUpdateItem}
+      />,
+    );
+
+    expect(await screen.findByText('Please Please Me')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Edit' }));
+
+    expect(screen.getByText('Edit album item')).toBeInTheDocument();
+    await user.clear(screen.getByLabelText('Display title'));
+    await user.type(screen.getByLabelText('Display title'), 'With the Beatles');
+    await user.clear(screen.getByLabelText('Position'));
+    await user.type(screen.getByLabelText('Position'), '2');
+    await user.clear(screen.getByLabelText('Note'));
+    await user.type(screen.getByLabelText('Note'), 'Updated marker.');
+    await user.click(screen.getByRole('button', { name: 'Update album item' }));
+
+    expect(onUpdateItem).toHaveBeenCalledWith({
+      itemId: 'item-1',
+      entityType: 'album',
+      entityId: 'album-1',
+      displayTitle: 'With the Beatles',
+      position: 2,
+      note: 'Updated marker.',
+      externalSource: 'anontraveler',
+      externalId: 'external-item-1',
+    });
+    await waitFor(() => expect(onLoadCollection).toHaveBeenCalledTimes(2));
+  });
+
+  it('deletes an archive item and reloads the collection', async () => {
+    const user = userEvent.setup();
+    const onDeleteItem = vi.fn().mockResolvedValue(undefined);
+    const onLoadCollection = vi.fn().mockResolvedValue(collection);
+
+    renderWithI18n(
+      <ArchiveDetailPage
+        archiveId="collection-1"
+        onDeleteItem={onDeleteItem}
+        onLoadCollection={onLoadCollection}
+      />,
+    );
+
+    expect(await screen.findByText('Please Please Me')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Delete' }));
+
+    expect(onDeleteItem).toHaveBeenCalledWith('item-1');
     await waitFor(() => expect(onLoadCollection).toHaveBeenCalledTimes(2));
   });
 });

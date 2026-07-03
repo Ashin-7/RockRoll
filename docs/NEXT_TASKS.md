@@ -1,5 +1,36 @@
 # RockRoll 下一阶段任务
 
+## 本轮完成：Archive Item Edit / Delete
+
+状态：已完成本地增量实现，待提交。
+
+完成范围：
+- Archive collection detail 的条目行增加 Edit / Delete 操作。
+- 点击 Edit 会回填表单，并切换到 Item / edit 模式。
+- 编辑提交会更新 archive item 字段并刷新 collection detail。
+- 点击 Delete 会删除 archive item 并刷新 collection detail。
+- Supabase 与 Demo Mode 均支持编辑 / 删除。
+- 不包含 Archive Collection 编辑 / 删除、Media Link 独立编辑 / 删除、真实导入写库、文件上传、播放器或预览器。
+
+验证：
+- `npm test -- --run src/features/archive`
+- 结果：3 个测试文件、14 个用例通过。
+- `npm run build`
+- 结果：通过。
+
+下一步建议先做：
+1. 提交 Archive Item Edit / Delete。
+2. 继续 Media Link 编辑 / 删除，或 Archive Collection 编辑 / 删除。
+
+下一轮建议只读取：
+- `AGENTS.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/NEXT_TASKS.md`
+- `docs/SESSION_HANDOFF.md`
+- 当前任务相关 feature 目录
+
+更新日期：2026-07-03
+
 ## 本轮完成：Media Asset Edit / Delete
 
 状态：已完成本地增量实现，待提交。
