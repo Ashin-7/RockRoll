@@ -97,7 +97,13 @@
 
 .library-form-actions {
   display: flex;
+  gap: 0.5rem;
   justify-content: flex-end;
+}
+
+.library-secondary-action {
+  background: transparent;
+  color: #475569;
 }
 
 .library-assets {
@@ -137,6 +143,16 @@
 .library-asset-table td small {
   margin-top: 0.2rem;
   color: #64748b;
+}
+
+.library-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.library-row-actions button {
+  white-space: nowrap;
 }
 
 @media (min-width: 860px) {

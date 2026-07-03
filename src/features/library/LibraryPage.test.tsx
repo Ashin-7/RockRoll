@@ -89,4 +89,49 @@ describe('LibraryPage', () => {
     await waitFor(() => expect(loadMediaAssets).toHaveBeenCalledTimes(2));
     expect(await screen.findByText('Media asset added.')).toBeInTheDocument();
   });
+
+  it('edits a media asset and refreshes the list', async () => {
+    const user = userEvent.setup();
+    const loadMediaAssets = vi.fn().mockResolvedValue(mediaAssets);
+    const updateMediaAsset = vi.fn().mockResolvedValue(undefined);
+
+    renderWithI18n(<LibraryPage onLoadMediaAssets={loadMediaAssets} onUpdateMediaAsset={updateMediaAsset} />);
+
+    await screen.findByText('solo-take.mp4');
+    await user.click(screen.getByRole('button', { name: 'Edit solo-take.mp4' }));
+    await user.clear(screen.getByLabelText('File name'));
+    await user.type(screen.getByLabelText('File name'), 'solo-take-updated.mp4');
+    await user.clear(screen.getByLabelText('Notes'));
+    await user.type(screen.getByLabelText('Notes'), 'Second chorus take.');
+    await user.click(screen.getByRole('button', { name: 'Update media asset' }));
+
+    expect(updateMediaAsset).toHaveBeenCalledWith('media-1', {
+      fileName: 'solo-take-updated.mp4',
+      mediaType: 'video',
+      storageBucket: 'practice',
+      storagePath: 'takes/solo-take.mp4',
+      notes: 'Second chorus take.',
+      link: {
+        entityType: 'song',
+        entityId: 'song-1',
+      },
+    });
+    await waitFor(() => expect(loadMediaAssets).toHaveBeenCalledTimes(2));
+    expect(await screen.findByText('Media asset updated.')).toBeInTheDocument();
+  });
+
+  it('deletes a media asset and refreshes the list', async () => {
+    const user = userEvent.setup();
+    const loadMediaAssets = vi.fn().mockResolvedValueOnce(mediaAssets).mockResolvedValueOnce([]);
+    const deleteMediaAsset = vi.fn().mockResolvedValue(undefined);
+
+    renderWithI18n(<LibraryPage onDeleteMediaAsset={deleteMediaAsset} onLoadMediaAssets={loadMediaAssets} />);
+
+    await screen.findByText('solo-take.mp4');
+    await user.click(screen.getByRole('button', { name: 'Delete solo-take.mp4' }));
+
+    expect(deleteMediaAsset).toHaveBeenCalledWith('media-1');
+    await waitFor(() => expect(loadMediaAssets).toHaveBeenCalledTimes(2));
+    expect(await screen.findByText('Media asset deleted.')).toBeInTheDocument();
+  });
 });

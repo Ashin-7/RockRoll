@@ -1,8 +1,39 @@
 # RockRoll 下一阶段任务
 
+## 本轮完成：Media Asset Edit / Delete
+
+状态：已完成本地增量实现，待提交。
+
+完成范围：
+- Library 媒体资产行增加 Edit / Delete 操作。
+- 点击 Edit 会回填表单，并切换到 Media / edit 模式。
+- 编辑提交会更新媒体资产字段，并替换可选实体关联。
+- 点击 Delete 会删除媒体资产并刷新列表。
+- Supabase 与 Demo Mode 均支持编辑 / 删除。
+- 不包含真实文件上传、播放器、预览器、批量操作或 Supabase Storage bucket 初始化。
+
+验证：
+- `npm test -- --run src/features/library`
+- 结果：2 个测试文件、12 个用例通过。
+- `npm run build`
+- 结果：通过。
+
+下一步建议先做：
+1. 提交 Media Asset Edit / Delete。
+2. 继续 Archive Item 编辑 / 删除，或进入 Media Link 编辑 / 删除。
+
+下一轮建议只读取：
+- `AGENTS.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/NEXT_TASKS.md`
+- `docs/SESSION_HANDOFF.md`
+- 当前任务相关 feature 目录
+
+更新日期：2026-07-03
+
 ## 本轮完成：Inbox / Library CRUD UI Pattern
 
-状态：已完成本地 UI Pattern 收口，待提交。
+状态：已完成并已提交推送。
 
 完成范围：
 - Inbox 首页补齐后台式指标区、Import workflow 分区、Preview output 分区和候选导入行列表。
@@ -17,8 +48,8 @@
 - 结果：6 个测试文件、19 个用例通过。
 
 下一步建议先做：
-1. 提交 Inbox / Library CRUD UI Pattern 收口改动。
-2. 如继续开发，优先进入 Media Asset 编辑 / 删除或 Archive Item 编辑 / 删除。
+1. Media Asset 编辑 / 删除。
+2. Archive Item 编辑 / 删除。
 
 下一轮建议只读取：
 - `AGENTS.md`

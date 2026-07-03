@@ -1,5 +1,12 @@
 import { getSupabase } from '../../lib/supabase';
-import { CreateMediaAssetInput, MediaAssetSummary, MediaLinkEntityType, MediaLinkSummary, MediaType } from './media.types';
+import {
+  CreateMediaAssetInput,
+  MediaAssetSummary,
+  MediaLinkEntityType,
+  MediaLinkSummary,
+  MediaType,
+  UpdateMediaAssetInput,
+} from './media.types';
 
 interface MediaLinkRow {
   id: string;
@@ -170,5 +177,111 @@ export async function createMediaAsset(input: CreateMediaAssetInput): Promise<vo
     if (linkError) {
       throw new Error(linkError.message);
     }
+  }
+}
+
+export async function updateMediaAsset(mediaAssetId: string, input: UpdateMediaAssetInput): Promise<void> {
+  let supabase: ReturnType<typeof getSupabase>;
+  try {
+    supabase = getSupabase();
+  } catch (caughtError) {
+    if (isMissingSupabaseEnvError(caughtError)) {
+      if (!hasDemoSession()) {
+        throw new Error('Sign in before editing media assets.');
+      }
+      writeDemoMediaAssets(
+        readDemoMediaAssets().map((asset) =>
+          asset.id === mediaAssetId
+            ? {
+                ...asset,
+                fileName: input.fileName,
+                mediaType: input.mediaType,
+                storageBucket: input.storageBucket,
+                storagePath: input.storagePath,
+                notes: input.notes,
+                links: input.link
+                  ? [
+                      {
+                        id: asset.links[0]?.id ?? `local-media-link-${Date.now()}`,
+                        entityType: input.link.entityType,
+                        entityId: input.link.entityId,
+                      },
+                    ]
+                  : [],
+              }
+            : asset,
+        ),
+      );
+      return;
+    }
+    throw caughtError;
+  }
+
+  const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+
+  if (sessionError) {
+    throw new Error(sessionError.message);
+  }
+
+  const userId = sessionData.session?.user?.id;
+
+  if (!userId) {
+    throw new Error('Sign in before editing media assets.');
+  }
+
+  const { error: mediaError } = await supabase
+    .from('media_assets')
+    .update({
+      file_name: input.fileName,
+      media_type: input.mediaType,
+      storage_bucket: input.storageBucket,
+      storage_path: input.storagePath,
+      notes: input.notes,
+    })
+    .eq('id', mediaAssetId);
+
+  if (mediaError) {
+    throw new Error(mediaError.message);
+  }
+
+  const { error: deleteLinkError } = await supabase.from('media_links').delete().eq('media_asset_id', mediaAssetId);
+
+  if (deleteLinkError) {
+    throw new Error(deleteLinkError.message);
+  }
+
+  if (input.link) {
+    const { error: linkError } = await supabase.from('media_links').insert({
+      user_id: userId,
+      media_asset_id: mediaAssetId,
+      entity_type: input.link.entityType,
+      entity_id: input.link.entityId,
+    });
+
+    if (linkError) {
+      throw new Error(linkError.message);
+    }
+  }
+}
+
+export async function deleteMediaAsset(mediaAssetId: string): Promise<void> {
+  let supabase: ReturnType<typeof getSupabase>;
+  try {
+    supabase = getSupabase();
+  } catch (caughtError) {
+    if (isMissingSupabaseEnvError(caughtError)) {
+      if (!hasDemoSession()) {
+        throw new Error('Sign in before deleting media assets.');
+      }
+      writeDemoMediaAssets(readDemoMediaAssets().filter((asset) => asset.id !== mediaAssetId));
+      return;
+    }
+    throw caughtError;
+  }
+
+  const { error } = await supabase.from('media_assets').delete().eq('id', mediaAssetId);
+
+  if (error) {
+    throw new Error(error.message);
   }
 }

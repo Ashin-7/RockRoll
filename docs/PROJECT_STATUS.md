@@ -1,5 +1,22 @@
 # RockRoll 项目状态
 
+## 本轮补充：Media Asset Edit / Delete
+
+- 已完成 Media Asset 编辑与删除最小闭环：
+  - Library 媒体资产行增加 Edit / Delete 操作。
+  - 点击 Edit 会回填表单，并切换到 Media / edit 模式。
+  - 编辑提交会更新媒体资产字段，并替换可选实体关联。
+  - 点击 Delete 会删除媒体资产并刷新列表。
+  - Supabase 与 Demo Mode 均支持编辑 / 删除。
+- 本轮未修改 Supabase schema、路由、依赖或构建配置。
+- 验证结果：
+  - `npm test -- --run src/features/library`
+  - 结果：2 个测试文件、12 个用例通过。
+  - `npm run build`
+  - 结果：通过。
+
+更新时间：2026-07-03
+
 ## 本轮补充：Inbox / Library CRUD UI Pattern
 
 - 已完成 Inbox 与 Library 的 CRUD UI Pattern 收口：

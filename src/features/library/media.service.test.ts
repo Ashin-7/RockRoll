@@ -5,8 +5,12 @@ const singleMock = vi.fn();
 const selectAfterInsertMock = vi.fn(() => ({ single: singleMock }));
 const selectMock = vi.fn();
 const insertMock = vi.fn();
+const updateEqMock = vi.fn();
+const deleteEqMock = vi.fn();
+const updateMock = vi.fn(() => ({ eq: updateEqMock }));
+const deleteMock = vi.fn(() => ({ eq: deleteEqMock }));
 const getSessionMock = vi.fn();
-const fromMock = vi.fn(() => ({ insert: insertMock, select: selectMock }));
+const fromMock = vi.fn(() => ({ delete: deleteMock, insert: insertMock, select: selectMock, update: updateMock }));
 const getSupabaseMock = vi.fn(() => ({
   auth: { getSession: getSessionMock },
   from: fromMock,
@@ -22,6 +26,8 @@ describe('media.service', () => {
     window.localStorage.clear();
     selectMock.mockImplementation(() => ({ order: orderMock }));
     insertMock.mockResolvedValue({ error: null });
+    updateEqMock.mockResolvedValue({ error: null });
+    deleteEqMock.mockResolvedValue({ error: null });
     getSupabaseMock.mockReturnValue({
       auth: { getSession: getSessionMock },
       from: fromMock,
@@ -133,6 +139,55 @@ describe('media.service', () => {
     });
   });
 
+  it('updates a media asset and replaces its optional link in Supabase', async () => {
+    getSessionMock.mockResolvedValue({ data: { session: { user: { id: 'user-1' } } }, error: null });
+    updateEqMock.mockResolvedValue({ error: null });
+    deleteEqMock.mockResolvedValue({ error: null });
+    insertMock.mockResolvedValue({ error: null });
+    const { updateMediaAsset } = await import('./media.service');
+
+    await updateMediaAsset('media-1', {
+      fileName: 'updated.mp3',
+      mediaType: 'audio',
+      storageBucket: 'takes',
+      storagePath: 'takes/updated.mp3',
+      notes: 'Updated reference.',
+      link: {
+        entityType: 'practice_session',
+        entityId: 'practice-1',
+      },
+    });
+
+    expect(fromMock).toHaveBeenCalledWith('media_assets');
+    expect(updateMock).toHaveBeenCalledWith({
+      file_name: 'updated.mp3',
+      media_type: 'audio',
+      storage_bucket: 'takes',
+      storage_path: 'takes/updated.mp3',
+      notes: 'Updated reference.',
+    });
+    expect(updateEqMock).toHaveBeenCalledWith('id', 'media-1');
+    expect(fromMock).toHaveBeenCalledWith('media_links');
+    expect(deleteEqMock).toHaveBeenCalledWith('media_asset_id', 'media-1');
+    expect(insertMock).toHaveBeenLastCalledWith({
+      user_id: 'user-1',
+      media_asset_id: 'media-1',
+      entity_type: 'practice_session',
+      entity_id: 'practice-1',
+    });
+  });
+
+  it('deletes a media asset in Supabase', async () => {
+    deleteEqMock.mockResolvedValue({ error: null });
+    const { deleteMediaAsset } = await import('./media.service');
+
+    await deleteMediaAsset('media-1');
+
+    expect(fromMock).toHaveBeenCalledWith('media_assets');
+    expect(deleteMock).toHaveBeenCalledWith();
+    expect(deleteEqMock).toHaveBeenCalledWith('id', 'media-1');
+  });
+
   it('uses local demo media assets when Supabase is not configured', async () => {
     getSupabaseMock.mockImplementation(() => {
       throw new Error('Missing VITE_SUPABASE_URL');
@@ -168,5 +223,54 @@ describe('media.service', () => {
         ],
       }),
     ]);
+  });
+
+  it('updates and deletes local demo media assets when Supabase is not configured', async () => {
+    getSupabaseMock.mockImplementation(() => {
+      throw new Error('Missing VITE_SUPABASE_URL');
+    });
+    window.localStorage.setItem('rockroll.demoSession', JSON.stringify({ user: { id: 'local-demo-user' } }));
+    window.localStorage.setItem(
+      'rockroll.demoMediaAssets',
+      JSON.stringify([
+        {
+          id: 'local-media-1',
+          fileName: 'demo-link',
+          mediaType: 'link',
+          storageBucket: 'external',
+          storagePath: 'https://example.test/demo',
+          notes: 'External reference.',
+          createdAt: '2026-07-03T00:00:00.000Z',
+          links: [],
+        },
+      ]),
+    );
+    const { deleteMediaAsset, listMediaAssets, updateMediaAsset } = await import('./media.service');
+
+    await updateMediaAsset('local-media-1', {
+      fileName: 'updated-demo-link',
+      mediaType: 'link',
+      storageBucket: 'external',
+      storagePath: 'https://example.test/updated',
+      notes: 'Updated external reference.',
+      link: {
+        entityType: 'artist',
+        entityId: 'artist-1',
+      },
+    });
+
+    await expect(listMediaAssets()).resolves.toEqual([
+      expect.objectContaining({
+        id: 'local-media-1',
+        fileName: 'updated-demo-link',
+        storagePath: 'https://example.test/updated',
+        notes: 'Updated external reference.',
+        links: [expect.objectContaining({ entityType: 'artist', entityId: 'artist-1' })],
+      }),
+    ]);
+
+    await deleteMediaAsset('local-media-1');
+
+    await expect(listMediaAssets()).resolves.toEqual([]);
   });
 });

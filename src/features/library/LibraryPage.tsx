@@ -1,12 +1,14 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { useI18n } from '../../i18n/I18nProvider';
-import { createMediaAsset, listMediaAssets } from './media.service';
-import { CreateMediaAssetInput, MediaAssetSummary, MediaLinkEntityType, MediaType } from './media.types';
+import { createMediaAsset, deleteMediaAsset, listMediaAssets, updateMediaAsset } from './media.service';
+import { CreateMediaAssetInput, MediaAssetSummary, MediaLinkEntityType, MediaType, UpdateMediaAssetInput } from './media.types';
 import './LibraryPage.css';
 
 interface LibraryPageProps {
   onCreateMediaAsset?: (input: CreateMediaAssetInput) => Promise<void>;
+  onDeleteMediaAsset?: (mediaAssetId: string) => Promise<void>;
   onLoadMediaAssets?: () => Promise<MediaAssetSummary[]>;
+  onUpdateMediaAsset?: (mediaAssetId: string, input: UpdateMediaAssetInput) => Promise<void>;
 }
 
 interface MediaFormState {
@@ -34,11 +36,14 @@ const initialForm: MediaFormState = {
 
 export function LibraryPage({
   onCreateMediaAsset = createMediaAsset,
+  onDeleteMediaAsset = deleteMediaAsset,
   onLoadMediaAssets = listMediaAssets,
+  onUpdateMediaAsset = updateMediaAsset,
 }: LibraryPageProps) {
   const { t } = useI18n();
   const [mediaAssets, setMediaAssets] = useState<MediaAssetSummary[]>([]);
   const [form, setForm] = useState<MediaFormState>(initialForm);
+  const [editingAssetId, setEditingAssetId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -74,16 +79,48 @@ export function LibraryPage({
         : null;
 
     setMessage(null);
-    await onCreateMediaAsset({
+    const input = {
       fileName: form.fileName.trim(),
       mediaType: form.mediaType,
       storageBucket: form.storageBucket.trim() || 'external',
       storagePath: form.storagePath.trim(),
       notes: form.notes.trim(),
       link,
-    });
+    };
+    if (editingAssetId) {
+      await onUpdateMediaAsset(editingAssetId, input);
+    } else {
+      await onCreateMediaAsset(input);
+    }
     setForm(initialForm);
-    setMessage(t('library.addSuccess'));
+    setEditingAssetId(null);
+    setMessage(editingAssetId ? t('library.updateSuccess') : t('library.addSuccess'));
+    await loadMediaAssets();
+  }
+
+  function handleEdit(asset: MediaAssetSummary) {
+    const firstLink = asset.links[0];
+    setEditingAssetId(asset.id);
+    setMessage(null);
+    setForm({
+      fileName: asset.fileName,
+      mediaType: asset.mediaType,
+      storageBucket: asset.storageBucket,
+      storagePath: asset.storagePath,
+      notes: asset.notes,
+      linkedEntityType: firstLink?.entityType ?? '',
+      linkedEntityId: firstLink?.entityId ?? '',
+    });
+  }
+
+  async function handleDelete(asset: MediaAssetSummary) {
+    setMessage(null);
+    await onDeleteMediaAsset(asset.id);
+    if (editingAssetId === asset.id) {
+      setEditingAssetId(null);
+      setForm(initialForm);
+    }
+    setMessage(t('library.deleteSuccess'));
     await loadMediaAssets();
   }
 
@@ -129,8 +166,8 @@ export function LibraryPage({
       <div className="library-workspace">
         <form className="library-form" onSubmit={handleSubmit}>
           <div className="library-form-heading">
-            <span>{t('library.formMode')}</span>
-            <h2>{t('library.addTitle')}</h2>
+            <span>{editingAssetId ? t('library.editMode') : t('library.formMode')}</span>
+            <h2>{editingAssetId ? t('library.editTitle') : t('library.addTitle')}</h2>
           </div>
           <fieldset>
             <legend>{t('library.identitySection')}</legend>
@@ -208,7 +245,20 @@ export function LibraryPage({
             </label>
           </fieldset>
           <div className="library-form-actions">
-            <button type="submit">{t('library.addSubmit')}</button>
+            {editingAssetId ? (
+              <button
+                type="button"
+                className="library-secondary-action"
+                onClick={() => {
+                  setEditingAssetId(null);
+                  setForm(initialForm);
+                  setMessage(null);
+                }}
+              >
+                {t('library.cancelEdit')}
+              </button>
+            ) : null}
+            <button type="submit">{editingAssetId ? t('library.updateSubmit') : t('library.addSubmit')}</button>
           </div>
           {message ? <p role="status">{message}</p> : null}
         </form>
@@ -228,6 +278,7 @@ export function LibraryPage({
                     <th>{t('library.columnStorage')}</th>
                     <th>{t('library.columnLinkedEntity')}</th>
                     <th>{t('library.columnNotes')}</th>
+                    <th>{t('library.columnActions')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -251,6 +302,20 @@ export function LibraryPage({
                           : t('library.noLinkedEntity')}
                       </td>
                       <td>{asset.notes || t('library.noNotes')}</td>
+                      <td>
+                        <div className="library-row-actions">
+                          <button type="button" aria-label={`${t('library.editAction')} ${asset.fileName}`} onClick={() => handleEdit(asset)}>
+                            {t('library.editAction')}
+                          </button>
+                          <button
+                            type="button"
+                            aria-label={`${t('library.deleteAction')} ${asset.fileName}`}
+                            onClick={() => handleDelete(asset)}
+                          >
+                            {t('library.deleteAction')}
+                          </button>
+                        </div>
+                      </td>
                     </tr>
                   ))}
                 </tbody>

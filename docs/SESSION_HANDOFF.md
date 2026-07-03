@@ -1,5 +1,69 @@
 # RockRoll 会话交接
 
+## 本轮补充：Media Asset Edit / Delete
+
+### 完成内容
+
+- Library 媒体资产行增加 Edit / Delete 操作。
+- 点击 Edit 会回填表单，并切换到 Media / edit 模式。
+- 编辑提交会更新媒体资产字段，并替换可选实体关联。
+- 点击 Delete 会删除媒体资产并刷新列表。
+- Supabase 与 Demo Mode 均支持编辑 / 删除。
+- 补充英文与中文 i18n 文案。
+- 补充 Library 页面与 media service 测试。
+
+### 修改文件
+
+- `docs/PROJECT_STATUS.md`
+- `docs/NEXT_TASKS.md`
+- `docs/SESSION_HANDOFF.md`
+- `src/features/library/LibraryPage.css`
+- `src/features/library/LibraryPage.test.tsx`
+- `src/features/library/LibraryPage.tsx`
+- `src/features/library/media.service.test.ts`
+- `src/features/library/media.service.ts`
+- `src/features/library/media.types.ts`
+- `src/i18n/messages.ts`
+
+### 验证命令和结果
+
+```powershell
+npm test -- --run src/features/library
+npm run build
+```
+
+结果：
+- 2 个测试文件通过。
+- 12 个测试用例通过。
+- 构建通过。
+
+### 未完成事项
+
+- 真实文件上传尚未实现。
+- 播放器 / 预览器尚未实现。
+- Media Link 独立编辑 / 删除尚未实现。
+- Archive Item 编辑 / 删除尚未实现。
+
+### 下一轮推荐提示词
+
+```text
+继续 RockRoll 项目开发。
+请只读取：
+- AGENTS.md
+- docs/PROJECT_STATUS.md
+- docs/NEXT_TASKS.md
+- docs/SESSION_HANDOFF.md
+- 当前任务相关 feature 目录
+
+继续 docs/NEXT_TASKS.md 中的下一个任务。
+不要扫描整个仓库。
+不要运行 npm install。
+不要做架构重构。
+完成后中文总结。
+```
+
+更新时间：2026-07-03
+
 ## 本轮补充：Inbox / Library CRUD UI Pattern
 
 ### 完成内容
@@ -34,7 +98,7 @@ npm test -- --run src/features/inbox src/features/library
 
 ### 未完成事项
 
-- Media Asset 编辑 / 删除尚未实现。
+- Media Asset 编辑 / 删除已在后续任务完成。
 - 正式导入写库尚未实现。
 - Archive Item 编辑 / 删除尚未实现。
 
