@@ -134,4 +134,41 @@ describe('LibraryPage', () => {
     await waitFor(() => expect(loadMediaAssets).toHaveBeenCalledTimes(2));
     expect(await screen.findByText('Media asset deleted.')).toBeInTheDocument();
   });
+
+  it('edits a media link and refreshes the list', async () => {
+    const user = userEvent.setup();
+    const loadMediaAssets = vi.fn().mockResolvedValue(mediaAssets);
+    const updateMediaLink = vi.fn().mockResolvedValue(undefined);
+
+    renderWithI18n(<LibraryPage onLoadMediaAssets={loadMediaAssets} onUpdateMediaLink={updateMediaLink} />);
+
+    await screen.findByText('solo-take.mp4');
+    await user.click(screen.getByRole('button', { name: 'Edit link song: song-1' }));
+    await user.selectOptions(screen.getByLabelText('Edit linked entity type'), 'album');
+    await user.clear(screen.getByLabelText('Edit linked entity ID'));
+    await user.type(screen.getByLabelText('Edit linked entity ID'), 'album-1');
+    await user.click(screen.getByRole('button', { name: 'Update link' }));
+
+    expect(updateMediaLink).toHaveBeenCalledWith('link-1', {
+      entityType: 'album',
+      entityId: 'album-1',
+    });
+    await waitFor(() => expect(loadMediaAssets).toHaveBeenCalledTimes(2));
+    expect(await screen.findByText('Media link updated.')).toBeInTheDocument();
+  });
+
+  it('deletes a media link and refreshes the list', async () => {
+    const user = userEvent.setup();
+    const loadMediaAssets = vi.fn().mockResolvedValue(mediaAssets);
+    const deleteMediaLink = vi.fn().mockResolvedValue(undefined);
+
+    renderWithI18n(<LibraryPage onDeleteMediaLink={deleteMediaLink} onLoadMediaAssets={loadMediaAssets} />);
+
+    await screen.findByText('solo-take.mp4');
+    await user.click(screen.getByRole('button', { name: 'Delete link song: song-1' }));
+
+    expect(deleteMediaLink).toHaveBeenCalledWith('link-1');
+    await waitFor(() => expect(loadMediaAssets).toHaveBeenCalledTimes(2));
+    expect(await screen.findByText('Media link deleted.')).toBeInTheDocument();
+  });
 });

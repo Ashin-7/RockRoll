@@ -1,5 +1,25 @@
 # RockRoll 项目状态
 
+## 本轮补充：Media Link Edit / Delete
+
+- 已完成 Media Link 独立编辑与删除最小闭环：
+  - Library 媒体资产列表的 Linked entity 单元格增加 Edit link / Delete link 操作。
+  - 点击 Edit link 会在当前 link 行内打开小型编辑表单。
+  - 编辑提交只更新 `media_links.entity_type` 与 `media_links.entity_id`，不改媒体资产字段。
+  - 点击 Delete link 会删除指定 media link 并刷新列表。
+  - Supabase 与 Demo Mode 均支持 media link 编辑 / 删除。
+- 本轮未修改 Supabase schema、路由、依赖或构建配置。
+- 验证结果：
+  - `npm test -- --run src/features/library`
+  - 结果：2 个测试文件、16 个用例通过。
+  - `npm run build`
+  - 结果：通过。
+- 环境说明：
+  - 使用本机已有 Node `v20.20.2` 的 npm 完成测试与构建。
+  - 未运行 `npm install`。
+
+更新时间：2026-07-03
+
 ## 本轮补充：Archive Item Edit / Delete
 
 - 已完成 Archive collection detail 中条目的编辑与删除最小闭环：

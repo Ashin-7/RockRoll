@@ -1,14 +1,31 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { useI18n } from '../../i18n/I18nProvider';
-import { createMediaAsset, deleteMediaAsset, listMediaAssets, updateMediaAsset } from './media.service';
-import { CreateMediaAssetInput, MediaAssetSummary, MediaLinkEntityType, MediaType, UpdateMediaAssetInput } from './media.types';
+import {
+  createMediaAsset,
+  deleteMediaAsset,
+  deleteMediaLink,
+  listMediaAssets,
+  updateMediaAsset,
+  updateMediaLink,
+} from './media.service';
+import {
+  CreateMediaAssetInput,
+  MediaAssetSummary,
+  MediaLinkEntityType,
+  MediaLinkSummary,
+  MediaType,
+  UpdateMediaAssetInput,
+  UpdateMediaLinkInput,
+} from './media.types';
 import './LibraryPage.css';
 
 interface LibraryPageProps {
   onCreateMediaAsset?: (input: CreateMediaAssetInput) => Promise<void>;
   onDeleteMediaAsset?: (mediaAssetId: string) => Promise<void>;
+  onDeleteMediaLink?: (mediaLinkId: string) => Promise<void>;
   onLoadMediaAssets?: () => Promise<MediaAssetSummary[]>;
   onUpdateMediaAsset?: (mediaAssetId: string, input: UpdateMediaAssetInput) => Promise<void>;
+  onUpdateMediaLink?: (mediaLinkId: string, input: UpdateMediaLinkInput) => Promise<void>;
 }
 
 interface MediaFormState {
@@ -19,6 +36,11 @@ interface MediaFormState {
   notes: string;
   linkedEntityType: '' | MediaLinkEntityType;
   linkedEntityId: string;
+}
+
+interface MediaLinkFormState {
+  entityType: MediaLinkEntityType;
+  entityId: string;
 }
 
 const mediaTypes: MediaType[] = ['video', 'audio', 'pdf', 'gp', 'image', 'backing_track', 'link'];
@@ -37,13 +59,17 @@ const initialForm: MediaFormState = {
 export function LibraryPage({
   onCreateMediaAsset = createMediaAsset,
   onDeleteMediaAsset = deleteMediaAsset,
+  onDeleteMediaLink = deleteMediaLink,
   onLoadMediaAssets = listMediaAssets,
   onUpdateMediaAsset = updateMediaAsset,
+  onUpdateMediaLink = updateMediaLink,
 }: LibraryPageProps) {
   const { t } = useI18n();
   const [mediaAssets, setMediaAssets] = useState<MediaAssetSummary[]>([]);
   const [form, setForm] = useState<MediaFormState>(initialForm);
   const [editingAssetId, setEditingAssetId] = useState<string | null>(null);
+  const [editingLinkId, setEditingLinkId] = useState<string | null>(null);
+  const [linkForm, setLinkForm] = useState<MediaLinkFormState>({ entityType: 'song', entityId: '' });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -98,6 +124,24 @@ export function LibraryPage({
     await loadMediaAssets();
   }
 
+  async function handleLinkSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!editingLinkId) {
+      return;
+    }
+
+    setMessage(null);
+    await onUpdateMediaLink(editingLinkId, {
+      entityType: linkForm.entityType,
+      entityId: linkForm.entityId.trim(),
+    });
+    setEditingLinkId(null);
+    setLinkForm({ entityType: 'song', entityId: '' });
+    setMessage(t('library.linkUpdateSuccess'));
+    await loadMediaAssets();
+  }
+
   function handleEdit(asset: MediaAssetSummary) {
     const firstLink = asset.links[0];
     setEditingAssetId(asset.id);
@@ -113,6 +157,15 @@ export function LibraryPage({
     });
   }
 
+  function handleEditLink(link: MediaLinkSummary) {
+    setEditingLinkId(link.id);
+    setMessage(null);
+    setLinkForm({
+      entityType: link.entityType,
+      entityId: link.entityId,
+    });
+  }
+
   async function handleDelete(asset: MediaAssetSummary) {
     setMessage(null);
     await onDeleteMediaAsset(asset.id);
@@ -121,6 +174,17 @@ export function LibraryPage({
       setForm(initialForm);
     }
     setMessage(t('library.deleteSuccess'));
+    await loadMediaAssets();
+  }
+
+  async function handleDeleteLink(linkId: string) {
+    setMessage(null);
+    await onDeleteMediaLink(linkId);
+    if (editingLinkId === linkId) {
+      setEditingLinkId(null);
+      setLinkForm({ entityType: 'song', entityId: '' });
+    }
+    setMessage(t('library.linkDeleteSuccess'));
     await loadMediaAssets();
   }
 
@@ -293,13 +357,84 @@ export function LibraryPage({
                         <small>{asset.storagePath}</small>
                       </td>
                       <td>
-                        {asset.links.length > 0
-                          ? asset.links.map((link) => (
-                              <span key={link.id}>
-                                {link.entityType}: {link.entityId}
-                              </span>
-                            ))
-                          : t('library.noLinkedEntity')}
+                        {asset.links.length > 0 ? (
+                          <div className="library-link-list">
+                            {asset.links.map((link) => {
+                              const linkLabel = `${link.entityType}: ${link.entityId}`;
+
+                              return (
+                                <div className="library-link-item" key={link.id}>
+                                  {editingLinkId === link.id ? (
+                                    <form className="library-link-form" onSubmit={handleLinkSubmit}>
+                                      <label>
+                                        {t('library.editLinkedEntityTypeLabel')}
+                                        <select
+                                          value={linkForm.entityType}
+                                          onChange={(event) =>
+                                            setLinkForm((current) => ({
+                                              ...current,
+                                              entityType: event.target.value as MediaLinkEntityType,
+                                            }))
+                                          }
+                                        >
+                                          {linkEntityTypes.map((entityType) => (
+                                            <option key={entityType} value={entityType}>
+                                              {entityType}
+                                            </option>
+                                          ))}
+                                        </select>
+                                      </label>
+                                      <label>
+                                        {t('library.editLinkedEntityIdLabel')}
+                                        <input
+                                          required
+                                          value={linkForm.entityId}
+                                          onChange={(event) =>
+                                            setLinkForm((current) => ({ ...current, entityId: event.target.value }))
+                                          }
+                                        />
+                                      </label>
+                                      <div className="library-link-actions">
+                                        <button type="submit">{t('library.updateLinkSubmit')}</button>
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            setEditingLinkId(null);
+                                            setLinkForm({ entityType: 'song', entityId: '' });
+                                          }}
+                                        >
+                                          {t('library.cancelEdit')}
+                                        </button>
+                                      </div>
+                                    </form>
+                                  ) : (
+                                    <>
+                                      <span>{linkLabel}</span>
+                                      <div className="library-link-actions">
+                                        <button
+                                          type="button"
+                                          aria-label={`${t('library.editLinkAction')} ${linkLabel}`}
+                                          onClick={() => handleEditLink(link)}
+                                        >
+                                          {t('library.editLinkAction')}
+                                        </button>
+                                        <button
+                                          type="button"
+                                          aria-label={`${t('library.deleteLinkAction')} ${linkLabel}`}
+                                          onClick={() => handleDeleteLink(link.id)}
+                                        >
+                                          {t('library.deleteLinkAction')}
+                                        </button>
+                                      </div>
+                                    </>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        ) : (
+                          t('library.noLinkedEntity')
+                        )}
                       </td>
                       <td>{asset.notes || t('library.noNotes')}</td>
                       <td>

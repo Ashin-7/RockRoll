@@ -188,12 +188,40 @@ describe('media.service', () => {
     expect(deleteEqMock).toHaveBeenCalledWith('id', 'media-1');
   });
 
+  it('updates a media link in Supabase', async () => {
+    updateEqMock.mockResolvedValue({ error: null });
+    const { updateMediaLink } = await import('./media.service');
+
+    await updateMediaLink('link-1', {
+      entityType: 'album',
+      entityId: 'album-2',
+    });
+
+    expect(fromMock).toHaveBeenCalledWith('media_links');
+    expect(updateMock).toHaveBeenCalledWith({
+      entity_type: 'album',
+      entity_id: 'album-2',
+    });
+    expect(updateEqMock).toHaveBeenCalledWith('id', 'link-1');
+  });
+
+  it('deletes a media link in Supabase', async () => {
+    deleteEqMock.mockResolvedValue({ error: null });
+    const { deleteMediaLink } = await import('./media.service');
+
+    await deleteMediaLink('link-1');
+
+    expect(fromMock).toHaveBeenCalledWith('media_links');
+    expect(deleteMock).toHaveBeenCalledWith();
+    expect(deleteEqMock).toHaveBeenCalledWith('id', 'link-1');
+  });
+
   it('uses local demo media assets when Supabase is not configured', async () => {
     getSupabaseMock.mockImplementation(() => {
       throw new Error('Missing VITE_SUPABASE_URL');
     });
     window.localStorage.setItem('rockroll.demoSession', JSON.stringify({ user: { id: 'local-demo-user' } }));
-    const { createMediaAsset, listMediaAssets } = await import('./media.service');
+    const { createMediaAsset, deleteMediaLink, listMediaAssets, updateMediaLink } = await import('./media.service');
 
     await createMediaAsset({
       fileName: 'demo-link',
@@ -221,6 +249,33 @@ describe('media.service', () => {
             entityId: 'artist-1',
           }),
         ],
+      }),
+    ]);
+
+    const [createdAsset] = await listMediaAssets();
+    const linkId = createdAsset.links[0].id;
+
+    await updateMediaLink(linkId, {
+      entityType: 'album',
+      entityId: 'album-1',
+    });
+
+    await expect(listMediaAssets()).resolves.toEqual([
+      expect.objectContaining({
+        links: [
+          expect.objectContaining({
+            entityType: 'album',
+            entityId: 'album-1',
+          }),
+        ],
+      }),
+    ]);
+
+    await deleteMediaLink(linkId);
+
+    await expect(listMediaAssets()).resolves.toEqual([
+      expect.objectContaining({
+        links: [],
       }),
     ]);
   });

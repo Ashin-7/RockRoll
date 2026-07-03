@@ -32,3 +32,8 @@ export interface CreateMediaAssetInput {
 }
 
 export type UpdateMediaAssetInput = CreateMediaAssetInput;
+
+export interface UpdateMediaLinkInput {
+  entityType: MediaLinkEntityType;
+  entityId: string;
+}

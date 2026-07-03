@@ -6,6 +6,7 @@ import {
   MediaLinkSummary,
   MediaType,
   UpdateMediaAssetInput,
+  UpdateMediaLinkInput,
 } from './media.types';
 
 interface MediaLinkRow {
@@ -280,6 +281,74 @@ export async function deleteMediaAsset(mediaAssetId: string): Promise<void> {
   }
 
   const { error } = await supabase.from('media_assets').delete().eq('id', mediaAssetId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+}
+
+export async function updateMediaLink(mediaLinkId: string, input: UpdateMediaLinkInput): Promise<void> {
+  let supabase: ReturnType<typeof getSupabase>;
+  try {
+    supabase = getSupabase();
+  } catch (caughtError) {
+    if (isMissingSupabaseEnvError(caughtError)) {
+      if (!hasDemoSession()) {
+        throw new Error('Sign in before editing media links.');
+      }
+      writeDemoMediaAssets(
+        readDemoMediaAssets().map((asset) => ({
+          ...asset,
+          links: asset.links.map((link) =>
+            link.id === mediaLinkId
+              ? {
+                  ...link,
+                  entityType: input.entityType,
+                  entityId: input.entityId,
+                }
+              : link,
+          ),
+        })),
+      );
+      return;
+    }
+    throw caughtError;
+  }
+
+  const { error } = await supabase
+    .from('media_links')
+    .update({
+      entity_type: input.entityType,
+      entity_id: input.entityId,
+    })
+    .eq('id', mediaLinkId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+}
+
+export async function deleteMediaLink(mediaLinkId: string): Promise<void> {
+  let supabase: ReturnType<typeof getSupabase>;
+  try {
+    supabase = getSupabase();
+  } catch (caughtError) {
+    if (isMissingSupabaseEnvError(caughtError)) {
+      if (!hasDemoSession()) {
+        throw new Error('Sign in before deleting media links.');
+      }
+      writeDemoMediaAssets(
+        readDemoMediaAssets().map((asset) => ({
+          ...asset,
+          links: asset.links.filter((link) => link.id !== mediaLinkId),
+        })),
+      );
+      return;
+    }
+    throw caughtError;
+  }
+
+  const { error } = await supabase.from('media_links').delete().eq('id', mediaLinkId);
 
   if (error) {
     throw new Error(error.message);

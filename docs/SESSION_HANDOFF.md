@@ -1,5 +1,71 @@
 # RockRoll 会话交接
 
+## 本轮补充：Media Link Edit / Delete
+
+### 完成内容
+
+- Library 媒体资产列表的 Linked entity 单元格增加 Edit link / Delete link 操作。
+- 点击 Edit link 会在当前 link 行内打开小型编辑表单。
+- 编辑提交只更新 media link 的关联对象类型与关联对象 ID。
+- 点击 Delete link 会删除指定 media link 并刷新媒体资产列表。
+- Supabase 与 Demo Mode 均支持 media link 编辑 / 删除。
+- 补充英文与中文 i18n 文案。
+- 补充 Media service 与 Library page 测试。
+
+### 修改文件
+
+- `docs/PROJECT_STATUS.md`
+- `docs/NEXT_TASKS.md`
+- `docs/SESSION_HANDOFF.md`
+- `src/features/library/LibraryPage.css`
+- `src/features/library/LibraryPage.test.tsx`
+- `src/features/library/LibraryPage.tsx`
+- `src/features/library/media.service.test.ts`
+- `src/features/library/media.service.ts`
+- `src/features/library/media.types.ts`
+- `src/i18n/messages.ts`
+
+### 验证命令和结果
+
+```powershell
+npm test -- --run src/features/library
+npm run build
+```
+
+结果：
+- Library 测试通过：2 个测试文件、16 个用例。
+- 构建通过。
+
+环境说明：
+- 使用本机已有 Node `v20.20.2` 的 npm 完成验证。
+- 未运行 `npm install`。
+
+### 未完成事项
+
+- Archive Collection 编辑 / 删除尚未实现。
+- 正式导入写库尚未实现。
+- 文件上传、播放器、预览器仍未实现。
+
+### 下一轮推荐提示词
+
+```text
+继续 RockRoll 项目开发。
+请只读取：
+- AGENTS.md
+- docs/PROJECT_STATUS.md
+- docs/NEXT_TASKS.md
+- docs/SESSION_HANDOFF.md
+- 当前任务相关 feature 目录
+
+继续 docs/NEXT_TASKS.md 中的下一个任务。
+不要扫描整个仓库。
+不要运行 npm install。
+不要做架构重构。
+完成后中文总结。
+```
+
+更新时间：2026-07-03
+
 ## 本轮补充：Archive Item Edit / Delete
 
 ### 完成内容

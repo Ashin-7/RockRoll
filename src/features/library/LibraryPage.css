@@ -155,6 +155,34 @@
   white-space: nowrap;
 }
 
+.library-link-list,
+.library-link-item,
+.library-link-form {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.library-link-item {
+  align-items: start;
+}
+
+.library-link-form label {
+  display: grid;
+  gap: 0.25rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.library-link-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.library-link-actions button {
+  white-space: nowrap;
+}
+
 @media (min-width: 860px) {
   .library-workspace {
     grid-template-columns: minmax(18rem, 0.8fr) minmax(0, 1.2fr);
