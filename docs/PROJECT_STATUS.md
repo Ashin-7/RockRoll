@@ -1,5 +1,20 @@
 # RockRoll 项目状态
 
+## 本轮补充：Inbox / Library CRUD UI Pattern
+
+- 已完成 Inbox 与 Library 的 CRUD UI Pattern 收口：
+  - Inbox 首页补齐后台式指标区、Import workflow 分区、Preview output 分区和候选导入行列表。
+  - Inbox Anontraveler 预览结果补充 Preview collection 与 Album samples 展示。
+  - Library 首页补齐 Assets filed / Linked assets / Media types 指标区。
+  - Library 媒体创建表单调整为 Asset identity / Storage profile / Optional link 分区。
+  - Library 媒体资产列表调整为 Asset / Media type / Storage / Linked entity / Notes 行列表。
+- 本轮未修改 Supabase schema、路由、依赖或构建配置。
+- 验证结果：
+  - `npm test -- --run src/features/inbox src/features/library`
+  - 结果：6 个测试文件、19 个用例通过。
+
+更新时间：2026-07-03
+
 ## 本轮补充：Practice Supabase Progress Fields
 
 - 已完成 Practice 目标时长、完成度与标签的真实 Supabase 持久化映射：

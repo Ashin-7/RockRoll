@@ -1,5 +1,34 @@
 # RockRoll 下一阶段任务
 
+## 本轮完成：Inbox / Library CRUD UI Pattern
+
+状态：已完成本地 UI Pattern 收口，待提交。
+
+完成范围：
+- Inbox 首页补齐后台式指标区、Import workflow 分区、Preview output 分区和候选导入行列表。
+- Inbox Anontraveler 预览结果补充 Preview collection 与 Album samples 展示。
+- Library 首页补齐 Assets filed / Linked assets / Media types 指标区。
+- Library 媒体创建表单调整为 Asset identity / Storage profile / Optional link 分区。
+- Library 媒体资产列表调整为 Asset / Media type / Storage / Linked entity / Notes 行列表。
+- 不包含 Media Asset 编辑 / 删除，不包含正式导入写库，不包含 Supabase schema 变更。
+
+验证：
+- `npm test -- --run src/features/inbox src/features/library`
+- 结果：6 个测试文件、19 个用例通过。
+
+下一步建议先做：
+1. 提交 Inbox / Library CRUD UI Pattern 收口改动。
+2. 如继续开发，优先进入 Media Asset 编辑 / 删除或 Archive Item 编辑 / 删除。
+
+下一轮建议只读取：
+- `AGENTS.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/NEXT_TASKS.md`
+- `docs/SESSION_HANDOFF.md`
+- 当前任务相关 feature 目录
+
+更新日期：2026-07-03
+
 ## 本轮完成：Practice Supabase Progress Fields
 
 状态：已完成本地代码映射、完整测试、构建、本地 Docker Postgres 手动验证，并已推送到远程 Supabase 项目完成验证。

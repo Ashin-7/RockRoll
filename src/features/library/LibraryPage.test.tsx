@@ -32,6 +32,11 @@ describe('LibraryPage', () => {
     expect(screen.getByText('Videos')).toBeInTheDocument();
     expect(screen.getByText('Scores')).toBeInTheDocument();
     expect(screen.getByText('Audio')).toBeInTheDocument();
+    expect(screen.getByText('Library sections')).toBeInTheDocument();
+    expect(screen.getByText('Media / create')).toBeInTheDocument();
+    expect(screen.getByText('Asset identity')).toBeInTheDocument();
+    expect(screen.getByText('Storage profile')).toBeInTheDocument();
+    expect(screen.getByText('Optional link')).toBeInTheDocument();
   });
 
   it('loads and renders media assets', async () => {
@@ -39,10 +44,19 @@ describe('LibraryPage', () => {
 
     expect(screen.getByText('Loading media assets...')).toBeInTheDocument();
     expect(await screen.findByText('solo-take.mp4')).toBeInTheDocument();
-    const assetCard = screen.getByText('solo-take.mp4').closest('article');
-    expect(assetCard).not.toBeNull();
-    expect(within(assetCard as HTMLElement).getByText('video')).toBeInTheDocument();
-    expect(within(assetCard as HTMLElement).getByText('song: song-1')).toBeInTheDocument();
+    expect(screen.getByText('Assets filed')).toBeInTheDocument();
+    const totalAssetsCard = screen.getByText('Assets filed').closest('article');
+    expect(totalAssetsCard).not.toBeNull();
+    expect(within(totalAssetsCard as HTMLElement).getByText('1')).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Asset' })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Storage' })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Linked entity' })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Notes' })).toBeInTheDocument();
+    const assetRow = screen.getByText('solo-take.mp4').closest('tr');
+    expect(assetRow).not.toBeNull();
+    expect(within(assetRow as HTMLElement).getByText('video')).toBeInTheDocument();
+    expect(within(assetRow as HTMLElement).getByText('practice')).toBeInTheDocument();
+    expect(within(assetRow as HTMLElement).getByText('song: song-1')).toBeInTheDocument();
   });
 
   it('creates a media asset with an album link and refreshes the list', async () => {

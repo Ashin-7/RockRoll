@@ -1,5 +1,63 @@
 # RockRoll 会话交接
 
+## 本轮补充：Inbox / Library CRUD UI Pattern
+
+### 完成内容
+
+- Inbox 首页补齐后台式指标区、Import workflow 分区、Preview output 分区和候选导入行列表。
+- Inbox Anontraveler 预览结果补充 Preview collection 与 Album samples 展示。
+- Library 首页补齐 Assets filed / Linked assets / Media types 指标区。
+- Library 媒体创建表单调整为 Asset identity / Storage profile / Optional link 分区。
+- Library 媒体资产列表调整为 Asset / Media type / Storage / Linked entity / Notes 行列表。
+
+### 修改文件
+
+- `docs/PROJECT_STATUS.md`
+- `docs/NEXT_TASKS.md`
+- `docs/SESSION_HANDOFF.md`
+- `src/features/inbox/InboxPage.css`
+- `src/features/inbox/InboxPage.test.tsx`
+- `src/features/inbox/InboxPage.tsx`
+- `src/features/library/LibraryPage.css`
+- `src/features/library/LibraryPage.test.tsx`
+- `src/features/library/LibraryPage.tsx`
+
+### 验证命令和结果
+
+```powershell
+npm test -- --run src/features/inbox src/features/library
+```
+
+结果：
+- 6 个测试文件通过。
+- 19 个测试用例通过。
+
+### 未完成事项
+
+- Media Asset 编辑 / 删除尚未实现。
+- 正式导入写库尚未实现。
+- Archive Item 编辑 / 删除尚未实现。
+
+### 下一轮推荐提示词
+
+```text
+继续 RockRoll 项目开发。
+请只读取：
+- AGENTS.md
+- docs/PROJECT_STATUS.md
+- docs/NEXT_TASKS.md
+- docs/SESSION_HANDOFF.md
+- 当前任务相关 feature 目录
+
+继续 docs/NEXT_TASKS.md 中的下一个任务。
+不要扫描整个仓库。
+不要运行 npm install。
+不要做架构重构。
+完成后中文总结。
+```
+
+更新时间：2026-07-03
+
 ## 本轮补充：Practice Supabase Progress Fields
 
 ### 完成内容

@@ -3,9 +3,46 @@
   gap: 1.5rem;
 }
 
+.library-hero {
+  display: grid;
+  gap: 1rem;
+}
+
+.library-hero h1 {
+  margin: 0;
+}
+
+.library-signals {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 0.75rem;
+}
+
+.library-signals article,
+.library-categories article {
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-radius: 8px;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.library-signals span,
+.library-categories span,
+.library-form-heading span {
+  color: #64748b;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.library-signals strong {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 1.65rem;
+}
+
 .library-categories,
-.library-workspace,
-.library-asset-list {
+.library-workspace {
   display: grid;
   gap: 1rem;
 }
@@ -14,10 +51,32 @@
   grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
 }
 
+.library-section-title {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
 .library-form {
   display: grid;
+  gap: 1rem;
+}
+
+.library-form-heading h2 {
+  margin: 0.2rem 0 0;
+}
+
+.library-form fieldset {
+  display: grid;
   gap: 0.75rem;
-  max-width: 38rem;
+  margin: 0;
+  padding: 1rem;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-radius: 8px;
+}
+
+.library-form legend {
+  padding: 0 0.35rem;
+  font-weight: 700;
 }
 
 .library-form label {
@@ -36,11 +95,53 @@
   min-height: 5rem;
 }
 
+.library-form-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
 .library-assets {
   display: grid;
   gap: 0.75rem;
 }
 
-.library-asset-list {
-  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+.library-table-wrap {
+  overflow-x: auto;
+}
+
+.library-asset-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 46rem;
+}
+
+.library-asset-table th,
+.library-asset-table td {
+  padding: 0.75rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.24);
+  text-align: left;
+  vertical-align: top;
+}
+
+.library-asset-table th {
+  color: #475569;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+}
+
+.library-asset-table td span,
+.library-asset-table td small {
+  display: block;
+}
+
+.library-asset-table td small {
+  margin-top: 0.2rem;
+  color: #64748b;
+}
+
+@media (min-width: 860px) {
+  .library-workspace {
+    grid-template-columns: minmax(18rem, 0.8fr) minmax(0, 1.2fr);
+    align-items: start;
+  }
 }

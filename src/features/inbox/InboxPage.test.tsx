@@ -59,6 +59,22 @@ describe('InboxPage', () => {
     expect(screen.getByText('Artist')).toBeInTheDocument();
   });
 
+  it('renders the inbox CRUD UI pattern with metrics, sections, and candidate rows', () => {
+    renderWithI18n(<InboxPage candidates={candidates} />);
+
+    expect(screen.getByText('Candidates filed')).toBeInTheDocument();
+    expect(screen.getByText('Preview sources')).toBeInTheDocument();
+    expect(screen.getByText('Ready preview')).toBeInTheDocument();
+    expect(screen.getByText('Import workflow')).toBeInTheDocument();
+    expect(screen.getByText('Source / Anontraveler')).toBeInTheDocument();
+    expect(screen.getByText('Preview output')).toBeInTheDocument();
+    expect(screen.getByText('Candidate index')).toBeInTheDocument();
+    expect(screen.getByText('Candidate')).toBeInTheDocument();
+    expect(screen.getByText('Source')).toBeInTheDocument();
+    expect(screen.getByText('Type')).toBeInTheDocument();
+    expect(screen.getByText('Summary')).toBeInTheDocument();
+  });
+
   it('renders empty state when no candidates exist', async () => {
     renderWithI18n(<InboxPage onLoadCandidates={vi.fn().mockResolvedValue([])} />);
 
@@ -103,6 +119,8 @@ describe('InboxPage', () => {
     expect(screen.getByText('Albums to preview: 1')).toBeInTheDocument();
     expect(screen.getByText('Archive items to preview: 1')).toBeInTheDocument();
     expect(screen.getByText('Songs skipped: 0')).toBeInTheDocument();
+    expect(screen.getByText('Preview collection')).toBeInTheDocument();
+    expect(screen.getByText('Album samples')).toBeInTheDocument();
     expect(screen.getByText('Please Please Me')).toBeInTheDocument();
   });
 });
