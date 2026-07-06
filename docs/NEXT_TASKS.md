@@ -1,65 +1,149 @@
 ﻿# RockRoll 下一步任务
 
-更新时间：2026-07-03
+更新时间：2026-07-06
 
-## 本轮完成：Auth + Supabase CRUD 最小真实闭环
+## 本轮完成：公共可读资料库与管理员正式导入 MVP
 
-状态：已完成，并已通过真实 Supabase session 手动验证。
+状态：已完成，并已通过 Inbox 相关测试与生产构建验证。
 
 完成范围：
 
-- 真实密码注册 / 登录链路已跑通。
-- Demo Mode 边界已收紧：仅 `VITE_ENABLE_DEMO_MODE=true` 时允许本地 demo session。
-- 缺少 Supabase 环境变量且未开启 Demo Mode 时，不再伪造登录成功。
-- Auth 页面新增独立登录 / 注册体验与密码注册支持。
-- Auth 页面补充注册需邮箱确认时的明确提示与重发确认邮件入口。
-- Auth 页面补充 Supabase CRUD smoke test 成功结果展示。
-- 真实登录用户已完成 `practice_sessions` insert / select / update / delete smoke test。
+- 使用 `profiles.role` 增加管理员角色模型，默认 `user`，管理员为 `admin`。
+- 新增 `public.is_public_library_admin(user_id uuid)` 供 RLS 判断管理员。
+- 给 `artists`、`albums`、`archive_collections`、`archive_items`、`external_sources` 增加 `visibility`。
+- `visibility = 'public'` 的正式资料允许匿名访问读取。
+- 正式资料 public 写入和导入流程仅管理员可执行。
+- `import_jobs`、`import_candidates`、`import_drafts`、`import_review_items` 收紧为管理员私有操作。
+- 新增 `commitPublicImportReviewPlan`，将 Review plan 中的 create / match_existing / skip 按规则提交到正式资料库。
+- 正式导入写入 `visibility = 'public'`，并写入 `external_sources.visibility = 'public'`。
+- Inbox Review plan 增加 25 条 / 页的前端分页。
+- 仅管理员显示 `Commit public import`。
+- 未使用 service role key，未绕过 RLS。
+
+## 追加完成：专辑按导入集合浏览
+
+状态：已完成，并已通过 Albums 相关测试。
+
+完成范围：
+
+- `/albums` 不再展示手动新增专辑表单。
+- `/albums` 以 `archive_collections` 为导入集合分组展示专辑。
+- 集合内专辑按照 `archive_items.position` 排序。
+- 排序严格保留来源链接原始排名；年份型榜单也不得按发行年份重新排序。
+- 专辑卡片展示封面、作者、发行年份、曲风、导入评语。
+- 新增按曲风筛选，当前基于 `external_sources.raw_payload.metadata.styles` 做前端筛选。
+- 本轮未新增 migration。
+
+设计文档：
+
+- `docs/superpowers/specs/2026-07-06-album-import-collection-view-design.md`
 
 验证：
 
-- `npm test -- --run src/features/auth/AuthPage.test.tsx`：15 个用例通过。
-- `npm test -- --run src/features/auth`：2 个测试文件、35 个用例通过。
-- `npm run build`：通过。
-- 浏览器真实 Supabase session smoke test：`Deleted: yes`。
+```powershell
+npm test -- --run src/features/albums
+```
 
-## 导入架构评估结果
+结果：3 个测试文件、17 个用例通过。
 
-既有文档已更新：`docs/IMPORT_ANONTRAVELER.md`。
+## 追加完成：专辑作者绑定修复与集合内分页
 
-结论：
+状态：已完成，并已通过 Inbox / Albums 相关测试与生产构建验证。
 
-- 暂不自建完整后端。
-- 继续使用 Supabase 作为主后端。
-- 匿名旅行者导入采用 Import Inbox-first。
-- 图片、视频、音频采用 Media metadata-first。
-- 大规模后台导入、转码、队列、重试等需求明确后，再引入 Edge Functions、独立 worker 或自建服务。
+完成范围：
 
-导入 MVP 排在 Practice 真实 CRUD UI 验证之后。
+- 修复正式导入时所有专辑作者都绑定到第一位艺人的问题。
+- 正式导入专辑现在按 `review_payload.metadata.artistName` 匹配艺人名称，不再用第一位艺人作为兜底。
+- `/albums` 在每个导入集合内部增加 25 张 / 页分页。
+- 分页不改变集合内原始排名，只切换当前展示范围。
+- 修复并恢复 `src/i18n/messages.ts` 中文文案编码，补齐分页文案。
+
+验证：
+
+```powershell
+npm test -- --run src/features/inbox src/features/albums
+npm run build
+```
+
+结果：7 个测试文件、56 个用例通过；生产构建通过。Vite 有 chunk size 警告，不影响本轮功能。
+
+注意：历史已经导入且作者绑定错误的数据不会被代码自动改正，需要重新导入或单独执行数据修正。
+
+## 追加完成：专辑页排版整理与错绑作者显示修正
+
+状态：已完成，并已通过 Albums / Inbox service 相关测试与生产构建验证。
+
+完成范围：
+
+- `/albums` 重排为更紧凑的资料库视图，降低首屏拥挤感。
+- 长来源 URL 收起为短链接，避免撑开集合标题区。
+- 集合说明限制展示行数。
+- 专辑条目改为行式索引布局，保留排名、封面、作者、年代、曲风、评语。
+- 集合页优先展示导入元数据里的 `artistName`，用于修正历史错绑作者在列表页的显示。
+
+验证：
+
+```powershell
+npm test -- --run src/features/albums
+npm test -- --run src/features/inbox/inbox.service.test.ts
+npm run build
+```
+
+结果：Albums 相关 3 个测试文件、19 个用例通过；Inbox service 16 个用例通过；生产构建通过。
+
+注意：列表页显示已优先使用导入元数据作者，但底层 `albums.artist_id` 如果已经错绑，仍建议清理后重新导入。
+
+验证：
+
+```powershell
+npm test -- --run src/features/inbox
+npm run build
+```
+
+结果：`src/features/inbox` 4 个测试文件、28 个用例通过；生产构建通过。Vite 有 chunk size 警告，不影响本轮功能。
+
+## 管理员初始化
+
+应用 migration 后，需要手动把管理员账号设置为 admin：
+
+```sql
+update public.profiles
+set role = 'admin'
+where id = '<你的用户 uuid>';
+```
 
 ## 当前最高优先级
 
-继续验证真实 Supabase session 下的 Practice CRUD UI。
+推荐任务：`match_existing` 的最小手动匹配 UI / service。
 
 目标：
 
-- 使用真实 Supabase 登录用户。
-- 在 Practice 页面完成最小 UI 闭环：create / list / update / delete。
-- 数据必须绑定当前登录用户 `user_id`。
-- 不使用 Demo Mode 伪造通过。
-- 不使用 service role key。
-- 如遇 RLS / permission 错误，只修 policy，不绕过 RLS。
+- 仅管理员可操作。
+- 最小支持把单条计划从 `create` 标记为 `match_existing`。
+- 允许管理员手动输入 `target_entity_id`。
+- 恢复为 `create` 时清空 `target_entity_id`。
+- 正式提交时 `match_existing` 不创建正式资料，只写公共 `external_sources` 映射。
+- 错误时展示 RLS / permission 信息。
+
+备选任务：
+
+- 正式导入状态追踪，避免重复点击或部分失败后不清楚状态。
+- Review plan 明细展示专辑封面 / 点评 / 年代 / 风格。
+- 专辑封面与曲风正规化：新增正式字段或关联表，减少对 `external_sources.raw_payload` 的依赖。
 
 ## 推荐执行顺序
 
-1. 只读取 Practice 相关实现：`src/features/practice`。
-2. 确认 Practice service 当前 Supabase CRUD 是否已经绑定当前用户。
-3. 检查 Practice 页面是否已有 create / list / update / delete UI。
-4. 使用浏览器真实登录 session 操作 Practice 页面。
-5. 如果 UI 缺少编辑 / 删除入口，只做最小入口补齐，不做大规模 UI 重构。
-6. 如果报 RLS 错误，定位缺少的 policy：select / insert / update / delete。
-7. 验证通过后更新本文档和交接文档。
-8. 下一阶段再启动匿名旅行者导入 MVP。
+1. 只读取本文件、`docs/PROJECT_STATUS.md`、`docs/SESSION_HANDOFF.md`、`src/features/inbox`。
+2. 如涉及权限或 schema，再读取：
+   - `supabase/migrations/20260706023655_add_import_review_items.sql`
+   - `supabase/migrations/20260706034529_public_library_admin_import.sql`
+3. 继续采用 TDD：先补最小 service / UI 测试，再实现。
+4. 完成后运行：
+
+```powershell
+npm test -- --run src/features/inbox
+npm run build
+```
 
 ## 下一轮建议只读取
 
@@ -67,29 +151,17 @@
 - `docs/PROJECT_STATUS.md`
 - `docs/NEXT_TASKS.md`
 - `docs/SESSION_HANDOFF.md`
-- `docs/IMPORT_ANONTRAVELER.md`
-- `src/features/auth`
-- `src/features/practice`
-- `supabase/migrations`
+- `src/features/inbox`
+- 如被当前任务阻塞，再读取最小必要的 `supabase/migrations`
 
 ## 不要做
 
 - 不要扫描整个仓库。
 - 不要运行 `npm install`。
 - 不要做架构重构。
-- 不要扩展新业务功能。
 - 不要引入新的 UI 框架。
+- 不要自建完整后端。
+- 不要做批量抓取、转码、队列、后台 worker。
 - 不要使用 service role key。
 - 不要绕过 RLS。
-
-## 后续候选任务
-
-在 Practice 真实 CRUD UI 验证通过后，优先考虑：
-
-1. 匿名旅行者导入 MVP：小型 JSON / CSV 进入 Inbox preview。
-2. 用户确认后分批写入正式库。
-3. 图片外链或手动上传到 Storage。
-4. 视频 / 音频先保存 metadata 和 Storage path，不做转码。
-5. Song 与 Practice 关联的真实 UI 验证。
-6. Practice History 最小列表。
-7. Practice Statistics 最小统计。
+- 不要让普通用户或匿名用户执行导入写入。

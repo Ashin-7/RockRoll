@@ -53,7 +53,8 @@
 
 .archive-detail-items,
 .archive-detail-form,
-.archive-detail-table {
+.archive-detail-table,
+.archive-detail-item-grid {
   display: grid;
   gap: 1rem;
 }
@@ -128,8 +129,99 @@
   gap: 0.5rem;
 }
 
+.archive-detail-pagination {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: space-between;
+}
+
+.archive-detail-pagination p {
+  color: var(--color-muted, #666);
+  font-weight: 700;
+  margin: 0;
+}
+
+.archive-detail-pagination div {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.archive-detail-item-card {
+  align-items: start;
+  border-bottom: 1px solid var(--color-border, #d7d7d7);
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 5.5rem minmax(0, 1fr) auto;
+  padding: 0.875rem 0;
+}
+
+.archive-detail-item-card__cover {
+  align-items: center;
+  aspect-ratio: 1;
+  background: var(--color-surface-muted, #f4f4f4);
+  border: 1px solid var(--color-border, #d7d7d7);
+  border-radius: 8px;
+  color: var(--color-muted, #666);
+  display: flex;
+  font-size: 0.8rem;
+  font-weight: 700;
+  justify-content: center;
+  overflow: hidden;
+  text-align: center;
+}
+
+.archive-detail-item-card__cover img {
+  height: 100%;
+  object-fit: cover;
+  width: 100%;
+}
+
+.archive-detail-item-card__body {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.archive-detail-item-card__body h3,
+.archive-detail-item-card__body p,
+.archive-detail-item-card__position {
+  margin: 0;
+}
+
+.archive-detail-item-card__position {
+  color: var(--color-muted, #666);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.archive-detail-item-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.archive-detail-item-card__meta span {
+  border: 1px solid var(--color-border, #d7d7d7);
+  border-radius: 999px;
+  color: var(--color-muted, #666);
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1;
+  padding: 0.35rem 0.55rem;
+}
+
 @media (max-width: 760px) {
   .archive-detail-layout {
     grid-template-columns: 1fr;
+  }
+
+  .archive-detail-item-card {
+    grid-template-columns: 4.75rem minmax(0, 1fr);
+  }
+
+  .archive-detail-item-card .archive-detail-row-actions {
+    grid-column: 1 / -1;
   }
 }

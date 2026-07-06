@@ -4,16 +4,26 @@ import {
   AnontravelerPreviewArchiveItem,
   AnontravelerPreviewArtist,
 } from './anontraveler.types';
+import { ImportCandidateSummary } from './inbox.types';
 
 interface AnontravelerArtistPayload {
   _id?: string;
   name?: string;
 }
 
+interface AnontravelerStylePayload {
+  name?: unknown;
+  title?: unknown;
+}
+
 interface AnontravelerAlbumPayload {
   _id?: string;
   title?: string;
+  primary_img?: unknown;
   year?: number;
+  album_type?: unknown;
+  styles?: Array<AnontravelerStylePayload | string>;
+  relate_styles?: Array<AnontravelerStylePayload | string>;
   artists?: AnontravelerArtistPayload[];
 }
 
@@ -63,6 +73,36 @@ function addArtist(artistsById: Map<string, AnontravelerPreviewArtist>, artist?:
   });
 }
 
+function readStyleText(value: unknown): string {
+  if (typeof value === 'string') {
+    return value;
+  }
+
+  if (value && typeof value === 'object') {
+    const record = value as { name?: unknown; title?: unknown };
+    return readStyleText(record.name ?? record.title);
+  }
+
+  return '';
+}
+
+function readStyleName(style: AnontravelerStylePayload | string): string {
+  if (typeof style === 'string') {
+    return style;
+  }
+
+  return readStyleText(style.name ?? style.title);
+}
+
+function readAlbumStyles(album?: AnontravelerAlbumPayload): string[] {
+  const styleNames = [...(album?.styles ?? []), ...(album?.relate_styles ?? [])]
+    .map(readStyleName)
+    .map((styleName) => styleName.trim())
+    .filter(Boolean);
+
+  return Array.from(new Set(styleNames));
+}
+
 function mapPreview(payload: AnontravelerVersionPayload, sourceUrl: string, versionId: string): AnontravelerPreview {
   const article = payload.data?.article;
   const items = payload.data?.items ?? [];
@@ -92,6 +132,9 @@ function mapPreview(payload: AnontravelerVersionPayload, sourceUrl: string, vers
       title,
       artistName,
       releaseYear: typeof album?.year === 'number' ? album.year : null,
+      coverUrl: readStyleText(album?.primary_img),
+      styles: readAlbumStyles(album),
+      albumType: readStyleText(album?.album_type),
       note,
     });
     archiveItems.push({
@@ -118,6 +161,75 @@ function mapPreview(payload: AnontravelerVersionPayload, sourceUrl: string, vers
     archiveItems,
     skippedSongs: 0,
   };
+}
+
+function formatAlbumSubtitle(album: AnontravelerPreviewAlbum): string {
+  return [album.artistName, album.releaseYear ? String(album.releaseYear) : null].filter(Boolean).join(' - ');
+}
+
+function compareNullableRank(leftRank: number | null | undefined, rightRank: number | null | undefined): number {
+  if (typeof leftRank === 'number' && typeof rightRank === 'number') {
+    return leftRank - rightRank;
+  }
+
+  if (typeof leftRank === 'number') {
+    return -1;
+  }
+
+  if (typeof rightRank === 'number') {
+    return 1;
+  }
+
+  return 0;
+}
+
+function compareAlbumCandidates(left: ImportCandidateSummary, right: ImportCandidateSummary): number {
+  const rankOrder = compareNullableRank(left.metadata?.sourceRank, right.metadata?.sourceRank);
+  if (rankOrder !== 0) {
+    return rankOrder;
+  }
+
+  const titleOrder = left.displayTitle.localeCompare(right.displayTitle);
+  if (titleOrder !== 0) {
+    return titleOrder;
+  }
+
+  return left.id.localeCompare(right.id);
+}
+
+export function mapAnontravelerPreviewCandidates(preview: AnontravelerPreview): ImportCandidateSummary[] {
+  const rankByAlbumExternalId = new Map(
+    preview.archiveItems.map((item) => [item.albumExternalId, item.position] as const),
+  );
+  const albumCandidates = preview.albums
+    .map((album) => ({
+      id: `anontraveler:album:${album.externalId}`,
+      entityType: 'album' as const,
+      displayTitle: album.title,
+      displaySubtitle: formatAlbumSubtitle(album),
+      sourceName: 'anontraveler' as const,
+      metadata: {
+        artistName: album.artistName,
+        releaseYear: album.releaseYear,
+        coverUrl: album.coverUrl,
+        styles: album.styles,
+        albumType: album.albumType,
+        note: album.note,
+        sourceRank: rankByAlbumExternalId.get(album.externalId) ?? null,
+      },
+    }))
+    .sort(compareAlbumCandidates);
+
+  return [
+    ...preview.artists.map((artist) => ({
+      id: `anontraveler:artist:${artist.externalId}`,
+      entityType: 'artist' as const,
+      displayTitle: artist.name,
+      displaySubtitle: 'Anontraveler artist candidate',
+      sourceName: 'anontraveler' as const,
+    })),
+    ...albumCandidates,
+  ];
 }
 
 export async function previewAnontravelerImport(url: string): Promise<AnontravelerPreview> {

@@ -24,6 +24,12 @@ export interface ArchiveItemSummary {
   note: string;
   externalSource: string | null;
   externalId: string | null;
+  albumMetadata?: {
+    coverUrl: string;
+    releaseYear: number | null;
+    styles: string[];
+    note: string;
+  } | null;
 }
 
 export interface ArchiveCollectionDetail extends ArchiveCollectionSummary {

@@ -1,51 +1,55 @@
-import { FormEvent, useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useI18n } from '../../i18n/I18nProvider';
-import { AlbumSummary, AlbumType, CreateAlbumInput } from './album.types';
-import { createAlbum, listAlbums } from './albums.service';
+import { AlbumCollectionSummary, AlbumSummary } from './album.types';
+import { listAlbumCollections } from './albums.service';
 import './AlbumListPage.css';
+
+const albumPageSize = 25;
 
 interface AlbumListPageProps {
   albums?: AlbumSummary[];
-  onCreateAlbum?: (input: CreateAlbumInput) => Promise<void>;
-  onLoadAlbums?: () => Promise<AlbumSummary[]>;
+  onLoadAlbumCollections?: () => Promise<AlbumCollectionSummary[]>;
 }
 
-const albumTypes: AlbumType[] = ['album', 'ep', 'live', 'compilation'];
-const albumTypeMessageKeys: Record<AlbumType, 'albums.type.album' | 'albums.type.ep' | 'albums.type.live' | 'albums.type.compilation'> = {
-  album: 'albums.type.album',
-  ep: 'albums.type.ep',
-  live: 'albums.type.live',
-  compilation: 'albums.type.compilation',
-};
+function mapFlatAlbumsToCollection(albums: AlbumSummary[] = []): AlbumCollectionSummary[] {
+  if (albums.length === 0) {
+    return [];
+  }
 
-export function AlbumListPage({ albums, onCreateAlbum = createAlbum, onLoadAlbums = listAlbums }: AlbumListPageProps) {
+  return [
+    {
+      id: 'ungrouped-albums',
+      title: 'Ungrouped albums',
+      source: 'manual',
+      sourceUrl: '',
+      description: '',
+      albums: albums.map((album) => ({
+        ...album,
+        rank: null,
+        coverUrl: '',
+        styles: [],
+        reviewNote: album.notes,
+      })),
+    },
+  ];
+}
+
+export function AlbumListPage({ albums, onLoadAlbumCollections = listAlbumCollections }: AlbumListPageProps) {
   const { t } = useI18n();
   const hasProvidedAlbums = Array.isArray(albums);
-  const [loadedAlbums, setLoadedAlbums] = useState<AlbumSummary[]>(albums ?? []);
+  const [loadedCollections, setLoadedCollections] = useState<AlbumCollectionSummary[]>(() =>
+    mapFlatAlbumsToCollection(albums),
+  );
   const [isLoading, setIsLoading] = useState(!hasProvidedAlbums);
-  const [title, setTitle] = useState('');
-  const [releaseYear, setReleaseYear] = useState('');
-  const [albumType, setAlbumType] = useState<AlbumType>('album');
-  const [notes, setNotes] = useState('');
-  const [message, setMessage] = useState('');
   const [error, setError] = useState('');
-
-  async function loadRealAlbums() {
-    setIsLoading(true);
-    setError('');
-
-    try {
-      setLoadedAlbums(await onLoadAlbums());
-    } catch (caughtError) {
-      setError(caughtError instanceof Error ? caughtError.message : t('albums.loadError'));
-    } finally {
-      setIsLoading(false);
-    }
-  }
+  const [selectedStyle, setSelectedStyle] = useState('');
+  const [collectionPageIndexes, setCollectionPageIndexes] = useState<Record<string, number>>({});
+  const [expandedDescriptionIds, setExpandedDescriptionIds] = useState<Record<string, boolean>>({});
+  const [expandedNoteIds, setExpandedNoteIds] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (hasProvidedAlbums) {
-      setLoadedAlbums(albums);
+      setLoadedCollections(mapFlatAlbumsToCollection(albums));
       setIsLoading(false);
       return;
     }
@@ -57,9 +61,9 @@ export function AlbumListPage({ albums, onCreateAlbum = createAlbum, onLoadAlbum
       setError('');
 
       try {
-        const nextAlbums = await onLoadAlbums();
+        const nextCollections = await onLoadAlbumCollections();
         if (isMounted) {
-          setLoadedAlbums(nextAlbums);
+          setLoadedCollections(nextCollections);
         }
       } catch (caughtError) {
         if (isMounted) {
@@ -77,38 +81,58 @@ export function AlbumListPage({ albums, onCreateAlbum = createAlbum, onLoadAlbum
     return () => {
       isMounted = false;
     };
-  }, [albums, hasProvidedAlbums, onLoadAlbums, t]);
+  }, [albums, hasProvidedAlbums, onLoadAlbumCollections, t]);
 
-  async function handleCreateAlbum(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setError('');
-    setMessage('');
+  const displayCollections = useMemo(
+    () => (hasProvidedAlbums ? mapFlatAlbumsToCollection(albums) : loadedCollections),
+    [albums, hasProvidedAlbums, loadedCollections],
+  );
+  const totalAlbums = displayCollections.reduce((total, collection) => total + collection.albums.length, 0);
+  const styleOptions = useMemo(
+    () =>
+      Array.from(
+        new Set(displayCollections.flatMap((collection) => collection.albums.flatMap((album) => album.styles))),
+      ).sort((left, right) => left.localeCompare(right)),
+    [displayCollections],
+  );
+  const filteredCollections = displayCollections
+    .map((collection) => ({
+      ...collection,
+      albums: selectedStyle
+        ? collection.albums.filter((album) => album.styles.includes(selectedStyle))
+        : collection.albums,
+    }))
+    .filter((collection) => collection.albums.length > 0);
 
-    const nextAlbum: CreateAlbumInput = {
-      title,
-      artistId: null,
-      releaseYear: releaseYear ? Number(releaseYear) : null,
-      albumType,
-      notes,
-    };
+  useEffect(() => {
+    setCollectionPageIndexes({});
+  }, [selectedStyle, displayCollections]);
 
-    try {
-      await onCreateAlbum(nextAlbum);
-      setTitle('');
-      setReleaseYear('');
-      setAlbumType('album');
-      setNotes('');
-      setMessage(t('albums.addSuccess'));
+  useEffect(() => {
+    setExpandedDescriptionIds({});
+    setExpandedNoteIds({});
+  }, [displayCollections]);
 
-      if (!hasProvidedAlbums) {
-        await loadRealAlbums();
-      }
-    } catch (caughtError) {
-      setError(caughtError instanceof Error ? caughtError.message : t('albums.loadError'));
-    }
+  function updateCollectionPage(collectionId: string, nextPageIndex: number) {
+    setCollectionPageIndexes((currentPageIndexes) => ({
+      ...currentPageIndexes,
+      [collectionId]: nextPageIndex,
+    }));
   }
 
-  const displayAlbums = hasProvidedAlbums ? albums : loadedAlbums;
+  function toggleCollectionDescription(collectionId: string) {
+    setExpandedDescriptionIds((currentDescriptionIds) => ({
+      ...currentDescriptionIds,
+      [collectionId]: !currentDescriptionIds[collectionId],
+    }));
+  }
+
+  function toggleAlbumNote(noteId: string) {
+    setExpandedNoteIds((currentNoteIds) => ({
+      ...currentNoteIds,
+      [noteId]: !currentNoteIds[noteId],
+    }));
+  }
 
   return (
     <section className="albums-page">
@@ -118,100 +142,151 @@ export function AlbumListPage({ albums, onCreateAlbum = createAlbum, onLoadAlbum
           <h1>{t('albums.title')}</h1>
         </div>
         <div className="albums-hero__summary">
-          <strong>{displayAlbums.length}</strong>
+          <strong>{totalAlbums}</strong>
           <span>{t('albums.total')}</span>
         </div>
       </div>
 
-      <form className="albums-add-form" onSubmit={handleCreateAlbum}>
-        <div className="albums-add-form__header">
-          <p>{t('albums.formMode')}</p>
-          <h2>{t('albums.addTitle')}</h2>
-        </div>
-
-        <fieldset className="albums-form-section">
-          <legend>
-            <h3>{t('albums.identitySection')}</h3>
-          </legend>
-          <div className="albums-form-grid">
-            <label htmlFor="album-title">
-              {t('albums.titleLabel')}
-              <input id="album-title" onChange={(event) => setTitle(event.target.value)} required value={title} />
-            </label>
-
-            <label htmlFor="album-release-year">
-              {t('albums.releaseYearLabel')}
-              <input
-                id="album-release-year"
-                min="0"
-                onChange={(event) => setReleaseYear(event.target.value)}
-                type="number"
-                value={releaseYear}
-              />
-            </label>
-
-            <label htmlFor="album-type">
-              {t('albums.typeLabel')}
-              <select id="album-type" onChange={(event) => setAlbumType(event.target.value as AlbumType)} value={albumType}>
-                {albumTypes.map((type) => (
-                  <option key={type} value={type}>
-                    {t(albumTypeMessageKeys[type])}
+      <section className="albums-toolbar" aria-label={t('albums.toolbarLabel')}>
+        {!isLoading && displayCollections.length > 0 ? (
+          <div className="albums-filter-bar">
+            <label htmlFor="album-style-filter">
+              {t('albums.styleFilterLabel')}
+              <select
+                id="album-style-filter"
+                value={selectedStyle}
+                onChange={(event) => setSelectedStyle(event.target.value)}
+              >
+                <option value="">{t('albums.allStyles')}</option>
+                {styleOptions.map((styleName) => (
+                  <option key={styleName} value={styleName}>
+                    {styleName}
                   </option>
                 ))}
               </select>
             </label>
           </div>
-        </fieldset>
+        ) : null}
+      </section>
 
-        <fieldset className="albums-form-section">
-          <legend>
-            <h3>{t('albums.notesSection')}</h3>
-          </legend>
-          <label htmlFor="album-notes">
-            {t('albums.notesLabel')}
-            <input id="album-notes" onChange={(event) => setNotes(event.target.value)} value={notes} />
-          </label>
-        </fieldset>
-
-        <div className="albums-add-form__actions">
-          <button type="submit">{t('albums.addSubmit')}</button>
-        </div>
-      </form>
-
-      {message ? <p className="albums-message" role="status">{message}</p> : null}
       {error ? <p className="albums-error" role="alert">{error}</p> : null}
       {isLoading ? <p className="albums-loading">{t('albums.loading')}</p> : null}
 
-      {!isLoading && displayAlbums.length === 0 ? <p className="albums-empty">{t('albums.empty')}</p> : null}
+      {!isLoading && displayCollections.length === 0 ? <p className="albums-empty">{t('albums.empty')}</p> : null}
 
-      {!isLoading && displayAlbums.length > 0 ? (
-        <div className="albums-table-wrap">
-          <table className="albums-table">
-            <thead>
-              <tr>
-                <th scope="col">{t('albums.columnAlbum')}</th>
-                <th scope="col">{t('albums.columnArtist')}</th>
-                <th scope="col">{t('albums.columnRelease')}</th>
-                <th scope="col">{t('albums.columnType')}</th>
-                <th scope="col">{t('albums.columnNotes')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {displayAlbums.map((album) => (
-                <tr key={album.id}>
-                  <td className="albums-table__title">
-                    <a href={`#album/${encodeURIComponent(album.id)}`}>{album.title}</a>
-                  </td>
-                  <td>{album.artistName || t('albums.unknown')}</td>
-                  <td>{album.releaseYear ?? t('albums.unknown')}</td>
-                  <td>
-                    <span className="albums-table__badge">{t(albumTypeMessageKeys[album.albumType])}</span>
-                  </td>
-                  <td>{album.notes || t('albums.noNotes')}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      {!isLoading && displayCollections.length > 0 && filteredCollections.length === 0 ? (
+        <p className="albums-empty">{t('albums.noStyleResults')}</p>
+      ) : null}
+
+      {!isLoading && filteredCollections.length > 0 ? (
+        <div className="albums-collections">
+          {filteredCollections.map((collection) => {
+            const pageCount = Math.max(1, Math.ceil(collection.albums.length / albumPageSize));
+            const currentPageIndex = Math.min(collectionPageIndexes[collection.id] ?? 0, pageCount - 1);
+            const startIndex = currentPageIndex * albumPageSize;
+            const endIndex = Math.min(startIndex + albumPageSize, collection.albums.length);
+            const pageAlbums = collection.albums.slice(startIndex, endIndex);
+            const isDescriptionExpanded = Boolean(expandedDescriptionIds[collection.id]);
+
+            return (
+              <section className="albums-collection" key={collection.id}>
+                <header className="albums-collection__header">
+                  <div>
+                    <p>{collection.source}</p>
+                    <h2>{collection.title}</h2>
+                    {collection.description ? (
+                      <div className="albums-collection__description">
+                        <span className={isDescriptionExpanded ? 'is-expanded' : ''}>{collection.description}</span>
+                        <button
+                          type="button"
+                          aria-expanded={isDescriptionExpanded}
+                          onClick={() => toggleCollectionDescription(collection.id)}
+                        >
+                          {isDescriptionExpanded ? t('albums.collapseDescription') : t('albums.expandDescription')}
+                        </button>
+                      </div>
+                    ) : null}
+                  </div>
+                  <div className="albums-collection__meta">
+                    <span>
+                      {t('albums.collectionCount').replace('{count}', String(collection.albums.length))}
+                    </span>
+                    {collection.sourceUrl ? <a href={collection.sourceUrl}>{t('albums.openSourceLink')}</a> : null}
+                  </div>
+                </header>
+
+                <div className="albums-collection__list">
+                  {pageAlbums.map((album) => {
+                    const noteId = `${collection.id}:${album.id}`;
+                    const noteText = album.reviewNote || album.notes || t('albums.noNotes');
+                    const isNoteExpanded = Boolean(expandedNoteIds[noteId]);
+
+                    return (
+                      <article className="albums-card" key={`${collection.id}:${album.id}`}>
+                        <div className="albums-card__rank">{album.rank ? `#${album.rank}` : t('albums.noRank')}</div>
+                        <div className="albums-card__cover">
+                          {album.coverUrl ? (
+                            <img src={album.coverUrl} alt={`${album.title} ${t('albums.coverAltSuffix')}`} loading="lazy" />
+                          ) : (
+                            <span>{t('albums.noCover')}</span>
+                          )}
+                        </div>
+                        <div className="albums-card__body">
+                          <h3>
+                            <a href={`#album/${encodeURIComponent(album.id)}`}>{album.title}</a>
+                          </h3>
+                          <div className="albums-card__meta">
+                            <span>{album.artistName || t('albums.unknown')}</span>
+                            <span>{album.releaseYear ?? t('albums.unknown')}</span>
+                          </div>
+                          {album.styles.length > 0 ? (
+                            <div className="albums-card__styles">
+                              {album.styles.map((styleName) => (
+                                <span key={styleName}>{styleName}</span>
+                              ))}
+                            </div>
+                          ) : null}
+                        </div>
+                        <button
+                          type="button"
+                          className={`albums-card__note${isNoteExpanded ? ' is-expanded' : ''}`}
+                          aria-expanded={isNoteExpanded}
+                          onClick={() => toggleAlbumNote(noteId)}
+                        >
+                          {noteText}
+                        </button>
+                      </article>
+                    );
+                  })}
+                </div>
+
+                <div className="albums-collection__pagination" aria-label={t('albums.collectionPaginationLabel')}>
+                  <p>
+                    {t('albums.collectionPaginationRange')
+                      .replace('{start}', String(startIndex + 1))
+                      .replace('{end}', String(endIndex))
+                      .replace('{total}', String(collection.albums.length))}
+                  </p>
+                  <div>
+                    <button
+                      type="button"
+                      disabled={currentPageIndex === 0}
+                      onClick={() => updateCollectionPage(collection.id, currentPageIndex - 1)}
+                    >
+                      {t('albums.previousPage')}
+                    </button>
+                    <button
+                      type="button"
+                      disabled={currentPageIndex >= pageCount - 1}
+                      onClick={() => updateCollectionPage(collection.id, currentPageIndex + 1)}
+                    >
+                      {t('albums.nextPage')}
+                    </button>
+                  </div>
+                </div>
+              </section>
+            );
+          })}
         </div>
       ) : null}
     </section>

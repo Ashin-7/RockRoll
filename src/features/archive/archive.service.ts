@@ -31,6 +31,11 @@ interface ArchiveItemRow {
   external_id: string | null;
 }
 
+interface ExternalSourceRow {
+  entity_id: string;
+  raw_payload: unknown;
+}
+
 interface DemoArchiveItem extends ArchiveItemSummary {
   collectionId: string;
 }
@@ -66,6 +71,45 @@ function mapItemRow(item: ArchiveItemRow): ArchiveItemSummary {
     externalSource: item.external_source,
     externalId: item.external_id,
   };
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function readString(value: unknown): string {
+  return typeof value === 'string' ? value : '';
+}
+
+function readNumberOrNull(value: unknown): number | null {
+  return typeof value === 'number' ? value : null;
+}
+
+function readStringArray(value: unknown): string[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.filter((item): item is string => typeof item === 'string' && item.trim().length > 0);
+}
+
+function mapAlbumMetadataRows(rows: ExternalSourceRow[]): Map<string, NonNullable<ArchiveItemSummary['albumMetadata']>> {
+  return new Map(
+    rows.map((row) => {
+      const payload = isRecord(row.raw_payload) ? row.raw_payload : {};
+      const metadata = isRecord(payload.metadata) ? payload.metadata : {};
+
+      return [
+        row.entity_id,
+        {
+          coverUrl: readString(metadata.coverUrl),
+          releaseYear: readNumberOrNull(metadata.releaseYear),
+          styles: readStringArray(metadata.styles),
+          note: readString(metadata.note),
+        },
+      ];
+    }),
+  );
 }
 
 function isMissingSupabaseEnvError(error: unknown): boolean {
@@ -293,9 +337,36 @@ export async function getArchiveCollectionById(collectionId: string): Promise<Ar
     throw new Error(itemError.message);
   }
 
+  const items = ((itemData ?? []) as ArchiveItemRow[]).map(mapItemRow);
+  const albumEntityIds = Array.from(
+    new Set(items.filter((item) => item.entityType === 'album').map((item) => item.entityId)),
+  );
+  let albumMetadataByEntityId = new Map<string, NonNullable<ArchiveItemSummary['albumMetadata']>>();
+
+  if (albumEntityIds.length > 0) {
+    const { data: externalSourceData, error: externalSourceError } = await supabase
+      .from('external_sources')
+      .select('entity_id,raw_payload')
+      .eq('entity_type', 'album')
+      .in('entity_id', albumEntityIds);
+
+    if (externalSourceError) {
+      throw new Error(externalSourceError.message);
+    }
+
+    albumMetadataByEntityId = mapAlbumMetadataRows((externalSourceData ?? []) as ExternalSourceRow[]);
+  }
+
   return {
     ...mapCollectionRow(collectionData as ArchiveCollectionRow),
-    items: ((itemData ?? []) as ArchiveItemRow[]).map(mapItemRow),
+    items: items.map((item) =>
+      albumMetadataByEntityId.has(item.entityId)
+        ? {
+            ...item,
+            albumMetadata: albumMetadataByEntityId.get(item.entityId) ?? null,
+          }
+        : item,
+    ),
   };
 }
 

@@ -8,6 +8,9 @@ export interface AnontravelerPreviewAlbum {
   title: string;
   artistName: string;
   releaseYear: number | null;
+  coverUrl: string;
+  styles: string[];
+  albumType: string;
   note: string;
 }
 

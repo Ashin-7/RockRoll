@@ -19,6 +19,8 @@ interface ItemFormState {
   note: string;
 }
 
+const itemPageSize = 25;
+
 const initialItemForm: ItemFormState = {
   entityId: '',
   displayTitle: '',
@@ -39,6 +41,7 @@ export function ArchiveDetailPage({
   const [editingItem, setEditingItem] = useState<ArchiveItemSummary | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [itemPageIndex, setItemPageIndex] = useState(0);
 
   async function loadCollection() {
     if (!archiveId) {
@@ -52,6 +55,7 @@ export function ArchiveDetailPage({
     setError(null);
     try {
       setCollection(await onLoadCollection(archiveId));
+      setItemPageIndex(0);
     } catch (caughtError) {
       setError(caughtError instanceof Error ? caughtError.message : t('archiveDetail.loadError'));
     } finally {
@@ -133,6 +137,16 @@ export function ArchiveDetailPage({
     return <p>{t('archiveDetail.notFound')}</p>;
   }
 
+  const itemPageCount = Math.max(1, Math.ceil(collection.items.length / itemPageSize));
+  const safeItemPageIndex = Math.min(itemPageIndex, itemPageCount - 1);
+  const currentItemStart = safeItemPageIndex * itemPageSize;
+  const currentItemEnd = Math.min(currentItemStart + itemPageSize, collection.items.length);
+  const currentItems = collection.items.slice(currentItemStart, currentItemEnd);
+  const itemRangeText = t('archiveDetail.itemPaginationRange')
+    .replace('{start}', String(collection.items.length === 0 ? 0 : currentItemStart + 1))
+    .replace('{end}', String(currentItemEnd))
+    .replace('{total}', String(collection.items.length));
+
   return (
     <section className="archive-detail-page">
       <header className="archive-detail-hero">
@@ -169,29 +183,72 @@ export function ArchiveDetailPage({
           </div>
           {collection.items.length === 0 ? <p>{t('archiveDetail.itemsEmpty')}</p> : null}
           {collection.items.length > 0 ? (
-            <div className="archive-detail-table" role="table" aria-label={t('archiveDetail.itemsTitle')}>
-              <div className="archive-detail-table-row archive-detail-table-head" role="row">
-                <span role="columnheader">{t('archiveDetail.columnItem')}</span>
-                <span role="columnheader">{t('archiveDetail.columnPosition')}</span>
-                <span role="columnheader">{t('archiveDetail.columnNote')}</span>
-                <span role="columnheader">{t('archiveDetail.columnActions')}</span>
+            <>
+              <div className="archive-detail-pagination" aria-label={t('archiveDetail.itemPaginationLabel')}>
+                <p>{itemRangeText}</p>
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => setItemPageIndex((current) => Math.max(0, current - 1))}
+                    disabled={safeItemPageIndex === 0}
+                  >
+                    {t('archiveDetail.previousPage')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setItemPageIndex((current) => Math.min(itemPageCount - 1, current + 1))}
+                    disabled={safeItemPageIndex >= itemPageCount - 1}
+                  >
+                    {t('archiveDetail.nextPage')}
+                  </button>
+                </div>
               </div>
-              {collection.items.map((item) => (
-                <article className="archive-detail-table-row" key={item.id} role="row">
-                  <h3 role="cell">{item.displayTitle}</h3>
-                  <p role="cell">{item.position ? `#${item.position}` : t('archiveDetail.noPosition')}</p>
-                  <p role="cell">{item.note || t('archiveDetail.noNote')}</p>
-                  <div className="archive-detail-row-actions" role="cell">
-                    <button type="button" onClick={() => handleEditItem(item)}>
-                      {t('archiveDetail.editAction')}
-                    </button>
-                    <button type="button" onClick={() => handleDeleteItem(item.id)}>
-                      {t('archiveDetail.deleteAction')}
-                    </button>
-                  </div>
-                </article>
-              ))}
-            </div>
+              <div className="archive-detail-item-grid" aria-label={t('archiveDetail.itemsTitle')}>
+                {currentItems.map((item) => {
+                  const itemNote = item.albumMetadata?.note || item.note;
+
+                  return (
+                    <article className="archive-detail-item-card" key={item.id}>
+                      <div className="archive-detail-item-card__cover">
+                        {item.albumMetadata?.coverUrl ? (
+                          <img
+                            src={item.albumMetadata.coverUrl}
+                            alt={`${item.displayTitle} ${t('archiveDetail.coverAltSuffix')}`}
+                            loading="lazy"
+                          />
+                        ) : (
+                          <span>{t('archiveDetail.noCover')}</span>
+                        )}
+                      </div>
+                      <div className="archive-detail-item-card__body">
+                        <div>
+                          <p className="archive-detail-item-card__position">
+                            {item.position ? `#${item.position}` : t('archiveDetail.noPosition')}
+                          </p>
+                          <h3>{item.displayTitle}</h3>
+                        </div>
+                        <div
+                          className="archive-detail-item-card__meta"
+                          aria-label={`${item.displayTitle} ${t('archiveDetail.metadataLabel')}`}
+                        >
+                          {item.albumMetadata?.releaseYear ? <span>{item.albumMetadata.releaseYear}</span> : null}
+                          {item.albumMetadata?.styles.map((styleName) => <span key={styleName}>{styleName}</span>)}
+                        </div>
+                        <p>{itemNote || t('archiveDetail.noNote')}</p>
+                      </div>
+                      <div className="archive-detail-row-actions">
+                        <button type="button" onClick={() => handleEditItem(item)}>
+                          {t('archiveDetail.editAction')}
+                        </button>
+                        <button type="button" onClick={() => handleDeleteItem(item.id)}>
+                          {t('archiveDetail.deleteAction')}
+                        </button>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            </>
           ) : null}
         </section>
 

@@ -41,10 +41,49 @@ describe('ArchiveDetailPage', () => {
     expect(screen.getByText('Please Please Me')).toBeInTheDocument();
     expect(screen.getByText('#1')).toBeInTheDocument();
     expect(screen.getByText('Beat music marker.')).toBeInTheDocument();
-    expect(screen.getByText('Item')).toBeInTheDocument();
-    expect(screen.getByRole('columnheader', { name: 'Position' })).toBeInTheDocument();
-    expect(screen.getByRole('columnheader', { name: 'Note' })).toBeInTheDocument();
-    expect(screen.getByRole('columnheader', { name: 'Actions' })).toBeInTheDocument();
+    expect(screen.getByText('No cover')).toBeInTheDocument();
+    expect(screen.getByText('Showing 1-1 of 1 items')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Previous page' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Next page' })).toBeDisabled();
+  });
+
+  it('renders archive items with imported album metadata and paginates the index', async () => {
+    const user = userEvent.setup();
+    const pagedCollection: ArchiveCollectionDetail = {
+      ...collection,
+      items: Array.from({ length: 26 }, (_, index) => ({
+        ...collection.items[0],
+        id: `item-${index + 1}`,
+        entityId: `album-${index + 1}`,
+        displayTitle: index === 25 ? 'Hidden page album' : `Album ${index + 1}`,
+        position: index + 1,
+        albumMetadata: {
+          coverUrl: 'https://img.example.test/please-please-me.jpg',
+          releaseYear: 1963,
+          styles: ['Beat music', 'Rock'],
+          note: 'Original preview comment.',
+        },
+      })),
+    };
+
+    renderWithI18n(
+      <ArchiveDetailPage archiveId="collection-1" onLoadCollection={vi.fn().mockResolvedValue(pagedCollection)} />,
+    );
+
+    expect(await screen.findByText('Album 1')).toBeInTheDocument();
+    expect(screen.getByAltText('Album 1 cover')).toBeInTheDocument();
+    expect(screen.getAllByText('1963')).toHaveLength(25);
+    expect(screen.getAllByText('Beat music')).toHaveLength(25);
+    expect(screen.getAllByText('Rock')).toHaveLength(25);
+    expect(screen.getAllByText('Original preview comment.')).toHaveLength(25);
+    expect(screen.getByText('Showing 1-25 of 26 items')).toBeInTheDocument();
+    expect(screen.queryByText('Hidden page album')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Next page' }));
+
+    expect(screen.getByText('Hidden page album')).toBeInTheDocument();
+    expect(screen.getByText('Showing 26-26 of 26 items')).toBeInTheDocument();
+    expect(screen.queryByText('Album 1')).not.toBeInTheDocument();
   });
 
   it('adds an album item and reloads the collection', async () => {

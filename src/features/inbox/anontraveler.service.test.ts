@@ -22,7 +22,11 @@ const anontravelerPayload = {
         main_album: {
           _id: 'album-1',
           title: 'Please Please Me',
+          primary_img: 'https://img.example.test/please-please-me.jpg',
           year: 1963,
+          album_type: { index: 1, name: '专辑' },
+          styles: [{ name: { index: 1, name: '节拍音乐' } }, { title: '摇滚' }],
+          relate_styles: ['早期流行/摇滚'],
           artists: [
             {
               _id: 'artist-1',
@@ -118,6 +122,9 @@ describe('anontraveler.service', () => {
           title: 'Please Please Me',
           artistName: 'The Beatles',
           releaseYear: 1963,
+          coverUrl: 'https://img.example.test/please-please-me.jpg',
+          styles: ['节拍音乐', '摇滚', '早期流行/摇滚'],
+          albumType: '专辑',
           note: 'Beat music marker.',
         },
         {
@@ -125,6 +132,9 @@ describe('anontraveler.service', () => {
           title: 'Highway 61 Revisited',
           artistName: 'Bob Dylan',
           releaseYear: 1965,
+          coverUrl: '',
+          styles: [],
+          albumType: '',
           note: 'Folk rock marker.',
         },
       ],
@@ -149,5 +159,108 @@ describe('anontraveler.service', () => {
     expect(fetchMock).toHaveBeenCalledWith('https://www.anontraveler.com/api/rank/version/version-1', {
       headers: { accept: 'application/json' },
     });
+  });
+
+  it('maps an Anontraveler preview into inbox candidate summaries', async () => {
+    const { mapAnontravelerPreviewCandidates } = await import('./anontraveler.service');
+
+    expect(
+      mapAnontravelerPreviewCandidates({
+        versionId: 'version-1',
+        sourceUrl: 'https://www.anontraveler.com/rank/version/version-1',
+        collection: {
+          externalId: 'version-1',
+          title: 'Classic rock guide',
+          description: 'Albums to explore.',
+          source: 'anontraveler',
+          collectionType: 'album_rank',
+        },
+        artists: [{ externalId: 'artist-1', name: 'The Beatles' }],
+        albums: [
+          {
+            externalId: 'album-1',
+          title: 'Please Please Me',
+          artistName: 'The Beatles',
+          releaseYear: 1963,
+          coverUrl: 'https://img.example.test/please-please-me.jpg',
+          styles: ['节拍音乐', '摇滚'],
+          albumType: '专辑',
+          note: 'Beat music marker.',
+        },
+        ],
+        archiveItems: [],
+        skippedSongs: 0,
+      }),
+    ).toEqual([
+      {
+        id: 'anontraveler:artist:artist-1',
+        entityType: 'artist',
+        displayTitle: 'The Beatles',
+        displaySubtitle: 'Anontraveler artist candidate',
+        sourceName: 'anontraveler',
+      },
+      {
+        id: 'anontraveler:album:album-1',
+        entityType: 'album',
+        displayTitle: 'Please Please Me',
+        displaySubtitle: 'The Beatles - 1963',
+        sourceName: 'anontraveler',
+        metadata: {
+          artistName: 'The Beatles',
+          releaseYear: 1963,
+          coverUrl: 'https://img.example.test/please-please-me.jpg',
+          styles: ['节拍音乐', '摇滚'],
+          albumType: '专辑',
+          note: 'Beat music marker.',
+          sourceRank: null,
+        },
+      },
+    ]);
+  });
+  it('maps album source rank from Anontraveler archive item position and sorts albums by that rank', async () => {
+    const { mapAnontravelerPreviewCandidates } = await import('./anontraveler.service');
+
+    const mappedCandidates = mapAnontravelerPreviewCandidates({
+      versionId: 'version-1',
+      sourceUrl: 'https://www.anontraveler.com/rank/version/version-1',
+      collection: {
+        externalId: 'version-1',
+        title: 'Classic rock guide',
+        description: '',
+        source: 'anontraveler',
+        collectionType: 'album_rank',
+      },
+      artists: [],
+      albums: [
+        {
+          externalId: 'album-2',
+          title: 'Rank Two',
+          artistName: 'Artist B',
+          releaseYear: null,
+          coverUrl: '',
+          styles: [],
+          albumType: '',
+          note: '',
+        },
+        {
+          externalId: 'album-1',
+          title: 'Rank One',
+          artistName: 'Artist A',
+          releaseYear: null,
+          coverUrl: '',
+          styles: [],
+          albumType: '',
+          note: '',
+        },
+      ],
+      archiveItems: [
+        { externalId: 'item-2', albumExternalId: 'album-2', displayTitle: 'Rank Two', position: 2, note: '' },
+        { externalId: 'item-1', albumExternalId: 'album-1', displayTitle: 'Rank One', position: 1, note: '' },
+      ],
+      skippedSongs: 0,
+    });
+
+    expect(mappedCandidates.map((candidate) => candidate.displayTitle)).toEqual(['Rank One', 'Rank Two']);
+    expect(mappedCandidates.map((candidate) => candidate.metadata?.sourceRank)).toEqual([1, 2]);
   });
 });

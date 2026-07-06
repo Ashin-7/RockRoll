@@ -1,6 +1,6 @@
 ﻿# 匿名旅行者数据导入评估
 
-更新时间：2026-07-03
+更新时间：2026-07-06
 
 目标页面：
 
@@ -20,6 +20,95 @@ RockRoll 当前不建议立刻自建完整后端。
 4. Worker later。
 
 短期继续使用 Supabase Database + Supabase Storage + RLS。中期如需轻量服务端逻辑，再考虑 Supabase Edge Functions。后期当数据量、转码、队列、重试需求明确后，再补独立 import worker 或自建后端服务。
+
+## 用户确认后正式导入设计评估
+
+当前结论：暂不直接实现写入 `artists` / `albums` / `archive` / `media_assets` 的正式导入按钮。
+
+原因：
+
+- 现有 `import_jobs` + `import_candidates` 已能保存 Import Inbox 草稿，但 `import_candidates` 仍偏“候选摘要”，不足以承载用户确认、匹配结果、跳过原因和正式写入追踪。
+- `ImportEntityType` 当前只有 `artist` / `album` / `song`，匿名旅行者预览中的 Archive Collection / Archive Item 还没有进入候选类型模型。
+- 当前缺少稳定的外部来源映射能力；如果直接按名称写正式库，重复导入同一匿名旅行者页面时容易产生重复 Artist / Album / Archive。
+- 用户确认后的正式导入需要每条正式数据继续绑定真实 Supabase `user_id`，并依赖各正式表自己的 RLS policy，不应使用 service role key 或绕过 RLS。
+
+建议采用两阶段确认模型：
+
+1. Review Plan
+   - 从 `import_candidates` 和匿名旅行者预览 payload 生成“导入计划”。
+   - 对每个 Artist / Album / Archive Collection / Archive Item 标记动作：`create`、`match_existing`、`skip`。
+   - 只展示计划和冲突，不写正式资料库。
+
+2. Commit Confirmed Plan
+   - 用户明确确认后再写正式表。
+   - 写入顺序建议为 Artist -> Album -> Archive Collection -> Archive Item -> Media metadata。
+   - 每一步都写入当前真实用户的 `user_id`，并让 RLS 正常校验。
+   - 写入后记录外部来源映射，避免重复导入。
+
+MVP 最小状态建议：
+
+- `draft`：已保存到 Import Inbox，尚未进入确认计划。
+- `reviewing`：已生成计划，等待用户确认匹配 / 跳过。
+- `ready`：用户已确认可写入正式库。
+- `imported`：正式写入完成。
+- `skipped`：用户跳过。
+- `failed`：正式写入失败，需要展示错误并允许重试。
+
+当前最小可执行下一步不是正式写库，而是先补“外部来源映射与确认计划”的设计 / 数据落点。
+
+推荐新增或确认的能力：
+
+- 外部来源映射：记录 `user_id`、`source_name`、`source_id`、`entity_type`、`entity_id`、`source_url`。
+- 确认计划：记录每条候选的目标动作、匹配到的正式实体 ID、用户跳过原因、失败信息。
+- 幂等约束：同一用户下 `source_name + source_id + entity_type` 不应重复映射到多个正式实体。
+- RLS：映射表与确认计划表都必须按 `user_id = auth.uid()` 隔离，正式导入失败时只修对应 policy，不绕过 RLS。
+
+## 外部来源映射与幂等导入策略
+
+当前结论：复用已有 `external_sources`，不新增第二张外部来源映射表。
+
+原因：
+
+- `external_sources` 已包含 `user_id`、`entity_type`、`entity_id`、`source_name`、`source_id`、`source_url`、`raw_payload`，职责与外部来源映射一致。
+- 原唯一约束是 `user_id + source_name + source_id`，同一个外部 ID 如果后续同时映射到 Archive Collection / Archive Item / Media Asset 会被过早阻塞。
+- MVP 更适合把幂等键收窄为 `user_id + source_name + source_id + entity_type`，避免同一用户同一外部实体类型重复映射到多个正式实体。
+
+本轮新增 migration：
+
+- 扩展 `external_sources.entity_type`，允许 `archive_collection`、`archive_item`、`media_asset`。
+- 调整 `external_sources` 唯一约束为 `user_id + source_name + source_id + entity_type`。
+- 新增 `import_review_items` 作为确认计划落点。
+
+`import_review_items` 的定位：
+
+- 只记录导入计划，不写正式资料库。
+- 可承接 `import_candidates` 之外的 Archive Collection / Archive Item / Media metadata 计划项。
+- 每条计划绑定 `user_id`、`import_job_id`、可选 `import_candidate_id`、`source_name`、`source_id`、`entity_type`。
+- `planned_action` 最小支持 `create`、`match_existing`、`skip`、`failed`。
+- `target_entity_id` 仅在用户选择匹配已有正式实体或正式写入成功后使用。
+- `review_payload` 保存生成计划时需要的轻量上下文，不作为长期正式资料库。
+
+幂等策略：
+
+1. 保存 Inbox 草稿：仍写 `import_jobs` + `import_candidates`，允许用户重复预览，但后续生成计划时按来源键收敛。
+2. 生成确认计划：对同一用户的 `source_name + source_id + entity_type` 使用唯一约束避免重复计划项。
+3. 用户确认正式写入：正式表写入成功后，再写 `external_sources` 映射。
+4. 重复导入同一来源：优先读取 `external_sources` 命中既有正式实体；未命中时读取 `import_review_items` 复用尚未提交的计划。
+
+RLS / 权限策略：
+
+- `import_review_items` 启用 RLS。
+- select / update / delete 限制为 `user_id = auth.uid()`。
+- insert / update 还要求引用的 `import_jobs` 属于当前用户；如有关联 `import_candidate_id`，候选也必须属于当前用户且同属该 import job。
+- 新表显式 `grant select, insert, update, delete to authenticated`，避免 Supabase 新建 public 表未自动暴露到 Data API 时前端不可访问。
+
+暂不做：
+
+- 不做批量抓取。
+- 不做转码、缩略图、波形分析。
+- 不做后台队列或 worker。
+- 不做 service role key 前端写入。
+- 不把匿名旅行者专辑榜条目强行写成 Song。
 
 ## 现有页面与接口观察
 

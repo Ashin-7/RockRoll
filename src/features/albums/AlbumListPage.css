@@ -1,6 +1,6 @@
 .albums-page {
   display: grid;
-  gap: var(--space-8);
+  gap: var(--space-5);
 }
 
 .albums-hero {
@@ -8,29 +8,24 @@
   align-items: flex-end;
   justify-content: space-between;
   gap: var(--space-6);
-  border: 1px solid rgba(167, 162, 154, 0.16);
-  border-radius: calc(var(--radius-panel) * 1.4);
-  background:
-    linear-gradient(135deg, rgba(34, 32, 31, 0.9), rgba(17, 16, 15, 0.88)),
-    repeating-linear-gradient(120deg, rgba(243, 234, 216, 0.04) 0 1px, transparent 1px 10px);
-  box-shadow: var(--shadow-stage);
-  padding: clamp(1.5rem, 4vw, 3.5rem);
+  border-bottom: 1px solid rgba(167, 162, 154, 0.16);
+  padding: 0 0 var(--space-5);
 }
 
 .albums-hero h1 {
   margin: var(--space-2) 0 0;
   font-family: var(--font-display);
-  font-size: clamp(3.2rem, 8vw, 7rem);
-  line-height: 0.85;
+  font-size: clamp(2.6rem, 6vw, 5.25rem);
+  line-height: 0.9;
   text-transform: uppercase;
 }
 
 .albums-hero__summary {
-  min-width: 12rem;
+  min-width: 9rem;
   border: 1px solid rgba(242, 169, 59, 0.24);
-  border-radius: 1rem;
+  border-radius: 0.75rem;
   background: rgba(17, 16, 15, 0.56);
-  padding: var(--space-4);
+  padding: var(--space-3) var(--space-4);
   text-align: right;
 }
 
@@ -220,6 +215,322 @@
   padding: var(--space-8);
 }
 
+.albums-toolbar,
+.albums-filter-bar,
+.albums-collection {
+  border: 1px solid rgba(167, 162, 154, 0.16);
+  border-radius: 0.85rem;
+  background: rgba(34, 32, 31, 0.58);
+}
+
+.albums-toolbar {
+  align-items: center;
+  display: block;
+  padding: var(--space-3);
+}
+
+.albums-toolbar p,
+.albums-collection__header p,
+.albums-card__rank {
+  margin: 0;
+  color: var(--color-silver);
+  font-size: 0.74rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.albums-toolbar h2,
+.albums-collection__header h2,
+.albums-card h3 {
+  margin: 0;
+}
+
+.albums-toolbar h2,
+.albums-collection__header h2 {
+  font-family: var(--font-display);
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.albums-toolbar a,
+.albums-collection__header a,
+.albums-card h3 a {
+  color: var(--color-paper);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.albums-toolbar a:hover,
+.albums-toolbar a:focus-visible,
+.albums-collection__header a:hover,
+.albums-collection__header a:focus-visible,
+.albums-card h3 a:hover,
+.albums-card h3 a:focus-visible {
+  color: var(--color-amber);
+}
+
+.albums-filter-bar {
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  padding: 0;
+}
+
+.albums-filter-bar label {
+  display: grid;
+  gap: var(--space-2);
+  color: var(--color-silver);
+  font-size: 0.74rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.albums-filter-bar select {
+  width: 100%;
+  min-height: 2.5rem;
+  border: 1px solid rgba(167, 162, 154, 0.22);
+  border-radius: 0.5rem;
+  background: rgba(17, 16, 15, 0.74);
+  color: var(--color-paper);
+  padding: 0.65rem 0.75rem;
+}
+
+.albums-collections {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.albums-collection {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-4);
+}
+
+.albums-collection__header {
+  align-items: start;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-4);
+}
+
+.albums-collection__header span {
+  color: var(--color-paper-muted);
+}
+
+.albums-collection__header h2 {
+  max-width: 42rem;
+  font-size: clamp(1.45rem, 3vw, 2.25rem);
+}
+
+.albums-collection__description {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.albums-collection__description span {
+  display: -webkit-box;
+  max-width: 52rem;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.albums-collection__description span.is-expanded {
+  display: block;
+  overflow: visible;
+  -webkit-line-clamp: unset;
+}
+
+.albums-collection__description button {
+  justify-self: start;
+  min-height: 1.75rem;
+  border: 0;
+  background: transparent;
+  color: var(--color-amber);
+  cursor: pointer;
+  font-weight: 700;
+  padding: 0;
+}
+
+.albums-collection__description button:hover,
+.albums-collection__description button:focus-visible {
+  color: var(--color-paper);
+}
+
+.albums-collection__meta {
+  align-items: flex-end;
+  display: grid;
+  gap: var(--space-2);
+  justify-items: end;
+  min-width: 8rem;
+}
+
+.albums-collection__meta span {
+  border: 1px solid rgba(242, 169, 59, 0.22);
+  border-radius: 999px;
+  color: var(--color-amber);
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1;
+  padding: 0.42rem 0.65rem;
+  white-space: nowrap;
+}
+
+.albums-collection__pagination {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  justify-content: space-between;
+}
+
+.albums-collection__pagination p {
+  margin: 0;
+  color: var(--color-paper-muted);
+  font-weight: 700;
+}
+
+.albums-collection__pagination div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.albums-collection__pagination button {
+  min-height: 2.4rem;
+  border: 1px solid rgba(242, 169, 59, 0.34);
+  border-radius: 0.5rem;
+  background: rgba(242, 169, 59, 0.12);
+  color: var(--color-paper);
+  cursor: pointer;
+  font-weight: 700;
+  padding: 0.55rem 0.85rem;
+}
+
+.albums-collection__pagination button:disabled {
+  border-color: rgba(167, 162, 154, 0.14);
+  color: var(--color-silver);
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+.albums-collection__list {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.albums-card {
+  align-items: start;
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: 3.25rem 4.75rem minmax(13rem, 1fr) minmax(14rem, 0.9fr);
+  min-width: 0;
+  border-top: 1px solid rgba(167, 162, 154, 0.12);
+  padding: var(--space-3) 0 0;
+}
+
+.albums-card__rank {
+  padding-top: 0.2rem;
+}
+
+.albums-card__cover {
+  align-items: center;
+  aspect-ratio: 1;
+  border: 1px solid rgba(167, 162, 154, 0.18);
+  border-radius: 0.5rem;
+  background: rgba(17, 16, 15, 0.72);
+  color: var(--color-silver);
+  display: flex;
+  font-size: 0.8rem;
+  font-weight: 700;
+  justify-content: center;
+  overflow: hidden;
+  text-align: center;
+}
+
+.albums-card__cover img {
+  height: 100%;
+  object-fit: cover;
+  width: 100%;
+}
+
+.albums-card__body {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.albums-card__meta,
+.albums-card__styles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.albums-card__meta span,
+.albums-card__styles span {
+  border: 1px solid rgba(167, 162, 154, 0.16);
+  border-radius: 999px;
+  color: var(--color-paper-muted);
+  font-size: 0.78rem;
+  line-height: 1;
+  padding: 0.35rem 0.55rem;
+}
+
+.albums-card__meta span {
+  max-width: 14rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.albums-card__styles span {
+  border-color: rgba(242, 169, 59, 0.24);
+  color: var(--color-amber);
+  font-size: 0.68rem;
+  padding: 0.24rem 0.42rem;
+}
+
+.albums-card__note {
+  display: -webkit-box;
+  width: 100%;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--color-paper-muted);
+  cursor: pointer;
+  font: inherit;
+  line-height: 1.55;
+  margin: 0;
+  overflow: hidden;
+  padding: 0;
+  text-align: left;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.albums-card__note.is-expanded {
+  display: block;
+  overflow: visible;
+  -webkit-line-clamp: unset;
+}
+
+.albums-card__note:hover,
+.albums-card__note:focus-visible {
+  color: var(--color-paper);
+  border-radius: 0;
+}
+
+@media (max-width: 1100px) {
+  .albums-card {
+    grid-template-columns: 3rem 4.5rem minmax(0, 1fr);
+  }
+
+  .albums-card__note {
+    grid-column: 3;
+  }
+}
+
 @media (max-width: 900px) {
   .albums-form-grid {
     grid-template-columns: 1fr;
@@ -228,9 +539,12 @@
 
 @media (max-width: 760px) {
   .albums-hero,
-  .albums-add-form__header {
+  .albums-add-form__header,
+  .albums-toolbar,
+  .albums-collection__header {
     align-items: flex-start;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: 1fr;
   }
 
   .albums-hero__summary {
@@ -243,5 +557,18 @@
 
   .albums-add-form__actions button {
     width: 100%;
+  }
+
+  .albums-card {
+    grid-template-columns: 2.75rem 4.25rem minmax(0, 1fr);
+  }
+
+  .albums-card__note {
+    grid-column: 1 / -1;
+  }
+
+  .albums-collection__meta {
+    align-items: start;
+    justify-items: start;
   }
 }

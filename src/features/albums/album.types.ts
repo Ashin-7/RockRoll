@@ -9,6 +9,22 @@ export interface AlbumSummary {
   notes: string;
 }
 
+export interface AlbumCollectionAlbumSummary extends AlbumSummary {
+  rank: number | null;
+  coverUrl: string;
+  styles: string[];
+  reviewNote: string;
+}
+
+export interface AlbumCollectionSummary {
+  id: string;
+  title: string;
+  source: string;
+  sourceUrl: string;
+  description: string;
+  albums: AlbumCollectionAlbumSummary[];
+}
+
 export type AlbumDetail = AlbumSummary;
 
 export interface CreateAlbumInput {

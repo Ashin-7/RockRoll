@@ -79,15 +79,19 @@
 
 .inbox-workflow,
 .inbox-anontraveler-form,
+.inbox-draft-jobs,
 .inbox-anontraveler-preview,
-.inbox-candidate-index {
+.inbox-candidate-index,
+.inbox-review-plan {
   display: grid;
   gap: var(--space-4);
 }
 
 .inbox-anontraveler-form,
+.inbox-draft-jobs,
 .inbox-anontraveler-preview,
-.inbox-candidate-index {
+.inbox-candidate-index,
+.inbox-review-plan {
   border: 1px solid rgba(167, 162, 154, 0.16);
   border-radius: var(--radius-panel);
   background: rgba(17, 16, 15, 0.48);
@@ -132,9 +136,48 @@
 }
 
 .inbox-anontraveler-preview__counts,
-.inbox-anontraveler-preview__albums {
+.inbox-anontraveler-preview__albums,
+.inbox-anontraveler-preview__actions {
   display: grid;
   gap: var(--space-3);
+}
+
+.inbox-draft-jobs__list {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.inbox-draft-job {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  border: 1px solid rgba(167, 162, 154, 0.16);
+  border-radius: calc(var(--radius-panel) * 0.6);
+  background: rgba(17, 16, 15, 0.42);
+  padding: var(--space-4);
+}
+
+.inbox-draft-job h3,
+.inbox-draft-job p {
+  margin: 0;
+}
+
+.inbox-draft-job h3 {
+  overflow-wrap: anywhere;
+  font-size: 1rem;
+}
+
+.inbox-draft-job p {
+  color: var(--color-paper-muted);
+}
+
+.inbox-draft-job button {
+  flex: 0 0 auto;
+}
+
+.inbox-anontraveler-preview__actions button {
+  justify-self: start;
 }
 
 .inbox-anontraveler-preview__counts {
@@ -143,6 +186,7 @@
 
 .inbox-anontraveler-preview__counts p,
 .inbox-anontraveler-preview__albums p,
+.inbox-anontraveler-preview__actions p,
 .inbox-preview-empty {
   margin: 0;
   color: var(--color-paper-muted);
@@ -163,12 +207,106 @@
   font-size: 1rem;
 }
 
+.inbox-album-preview-card {
+  display: grid;
+  grid-template-columns: 4.5rem minmax(8rem, 13rem) minmax(0, 1fr);
+  align-items: start;
+  gap: var(--space-6);
+}
+
+.inbox-album-preview-card__rank {
+  color: var(--color-paper);
+  font-family: var(--font-display);
+  font-size: 2.8rem;
+  line-height: 0.9;
+}
+
+.inbox-album-preview-card__cover {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  border: 1px solid rgba(167, 162, 154, 0.2);
+  background: rgba(10, 9, 8, 0.48);
+  color: var(--color-silver);
+  overflow: hidden;
+}
+
+.inbox-album-preview-card__cover img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.inbox-album-preview-card__body {
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.inbox-album-preview-card__artist {
+  color: var(--color-paper);
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.inbox-album-preview-card .inbox-album-preview-card__body h4 {
+  margin: 0;
+  color: var(--color-paper);
+  font-size: 1.18rem;
+  line-height: 1.25;
+}
+
+.inbox-album-preview-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-3);
+  color: var(--color-paper-muted);
+  font-size: 0.9rem;
+}
+
+.inbox-album-preview-card__meta span:not(:first-child)::before {
+  content: "* ";
+  color: var(--color-amber);
+}
+
+.inbox-album-preview-card__note {
+  border-top: 1px solid rgba(167, 162, 154, 0.12);
+  padding-top: var(--space-3);
+  line-height: 1.7;
+}
+
 .inbox-candidate-table {
   display: grid;
   gap: var(--space-2);
 }
 
-.inbox-candidate-row {
+.inbox-candidate-index__header,
+.inbox-candidate-index__summary {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  justify-content: space-between;
+}
+
+.inbox-candidate-index__summary p {
+  margin: 0;
+  color: var(--color-paper-muted);
+}
+
+.inbox-candidate-index__summary button {
+  min-width: 8rem;
+}
+
+.inbox-review-plan__table {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.inbox-candidate-row,
+.inbox-review-plan__row {
   display: grid;
   grid-template-columns: minmax(14rem, 1.4fr) minmax(8rem, 0.7fr) minmax(7rem, 0.6fr) minmax(12rem, 1fr);
   align-items: center;
@@ -179,7 +317,12 @@
   padding: var(--space-4);
 }
 
-.inbox-candidate-row--header {
+.inbox-review-plan__row {
+  grid-template-columns: minmax(14rem, 1.3fr) minmax(8rem, 0.7fr) minmax(7rem, 0.6fr) minmax(10rem, 0.8fr) minmax(14rem, 1.2fr);
+}
+
+.inbox-candidate-row--header,
+.inbox-review-plan__row--header {
   border-color: transparent;
   background: transparent;
   color: var(--color-silver);
@@ -190,15 +333,19 @@
 }
 
 .inbox-candidate-row h3,
-.inbox-candidate-row p {
+.inbox-candidate-row p,
+.inbox-review-plan__row h3,
+.inbox-review-plan__row p {
   margin: 0;
 }
 
-.inbox-candidate-row h3 {
+.inbox-candidate-row h3,
+.inbox-review-plan__row h3 {
   font-size: 1rem;
 }
 
-.inbox-candidate-row p {
+.inbox-candidate-row p,
+.inbox-review-plan__row p {
   color: var(--color-paper-muted);
 }
 
@@ -210,8 +357,63 @@
   text-transform: uppercase;
 }
 
-.inbox-candidate-row > span {
+.inbox-candidate-row > span,
+.inbox-review-plan__row > span {
   color: var(--color-amber);
+}
+
+.inbox-review-plan__actions {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.inbox-review-plan__actions label {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.inbox-review-plan__actions label span {
+  color: var(--color-silver);
+  font-size: 0.72rem;
+}
+
+.inbox-review-plan__actions input {
+  width: 100%;
+}
+
+.inbox-review-plan__actions button {
+  justify-self: start;
+}
+
+.inbox-review-plan__toolbar,
+.inbox-review-plan__commit {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  justify-content: space-between;
+  margin-bottom: var(--space-3);
+}
+
+.inbox-review-plan__toolbar p,
+.inbox-review-plan__commit p {
+  color: var(--color-paper-muted);
+  margin: 0;
+}
+
+.inbox-review-plan__toolbar div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.inbox-review-plan__toolbar button,
+.inbox-review-plan__commit button {
+  min-width: 10rem;
+}
+
+.inbox-review-plan__skip-reason {
+  font-size: 0.86rem;
 }
 
 @media (max-width: 760px) {
@@ -220,15 +422,45 @@
   }
 
   .inbox-hero__metrics,
-  .inbox-candidate-row {
+  .inbox-candidate-row,
+  .inbox-review-plan__row,
+  .inbox-album-preview-card {
     grid-template-columns: 1fr;
+  }
+
+  .inbox-album-preview-card__rank {
+    font-size: 2.2rem;
+  }
+
+  .inbox-album-preview-card__cover {
+    width: min(100%, 14rem);
+  }
+
+  .inbox-draft-job {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .inbox-draft-job button {
+    align-self: start;
+  }
+
+  .inbox-candidate-index__header,
+  .inbox-candidate-index__summary {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .inbox-candidate-index__summary button {
+    align-self: start;
   }
 
   .inbox-hero__summary {
     text-align: left;
   }
 
-  .inbox-candidate-row--header {
+  .inbox-candidate-row--header,
+  .inbox-review-plan__row--header {
     display: none;
   }
 }

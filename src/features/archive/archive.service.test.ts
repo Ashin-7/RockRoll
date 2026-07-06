@@ -4,6 +4,7 @@ const orderMock = vi.fn();
 const maybeSingleMock = vi.fn();
 const updateEqMock = vi.fn();
 const deleteEqMock = vi.fn();
+const inMock = vi.fn();
 const eqOrderMock = vi.fn(() => ({ order: orderMock }));
 const eqMaybeSingleMock = vi.fn(() => ({ maybeSingle: maybeSingleMock }));
 const selectMock = vi.fn();
@@ -123,7 +124,11 @@ describe('archive.service', () => {
   });
 
   it('loads a collection detail with ordered items from Supabase', async () => {
-    selectMock.mockReturnValueOnce({ eq: eqMaybeSingleMock }).mockReturnValueOnce({ eq: eqOrderMock });
+    const externalSourceEqMock = vi.fn(() => ({ in: inMock }));
+    selectMock
+      .mockReturnValueOnce({ eq: eqMaybeSingleMock })
+      .mockReturnValueOnce({ eq: eqOrderMock })
+      .mockReturnValueOnce({ eq: externalSourceEqMock });
     maybeSingleMock.mockResolvedValue({
       data: {
         id: 'collection-1',
@@ -150,6 +155,7 @@ describe('archive.service', () => {
       ],
       error: null,
     });
+    inMock.mockResolvedValue({ data: [], error: null });
     const { getArchiveCollectionById } = await import('./archive.service');
 
     await expect(getArchiveCollectionById('collection-1')).resolves.toEqual({
@@ -175,6 +181,75 @@ describe('archive.service', () => {
     expect(fromMock).toHaveBeenCalledWith('archive_collections');
     expect(fromMock).toHaveBeenCalledWith('archive_items');
     expect(orderMock).toHaveBeenCalledWith('position', { ascending: true, nullsFirst: false });
+  });
+
+  it('hydrates archive album items with imported external metadata', async () => {
+    const externalSourceEqMock = vi.fn(() => ({ in: inMock }));
+    selectMock
+      .mockReturnValueOnce({ eq: eqMaybeSingleMock })
+      .mockReturnValueOnce({ eq: eqOrderMock })
+      .mockReturnValueOnce({ eq: externalSourceEqMock });
+    maybeSingleMock.mockResolvedValue({
+      data: {
+        id: 'collection-1',
+        title: 'Classic rock guide',
+        source: 'anontraveler',
+        source_url: 'https://example.test/rank/version/1',
+        description: 'Albums to explore.',
+        collection_type: 'album_rank',
+      },
+      error: null,
+    });
+    orderMock.mockResolvedValue({
+      data: [
+        {
+          id: 'item-1',
+          entity_type: 'album',
+          entity_id: 'album-1',
+          display_title: 'Please Please Me',
+          position: 1,
+          note: 'Beat music marker.',
+          external_source: 'anontraveler',
+          external_id: 'external-item-1',
+        },
+      ],
+      error: null,
+    });
+    inMock.mockResolvedValue({
+      data: [
+        {
+          entity_id: 'album-1',
+          raw_payload: {
+            metadata: {
+              coverUrl: 'https://img.example.test/please-please-me.jpg',
+              releaseYear: 1963,
+              styles: ['Beat music', 'Rock'],
+              note: 'Original preview comment.',
+            },
+          },
+        },
+      ],
+      error: null,
+    });
+    const { getArchiveCollectionById } = await import('./archive.service');
+
+    await expect(getArchiveCollectionById('collection-1')).resolves.toEqual(
+      expect.objectContaining({
+        items: [
+          expect.objectContaining({
+            albumMetadata: {
+              coverUrl: 'https://img.example.test/please-please-me.jpg',
+              releaseYear: 1963,
+              styles: ['Beat music', 'Rock'],
+              note: 'Original preview comment.',
+            },
+          }),
+        ],
+      }),
+    );
+    expect(fromMock).toHaveBeenCalledWith('external_sources');
+    expect(externalSourceEqMock).toHaveBeenCalledWith('entity_type', 'album');
+    expect(inMock).toHaveBeenCalledWith('entity_id', ['album-1']);
   });
 
   it('adds an album item to an archive collection', async () => {
