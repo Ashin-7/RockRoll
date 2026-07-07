@@ -24,6 +24,7 @@ interface AnontravelerAlbumPayload {
   album_type?: unknown;
   styles?: Array<AnontravelerStylePayload | string>;
   relate_styles?: Array<AnontravelerStylePayload | string>;
+  main_artist?: AnontravelerArtistPayload;
   artists?: AnontravelerArtistPayload[];
 }
 
@@ -36,6 +37,15 @@ interface AnontravelerItemPayload {
   main_album?: AnontravelerAlbumPayload;
 }
 
+interface AnontravelerVersionsPayload {
+  data?: {
+    articles?: Array<{
+      _id?: string;
+      is_published?: boolean;
+    }>;
+  };
+}
+
 interface AnontravelerVersionPayload {
   data?: {
     article?: {
@@ -43,22 +53,31 @@ interface AnontravelerVersionPayload {
       title?: string;
       content?: string;
     };
+    info?: {
+      _id?: string;
+      title?: string;
+      desc?: string;
+    };
     items?: AnontravelerItemPayload[];
   };
 }
 
-export function parseAnontravelerVersionUrl(url: string): { versionId: string; apiUrl: string } {
+export function parseAnontravelerVersionUrl(url: string): { versionId: string; apiUrl: string; sourceKind: string } {
   const parsedUrl = new URL(url);
   const isAnontravelerHost = parsedUrl.hostname === 'www.anontraveler.com' || parsedUrl.hostname === 'anontraveler.com';
-  const match = parsedUrl.pathname.match(/^\/rank\/version\/([^/]+)$/);
+  const match = parsedUrl.pathname.match(/^\/rank\/(version|rank)\/([^/]+)$/);
 
   if (!isAnontravelerHost || !match) {
     throw new Error('Only public Anontraveler rank version URLs are supported.');
   }
 
+  const sourceKind = match[1];
+  const versionId = decodeURIComponent(match[2]);
+
   return {
-    versionId: decodeURIComponent(match[1]),
-    apiUrl: `https://www.anontraveler.com/api/rank/version/${decodeURIComponent(match[1])}`,
+    versionId,
+    apiUrl: `https://www.anontraveler.com/api/rank/${sourceKind}/${versionId}`,
+    sourceKind,
   };
 }
 
@@ -103,8 +122,20 @@ function readAlbumStyles(album?: AnontravelerAlbumPayload): string[] {
   return Array.from(new Set(styleNames));
 }
 
-function mapPreview(payload: AnontravelerVersionPayload, sourceUrl: string, versionId: string): AnontravelerPreview {
-  const article = payload.data?.article;
+function buildArchiveItemExternalId(item: AnontravelerItemPayload, versionId: string, albumExternalId: string, position: number | null) {
+  const itemKey = item._id ?? (typeof position === 'number' ? String(position) : 'unknown');
+  return `${versionId}:item:${itemKey}:${albumExternalId}`;
+}
+
+function mapPreview(
+  payload: AnontravelerVersionPayload,
+  sourceUrl: string,
+  versionId: string,
+  noteByAlbumExternalId = new Map<string, string>(),
+): AnontravelerPreview {
+  const article = payload.data?.article ?? payload.data?.info;
+  const description = payload.data?.article?.content ?? payload.data?.info?.desc ?? '';
+  const rankOrderBase = payload.data?.info ? 1 : 0;
   const items = payload.data?.items ?? [];
   const artistsById = new Map<string, AnontravelerPreviewArtist>();
   const albums: AnontravelerPreviewAlbum[] = [];
@@ -114,7 +145,7 @@ function mapPreview(payload: AnontravelerVersionPayload, sourceUrl: string, vers
     const album = item.main_album;
     const albumExternalId = album?._id ?? item.album_id?._id;
     const title = album?.title;
-    const mainArtist = item.main_artist_id ?? album?.artists?.[0];
+    const mainArtist = item.main_artist_id ?? album?.main_artist ?? album?.artists?.[0];
 
     addArtist(artistsById, mainArtist);
     album?.artists?.forEach((artist) => addArtist(artistsById, artist));
@@ -123,9 +154,9 @@ function mapPreview(payload: AnontravelerVersionPayload, sourceUrl: string, vers
       return;
     }
 
-    const artistName = mainArtist?.name ?? album?.artists?.[0]?.name ?? 'Unknown artist';
-    const note = item.content ?? '';
-    const position = typeof item.rank_order === 'number' ? item.rank_order + 1 : null;
+    const artistName = mainArtist?.name ?? album?.main_artist?.name ?? album?.artists?.[0]?.name ?? 'Unknown artist';
+    const note = item.content ?? noteByAlbumExternalId.get(albumExternalId) ?? '';
+    const position = typeof item.rank_order === 'number' ? item.rank_order - rankOrderBase + 1 : null;
 
     albums.push({
       externalId: albumExternalId,
@@ -138,7 +169,7 @@ function mapPreview(payload: AnontravelerVersionPayload, sourceUrl: string, vers
       note,
     });
     archiveItems.push({
-      externalId: item._id ?? albumExternalId,
+      externalId: buildArchiveItemExternalId(item, versionId, albumExternalId, position),
       albumExternalId,
       displayTitle: title,
       position,
@@ -152,7 +183,7 @@ function mapPreview(payload: AnontravelerVersionPayload, sourceUrl: string, vers
     collection: {
       externalId: article?._id ?? versionId,
       title: article?.title ?? 'Anontraveler rank version',
-      description: article?.content ?? '',
+      description,
       source: 'anontraveler',
       collectionType: 'album_rank',
     },
@@ -232,8 +263,7 @@ export function mapAnontravelerPreviewCandidates(preview: AnontravelerPreview): 
   ];
 }
 
-export async function previewAnontravelerImport(url: string): Promise<AnontravelerPreview> {
-  const { apiUrl, versionId } = parseAnontravelerVersionUrl(url);
+async function fetchAnontravelerJson<T>(apiUrl: string): Promise<T> {
   const response = await fetch(apiUrl, {
     headers: { accept: 'application/json' },
   });
@@ -242,5 +272,36 @@ export async function previewAnontravelerImport(url: string): Promise<Anontravel
     throw new Error('Unable to load Anontraveler preview.');
   }
 
-  return mapPreview((await response.json()) as AnontravelerVersionPayload, url, versionId);
+  return (await response.json()) as T;
+}
+
+async function loadRankVersionNotes(rankId: string): Promise<Map<string, string>> {
+  try {
+    const versions = await fetchAnontravelerJson<AnontravelerVersionsPayload>(
+      `https://www.anontraveler.com/api/rank/versions/${rankId}`,
+    );
+    const versionId = versions.data?.articles?.find((article) => article.is_published !== false)?._id;
+    if (!versionId) {
+      return new Map();
+    }
+
+    const detail = await fetchAnontravelerJson<AnontravelerVersionPayload>(
+      `https://www.anontraveler.com/api/rank/version/${versionId}`,
+    );
+    return new Map(
+      (detail.data?.items ?? [])
+        .map((item) => [item.main_album?._id ?? item.album_id?._id ?? '', item.content?.trim() ?? ''] as const)
+        .filter(([albumExternalId, note]) => albumExternalId && note),
+    );
+  } catch {
+    return new Map();
+  }
+}
+
+export async function previewAnontravelerImport(url: string): Promise<AnontravelerPreview> {
+  const { apiUrl, versionId, sourceKind } = parseAnontravelerVersionUrl(url);
+  const payload = await fetchAnontravelerJson<AnontravelerVersionPayload>(apiUrl);
+  const noteByAlbumExternalId = sourceKind === 'rank' ? await loadRankVersionNotes(versionId) : new Map<string, string>();
+
+  return mapPreview(payload, url, versionId, noteByAlbumExternalId);
 }

@@ -26,6 +26,31 @@ vi.mock('../../lib/supabase', () => ({
   getSupabase: () => getSupabaseMock(),
 }));
 
+function createTrackedDeferred<T>() {
+  let resolve!: (value: T) => void;
+  let isResolved = false;
+  const promise = new Promise<T>((nextResolve) => {
+    resolve = (value: T) => {
+      isResolved = true;
+      nextResolve(value);
+    };
+  });
+
+  return {
+    promise,
+    resolve,
+    get isResolved() {
+      return isResolved;
+    },
+  };
+}
+
+async function flushMicrotasks(times = 5): Promise<void> {
+  for (let index = 0; index < times; index += 1) {
+    await Promise.resolve();
+  }
+}
+
 describe('albums.service', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -69,6 +94,188 @@ describe('albums.service', () => {
     expect(fromMock).toHaveBeenCalledWith('albums');
     expect(selectMock).toHaveBeenCalledWith('id,title,release_year,album_type,notes,artists(name)');
     expect(orderMock).toHaveBeenCalledWith('updated_at', { ascending: false });
+  });
+
+  it('lists import collection options without loading album rows', async () => {
+    const collectionOrderMock = vi.fn().mockResolvedValue({
+      data: [
+        {
+          id: 'collection-1',
+          title: 'Classic rock guide',
+          source: 'anontraveler',
+          source_url: 'https://example.test/rank/version/1',
+          description: 'Albums to explore.',
+        },
+      ],
+      error: null,
+    });
+    const albumInMock = vi.fn();
+    fromMock.mockImplementation((tableName?: string) => {
+      if (tableName === 'archive_collections') {
+        return {
+          delete: deleteMock,
+          insert: insertMock,
+          select: vi.fn(() => ({ order: collectionOrderMock })),
+          update: updateMock,
+        };
+      }
+      if (tableName === 'albums') {
+        return { delete: deleteMock, insert: insertMock, select: vi.fn(() => ({ in: albumInMock })), update: updateMock };
+      }
+      return { delete: deleteMock, insert: insertMock, select: selectMock, update: updateMock };
+    });
+    const { listAlbumCollectionOptions } = await import('./albums.service');
+
+    await expect(listAlbumCollectionOptions()).resolves.toEqual([
+      {
+        id: 'collection-1',
+        title: 'Classic rock guide',
+        source: 'anontraveler',
+        sourceUrl: 'https://example.test/rank/version/1',
+        description: 'Albums to explore.',
+      },
+    ]);
+    expect(albumInMock).not.toHaveBeenCalled();
+  });
+
+  it('loads a single import collection by id with its albums', async () => {
+    const collectionEqMock = vi.fn().mockResolvedValue({
+      data: [
+        {
+          id: 'collection-1',
+          title: 'Classic rock guide',
+          source: 'anontraveler',
+          source_url: 'https://example.test/rank/version/1',
+          description: 'Albums to explore.',
+        },
+      ],
+      error: null,
+    });
+    const itemOrderMock = vi.fn().mockResolvedValue({
+      data: [{ collection_id: 'collection-1', entity_id: 'album-1', position: 7, note: 'Archive item note.' }],
+      error: null,
+    });
+    const albumInMock = vi.fn().mockResolvedValue({
+      data: [
+        {
+          id: 'album-1',
+          title: 'Axis: Bold as Love',
+          release_year: 1967,
+          album_type: 'album',
+          notes: 'Second studio album.',
+          artists: { name: 'Jimi Hendrix' },
+        },
+      ],
+      error: null,
+    });
+    const externalInMock = vi.fn().mockResolvedValue({ data: [], error: null });
+    const externalEqMock = vi.fn(() => ({ in: externalInMock }));
+    const itemEntityEqMock = vi.fn(() => ({ order: itemOrderMock }));
+    const itemEqMock = vi.fn(() => ({ eq: itemEntityEqMock }));
+    fromMock.mockImplementation((tableName?: string) => {
+      if (tableName === 'archive_collections') {
+        return { delete: deleteMock, insert: insertMock, select: vi.fn(() => ({ eq: collectionEqMock })), update: updateMock };
+      }
+      if (tableName === 'archive_items') {
+        return { delete: deleteMock, insert: insertMock, select: vi.fn(() => ({ eq: itemEqMock })), update: updateMock };
+      }
+      if (tableName === 'albums') {
+        return { delete: deleteMock, insert: insertMock, select: vi.fn(() => ({ in: albumInMock })), update: updateMock };
+      }
+      if (tableName === 'external_sources') {
+        return { delete: deleteMock, insert: insertMock, select: vi.fn(() => ({ eq: externalEqMock })), update: updateMock };
+      }
+      return { delete: deleteMock, insert: insertMock, select: selectMock, update: updateMock };
+    });
+    const { getAlbumCollectionById } = await import('./albums.service');
+
+    await expect(getAlbumCollectionById('collection-1')).resolves.toEqual(
+      expect.objectContaining({
+        id: 'collection-1',
+        albums: [
+          expect.objectContaining({
+            id: 'album-1',
+            title: 'Axis: Bold as Love',
+            rank: 7,
+            reviewNote: 'Archive item note.',
+          }),
+        ],
+      }),
+    );
+    expect(collectionEqMock).toHaveBeenCalledWith('id', 'collection-1');
+    expect(itemEqMock).toHaveBeenCalledWith('collection_id', 'collection-1');
+    expect(itemEntityEqMock).toHaveBeenCalledWith('entity_type', 'album');
+  });
+
+  it('loads only the requested album page for a large collection while keeping the total count', async () => {
+    const collectionEqMock = vi.fn().mockResolvedValue({
+      data: [
+        {
+          id: 'collection-1',
+          title: 'Large import guide',
+          source: 'anontraveler',
+          source_url: 'https://example.test/rank/version/large',
+          description: 'Large import.',
+        },
+      ],
+      error: null,
+    });
+    const itemRangeMock = vi.fn().mockResolvedValue({
+      data: [{ collection_id: 'collection-1', entity_id: 'album-26', position: 26, note: 'Page note.' }],
+      count: 496,
+      error: null,
+    });
+    const itemOrderMock = vi.fn(() => ({ range: itemRangeMock }));
+    const albumInMock = vi.fn().mockResolvedValue({
+      data: [
+        {
+          id: 'album-26',
+          title: 'Album 26',
+          release_year: 1970,
+          album_type: 'album',
+          notes: '',
+          artists: { name: 'Artist 26' },
+        },
+      ],
+      error: null,
+    });
+    const externalInMock = vi.fn().mockResolvedValue({ data: [], error: null });
+    const externalEqMock = vi.fn(() => ({ in: externalInMock }));
+    const itemEntityEqMock = vi.fn(() => ({ order: itemOrderMock }));
+    const itemEqMock = vi.fn(() => ({ eq: itemEntityEqMock }));
+    fromMock.mockImplementation((tableName?: string) => {
+      if (tableName === 'archive_collections') {
+        return { delete: deleteMock, insert: insertMock, select: vi.fn(() => ({ eq: collectionEqMock })), update: updateMock };
+      }
+      if (tableName === 'archive_items') {
+        return {
+          delete: deleteMock,
+          insert: insertMock,
+          select: vi.fn(() => ({ eq: itemEqMock })),
+          update: updateMock,
+        };
+      }
+      if (tableName === 'albums') {
+        return { delete: deleteMock, insert: insertMock, select: vi.fn(() => ({ in: albumInMock })), update: updateMock };
+      }
+      if (tableName === 'external_sources') {
+        return { delete: deleteMock, insert: insertMock, select: vi.fn(() => ({ eq: externalEqMock })), update: updateMock };
+      }
+      return { delete: deleteMock, insert: insertMock, select: selectMock, update: updateMock };
+    });
+    const { getAlbumCollectionById } = await import('./albums.service');
+
+    await expect(getAlbumCollectionById('collection-1', { pageIndex: 1, pageSize: 25 })).resolves.toEqual(
+      expect.objectContaining({
+        id: 'collection-1',
+        totalAlbumCount: 496,
+        albums: [expect.objectContaining({ id: 'album-26', rank: 26 })],
+      }),
+    );
+
+    expect(itemRangeMock).toHaveBeenCalledWith(25, 49);
+    expect(albumInMock).toHaveBeenCalledWith('id', ['album-26']);
+    expect(externalInMock).toHaveBeenCalledWith('entity_id', ['album-26']);
   });
 
   it('lists albums grouped by public import collection with imported metadata', async () => {
@@ -161,6 +368,7 @@ describe('albums.service', () => {
         source: 'anontraveler',
         sourceUrl: 'https://example.test/rank/version/1',
         description: 'Albums to explore.',
+        totalAlbumCount: 1,
         albums: [
           {
             id: 'album-1',
@@ -182,6 +390,132 @@ describe('albums.service', () => {
     expect(albumInMock).toHaveBeenCalledWith('id', ['album-1']);
     expect(externalEqMock).toHaveBeenCalledWith('entity_type', 'album');
     expect(externalInMock).toHaveBeenCalledWith('entity_id', ['album-1']);
+  });
+
+  it('chunks collection album lookups to avoid oversized Supabase in filters', async () => {
+    const collectionOrderMock = vi.fn().mockResolvedValue({
+      data: [
+        {
+          id: 'collection-1',
+          title: 'Large import guide',
+          source: 'anontraveler',
+          source_url: 'https://example.test/rank/version/large',
+          description: 'Large import.',
+        },
+      ],
+      error: null,
+    });
+    const itemRows = Array.from({ length: 251 }, (_, index) => ({
+      collection_id: 'collection-1',
+      entity_id: `album-${index + 1}`,
+      position: index + 1,
+      note: '',
+    }));
+    const itemOrderMock = vi.fn().mockResolvedValue({ data: itemRows, error: null });
+    const albumInMock = vi.fn().mockResolvedValue({ data: [], error: null });
+    const externalInMock = vi.fn().mockResolvedValue({ data: [], error: null });
+    const externalEqMock = vi.fn(() => ({ in: externalInMock }));
+    const itemEqMock = vi.fn(() => ({ order: itemOrderMock }));
+    const itemInMock = vi.fn(() => ({ eq: itemEqMock }));
+    fromMock.mockImplementation((tableName?: string) => {
+      if (tableName === 'archive_collections') {
+        return {
+          delete: deleteMock,
+          insert: insertMock,
+          select: vi.fn(() => ({ order: collectionOrderMock })),
+          update: updateMock,
+        };
+      }
+      if (tableName === 'archive_items') {
+        return { delete: deleteMock, insert: insertMock, select: vi.fn(() => ({ in: itemInMock })), update: updateMock };
+      }
+      if (tableName === 'albums') {
+        return { delete: deleteMock, insert: insertMock, select: vi.fn(() => ({ in: albumInMock })), update: updateMock };
+      }
+      if (tableName === 'external_sources') {
+        return {
+          delete: deleteMock,
+          insert: insertMock,
+          select: vi.fn(() => ({ eq: externalEqMock })),
+          update: updateMock,
+        };
+      }
+      return { delete: deleteMock, insert: insertMock, select: selectMock, update: updateMock };
+    });
+    const { listAlbumCollections } = await import('./albums.service');
+
+    await expect(listAlbumCollections()).resolves.toEqual([
+      expect.objectContaining({ id: 'collection-1', albums: [] }),
+    ]);
+
+    expect(albumInMock).toHaveBeenCalledTimes(2);
+    expect(albumInMock.mock.calls[0][1]).toHaveLength(200);
+    expect(albumInMock.mock.calls[1][1]).toHaveLength(51);
+    expect(externalInMock).toHaveBeenCalledTimes(2);
+    expect(externalInMock.mock.calls[0][1]).toHaveLength(200);
+    expect(externalInMock.mock.calls[1][1]).toHaveLength(51);
+  });
+
+  it('loads large collection album rows and metadata in limited parallel batches', async () => {
+    const collectionEqMock = vi.fn().mockResolvedValue({
+      data: [
+        {
+          id: 'collection-1',
+          title: 'Large import guide',
+          source: 'anontraveler',
+          source_url: 'https://example.test/rank/version/large',
+          description: 'Large import.',
+        },
+      ],
+      error: null,
+    });
+    const itemRows = Array.from({ length: 401 }, (_, index) => ({
+      collection_id: 'collection-1',
+      entity_id: `album-${index + 1}`,
+      position: index + 1,
+      note: '',
+    }));
+    const itemOrderMock = vi.fn().mockResolvedValue({ data: itemRows, error: null });
+    const albumRequests = Array.from({ length: 3 }, () => createTrackedDeferred<{ data: []; error: null }>());
+    const externalRequests = Array.from({ length: 3 }, () => createTrackedDeferred<{ data: []; error: null }>());
+    const albumInMock = vi.fn(() => albumRequests[albumInMock.mock.calls.length - 1].promise);
+    const externalInMock = vi.fn(() => externalRequests[externalInMock.mock.calls.length - 1].promise);
+    const externalEqMock = vi.fn(() => ({ in: externalInMock }));
+    const itemEntityEqMock = vi.fn(() => ({ order: itemOrderMock }));
+    const itemEqMock = vi.fn(() => ({ eq: itemEntityEqMock }));
+    fromMock.mockImplementation((tableName?: string) => {
+      if (tableName === 'archive_collections') {
+        return { delete: deleteMock, insert: insertMock, select: vi.fn(() => ({ eq: collectionEqMock })), update: updateMock };
+      }
+      if (tableName === 'archive_items') {
+        return { delete: deleteMock, insert: insertMock, select: vi.fn(() => ({ eq: itemEqMock })), update: updateMock };
+      }
+      if (tableName === 'albums') {
+        return { delete: deleteMock, insert: insertMock, select: vi.fn(() => ({ in: albumInMock })), update: updateMock };
+      }
+      if (tableName === 'external_sources') {
+        return {
+          delete: deleteMock,
+          insert: insertMock,
+          select: vi.fn(() => ({ eq: externalEqMock })),
+          update: updateMock,
+        };
+      }
+      return { delete: deleteMock, insert: insertMock, select: selectMock, update: updateMock };
+    });
+    const { getAlbumCollectionById } = await import('./albums.service');
+
+    const resultPromise = getAlbumCollectionById('collection-1');
+    await flushMicrotasks();
+
+    expect(albumInMock).toHaveBeenCalledTimes(3);
+    expect(externalInMock).toHaveBeenCalledTimes(3);
+    expect(albumRequests[0].isResolved).toBe(false);
+    expect(externalRequests[0].isResolved).toBe(false);
+
+    albumRequests.forEach((request) => request.resolve({ data: [], error: null }));
+    externalRequests.forEach((request) => request.resolve({ data: [], error: null }));
+    await expect(resultPromise).resolves.toEqual(expect.objectContaining({ id: 'collection-1', albums: [] }));
   });
 
   it('preserves the original source ranking inside each import collection', async () => {

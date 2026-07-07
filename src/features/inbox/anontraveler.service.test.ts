@@ -75,6 +75,7 @@ describe('anontraveler.service', () => {
     ).toEqual({
       versionId: '65f3e6194e5b897fbb0a7bfa',
       apiUrl: 'https://www.anontraveler.com/api/rank/version/65f3e6194e5b897fbb0a7bfa',
+      sourceKind: 'version',
     });
   });
 
@@ -140,14 +141,14 @@ describe('anontraveler.service', () => {
       ],
       archiveItems: [
         {
-          externalId: 'item-1',
+          externalId: 'version-1:item:item-1:album-1',
           albumExternalId: 'album-1',
           displayTitle: 'Please Please Me',
           position: 1,
           note: 'Beat music marker.',
         },
         {
-          externalId: 'item-2',
+          externalId: 'version-1:item:item-2:album-2',
           albumExternalId: 'album-2',
           displayTitle: 'Highway 61 Revisited',
           position: 2,
@@ -159,6 +160,92 @@ describe('anontraveler.service', () => {
     expect(fetchMock).toHaveBeenCalledWith('https://www.anontraveler.com/api/rank/version/version-1', {
       headers: { accept: 'application/json' },
     });
+  });
+
+  it('keeps archive item ids unique per rank when the same album appears in different ranks', async () => {
+    const firstRankPayload = {
+      data: {
+        article: { _id: 'version-a', title: 'First rank', content: '' },
+        items: [
+          {
+            rank_order: 0,
+            album_id: { _id: 'shared-album-1' },
+            main_artist_id: { _id: 'artist-1', name: 'Shared Artist' },
+            main_album: { _id: 'shared-album-1', title: 'Shared Album', artists: [{ _id: 'artist-1', name: 'Shared Artist' }] },
+          },
+        ],
+      },
+    };
+    const secondRankPayload = {
+      data: {
+        article: { _id: 'version-b', title: 'Second rank', content: '' },
+        items: [
+          {
+            rank_order: 0,
+            album_id: { _id: 'shared-album-1' },
+            main_artist_id: { _id: 'artist-1', name: 'Shared Artist' },
+            main_album: { _id: 'shared-album-1', title: 'Shared Album', artists: [{ _id: 'artist-1', name: 'Shared Artist' }] },
+          },
+        ],
+      },
+    };
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => firstRankPayload })
+      .mockResolvedValueOnce({ ok: true, json: async () => secondRankPayload });
+    vi.stubGlobal('fetch', fetchMock);
+    const { previewAnontravelerImport } = await import('./anontraveler.service');
+
+    const firstPreview = await previewAnontravelerImport('https://www.anontraveler.com/rank/version/version-a');
+    const secondPreview = await previewAnontravelerImport('https://www.anontraveler.com/rank/version/version-b');
+
+    expect(firstPreview.albums[0].externalId).toBe('shared-album-1');
+    expect(secondPreview.albums[0].externalId).toBe('shared-album-1');
+    expect(firstPreview.archiveItems[0].externalId).toBe('version-a:item:1:shared-album-1');
+    expect(secondPreview.archiveItems[0].externalId).toBe('version-b:item:1:shared-album-1');
+  });
+
+  it('namespaces archive item ids by rank even when Anontraveler reuses item ids', async () => {
+    const firstRankPayload = {
+      data: {
+        article: { _id: 'version-a', title: 'First rank', content: '' },
+        items: [
+          {
+            _id: 'reused-item-1',
+            rank_order: 0,
+            album_id: { _id: 'shared-album-1' },
+            main_artist_id: { _id: 'artist-1', name: 'Shared Artist' },
+            main_album: { _id: 'shared-album-1', title: 'Shared Album', artists: [{ _id: 'artist-1', name: 'Shared Artist' }] },
+          },
+        ],
+      },
+    };
+    const secondRankPayload = {
+      data: {
+        article: { _id: 'version-b', title: 'Second rank', content: '' },
+        items: [
+          {
+            _id: 'reused-item-1',
+            rank_order: 0,
+            album_id: { _id: 'shared-album-1' },
+            main_artist_id: { _id: 'artist-1', name: 'Shared Artist' },
+            main_album: { _id: 'shared-album-1', title: 'Shared Album', artists: [{ _id: 'artist-1', name: 'Shared Artist' }] },
+          },
+        ],
+      },
+    };
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => firstRankPayload })
+      .mockResolvedValueOnce({ ok: true, json: async () => secondRankPayload });
+    vi.stubGlobal('fetch', fetchMock);
+    const { previewAnontravelerImport } = await import('./anontraveler.service');
+
+    const firstPreview = await previewAnontravelerImport('https://www.anontraveler.com/rank/version/version-a');
+    const secondPreview = await previewAnontravelerImport('https://www.anontraveler.com/rank/version/version-b');
+
+    expect(firstPreview.archiveItems[0].externalId).toBe('version-a:item:reused-item-1:shared-album-1');
+    expect(secondPreview.archiveItems[0].externalId).toBe('version-b:item:reused-item-1:shared-album-1');
   });
 
   it('maps an Anontraveler preview into inbox candidate summaries', async () => {

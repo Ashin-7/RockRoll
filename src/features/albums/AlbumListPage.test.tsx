@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { renderWithI18n } from '../../test/render';
 import { AlbumListPage } from './AlbumListPage';
-import { AlbumCollectionSummary, AlbumSummary } from './album.types';
+import { AlbumCollectionOption, AlbumCollectionSummary, AlbumSummary } from './album.types';
 
 const albums: AlbumSummary[] = [
   {
@@ -40,12 +40,31 @@ const albumCollections: AlbumCollectionSummary[] = [
   },
 ];
 
+const albumCollectionOptions: AlbumCollectionOption[] = albumCollections.map(({ albums: _albums, ...collection }) => collection);
+
 describe('AlbumListPage', () => {
+  it('loads collection titles first and then loads the selected collection albums', async () => {
+    const onLoadAlbumCollectionOptions = vi.fn().mockResolvedValue(albumCollectionOptions);
+    const onLoadAlbumCollection = vi.fn().mockResolvedValue(albumCollections[0]);
+
+    renderWithI18n(
+      <AlbumListPage
+        onLoadAlbumCollectionOptions={onLoadAlbumCollectionOptions}
+        onLoadAlbumCollection={onLoadAlbumCollection}
+      />,
+    );
+
+    expect(await screen.findByLabelText('Collection category')).toBeInTheDocument();
+    expect(onLoadAlbumCollectionOptions).toHaveBeenCalledTimes(1);
+    expect(onLoadAlbumCollection).toHaveBeenCalledWith('collection-1', { pageIndex: 0, pageSize: 25 });
+    expect(await screen.findByText('Axis: Bold as Love')).toBeInTheDocument();
+  });
+
   it('loads and renders albums grouped by import collection', async () => {
     renderWithI18n(<AlbumListPage onLoadAlbumCollections={vi.fn().mockResolvedValue(albumCollections)} />);
 
     expect(screen.getByText('Loading albums...')).toBeInTheDocument();
-    expect(await screen.findByText('Classic rock guide')).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Classic rock guide' })).toBeInTheDocument();
     expect(await screen.findByText('Axis: Bold as Love')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Axis: Bold as Love' })).toHaveAttribute('href', '#album/album-1');
     expect(screen.getByText('Jimi Hendrix')).toBeInTheDocument();
@@ -137,6 +156,50 @@ describe('AlbumListPage', () => {
     expect(screen.getByText('#26')).toBeInTheDocument();
     expect(screen.getByText('Showing 26-26 of 26 albums')).toBeInTheDocument();
     expect(screen.queryByText('Album 1')).not.toBeInTheDocument();
+  });
+
+  it('loads the next collection page from the service when using collection options', async () => {
+    const user = userEvent.setup();
+    const firstPage: AlbumCollectionSummary = {
+      ...albumCollections[0],
+      totalAlbumCount: 26,
+      albums: Array.from({ length: 25 }, (_, index) => ({
+        ...albumCollections[0].albums[0],
+        id: `album-${index + 1}`,
+        title: `Album ${index + 1}`,
+        rank: index + 1,
+      })),
+    };
+    const secondPage: AlbumCollectionSummary = {
+      ...albumCollections[0],
+      totalAlbumCount: 26,
+      albums: [{
+        ...albumCollections[0].albums[0],
+        id: 'album-26',
+        title: 'Album 26',
+        rank: 26,
+      }],
+    };
+    const onLoadAlbumCollection = vi.fn()
+      .mockResolvedValueOnce(firstPage)
+      .mockResolvedValueOnce(secondPage);
+
+    renderWithI18n(
+      <AlbumListPage
+        onLoadAlbumCollectionOptions={vi.fn().mockResolvedValue(albumCollectionOptions)}
+        onLoadAlbumCollection={onLoadAlbumCollection}
+      />,
+    );
+
+    expect(await screen.findByText('Album 1')).toBeInTheDocument();
+    expect(screen.getByText('Showing 1-25 of 26 albums')).toBeInTheDocument();
+    expect(screen.queryByText('Album 26')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Next page' }));
+
+    expect(onLoadAlbumCollection).toHaveBeenLastCalledWith('collection-1', { pageIndex: 1, pageSize: 25 });
+    expect(await screen.findByText('Album 26')).toBeInTheDocument();
+    expect(screen.getByText('Showing 26-26 of 26 albums')).toBeInTheDocument();
   });
 
   it('places collection pagination after the album list', async () => {

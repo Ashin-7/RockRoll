@@ -16,13 +16,22 @@ export interface AlbumCollectionAlbumSummary extends AlbumSummary {
   reviewNote: string;
 }
 
-export interface AlbumCollectionSummary {
+export interface AlbumCollectionOption {
   id: string;
   title: string;
   source: string;
   sourceUrl: string;
   description: string;
+}
+
+export interface AlbumCollectionSummary extends AlbumCollectionOption {
   albums: AlbumCollectionAlbumSummary[];
+  totalAlbumCount?: number;
+}
+
+export interface AlbumCollectionPageInput {
+  pageIndex: number;
+  pageSize: number;
 }
 
 export type AlbumDetail = AlbumSummary;

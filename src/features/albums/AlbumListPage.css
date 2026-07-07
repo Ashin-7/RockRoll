@@ -225,7 +225,8 @@
 
 .albums-toolbar {
   align-items: center;
-  display: block;
+  display: grid;
+  gap: var(--space-3);
   padding: var(--space-3);
 }
 

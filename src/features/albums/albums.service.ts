@@ -1,6 +1,8 @@
 import { getSupabase } from '../../lib/supabase';
 import {
   AlbumCollectionAlbumSummary,
+  AlbumCollectionOption,
+  AlbumCollectionPageInput,
   AlbumCollectionSummary,
   AlbumDetail,
   AlbumSummary,
@@ -39,6 +41,8 @@ interface ExternalSourceRow {
 }
 
 const albumTypes: AlbumType[] = ['album', 'ep', 'live', 'compilation'];
+const supabaseInFilterChunkSize = 200;
+const supabaseBatchConcurrency = 3;
 const demoSessionStorageKey = 'rockroll.demoSession';
 const demoAlbumsStorageKey = 'rockroll.demoAlbums';
 
@@ -62,6 +66,16 @@ function mapAlbumRow(album: AlbumRow): AlbumSummary {
     releaseYear: album.release_year,
     albumType: toAlbumType(album.album_type),
     notes: album.notes,
+  };
+}
+
+function mapCollectionRow(collection: ArchiveCollectionRow): AlbumCollectionOption {
+  return {
+    id: collection.id,
+    title: collection.title,
+    source: collection.source,
+    sourceUrl: collection.source_url,
+    description: collection.description,
   };
 }
 
@@ -96,6 +110,34 @@ function mapExternalMetadataRows(rows: ExternalSourceRow[]) {
           reviewNote: readString(metadata.note),
         },
       ];
+    }),
+  );
+}
+
+function chunkArray<T>(items: T[], chunkSize: number): T[][] {
+  const chunks: T[][] = [];
+  for (let index = 0; index < items.length; index += chunkSize) {
+    chunks.push(items.slice(index, index + chunkSize));
+  }
+
+  return chunks;
+}
+
+async function runWithConcurrency<T>(
+  items: T[],
+  concurrency: number,
+  handler: (item: T) => Promise<void>,
+): Promise<void> {
+  let nextIndex = 0;
+  const workerCount = Math.min(concurrency, items.length);
+
+  await Promise.all(
+    Array.from({ length: workerCount }, async () => {
+      while (nextIndex < items.length) {
+        const currentItem = items[nextIndex];
+        nextIndex += 1;
+        await handler(currentItem);
+      }
     }),
   );
 }
@@ -160,6 +202,182 @@ function findDemoAlbum(albumId: string): AlbumDetail | null {
   return readDemoAlbums().find((demoAlbum) => demoAlbum.id === albumId) ?? null;
 }
 
+async function loadAlbumRowsByIds(supabase: ReturnType<typeof getSupabase>, albumIds: string[]): Promise<AlbumRow[]> {
+  const albumRows: AlbumRow[] = [];
+
+  await runWithConcurrency(chunkArray(albumIds, supabaseInFilterChunkSize), supabaseBatchConcurrency, async (albumIdChunk) => {
+    const { data, error } = await supabase
+      .from('albums')
+      .select('id,title,release_year,album_type,notes,artists(name)')
+      .in('id', albumIdChunk);
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    albumRows.push(...((data ?? []) as AlbumRow[]));
+  });
+
+  return albumRows;
+}
+
+async function loadExternalSourceRowsByAlbumIds(
+  supabase: ReturnType<typeof getSupabase>,
+  albumIds: string[],
+): Promise<ExternalSourceRow[]> {
+  const externalSourceRows: ExternalSourceRow[] = [];
+
+  await runWithConcurrency(chunkArray(albumIds, supabaseInFilterChunkSize), supabaseBatchConcurrency, async (albumIdChunk) => {
+    const { data, error } = await supabase
+      .from('external_sources')
+      .select('entity_id,raw_payload')
+      .eq('entity_type', 'album')
+      .in('entity_id', albumIdChunk);
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    externalSourceRows.push(...((data ?? []) as ExternalSourceRow[]));
+  });
+
+  return externalSourceRows;
+}
+
+async function buildAlbumCollections(
+  supabase: ReturnType<typeof getSupabase>,
+  collections: ArchiveCollectionRow[],
+  items: ArchiveItemRow[],
+  totalAlbumCountByCollectionId: Record<string, number> = {},
+): Promise<AlbumCollectionSummary[]> {
+  const albumIds = Array.from(new Set(items.map((item) => item.entity_id)));
+  if (albumIds.length === 0) {
+    return collections.map((collection) => ({
+      ...mapCollectionRow(collection),
+      totalAlbumCount: totalAlbumCountByCollectionId[collection.id] ?? 0,
+      albums: [],
+    }));
+  }
+
+  const [albumRows, externalSourceRows] = await Promise.all([
+    loadAlbumRowsByIds(supabase, albumIds),
+    loadExternalSourceRowsByAlbumIds(supabase, albumIds),
+  ]);
+  const albumsById = new Map(albumRows.map((album) => [album.id, mapAlbumRow(album)]));
+  const metadataByAlbumId = mapExternalMetadataRows(externalSourceRows);
+  const itemsByCollectionId = items.reduce<Record<string, AlbumCollectionAlbumSummary[]>>((groupedItems, item) => {
+    const album = albumsById.get(item.entity_id);
+    if (!album) {
+      return groupedItems;
+    }
+
+    const metadata = metadataByAlbumId.get(item.entity_id);
+    return {
+      ...groupedItems,
+      [item.collection_id]: [
+        ...(groupedItems[item.collection_id] ?? []),
+        {
+          ...album,
+          artistName: metadata?.artistName || album.artistName,
+          rank: item.position,
+          coverUrl: metadata?.coverUrl ?? '',
+          styles: metadata?.styles ?? [],
+          reviewNote: metadata?.reviewNote || item.note || album.notes,
+        },
+      ],
+    };
+  }, {});
+
+  return collections.map((collection) => ({
+    ...mapCollectionRow(collection),
+    totalAlbumCount: totalAlbumCountByCollectionId[collection.id] ?? itemsByCollectionId[collection.id]?.length ?? 0,
+    albums: [...(itemsByCollectionId[collection.id] ?? [])].sort(compareAlbumRank),
+  }));
+}
+
+export async function listAlbumCollectionOptions(): Promise<AlbumCollectionOption[]> {
+  let supabase: ReturnType<typeof getSupabase>;
+  try {
+    supabase = getSupabase();
+  } catch (caughtError) {
+    if (isMissingSupabaseEnvError(caughtError)) {
+      return mapFlatAlbumsToCollection(readDemoAlbums()).map(({ albums: _albums, ...collection }) => collection);
+    }
+    throw caughtError;
+  }
+
+  const { data, error } = await supabase
+    .from('archive_collections')
+    .select('id,title,source,source_url,description')
+    .order('updated_at', { ascending: false });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return ((data ?? []) as ArchiveCollectionRow[]).map(mapCollectionRow);
+}
+
+export async function getAlbumCollectionById(
+  collectionId: string,
+  page?: AlbumCollectionPageInput,
+): Promise<AlbumCollectionSummary | null> {
+  let supabase: ReturnType<typeof getSupabase>;
+  try {
+    supabase = getSupabase();
+  } catch (caughtError) {
+    if (isMissingSupabaseEnvError(caughtError)) {
+      const collection = mapFlatAlbumsToCollection(readDemoAlbums()).find((demoCollection) => demoCollection.id === collectionId);
+      if (!collection) {
+        return null;
+      }
+      if (!page) {
+        return { ...collection, totalAlbumCount: collection.albums.length };
+      }
+      const start = page.pageIndex * page.pageSize;
+      return {
+        ...collection,
+        totalAlbumCount: collection.albums.length,
+        albums: collection.albums.slice(start, start + page.pageSize),
+      };
+    }
+    throw caughtError;
+  }
+
+  const { data: collectionData, error: collectionError } = await supabase
+    .from('archive_collections')
+    .select('id,title,source,source_url,description')
+    .eq('id', collectionId);
+
+  if (collectionError) {
+    throw new Error(collectionError.message);
+  }
+
+  const collection = ((collectionData ?? []) as ArchiveCollectionRow[])[0];
+  if (!collection) {
+    return null;
+  }
+
+  const itemQuery = supabase
+    .from('archive_items')
+    .select('collection_id,entity_id,position,note', page ? { count: 'exact' } : undefined)
+    .eq('collection_id', collectionId)
+    .eq('entity_type', 'album')
+    .order('position', { ascending: true, nullsFirst: false });
+  const from = page ? page.pageIndex * page.pageSize : 0;
+  const to = page ? from + page.pageSize - 1 : 0;
+  const { data: itemData, error: itemError, count } = await (page ? itemQuery.range(from, to) : itemQuery);
+
+  if (itemError) {
+    throw new Error(itemError.message);
+  }
+
+  const [collectionSummary] = await buildAlbumCollections(supabase, [collection], (itemData ?? []) as ArchiveItemRow[], {
+    [collection.id]: page ? count ?? 0 : ((itemData ?? []) as ArchiveItemRow[]).length,
+  });
+  return collectionSummary ?? null;
+}
+
 export async function listAlbums(): Promise<AlbumSummary[]> {
   let supabase: ReturnType<typeof getSupabase>;
   try {
@@ -220,71 +438,7 @@ export async function listAlbumCollections(): Promise<AlbumCollectionSummary[]> 
     throw new Error(itemError.message);
   }
 
-  const items = (itemData ?? []) as ArchiveItemRow[];
-  const albumIds = Array.from(new Set(items.map((item) => item.entity_id)));
-  if (albumIds.length === 0) {
-    return collections.map((collection) => ({
-      id: collection.id,
-      title: collection.title,
-      source: collection.source,
-      sourceUrl: collection.source_url,
-      description: collection.description,
-      albums: [],
-    }));
-  }
-
-  const { data: albumData, error: albumError } = await supabase
-    .from('albums')
-    .select('id,title,release_year,album_type,notes,artists(name)')
-    .in('id', albumIds);
-
-  if (albumError) {
-    throw new Error(albumError.message);
-  }
-
-  const { data: externalSourceData, error: externalSourceError } = await supabase
-    .from('external_sources')
-    .select('entity_id,raw_payload')
-    .eq('entity_type', 'album')
-    .in('entity_id', albumIds);
-
-  if (externalSourceError) {
-    throw new Error(externalSourceError.message);
-  }
-
-  const albumsById = new Map(((albumData ?? []) as AlbumRow[]).map((album) => [album.id, mapAlbumRow(album)]));
-  const metadataByAlbumId = mapExternalMetadataRows((externalSourceData ?? []) as ExternalSourceRow[]);
-  const itemsByCollectionId = items.reduce<Record<string, AlbumCollectionAlbumSummary[]>>((groupedItems, item) => {
-    const album = albumsById.get(item.entity_id);
-    if (!album) {
-      return groupedItems;
-    }
-
-    const metadata = metadataByAlbumId.get(item.entity_id);
-    return {
-      ...groupedItems,
-      [item.collection_id]: [
-        ...(groupedItems[item.collection_id] ?? []),
-        {
-          ...album,
-          artistName: metadata?.artistName || album.artistName,
-          rank: item.position,
-          coverUrl: metadata?.coverUrl ?? '',
-          styles: metadata?.styles ?? [],
-          reviewNote: metadata?.reviewNote || item.note || album.notes,
-        },
-      ],
-    };
-  }, {});
-
-  return collections.map((collection) => ({
-    id: collection.id,
-    title: collection.title,
-    source: collection.source,
-    sourceUrl: collection.source_url,
-    description: collection.description,
-    albums: [...(itemsByCollectionId[collection.id] ?? [])].sort(compareAlbumRank),
-  }));
+  return buildAlbumCollections(supabase, collections, (itemData ?? []) as ArchiveItemRow[]);
 }
 
 export async function createAlbum(input: CreateAlbumInput): Promise<void> {

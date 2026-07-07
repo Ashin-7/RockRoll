@@ -1,13 +1,18 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useI18n } from '../../i18n/I18nProvider';
-import { AlbumCollectionSummary, AlbumSummary } from './album.types';
-import { listAlbumCollections } from './albums.service';
+import { AlbumCollectionOption, AlbumCollectionPageInput, AlbumCollectionSummary, AlbumSummary } from './album.types';
+import { getAlbumCollectionById, listAlbumCollectionOptions, listAlbumCollections } from './albums.service';
 import './AlbumListPage.css';
 
 const albumPageSize = 25;
 
 interface AlbumListPageProps {
   albums?: AlbumSummary[];
+  onLoadAlbumCollectionOptions?: () => Promise<AlbumCollectionOption[]>;
+  onLoadAlbumCollection?: (
+    collectionId: string,
+    page?: AlbumCollectionPageInput,
+  ) => Promise<AlbumCollectionSummary | null>;
   onLoadAlbumCollections?: () => Promise<AlbumCollectionSummary[]>;
 }
 
@@ -34,12 +39,19 @@ function mapFlatAlbumsToCollection(albums: AlbumSummary[] = []): AlbumCollection
   ];
 }
 
-export function AlbumListPage({ albums, onLoadAlbumCollections = listAlbumCollections }: AlbumListPageProps) {
+export function AlbumListPage({
+  albums,
+  onLoadAlbumCollectionOptions = listAlbumCollectionOptions,
+  onLoadAlbumCollection = getAlbumCollectionById,
+  onLoadAlbumCollections,
+}: AlbumListPageProps) {
   const { t } = useI18n();
   const hasProvidedAlbums = Array.isArray(albums);
   const [loadedCollections, setLoadedCollections] = useState<AlbumCollectionSummary[]>(() =>
     mapFlatAlbumsToCollection(albums),
   );
+  const [collectionOptions, setCollectionOptions] = useState<AlbumCollectionOption[]>([]);
+  const [selectedCollectionId, setSelectedCollectionId] = useState('');
   const [isLoading, setIsLoading] = useState(!hasProvidedAlbums);
   const [error, setError] = useState('');
   const [selectedStyle, setSelectedStyle] = useState('');
@@ -47,8 +59,19 @@ export function AlbumListPage({ albums, onLoadAlbumCollections = listAlbumCollec
   const [expandedDescriptionIds, setExpandedDescriptionIds] = useState<Record<string, boolean>>({});
   const [expandedNoteIds, setExpandedNoteIds] = useState<Record<string, boolean>>({});
 
+  async function loadCollectionPage(collectionId: string, pageIndex: number) {
+    const nextCollection = await onLoadAlbumCollection(collectionId, { pageIndex, pageSize: albumPageSize });
+    setLoadedCollections(nextCollection ? [nextCollection] : []);
+    setCollectionPageIndexes((currentPageIndexes) => ({
+      ...currentPageIndexes,
+      [collectionId]: pageIndex,
+    }));
+  }
+
   useEffect(() => {
     if (hasProvidedAlbums) {
+      setCollectionOptions([]);
+      setSelectedCollectionId('');
       setLoadedCollections(mapFlatAlbumsToCollection(albums));
       setIsLoading(false);
       return;
@@ -61,9 +84,26 @@ export function AlbumListPage({ albums, onLoadAlbumCollections = listAlbumCollec
       setError('');
 
       try {
-        const nextCollections = await onLoadAlbumCollections();
+        if (onLoadAlbumCollections) {
+          const nextCollections = await onLoadAlbumCollections();
+          if (isMounted) {
+            setLoadedCollections(nextCollections);
+            setCollectionOptions(nextCollections.map(({ albums: _albums, ...collection }) => collection));
+            setSelectedCollectionId(nextCollections[0]?.id ?? '');
+          }
+          return;
+        }
+
+        const nextOptions = await onLoadAlbumCollectionOptions();
+        const firstCollectionId = nextOptions[0]?.id ?? '';
+        const firstCollection = firstCollectionId
+          ? await onLoadAlbumCollection(firstCollectionId, { pageIndex: 0, pageSize: albumPageSize })
+          : null;
         if (isMounted) {
-          setLoadedCollections(nextCollections);
+          setCollectionOptions(nextOptions);
+          setSelectedCollectionId(firstCollectionId);
+          setLoadedCollections(firstCollection ? [firstCollection] : []);
+          setCollectionPageIndexes(firstCollectionId ? { [firstCollectionId]: 0 } : {});
         }
       } catch (caughtError) {
         if (isMounted) {
@@ -81,13 +121,24 @@ export function AlbumListPage({ albums, onLoadAlbumCollections = listAlbumCollec
     return () => {
       isMounted = false;
     };
-  }, [albums, hasProvidedAlbums, onLoadAlbumCollections, t]);
+  }, [
+    albums,
+    hasProvidedAlbums,
+    onLoadAlbumCollection,
+    onLoadAlbumCollectionOptions,
+    onLoadAlbumCollections,
+    t,
+  ]);
 
   const displayCollections = useMemo(
     () => (hasProvidedAlbums ? mapFlatAlbumsToCollection(albums) : loadedCollections),
     [albums, hasProvidedAlbums, loadedCollections],
   );
-  const totalAlbums = displayCollections.reduce((total, collection) => total + collection.albums.length, 0);
+  const usesServerPagination = !hasProvidedAlbums && !onLoadAlbumCollections;
+  const totalAlbums = displayCollections.reduce(
+    (total, collection) => total + (collection.totalAlbumCount ?? collection.albums.length),
+    0,
+  );
   const styleOptions = useMemo(
     () =>
       Array.from(
@@ -106,18 +157,46 @@ export function AlbumListPage({ albums, onLoadAlbumCollections = listAlbumCollec
 
   useEffect(() => {
     setCollectionPageIndexes({});
-  }, [selectedStyle, displayCollections]);
+  }, [selectedStyle]);
 
   useEffect(() => {
     setExpandedDescriptionIds({});
     setExpandedNoteIds({});
   }, [displayCollections]);
 
-  function updateCollectionPage(collectionId: string, nextPageIndex: number) {
-    setCollectionPageIndexes((currentPageIndexes) => ({
-      ...currentPageIndexes,
-      [collectionId]: nextPageIndex,
-    }));
+  async function updateCollectionPage(collectionId: string, nextPageIndex: number) {
+    if (hasProvidedAlbums || onLoadAlbumCollections) {
+      setCollectionPageIndexes((currentPageIndexes) => ({
+        ...currentPageIndexes,
+        [collectionId]: nextPageIndex,
+      }));
+      return;
+    }
+
+    setIsLoading(true);
+    setError('');
+    try {
+      await loadCollectionPage(collectionId, nextPageIndex);
+    } catch (caughtError) {
+      setError(caughtError instanceof Error ? caughtError.message : t('albums.loadError'));
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  async function handleSelectCollection(collectionId: string) {
+    setSelectedCollectionId(collectionId);
+    setSelectedStyle('');
+    setIsLoading(true);
+    setError('');
+
+    try {
+      await loadCollectionPage(collectionId, 0);
+    } catch (caughtError) {
+      setError(caughtError instanceof Error ? caughtError.message : t('albums.loadError'));
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   function toggleCollectionDescription(collectionId: string) {
@@ -148,6 +227,24 @@ export function AlbumListPage({ albums, onLoadAlbumCollections = listAlbumCollec
       </div>
 
       <section className="albums-toolbar" aria-label={t('albums.toolbarLabel')}>
+        {!hasProvidedAlbums && collectionOptions.length > 0 ? (
+          <div className="albums-filter-bar">
+            <label htmlFor="album-collection-filter">
+              Collection category
+              <select
+                id="album-collection-filter"
+                value={selectedCollectionId}
+                onChange={(event) => handleSelectCollection(event.target.value)}
+              >
+                {collectionOptions.map((collection) => (
+                  <option key={collection.id} value={collection.id}>
+                    {collection.title}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+        ) : null}
         {!isLoading && displayCollections.length > 0 ? (
           <div className="albums-filter-bar">
             <label htmlFor="album-style-filter">
@@ -181,11 +278,14 @@ export function AlbumListPage({ albums, onLoadAlbumCollections = listAlbumCollec
       {!isLoading && filteredCollections.length > 0 ? (
         <div className="albums-collections">
           {filteredCollections.map((collection) => {
-            const pageCount = Math.max(1, Math.ceil(collection.albums.length / albumPageSize));
+            const collectionAlbumCount = collection.totalAlbumCount ?? collection.albums.length;
+            const pageCount = Math.max(1, Math.ceil(collectionAlbumCount / albumPageSize));
             const currentPageIndex = Math.min(collectionPageIndexes[collection.id] ?? 0, pageCount - 1);
             const startIndex = currentPageIndex * albumPageSize;
-            const endIndex = Math.min(startIndex + albumPageSize, collection.albums.length);
-            const pageAlbums = collection.albums.slice(startIndex, endIndex);
+            const endIndex = Math.min(startIndex + albumPageSize, collectionAlbumCount);
+            const pageAlbums = usesServerPagination
+              ? collection.albums
+              : collection.albums.slice(startIndex, endIndex);
             const isDescriptionExpanded = Boolean(expandedDescriptionIds[collection.id]);
 
             return (
@@ -209,7 +309,7 @@ export function AlbumListPage({ albums, onLoadAlbumCollections = listAlbumCollec
                   </div>
                   <div className="albums-collection__meta">
                     <span>
-                      {t('albums.collectionCount').replace('{count}', String(collection.albums.length))}
+                      {t('albums.collectionCount').replace('{count}', String(collectionAlbumCount))}
                     </span>
                     {collection.sourceUrl ? <a href={collection.sourceUrl}>{t('albums.openSourceLink')}</a> : null}
                   </div>
@@ -265,7 +365,7 @@ export function AlbumListPage({ albums, onLoadAlbumCollections = listAlbumCollec
                     {t('albums.collectionPaginationRange')
                       .replace('{start}', String(startIndex + 1))
                       .replace('{end}', String(endIndex))
-                      .replace('{total}', String(collection.albums.length))}
+                      .replace('{total}', String(collectionAlbumCount))}
                   </p>
                   <div>
                     <button

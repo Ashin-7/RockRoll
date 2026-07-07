@@ -15,6 +15,13 @@ const externalInsertMock = vi.fn();
 const formalSingleMock = vi.fn();
 const formalSelectAfterInsertMock = vi.fn(() => ({ single: formalSingleMock }));
 const formalInsertMock = vi.fn(() => ({ select: formalSelectAfterInsertMock }));
+const formalUpdateEqMock = vi.fn();
+const formalUpdateMock = vi.fn(() => ({ eq: formalUpdateEqMock }));
+const archiveItemMaybeSingleMock = vi.fn();
+const archiveItemEqEntityIdMock = vi.fn(() => ({ maybeSingle: archiveItemMaybeSingleMock }));
+const archiveItemEqEntityTypeMock = vi.fn(() => ({ eq: archiveItemEqEntityIdMock }));
+const archiveItemEqCollectionMock = vi.fn(() => ({ eq: archiveItemEqEntityTypeMock }));
+const archiveItemSelectMock = vi.fn(() => ({ eq: archiveItemEqCollectionMock }));
 const singleMock = vi.fn();
 const selectInsertMock = vi.fn(() => ({ single: singleMock }));
 const jobInsertMock = vi.fn(() => ({ select: selectInsertMock }));
@@ -35,11 +42,16 @@ const candidateSelectMock = vi.fn();
 const candidateInMock = vi.fn();
 const orderMock = vi.fn();
 const selectMock = vi.fn<() => unknown>(() => ({ order: orderMock }));
+const reviewRangeMock = vi.fn();
+const defaultReviewRangeMock = vi.fn();
 const fromMock = vi.fn((tableName: string) => {
   if (tableName === 'profiles') {
     return { select: profileSelectMock };
   }
-  if (tableName === 'artists' || tableName === 'albums' || tableName === 'archive_collections' || tableName === 'archive_items') {
+  if (tableName === 'archive_items') {
+    return { insert: formalInsertMock, select: archiveItemSelectMock, update: formalUpdateMock };
+  }
+  if (tableName === 'artists' || tableName === 'albums' || tableName === 'archive_collections') {
     return { insert: formalInsertMock };
   }
   if (tableName === 'external_sources') {
@@ -65,6 +77,31 @@ vi.mock('../../lib/supabase', () => ({
   getSupabase: () => getSupabaseMock(),
 }));
 
+function createTrackedDeferred<T>() {
+  let resolve!: (value: T) => void;
+  let isResolved = false;
+  const promise = new Promise<T>((nextResolve) => {
+    resolve = (value: T) => {
+      isResolved = true;
+      nextResolve(value);
+    };
+  });
+
+  return {
+    promise,
+    resolve,
+    get isResolved() {
+      return isResolved;
+    },
+  };
+}
+
+async function flushMicrotasks(times = 5): Promise<void> {
+  for (let index = 0; index < times; index += 1) {
+    await Promise.resolve();
+  }
+}
+
 describe('inbox.service', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -83,16 +120,20 @@ describe('inbox.service', () => {
     jobOrderMock.mockReturnValue({ limit: jobLimitMock });
     jobDeleteMock.mockReturnValue({ in: jobDeleteInMock });
     jobDeleteInMock.mockResolvedValue({ error: null });
-    reviewUpsertMock.mockReturnValue({ select: reviewSelectAfterUpsertMock });
+    reviewUpsertMock.mockResolvedValue({ error: null });
     reviewSelectAfterUpsertMock.mockReturnValue({ order: orderMock });
     reviewUpdateMock.mockReturnValue({ select: reviewSelectAfterUpdateMock });
     reviewSelectAfterUpdateMock.mockReturnValue({ eq: reviewEqAfterUpdateMock });
     reviewEqAfterUpdateMock.mockReturnValue({ single: reviewSingleAfterUpdateMock });
+    selectMock.mockReturnValue({ order: orderMock, range: defaultReviewRangeMock });
+    defaultReviewRangeMock.mockImplementation((from: number) => (from === 0 ? orderMock() : { data: [], error: null }));
     profileSingleMock.mockResolvedValue({ data: { role: 'admin' }, error: null });
     externalMaybeSingleMock.mockResolvedValue({ data: null, error: null });
     externalSelectMock.mockReturnValue({ eq: externalEq1Mock });
     externalInMock.mockResolvedValue({ data: [], error: null });
     externalInsertMock.mockResolvedValue({ error: null });
+    formalUpdateEqMock.mockResolvedValue({ error: null });
+    archiveItemMaybeSingleMock.mockResolvedValue({ data: null, error: null });
     formalSingleMock
       .mockResolvedValueOnce({ data: { id: 'artist-created-1' }, error: null })
       .mockResolvedValueOnce({ data: { id: 'album-created-1' }, error: null })
@@ -209,6 +250,26 @@ describe('inbox.service', () => {
     expect(candidateInMock).toHaveBeenCalledWith('import_job_id', ['job-1', 'job-2']);
   });
 
+  it('deletes an import draft job so its candidate index rows cascade away', async () => {
+    const { deleteImportDraftJob } = await import('./inbox.service');
+
+    await expect(deleteImportDraftJob('job-1')).resolves.toEqual({ importJobId: 'job-1' });
+
+    expect(getUserMock).toHaveBeenCalled();
+    expect(fromMock).toHaveBeenCalledWith('profiles');
+    expect(fromMock).toHaveBeenCalledWith('import_jobs');
+    expect(jobDeleteMock).toHaveBeenCalledWith();
+    expect(jobDeleteInMock).toHaveBeenCalledWith('id', ['job-1']);
+  });
+
+  it('rejects deleting import draft jobs for non-admin users', async () => {
+    profileSingleMock.mockResolvedValue({ data: { role: 'user' }, error: null });
+    const { deleteImportDraftJob } = await import('./inbox.service');
+
+    await expect(deleteImportDraftJob('job-1')).rejects.toThrow('Only admins can delete import draft jobs.');
+    expect(jobDeleteMock).not.toHaveBeenCalled();
+  });
+
   it('saves Anontraveler preview candidates to a user-bound import job draft', async () => {
     singleMock.mockResolvedValue({ data: { id: 'job-1' }, error: null });
     const { saveImportCandidatesDraft } = await import('./inbox.service');
@@ -298,6 +359,31 @@ describe('inbox.service', () => {
     ]);
   });
 
+  it('saves large import candidate drafts in batches to avoid oversized PostgREST requests', async () => {
+    singleMock.mockResolvedValue({ data: { id: 'job-1' }, error: null });
+    const candidates = Array.from({ length: 401 }, (_, index) => ({
+      id: `anontraveler:album:album-${index + 1}`,
+      entityType: 'album' as const,
+      displayTitle: `Album ${index + 1}`,
+      displaySubtitle: 'Artist',
+      sourceName: 'anontraveler' as const,
+    }));
+    const { saveImportCandidatesDraft } = await import('./inbox.service');
+
+    await expect(
+      saveImportCandidatesDraft({
+        sourceName: 'anontraveler',
+        query: 'https://www.anontraveler.com/rank/version/large',
+        candidates,
+      }),
+    ).resolves.toEqual({ importJobId: 'job-1', savedCount: 401 });
+
+    expect(candidateInsertMock).toHaveBeenCalledTimes(3);
+    expect(candidateInsertMock.mock.calls[0][0]).toHaveLength(200);
+    expect(candidateInsertMock.mock.calls[1][0]).toHaveLength(200);
+    expect(candidateInsertMock.mock.calls[2][0]).toHaveLength(1);
+  });
+
   it('rejects saving import candidate drafts without an authenticated user', async () => {
     getUserMock.mockResolvedValue({ data: { user: null }, error: null });
     const { saveImportCandidatesDraft } = await import('./inbox.service');
@@ -325,33 +411,6 @@ describe('inbox.service', () => {
   });
 
   it('generates a user-bound review plan without writing formal library records', async () => {
-    reviewSelectAfterUpsertMock.mockResolvedValue({
-      data: [
-        {
-          id: 'review-artist-1',
-          entity_type: 'artist',
-          display_title: 'The Beatles',
-          source_name: 'anontraveler',
-          source_id: 'artist-1',
-          planned_action: 'create',
-          target_entity_id: null,
-          skip_reason: '',
-          error_message: null,
-        },
-        {
-          id: 'review-collection-1',
-          entity_type: 'archive_collection',
-          display_title: 'Classic rock guide',
-          source_name: 'anontraveler',
-          source_id: 'version-1',
-          planned_action: 'create',
-          target_entity_id: null,
-          skip_reason: '',
-          error_message: null,
-        },
-      ],
-      error: null,
-    });
     const { createImportReviewPlan } = await import('./inbox.service');
 
     await expect(
@@ -399,33 +458,7 @@ describe('inbox.service', () => {
           },
         ],
       }),
-    ).resolves.toEqual({
-      plannedCount: 2,
-      items: [
-        {
-          id: 'review-artist-1',
-          entityType: 'artist',
-          displayTitle: 'The Beatles',
-          sourceName: 'anontraveler',
-          sourceId: 'artist-1',
-          plannedAction: 'create',
-          targetEntityId: null,
-          skipReason: '',
-          errorMessage: null,
-        },
-        {
-          id: 'review-collection-1',
-          entityType: 'archive_collection',
-          displayTitle: 'Classic rock guide',
-          sourceName: 'anontraveler',
-          sourceId: 'version-1',
-          plannedAction: 'create',
-          targetEntityId: null,
-          skipReason: '',
-          errorMessage: null,
-        },
-      ],
-    });
+    ).resolves.toEqual({ plannedCount: 4, items: [] });
 
     expect(fromMock).toHaveBeenCalledWith('import_review_items');
     expect(reviewUpsertMock).toHaveBeenCalledWith(
@@ -503,79 +536,84 @@ describe('inbox.service', () => {
       ],
       { onConflict: 'user_id,source_name,source_id,entity_type' },
     );
-    expect(reviewSelectAfterUpsertMock).toHaveBeenCalledWith(
-      'id,entity_type,display_title,source_name,source_id,planned_action,target_entity_id,skip_reason,error_message,review_payload',
-    );
+    expect(reviewSelectAfterUpsertMock).not.toHaveBeenCalled();
     expect(orderMock).not.toHaveBeenCalledWith('created_at', { ascending: true });
   });
 
-  it('sorts generated review plan items locally without requiring a created_at column', async () => {
-    reviewSelectAfterUpsertMock.mockResolvedValue({
-      data: [
-        {
-          id: 'review-item-1',
-          entity_type: 'archive_item',
-          display_title: 'Please Please Me',
-          source_name: 'anontraveler',
-          source_id: 'item-1',
-          planned_action: 'create',
-          target_entity_id: null,
-          skip_reason: '',
-          error_message: null,
-        },
-        {
-          id: 'review-artist-1',
-          entity_type: 'artist',
-          display_title: 'The Beatles',
-          source_name: 'anontraveler',
-          source_id: 'artist-1',
-          planned_action: 'create',
-          target_entity_id: null,
-          skip_reason: '',
-          error_message: null,
-        },
-        {
-          id: 'review-album-1',
-          entity_type: 'album',
-          display_title: 'Please Please Me',
-          source_name: 'anontraveler',
-          source_id: 'album-1',
-          planned_action: 'create',
-          target_entity_id: null,
-          skip_reason: '',
-          error_message: null,
-        },
-      ],
-      error: null,
-    });
+  it('generates large review plans in batches without selecting every inserted row', async () => {
+    const candidates = Array.from({ length: 401 }, (_, index) => ({
+      id: `anontraveler:album:album-${index + 1}`,
+      entityType: 'album' as const,
+      displayTitle: `Album ${index + 1}`,
+      displaySubtitle: 'Artist',
+      sourceName: 'anontraveler' as const,
+    }));
+    const archiveItems = Array.from({ length: 401 }, (_, index) => ({
+      externalId: `version-1:item:${index + 1}:album-${index + 1}`,
+      albumExternalId: `album-${index + 1}`,
+      displayTitle: `Album ${index + 1}`,
+      position: index + 1,
+      note: '',
+    }));
     const { createImportReviewPlan } = await import('./inbox.service');
 
     await expect(
       createImportReviewPlan({
         importJobId: 'job-1',
         sourceName: 'anontraveler',
-        sourceUrl: 'https://www.anontraveler.com/rank/version/version-1',
-        candidates: [
-          {
-            id: 'anontraveler:artist:artist-1',
-            entityType: 'artist',
-            displayTitle: 'The Beatles',
-            displaySubtitle: 'Anontraveler artist candidate',
-            sourceName: 'anontraveler',
-          },
-        ],
+        sourceUrl: 'https://www.anontraveler.com/rank/version/large',
+        candidates,
+        archiveCollection: {
+          externalId: 'version-1',
+          title: 'Large guide',
+          description: '',
+          collectionType: 'album_rank',
+        },
+        archiveItems,
       }),
-    ).resolves.toMatchObject({
-      items: [
-        { id: 'review-artist-1', entityType: 'artist' },
-        { id: 'review-album-1', entityType: 'album' },
-        { id: 'review-item-1', entityType: 'archive_item' },
-      ],
+    ).resolves.toEqual({ plannedCount: 803, items: [] });
+
+    expect(reviewUpsertMock).toHaveBeenCalledTimes(5);
+    expect(reviewUpsertMock.mock.calls[0][0]).toHaveLength(200);
+    expect(reviewUpsertMock.mock.calls[1][0]).toHaveLength(200);
+    expect(reviewUpsertMock.mock.calls[2][0]).toHaveLength(200);
+    expect(reviewUpsertMock.mock.calls[3][0]).toHaveLength(200);
+    expect(reviewUpsertMock.mock.calls[4][0]).toHaveLength(3);
+    expect(reviewSelectAfterUpsertMock).not.toHaveBeenCalled();
+  });
+
+  it('runs review plan write batches with limited concurrency instead of serial requests', async () => {
+    const candidates = Array.from({ length: 601 }, (_, index) => ({
+      id: `anontraveler:album:album-${index + 1}`,
+      entityType: 'album' as const,
+      displayTitle: `Album ${index + 1}`,
+      displaySubtitle: 'Artist',
+      sourceName: 'anontraveler' as const,
+    }));
+    const requests = Array.from({ length: 4 }, () => createTrackedDeferred<{ error: null }>());
+    reviewUpsertMock.mockImplementation(() => requests[reviewUpsertMock.mock.calls.length - 1].promise);
+    const { createImportReviewPlan } = await import('./inbox.service');
+
+    const resultPromise = createImportReviewPlan({
+      importJobId: 'job-1',
+      sourceName: 'anontraveler',
+      sourceUrl: 'https://www.anontraveler.com/rank/version/large',
+      candidates,
     });
-    expect(reviewSelectAfterUpsertMock).toHaveBeenCalledWith(
-      'id,entity_type,display_title,source_name,source_id,planned_action,target_entity_id,skip_reason,error_message,review_payload',
-    );
-    expect(orderMock).not.toHaveBeenCalledWith('created_at', { ascending: true });
+
+    await flushMicrotasks();
+    expect(reviewUpsertMock).toHaveBeenCalledTimes(3);
+    expect(requests[0].isResolved).toBe(false);
+
+    requests[0].resolve({ error: null });
+    await flushMicrotasks();
+    expect(reviewUpsertMock).toHaveBeenCalledTimes(4);
+
+    requests[1].resolve({ error: null });
+    requests[2].resolve({ error: null });
+    requests[3].resolve({ error: null });
+
+    await expect(resultPromise).resolves.toEqual({ plannedCount: 601, items: [] });
   });
 
   it('reads the current user import role from profiles', async () => {
@@ -828,6 +866,37 @@ describe('inbox.service', () => {
     await expect(commitPublicImportReviewPlan()).rejects.toThrow('Only admins can commit public imports.');
   });
 
+  it('loads every review item page before committing a large public import plan', async () => {
+    const skippedRows = Array.from({ length: 1001 }, (_, index) => ({
+      id: `review-skip-${index + 1}`,
+      import_job_id: 'job-1',
+      entity_type: 'album',
+      display_title: `Skipped album ${index + 1}`,
+      source_name: 'anontraveler',
+      source_id: `album-${index + 1}`,
+      source_url: 'https://www.anontraveler.com/rank/version/large',
+      planned_action: 'skip',
+      target_entity_id: null,
+      skip_reason: 'Only testing pagination',
+      error_message: null,
+      review_payload: {},
+    }));
+    selectMock.mockReturnValue({ range: reviewRangeMock });
+    reviewRangeMock
+      .mockResolvedValueOnce({ data: skippedRows.slice(0, 1000), error: null })
+      .mockResolvedValueOnce({ data: skippedRows.slice(1000), error: null });
+    const { commitPublicImportReviewPlan } = await import('./inbox.service');
+
+    await expect(commitPublicImportReviewPlan()).resolves.toEqual({
+      createdCount: 0,
+      matchedCount: 0,
+      skippedCount: 1001,
+    });
+
+    expect(reviewRangeMock).toHaveBeenNthCalledWith(1, 0, 999);
+    expect(reviewRangeMock).toHaveBeenNthCalledWith(2, 1000, 1999);
+  });
+
   it('prefetches existing public external sources by entity type before committing imports', async () => {
     selectMock.mockResolvedValue({
       data: [
@@ -881,6 +950,183 @@ describe('inbox.service', () => {
     expect(formalInsertMock).toHaveBeenCalledWith(expect.objectContaining({ title: 'Please Please Me' }));
   });
 
+  it('prefetches existing public external sources in chunks to avoid oversized in filters', async () => {
+    const artistRows = Array.from({ length: 401 }, (_, index) => ({
+      id: `review-artist-${index + 1}`,
+      import_job_id: 'job-1',
+      entity_type: 'artist',
+      display_title: `Artist ${index + 1}`,
+      source_name: 'anontraveler',
+      source_id: `artist-${index + 1}`,
+      source_url: 'https://www.anontraveler.com/rank/version/large',
+      planned_action: 'create',
+      target_entity_id: null,
+      skip_reason: '',
+      error_message: null,
+      review_payload: {},
+    }));
+    selectMock.mockResolvedValue({ data: artistRows, error: null });
+    externalInMock
+      .mockResolvedValueOnce({ data: [], error: null })
+      .mockResolvedValueOnce({ data: [], error: null })
+      .mockResolvedValueOnce({ data: [], error: null });
+    formalSingleMock.mockImplementation(async () => ({ data: { id: `created-${formalSingleMock.mock.calls.length}` }, error: null }));
+    const { commitPublicImportReviewPlan } = await import('./inbox.service');
+
+    await expect(commitPublicImportReviewPlan()).resolves.toEqual({
+      createdCount: 401,
+      matchedCount: 0,
+      skippedCount: 0,
+    });
+
+    expect(externalInMock).toHaveBeenCalledTimes(3);
+    expect(externalInMock.mock.calls[0][1]).toHaveLength(200);
+    expect(externalInMock.mock.calls[1][1]).toHaveLength(200);
+    expect(externalInMock.mock.calls[2][1]).toHaveLength(1);
+  });
+
+  it('backfills notes for already imported archive items when committing a refreshed plan', async () => {
+    selectMock.mockResolvedValue({
+      data: [
+        {
+          id: 'review-album-1',
+          import_job_id: 'job-1',
+          entity_type: 'album',
+          display_title: 'Please Please Me',
+          source_name: 'anontraveler',
+          source_id: 'album-1',
+          source_url: 'https://www.anontraveler.com/rank/version/version-1',
+          planned_action: 'create',
+          target_entity_id: null,
+          skip_reason: '',
+          error_message: null,
+          review_payload: { metadata: { artistName: 'The Beatles' } },
+        },
+        {
+          id: 'review-item-1',
+          import_job_id: 'job-1',
+          entity_type: 'archive_item',
+          display_title: 'Please Please Me',
+          source_name: 'anontraveler',
+          source_id: 'item-1',
+          source_url: 'https://www.anontraveler.com/rank/version/version-1',
+          planned_action: 'create',
+          target_entity_id: null,
+          skip_reason: '',
+          error_message: null,
+          review_payload: { albumExternalId: 'album-1', position: 1, note: 'Imported comment.' },
+        },
+      ],
+      error: null,
+    });
+    externalInMock
+      .mockResolvedValueOnce({
+        data: [{ source_id: 'album-1', entity_id: 'album-existing-1', entity_type: 'album' }],
+        error: null,
+      })
+      .mockResolvedValueOnce({
+        data: [{ source_id: 'item-1', entity_id: 'archive-item-existing-1', entity_type: 'archive_item' }],
+        error: null,
+      });
+    const { commitPublicImportReviewPlan } = await import('./inbox.service');
+
+    await expect(commitPublicImportReviewPlan()).resolves.toEqual({
+      createdCount: 0,
+      matchedCount: 2,
+      skippedCount: 0,
+    });
+
+    expect(formalUpdateMock).toHaveBeenCalledWith({ note: 'Imported comment.' });
+    expect(formalUpdateEqMock).toHaveBeenCalledWith('id', 'archive-item-existing-1');
+    expect(formalInsertMock).not.toHaveBeenCalledWith(expect.objectContaining({ external_id: 'item-1' }));
+  });
+
+  it('reuses an archive item in the same collection when a refreshed source id would hit the collection album uniqueness constraint', async () => {
+    selectMock.mockResolvedValue({
+      data: [
+        {
+          id: 'review-collection-1',
+          import_job_id: 'job-1',
+          entity_type: 'archive_collection',
+          display_title: 'Classic rock guide',
+          source_name: 'anontraveler',
+          source_id: 'version-1',
+          source_url: 'https://www.anontraveler.com/rank/version/version-1',
+          planned_action: 'create',
+          target_entity_id: null,
+          skip_reason: '',
+          error_message: null,
+          review_payload: { collectionType: 'album_rank', description: 'Albums to explore.' },
+        },
+        {
+          id: 'review-album-1',
+          import_job_id: 'job-1',
+          entity_type: 'album',
+          display_title: 'Please Please Me',
+          source_name: 'anontraveler',
+          source_id: 'album-1',
+          source_url: 'https://www.anontraveler.com/rank/version/version-1',
+          planned_action: 'create',
+          target_entity_id: null,
+          skip_reason: '',
+          error_message: null,
+          review_payload: { metadata: { artistName: 'The Beatles' } },
+        },
+        {
+          id: 'review-item-1',
+          import_job_id: 'job-1',
+          entity_type: 'archive_item',
+          display_title: 'Please Please Me',
+          source_name: 'anontraveler',
+          source_id: 'version-1:item:item-1:album-1',
+          source_url: 'https://www.anontraveler.com/rank/version/version-1',
+          planned_action: 'create',
+          target_entity_id: null,
+          skip_reason: '',
+          error_message: null,
+          review_payload: { albumExternalId: 'album-1', position: 1, note: 'Imported comment.' },
+        },
+      ],
+      error: null,
+    });
+    externalInMock
+      .mockResolvedValueOnce({
+        data: [{ source_id: 'album-1', entity_id: 'album-existing-1', entity_type: 'album' }],
+        error: null,
+      })
+      .mockResolvedValueOnce({
+        data: [{ source_id: 'version-1', entity_id: 'collection-existing-1', entity_type: 'archive_collection' }],
+        error: null,
+      })
+      .mockResolvedValueOnce({ data: [], error: null });
+    archiveItemMaybeSingleMock.mockResolvedValue({
+      data: { id: 'archive-item-existing-1' },
+      error: null,
+    });
+    const { commitPublicImportReviewPlan } = await import('./inbox.service');
+
+    await expect(commitPublicImportReviewPlan()).resolves.toEqual({
+      createdCount: 0,
+      matchedCount: 3,
+      skippedCount: 0,
+    });
+
+    expect(archiveItemSelectMock).toHaveBeenCalledWith('id');
+    expect(archiveItemEqCollectionMock).toHaveBeenCalledWith('collection_id', 'collection-existing-1');
+    expect(archiveItemEqEntityTypeMock).toHaveBeenCalledWith('entity_type', 'album');
+    expect(archiveItemEqEntityIdMock).toHaveBeenCalledWith('entity_id', 'album-existing-1');
+    expect(formalUpdateMock).toHaveBeenCalledWith({ note: 'Imported comment.' });
+    expect(formalUpdateEqMock).toHaveBeenCalledWith('id', 'archive-item-existing-1');
+    expect(externalInsertMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        entity_type: 'archive_item',
+        entity_id: 'archive-item-existing-1',
+        source_id: 'version-1:item:item-1:album-1',
+      }),
+    );
+    expect(formalInsertMock).not.toHaveBeenCalledWith(expect.objectContaining({ collection_id: 'collection-existing-1' }));
+  });
+
   it('updates a review item action and skip reason without writing formal library records', async () => {
     reviewSingleAfterUpdateMock.mockResolvedValue({
       data: {
@@ -932,71 +1178,6 @@ describe('inbox.service', () => {
   });
 
   it('sorts Anontraveler review items by source ranking while keeping commit dependencies', async () => {
-    reviewSelectAfterUpsertMock.mockResolvedValue({
-      data: [
-        {
-          id: 'review-item-2',
-          entity_type: 'archive_item',
-          display_title: 'Rank Two',
-          source_name: 'anontraveler',
-          source_id: 'item-2',
-          planned_action: 'create',
-          target_entity_id: null,
-          skip_reason: '',
-          error_message: null,
-          review_payload: { position: 2 },
-        },
-        {
-          id: 'review-album-2',
-          entity_type: 'album',
-          display_title: 'Rank Two',
-          source_name: 'anontraveler',
-          source_id: 'album-2',
-          planned_action: 'create',
-          target_entity_id: null,
-          skip_reason: '',
-          error_message: null,
-          review_payload: { metadata: { sourceRank: 2 } },
-        },
-        {
-          id: 'review-album-1',
-          entity_type: 'album',
-          display_title: 'Rank One',
-          source_name: 'anontraveler',
-          source_id: 'album-1',
-          planned_action: 'create',
-          target_entity_id: null,
-          skip_reason: '',
-          error_message: null,
-          review_payload: { metadata: { sourceRank: 1 } },
-        },
-        {
-          id: 'review-item-1',
-          entity_type: 'archive_item',
-          display_title: 'Rank One',
-          source_name: 'anontraveler',
-          source_id: 'item-1',
-          planned_action: 'create',
-          target_entity_id: null,
-          skip_reason: '',
-          error_message: null,
-          review_payload: { position: 1 },
-        },
-        {
-          id: 'review-collection-1',
-          entity_type: 'archive_collection',
-          display_title: 'Classic rock guide',
-          source_name: 'anontraveler',
-          source_id: 'version-1',
-          planned_action: 'create',
-          target_entity_id: null,
-          skip_reason: '',
-          error_message: null,
-          review_payload: {},
-        },
-      ],
-      error: null,
-    });
     const { createImportReviewPlan } = await import('./inbox.service');
 
     await expect(
@@ -1015,14 +1196,6 @@ describe('inbox.service', () => {
           },
         ],
       }),
-    ).resolves.toMatchObject({
-      items: [
-        { id: 'review-album-1', entityType: 'album' },
-        { id: 'review-album-2', entityType: 'album' },
-        { id: 'review-collection-1', entityType: 'archive_collection' },
-        { id: 'review-item-1', entityType: 'archive_item' },
-        { id: 'review-item-2', entityType: 'archive_item' },
-      ],
-    });
+    ).resolves.toEqual({ plannedCount: 1, items: [] });
   });
 });

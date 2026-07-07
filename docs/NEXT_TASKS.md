@@ -1,158 +1,139 @@
-﻿# RockRoll 下一步任务
+# RockRoll 下一步任务
 
-更新时间：2026-07-06
+更新时间：2026-07-07
 
-## 本轮完成：公共可读资料库与管理员正式导入 MVP
+## 当前状态
 
-状态：已完成，并已通过 Inbox 相关测试与生产构建验证。
+本轮已经完成多项导入与资料库相关改动，并补上了重复导入时榜单评语不会回填到专辑列表的问题。
 
-完成范围：
+已完成或已推进的范围：
 
-- 使用 `profiles.role` 增加管理员角色模型，默认 `user`，管理员为 `admin`。
-- 新增 `public.is_public_library_admin(user_id uuid)` 供 RLS 判断管理员。
-- 给 `artists`、`albums`、`archive_collections`、`archive_items`、`external_sources` 增加 `visibility`。
-- `visibility = 'public'` 的正式资料允许匿名访问读取。
-- 正式资料 public 写入和导入流程仅管理员可执行。
-- `import_jobs`、`import_candidates`、`import_drafts`、`import_review_items` 收紧为管理员私有操作。
-- 新增 `commitPublicImportReviewPlan`，将 Review plan 中的 create / match_existing / skip 按规则提交到正式资料库。
-- 正式导入写入 `visibility = 'public'`，并写入 `external_sources.visibility = 'public'`。
-- Inbox Review plan 增加 25 条 / 页的前端分页。
-- 仅管理员显示 `Commit public import`。
-- 未使用 service role key，未绕过 RLS。
+- Inbox 新增删除导入草稿能力，删除草稿时通过外键级联删除候选索引和 Review plan。
+- Archive 集合列表修正来源展示：来源名称正常显示，存在 `sourceUrl` 时提供短链接。
+- Archive 集合描述增加行数限制，避免长文本撑开列表。
+- Albums 服务对大量 id 的 `.in()` 查询增加分块，缓解 `/albums` 的 `Bad Request`。
+- Albums 已开始改为先加载榜单分类 / 集合标题，再按选中标题加载集合专辑。
+- Albums 集合详情分页已从前端展示分页改为服务端请求分页：首屏只拉当前页 25 条 `archive_items`、对应 album rows 和 external metadata，同时用 Supabase count 保留总数显示。
+- Albums 集合详情的大量 album / external metadata 分块查询已改为受限并发，并且两类查询并行启动，减少 496 条集合加载时的串行等待。
+- Inbox 正式提交导入时，如果 `archive_item` 已经导入过，会用新 Review plan 中的非空评语回填 `archive_items.note`，避免预览集合有评语、专辑列表仍显示“暂无笔记”。
+- Anontraveler 预览修正档案条目 external id 生成：同一张专辑出现在不同榜单时，专辑实体可复用，但榜单条目会按 `versionId + position + albumExternalId` 保持独立，避免跨榜单被误去重。
+- 针对 `https://www.anontraveler.com/rank/version/5e9fb16311ee091e615c2a7f` 复核真实 API：预览 496 个条目无缺失；修正为即使来源 item 有 `_id`，`archive_item` external id 也必须带榜单命名空间，避免来源复用 item id 时入库阶段继续去重。
+- 修复重复导入同一集合时触发 `archive_items_collection_id_entity_type_entity_id_key` 的问题：当新版 source id 没命中 external source，但同集合里已存在同一 album 的 archive item，会复用旧条目、回填 note，并补写新的 external source 映射。
+- 修复大榜单提交只写入前 1000 条 Review plan 的问题：`commitPublicImportReviewPlan` 现在分页读取全部 `import_review_items`，避免 496 专辑榜单因 artist/album/review item 总数超过 1000 而只提交约 80 条 archive item。
+- 已用只读 REST 查询确认 `5e9fb16311ee091e615c2a7f` 当前数据库集合确实只有 80 条 `archive_items`，页面显示 80 不是 Albums 页面二次去重，而是之前提交部分写入后的真实状态。
+- Inbox 导入流程仍有待优化：步骤偏繁琐，生成计划后正式推送和导入数量需要继续排查。
+- Inbox 页面已进一步简化为预览后一键完整导入：页面不再暴露草稿、候选索引和 Review plan，内部仍复用保存候选、生成计划、正式提交三步链路。
+- Inbox 大批量导入已做服务层分块优化：候选保存、Review plan upsert、external source `.in()` 预取、import job 删除都按 200 条分块，降低 PostgREST `Bad Request` 和大响应等待风险。
+- 针对分块后响应变慢的问题，候选保存、Review plan upsert 和 external source 分块预取已改为最多 3 路受限并发；保留 200 条分块上限，避免再次触发大请求。
+- Review plan 生成阶段不再回传全部明细；一键导入页面只需要 plannedCount，正式提交阶段仍分页读取全部 Review plan。
 
-## 追加完成：专辑按导入集合浏览
+## 验证状态
 
-状态：已完成，并已通过 Albums 相关测试。
-
-完成范围：
-
-- `/albums` 不再展示手动新增专辑表单。
-- `/albums` 以 `archive_collections` 为导入集合分组展示专辑。
-- 集合内专辑按照 `archive_items.position` 排序。
-- 排序严格保留来源链接原始排名；年份型榜单也不得按发行年份重新排序。
-- 专辑卡片展示封面、作者、发行年份、曲风、导入评语。
-- 新增按曲风筛选，当前基于 `external_sources.raw_payload.metadata.styles` 做前端筛选。
-- 本轮未新增 migration。
-
-设计文档：
-
-- `docs/superpowers/specs/2026-07-06-album-import-collection-view-design.md`
-
-验证：
+本轮新增验证：
 
 ```powershell
-npm test -- --run src/features/albums
-```
-
-结果：3 个测试文件、17 个用例通过。
-
-## 追加完成：专辑作者绑定修复与集合内分页
-
-状态：已完成，并已通过 Inbox / Albums 相关测试与生产构建验证。
-
-完成范围：
-
-- 修复正式导入时所有专辑作者都绑定到第一位艺人的问题。
-- 正式导入专辑现在按 `review_payload.metadata.artistName` 匹配艺人名称，不再用第一位艺人作为兜底。
-- `/albums` 在每个导入集合内部增加 25 张 / 页分页。
-- 分页不改变集合内原始排名，只切换当前展示范围。
-- 修复并恢复 `src/i18n/messages.ts` 中文文案编码，补齐分页文案。
-
-验证：
-
-```powershell
-npm test -- --run src/features/inbox src/features/albums
-npm run build
-```
-
-结果：7 个测试文件、56 个用例通过；生产构建通过。Vite 有 chunk size 警告，不影响本轮功能。
-
-注意：历史已经导入且作者绑定错误的数据不会被代码自动改正，需要重新导入或单独执行数据修正。
-
-## 追加完成：专辑页排版整理与错绑作者显示修正
-
-状态：已完成，并已通过 Albums / Inbox service 相关测试与生产构建验证。
-
-完成范围：
-
-- `/albums` 重排为更紧凑的资料库视图，降低首屏拥挤感。
-- 长来源 URL 收起为短链接，避免撑开集合标题区。
-- 集合说明限制展示行数。
-- 专辑条目改为行式索引布局，保留排名、封面、作者、年代、曲风、评语。
-- 集合页优先展示导入元数据里的 `artistName`，用于修正历史错绑作者在列表页的显示。
-
-验证：
-
-```powershell
-npm test -- --run src/features/albums
 npm test -- --run src/features/inbox/inbox.service.test.ts
-npm run build
-```
-
-结果：Albums 相关 3 个测试文件、19 个用例通过；Inbox service 16 个用例通过；生产构建通过。
-
-注意：列表页显示已优先使用导入元数据作者，但底层 `albums.artist_id` 如果已经错绑，仍建议清理后重新导入。
-
-验证：
-
-```powershell
+npm test -- --run src/features/inbox/anontraveler.service.test.ts
 npm test -- --run src/features/inbox
 npm run build
 ```
 
-结果：`src/features/inbox` 4 个测试文件、28 个用例通过；生产构建通过。Vite 有 chunk size 警告，不影响本轮功能。
+结果：Inbox service 21 个用例通过；Anontraveler service 7 个用例通过；Inbox 6 个测试文件、49 个用例通过；生产构建通过。Vite 仍有既有 chunk size 警告。
 
-## 管理员初始化
+补充验证：
 
-应用 migration 后，需要手动把管理员账号设置为 admin：
-
-```sql
-update public.profiles
-set role = 'admin'
-where id = '<你的用户 uuid>';
+```powershell
+npm test -- --run src/features/albums
+npm test -- --run src/features/inbox
+npm test -- --run src/features/archive
+npm run build
+git diff --check -- src/features/albums src/features/inbox src/features/archive src/i18n/messages.ts docs/PROJECT_STATUS.md docs/NEXT_TASKS.md docs/SESSION_HANDOFF.md
 ```
+
+结果：Albums 3 个测试文件、26 个用例通过；Inbox 5 个测试文件、36 个用例通过；Archive 3 个测试文件、20 个用例通过；生产构建通过。Vite 仍有既有 chunk size 警告；`git diff --check` 通过，仅提示 Windows 下 LF/CRLF 换行转换。
+
+本轮补充验证：
+
+```powershell
+npm test -- --run src/features/inbox/inbox.service.test.ts
+npm test -- --run src/features/inbox
+npm test -- --run src/features/albums
+npm test -- --run src/features/archive
+npm run build
+git diff --check -- src/features/inbox src/features/albums src/features/archive src/i18n/messages.ts docs/PROJECT_STATUS.md docs/NEXT_TASKS.md docs/SESSION_HANDOFF.md
+```
+
+结果：Inbox service 24 个用例通过；Inbox 5 个测试文件、39 个用例通过；Albums 3 个测试文件、26 个用例通过；Archive 3 个测试文件、20 个用例通过；生产构建通过。Vite 仍有既有 chunk size 警告；`git diff --check` 通过，仅提示 Windows 下 LF/CRLF 换行转换。
+
+验证中发现 Albums 懒加载后集合标题同时出现在下拉选项和页面标题中，导致测试文本查询歧义；已将断言改为查询集合标题 heading，未修改产品逻辑。
+
+仍需补充验证：
+
+- 真实 Supabase 环境中，需要重新提交一次已导入榜单或执行数据修正，旧的 `archive_items.note` 才会被回填。
+- 真实 Supabase 环境中，需要重新导入 `https://www.anontraveler.com/rank/version/5e9fb16311ee091e615c2a7f`，确认正式写入的 `archive_items` 与预览 496 条一致。
+- 当前该集合已有 80 条历史部分写入数据，因之前 Review plan / import job 已清空，需要重新预览、保存草稿、生成计划并提交，才能补齐剩余 archive item。
+- 对已经生成过旧 archive item 的集合，重新提交导入计划时应不再报 `archive_items_collection_id_entity_type_entity_id_key`，并会补齐新的 external source 映射。
+- Albums 集合标题懒加载、服务端分页和分块并发已通过 `src/features/albums` 自动化测试；仍建议在浏览器里做一次桌面 / 窄屏视觉检查。
 
 ## 当前最高优先级
 
-推荐任务：`match_existing` 的最小手动匹配 UI / service。
+自动化验证已完成；下一步优先做真实 Supabase 下 `/albums` 服务端分页耗时复测、导入验证和一键导入状态追踪设计。
 
-目标：
-
-- 仅管理员可操作。
-- 最小支持把单条计划从 `create` 标记为 `match_existing`。
-- 允许管理员手动输入 `target_entity_id`。
-- 恢复为 `create` 时清空 `target_entity_id`。
-- 正式提交时 `match_existing` 不创建正式资料，只写公共 `external_sources` 映射。
-- 错误时展示 RLS / permission 信息。
-
-备选任务：
-
-- 正式导入状态追踪，避免重复点击或部分失败后不清楚状态。
-- Review plan 明细展示专辑封面 / 点评 / 年代 / 风格。
-- 专辑封面与曲风正规化：新增正式字段或关联表，减少对 `external_sources.raw_payload` 的依赖。
-
-## 推荐执行顺序
-
-1. 只读取本文件、`docs/PROJECT_STATUS.md`、`docs/SESSION_HANDOFF.md`、`src/features/inbox`。
-2. 如涉及权限或 schema，再读取：
-   - `supabase/migrations/20260706023655_add_import_review_items.sql`
-   - `supabase/migrations/20260706034529_public_library_admin_import.sql`
-3. 继续采用 TDD：先补最小 service / UI 测试，再实现。
-4. 完成后运行：
+推荐命令：
 
 ```powershell
+npm test -- --run src/features/albums
 npm test -- --run src/features/inbox
+npm test -- --run src/features/archive
 npm run build
 ```
 
-## 下一轮建议只读取
+预期处理：
+
+- 如果 Albums 测试失败，优先修复懒加载引入的回归。
+- 如果 Inbox 或 Archive 测试失败，只修复与本轮改动直接相关的问题。
+- 如果构建失败，先处理 TypeScript 或 Vite 编译错误，不做无关重构。
+
+## 下一个功能任务：验证一键导入与结果状态
+
+目标：在真实 Supabase 环境验证一键导入是否能补齐大榜单，并确认分块优化后不再出现导入后 `Bad Request`。
+
+建议排查顺序：
+
+1. 对比匿名旅行者 preview 数量、保存到 `import_candidates` 的数量、Review plan 数量、正式写入 public rows 的数量。
+2. 特别区分“专辑实体数量”和“榜单条目数量”：同一专辑可复用，但不同榜单里的条目必须分别进入 `archive_items`。
+3. 判断 Review plan 数量增加是否来自 `artist`、`album`、`archive_collection`、`archive_item` 等不同实体类型的合计。
+4. 确认重复点击生成计划是否会重复创建、更新或遗漏条目。
+5. 检查生成计划后正式 push 到档案袋是否真的写入 `archive_collections` / `archive_items`，以及是否因权限、RLS 或外部来源映射冲突失败。
+6. 为一键导入补正式结果状态追踪，减少重复点击和部分失败后状态不清的问题。
+7. 如果真实环境仍慢，下一步考虑把正式提交迁移为数据库 RPC 或后台任务；当前 3 路并发只优化分块保存/预取阶段，不能消除前端逐条多表提交的网络往返。
+
+建议先补测试：
+
+- 一键导入内部保存的候选数量与 preview 映射数量一致。
+- Review plan 数量按实体类型可解释。
+- 重复生成计划不会产生重复不可控数据。
+- commit 成功后档案袋集合可被读取。
+- `/albums` 首屏集合详情只请求当前页 25 条数据，翻页时再请求下一页。
+
+## 后续功能队列
+
+1. `match_existing` 的最小手动匹配 UI / service。
+2. 正式导入结果状态追踪，避免重复点击或部分失败后不清楚状态。
+3. Review plan 明细展示专辑封面 / 点评 / 年代 / 风格，便于导入前检查。
+4. 专辑封面与曲风正规化，例如 `albums.cover_url` 和 `album_styles` / `album_genres`。
+5. 历史错绑作者数据修正方案：重新导入或单独 migration / SQL 修正。
+
+## 推荐下一轮只读取
 
 - `AGENTS.md`
 - `docs/PROJECT_STATUS.md`
 - `docs/NEXT_TASKS.md`
 - `docs/SESSION_HANDOFF.md`
+- `src/features/albums`
 - `src/features/inbox`
-- 如被当前任务阻塞，再读取最小必要的 `supabase/migrations`
+- `src/features/archive`
+- 如被权限或 schema 阻塞，再读取最小必要的 `supabase/migrations`
 
 ## 不要做
 

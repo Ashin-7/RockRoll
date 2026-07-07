@@ -29,6 +29,10 @@ interface SaveImportCandidatesDraftResult {
   savedCount: number;
 }
 
+interface DeleteImportDraftJobResult {
+  importJobId: string;
+}
+
 interface ImportJobRow {
   id: string;
 }
@@ -120,6 +124,10 @@ interface ExternalSourceRow {
   entity_type?: ImportEntityType;
 }
 
+interface ArchiveItemIdRow {
+  id: string;
+}
+
 const demoImportCandidatesStorageKey = 'rockroll.demoImportCandidates';
 const importReviewItemSelectColumns =
   'id,entity_type,display_title,source_name,source_id,planned_action,target_entity_id,skip_reason,error_message,review_payload';
@@ -133,6 +141,10 @@ const reviewEntityCommitOrder: Record<ImportEntityType, number> = {
   song: 4,
   media_asset: 5,
 };
+const commitReviewItemPageSize = 1000;
+const supabaseWriteBatchSize = 200;
+const supabaseInFilterBatchSize = 200;
+const supabaseBatchConcurrency = 3;
 
 function isMissingSupabaseEnvError(error: unknown): boolean {
   return error instanceof Error && error.message.startsWith('Missing VITE_SUPABASE_');
@@ -145,6 +157,33 @@ function readDemoImportCandidates(): ImportCandidateSummary[] {
 
 function readSourceId(candidate: ImportCandidateSummary): string {
   return candidate.id.split(':').pop() ?? candidate.id;
+}
+
+function chunkArray<T>(items: T[], chunkSize: number): T[][] {
+  const chunks: T[][] = [];
+  for (let index = 0; index < items.length; index += chunkSize) {
+    chunks.push(items.slice(index, index + chunkSize));
+  }
+  return chunks;
+}
+
+async function runWithConcurrency<T>(
+  items: T[],
+  concurrency: number,
+  handler: (item: T) => Promise<void>,
+): Promise<void> {
+  let nextIndex = 0;
+  const workerCount = Math.min(concurrency, items.length);
+
+  await Promise.all(
+    Array.from({ length: workerCount }, async () => {
+      while (nextIndex < items.length) {
+        const currentItem = items[nextIndex];
+        nextIndex += 1;
+        await handler(currentItem);
+      }
+    }),
+  );
 }
 
 function buildCandidateRows(input: SaveImportCandidatesDraftInput, userId: string, importJobId: string) {
@@ -292,18 +331,22 @@ async function findPublicExternalEntityIdsByType(
   }
 
   const supabase = getSupabase();
-  const { data, error } = await supabase
-    .from('external_sources')
-    .select('source_id,entity_id,entity_type')
-    .eq('source_name', sourceName)
-    .in('source_id', sourceIds);
+  const rows: ExternalSourceRow[] = [];
+  await runWithConcurrency(chunkArray(sourceIds, supabaseInFilterBatchSize), supabaseBatchConcurrency, async (sourceIdChunk) => {
+    const { data, error } = await supabase
+      .from('external_sources')
+      .select('source_id,entity_id,entity_type')
+      .eq('source_name', sourceName)
+      .in('source_id', sourceIdChunk);
 
-  if (error) {
-    throw new Error(error.message);
-  }
+    if (error) {
+      throw new Error(error.message);
+    }
+    rows.push(...((data ?? []) as ExternalSourceRow[]));
+  });
 
   return new Map(
-    ((data ?? []) as ExternalSourceRow[])
+    rows
       .filter((row) => !row.entity_type || row.entity_type === entityType)
       .map((row) => [row.source_id, row.entity_id]),
   );
@@ -339,9 +382,11 @@ async function deleteImportJobs(importJobIds: string[]) {
   }
 
   const supabase = getSupabase();
-  const { error } = await supabase.from('import_jobs').delete().in('id', uniqueImportJobIds);
-  if (error) {
-    throw new Error(error.message);
+  for (const importJobIdChunk of chunkArray(uniqueImportJobIds, supabaseInFilterBatchSize)) {
+    const { error } = await supabase.from('import_jobs').delete().in('id', importJobIdChunk);
+    if (error) {
+      throw new Error(error.message);
+    }
   }
 }
 
@@ -469,17 +514,31 @@ export async function saveImportCandidatesDraft(
   const importJobId = (jobData as ImportJobRow).id;
   const candidateRows = buildCandidateRows(input, userId, importJobId);
   if (candidateRows.length > 0) {
-    const { error: candidatesError } = await supabase.from('import_candidates').insert(candidateRows);
+    await runWithConcurrency(chunkArray(candidateRows, supabaseWriteBatchSize), supabaseBatchConcurrency, async (candidateChunk) => {
+      const { error: candidatesError } = await supabase.from('import_candidates').insert(candidateChunk);
 
-    if (candidatesError) {
-      throw new Error(candidatesError.message);
-    }
+      if (candidatesError) {
+        throw new Error(candidatesError.message);
+      }
+    });
   }
 
   return {
     importJobId,
     savedCount: candidateRows.length,
   };
+}
+
+export async function deleteImportDraftJob(importJobId: string): Promise<DeleteImportDraftJobResult> {
+  await getAuthenticatedUserId('You must sign in before deleting import draft jobs.');
+  const role = await getCurrentUserImportRole();
+  if (role !== 'admin') {
+    throw new Error('Only admins can delete import draft jobs.');
+  }
+
+  await deleteImportJobs([importJobId]);
+
+  return { importJobId };
 }
 
 export async function listImportDraftJobs(): Promise<ImportDraftJobSummary[]> {
@@ -589,20 +648,19 @@ export async function createImportReviewPlan(
     };
   }
 
-  const { data, error } = await supabase
-    .from('import_review_items')
-    .upsert(reviewRows, { onConflict: 'user_id,source_name,source_id,entity_type' })
-    .select(importReviewItemSelectColumns);
+  await runWithConcurrency(chunkArray(reviewRows, supabaseWriteBatchSize), supabaseBatchConcurrency, async (reviewChunk) => {
+    const { error } = await supabase
+      .from('import_review_items')
+      .upsert(reviewChunk, { onConflict: 'user_id,source_name,source_id,entity_type' });
 
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  const items = mapSortedReviewItems((data ?? []) as ImportReviewItemRow[]);
+    if (error) {
+      throw new Error(error.message);
+    }
+  });
 
   return {
-    plannedCount: items.length,
-    items,
+    plannedCount: reviewRows.length,
+    items: [],
   };
 }
 
@@ -617,6 +675,63 @@ async function insertPublicEntity(tableName: string, values: Record<string, unkn
   return (data as CreatedEntityRow).id;
 }
 
+async function updatePublicArchiveItemNote(archiveItemId: string, note: string) {
+  const trimmedNote = note.trim();
+  if (!trimmedNote) {
+    return;
+  }
+
+  const supabase = getSupabase();
+  const { error } = await supabase.from('archive_items').update({ note: trimmedNote }).eq('id', archiveItemId);
+  if (error) {
+    throw new Error(error.message);
+  }
+}
+
+async function findPublicArchiveItemIdByCollectionAlbum(
+  collectionId: string,
+  albumId: string,
+): Promise<string | null> {
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from('archive_items')
+    .select('id')
+    .eq('collection_id', collectionId)
+    .eq('entity_type', 'album')
+    .eq('entity_id', albumId)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return (data as ArchiveItemIdRow | null)?.id ?? null;
+}
+
+async function listAllCommitReviewItems(): Promise<ImportReviewItemRow[]> {
+  const supabase = getSupabase();
+  const rows: ImportReviewItemRow[] = [];
+  let pageIndex = 0;
+
+  while (true) {
+    const from = pageIndex * commitReviewItemPageSize;
+    const to = from + commitReviewItemPageSize - 1;
+    const query = supabase.from('import_review_items').select(commitReviewItemSelectColumns);
+    const { data, error } = await ('range' in query ? query.range(from, to) : query);
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    const pageRows = (data ?? []) as ImportReviewItemRow[];
+    rows.push(...pageRows);
+    if (pageRows.length < commitReviewItemPageSize) {
+      return rows;
+    }
+    pageIndex += 1;
+  }
+}
+
 export async function commitPublicImportReviewPlan(): Promise<CommitImportReviewPlanResult> {
   const userId = await getAuthenticatedUserId('You must sign in before committing public imports.');
   const role = await getCurrentUserImportRole();
@@ -624,16 +739,7 @@ export async function commitPublicImportReviewPlan(): Promise<CommitImportReview
     throw new Error('Only admins can commit public imports.');
   }
 
-  const supabase = getSupabase();
-  const { data, error } = await supabase
-    .from('import_review_items')
-    .select(commitReviewItemSelectColumns);
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  const items = sortReviewRows((data ?? []) as ImportReviewItemRow[]);
+  const items = sortReviewRows(await listAllCommitReviewItems());
   const importJobIds = items.map((item) => item.import_job_id ?? '');
   const artistIdsBySourceId = new Map<string, string>();
   const artistIdsByName = new Map<string, string>();
@@ -752,12 +858,33 @@ export async function commitPublicImportReviewPlan(): Promise<CommitImportReview
 
   await Promise.all(
     archiveItems
+      .filter((item) => existingArchiveItemIds.has(item.source_id))
+      .map(async (item) => {
+        const payload = item.review_payload ?? {};
+        const archiveItemId = existingArchiveItemIds.get(item.source_id);
+        if (archiveItemId && payload.note) {
+          await updatePublicArchiveItemNote(archiveItemId, payload.note);
+        }
+      }),
+  );
+
+  await Promise.all(
+    archiveItems
       .filter((item) => !existingArchiveItemIds.has(item.source_id))
       .map(async (item) => {
         const payload = item.review_payload ?? {};
         const albumId = payload.albumExternalId ? albumIdsBySourceId.get(payload.albumExternalId) : undefined;
         if (!archiveCollectionId || !albumId) {
           throw new Error('Cannot commit archive item before its collection and album are available.');
+        }
+        const existingArchiveItemId = await findPublicArchiveItemIdByCollectionAlbum(archiveCollectionId, albumId);
+        if (existingArchiveItemId) {
+          if (payload.note) {
+            await updatePublicArchiveItemNote(existingArchiveItemId, payload.note);
+          }
+          await savePublicExternalSource(item, 'archive_item', existingArchiveItemId, userId);
+          matchedCount += 1;
+          return;
         }
         const entityId = await insertPublicEntity('archive_items', {
           user_id: userId,

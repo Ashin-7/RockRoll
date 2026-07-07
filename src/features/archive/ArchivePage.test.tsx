@@ -39,6 +39,11 @@ describe('ArchivePage', () => {
       '#archive/collection-1',
     );
     expect(screen.getByText('anontraveler')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Open source link' })).toHaveAttribute(
+      'href',
+      'https://example.test/rank/version/1',
+    );
+    expect(screen.getByText('Albums to explore.')).toHaveClass('archive-collection-description');
     expect(screen.getByText('Collection')).toBeInTheDocument();
     expect(screen.getByRole('columnheader', { name: 'Source' })).toBeInTheDocument();
     expect(screen.getByRole('columnheader', { name: 'Type' })).toBeInTheDocument();

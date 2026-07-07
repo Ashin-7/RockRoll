@@ -161,9 +161,14 @@ export function ArchivePage({
                   <h3 role="cell">
                     <a href={`#archive/${encodeURIComponent(collection.id)}`}>{collection.title}</a>
                   </h3>
-                  <p role="cell">{collection.source}</p>
+                  <div className="archive-source-cell" role="cell">
+                    <span>{collection.source}</span>
+                    {collection.sourceUrl ? <a href={collection.sourceUrl}>Open source link</a> : null}
+                  </div>
                   <p role="cell">{collection.collectionType}</p>
-                  <p role="cell">{collection.description || t('archive.noDescription')}</p>
+                  <p className="archive-collection-description" role="cell">
+                    {collection.description || t('archive.noDescription')}
+                  </p>
                   <div className="archive-row-actions" role="cell">
                     <button
                       type="button"
