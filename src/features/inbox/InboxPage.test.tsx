@@ -167,6 +167,11 @@ describe('InboxPage', () => {
     });
     expect(onCommitPublicImportReviewPlan).toHaveBeenCalledTimes(1);
     expect(await screen.findByText('Public import committed: created 4, matched 1, skipped 0.')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'Import summary: preview 4 archive items, saved 5 candidates, planned 6 review items, committed 5 rows.',
+      ),
+    ).toBeInTheDocument();
     expect(screen.queryByText('Classic rock guide')).not.toBeInTheDocument();
     expect(screen.getByLabelText('Anontraveler rank version URL')).toHaveValue('');
   });

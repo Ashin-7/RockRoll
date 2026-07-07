@@ -1,4 +1,4 @@
-# RockRoll 会话交接
+﻿# RockRoll 会话交接
 
 更新时间：2026-07-07
 
@@ -15,6 +15,7 @@
 - Albums 已开始实现按“榜单分类 / 集合标题”懒加载：先加载集合标题，再按选中的标题加载对应专辑。
 - 修正 Albums 集合内分页只做前端展示分页的问题：集合详情现在按页请求 `archive_items`，首屏只加载当前页 25 条专辑及对应 metadata，总数通过 Supabase count 保留。
 - Albums 集合详情的大量 album / external metadata 分块查询已改为 3 路受限并发，并且 album rows 与 metadata rows 并行启动。
+- Albums 曲风筛选已覆盖完整集合：曲风选项来自集合级 `availableStyles`，选择曲风后用完整集合 metadata 计算命中项，再只加载当前页详情。
 - 修复重复导入已存在榜单条目时，Review plan 中的新评语没有回填到 `archive_items.note` 的问题；这会导致预览集合有评语，但专辑列表显示“暂无笔记”。
 - 修复无 `_id` 榜单条目使用 album id 作为 `archive_item` external id 的问题；同专辑跨不同榜单时，现在会生成不同榜单条目 id，不再把不同榜单里的相同专辑误合并。
 - 针对 `https://www.anontraveler.com/rank/version/5e9fb16311ee091e615c2a7f` 进一步修正：来源 item `_id` 也不再作为全局去重键，`archive_item` external id 始终带榜单命名空间。
@@ -26,6 +27,12 @@
 - 修复导入后 `Bad Request` 的高风险请求模式：候选保存、Review plan upsert、external source `.in()` 预取和 import job 删除均改为 200 条分块。
 - 针对分块后响应变慢的问题，候选保存、Review plan upsert 和 external source 分块预取改为最多 3 路受限并发；保留 200 条分块上限，避免重新放大 PostgREST 请求。
 - Review plan 生成阶段不再 `.select()` 回传全部明细，减少大榜单生成计划时的大响应和等待时间。
+- 已实现 Archive 新增集合 URL 预览导入：输入 Anontraveler 榜单 URL 后先确认数量和 3 条样例，允许自定义集合标题 / 说明，再复用 Inbox 保存候选、生成 Review plan、正式提交的链路写入公共资料。
+- Archive URL 导入预览样例现在展示封面、年代、专辑类型、曲风、作者、标题和评语。
+- Archive 手动新增 / 编辑集合仍保留为备用入口；URL 导入写入仍限制为管理员角色。
+- Archive 档案集合索引已从横向表格调整为默认折叠的可展开卡片；展开后显示说明、来源链接、打开集合、编辑和删除操作，减少集合列表在首屏的占用。
+- 已给 Inbox 与 Archive 的导入成功结果增加同一口径摘要：preview 档案条目数、保存候选数、Review plan 确认项数和提交结果数。下一轮真实环境验证时优先记录这四个数字。
+- Albums 集合分类控件已从原生下拉框改为可搜索按钮列表，并支持本地手动上移 / 下移排序；曲风筛选控件已改为可搜索的现有曲风按钮列表，保留全部曲风入口。
 
 ## 修改文件列表
 
@@ -40,6 +47,7 @@
 - `src/features/archive/ArchivePage.tsx`
 - `src/features/archive/ArchivePage.css`
 - `src/features/archive/ArchivePage.test.tsx`
+- `src/i18n/messages.ts`
 - `src/features/albums/album.types.ts`
 - `src/features/albums/albums.service.ts`
 - `src/features/albums/albums.service.test.ts`
@@ -103,14 +111,60 @@ git diff --check -- src/features/inbox src/features/albums src/features/archive 
 
 验证中发现 Albums 懒加载后集合标题同时出现在下拉选项和页面标题中，导致测试文本查询歧义；已将 `AlbumListPage.test.tsx` 中对应断言改为 heading 查询，未修改产品逻辑。
 
+Archive URL 导入补充验证：
+
+```powershell
+npm test -- --run src/features/archive/ArchivePage.test.tsx
+npm test -- --run src/features/archive
+npm test -- --run src/features/inbox
+npm test -- --run src/features/albums
+npm run build
+git diff --check -- src/features/archive src/features/inbox src/features/albums src/i18n/messages.ts docs/PROJECT_STATUS.md docs/NEXT_TASKS.md docs/SESSION_HANDOFF.md
+```
+
+结果：ArchivePage 6 个用例通过；Archive 3 个测试文件、21 个用例通过；Inbox 5 个测试文件、39 个用例通过；Albums 3 个测试文件、31 个用例通过；生产构建通过。Vite 仍提示既有 chunk size 警告；`git diff --check` 通过，仅提示 Windows 下 LF/CRLF 换行转换。
+
+共享导入结果摘要补充验证：
+
+```powershell
+npm test -- --run src/features/inbox/InboxPage.test.tsx
+npm test -- --run src/features/archive/ArchivePage.test.tsx
+npm test -- --run src/features/inbox
+npm test -- --run src/features/archive
+```
+
+结果：InboxPage 5 个用例通过；ArchivePage 6 个用例通过；Inbox 5 个测试文件、39 个用例通过；Archive 3 个测试文件、21 个用例通过。
+
+Archive 集合索引卡片化补充验证：
+```powershell
+npm test -- --run src/features/archive/ArchivePage.test.tsx
+npm test -- --run src/features/archive
+npm test -- --run src/features/archive src/features/inbox src/features/albums
+npm run build
+git diff --check -- src/features/archive src/features/inbox src/features/albums src/i18n/messages.ts docs/PROJECT_STATUS.md docs/NEXT_TASKS.md docs/SESSION_HANDOFF.md
+```
+
+结果：ArchivePage 6 个用例通过；Archive 3 个测试文件、21 个用例通过；Archive / Inbox / Albums 合计 11 个测试文件、91 个用例通过；生产构建通过。`git diff --check` 通过，仅提示 Windows 下 LF/CRLF 换行转换。浏览器截图检查因本机 Playwright 浏览器二进制缺失未完成，未执行 `npx playwright install`。
+
+Albums 集合与曲风筛选控件补充验证：
+```powershell
+$env:HOME=(Resolve-Path .\.tmp).Path; $env:USERPROFILE=(Resolve-Path .\.tmp).Path; $env:TEMP=(Resolve-Path .\.tmp).Path; $env:TMP=(Resolve-Path .\.tmp).Path; node .\node_modules\vitest\vitest.mjs --run src/features/albums/AlbumListPage.test.tsx
+$env:HOME=(Resolve-Path .\.tmp).Path; $env:USERPROFILE=(Resolve-Path .\.tmp).Path; $env:TEMP=(Resolve-Path .\.tmp).Path; $env:TMP=(Resolve-Path .\.tmp).Path; node .\node_modules\vitest\vitest.mjs --run src/features/albums
+$env:HOME=(Resolve-Path .\.tmp).Path; $env:USERPROFILE=(Resolve-Path .\.tmp).Path; $env:TEMP=(Resolve-Path .\.tmp).Path; $env:TMP=(Resolve-Path .\.tmp).Path; node .\node_modules\typescript\bin\tsc -b; if ($LASTEXITCODE -eq 0) { node .\node_modules\vite\bin\vite.js build }
+git diff --check -- src/features/albums/AlbumListPage.tsx src/features/albums/AlbumListPage.css src/features/albums/AlbumListPage.test.tsx docs/PROJECT_STATUS.md docs/NEXT_TASKS.md docs/SESSION_HANDOFF.md
+```
+
+结果：AlbumListPage 14 个用例通过；Albums 3 个测试文件、33 个用例通过；生产构建通过。Vite 仍提示既有 chunk size 警告；`git diff --check` 通过，仅提示 Windows 下 LF/CRLF 换行转换。当前受限沙箱下直接运行 `npm test` 会因 Node 访问 `C:\Users\Ashin` 被拒绝，本轮改用工作区 `.tmp` 作为 HOME / TEMP 并直接调用本地 `node_modules` 命令。
+
 当前未完成验证：
 
 - 真实 Supabase 环境中，需要重新提交一次已导入榜单或单独执行数据修正，旧 `archive_items.note` 才会出现新增评语。
 - 真实 Supabase 环境中，建议导入两个包含相同专辑的不同榜单，确认 `archive_items` 数量按榜单条目保留。
 - 建议重新导入 `https://www.anontraveler.com/rank/version/5e9fb16311ee091e615c2a7f`，确认档案条目数量与预览 496 条一致。
+- 建议从 `/archive` 新增集合入口用同一链接导入一次，确认自定义标题 / 说明写入正式集合，且与 Inbox 入口的数量结果一致。
 - 当前该集合只有 80 条历史部分写入数据，需重新预览、保存草稿、生成 Review plan 并提交，才能补齐剩余 `archive_items`。
 - 对已报过唯一约束的集合，建议重新提交一次导入计划，确认不会再触发 `archive_items_collection_id_entity_type_entity_id_key`。
-- Albums 按集合标题懒加载、服务端分页和分块并发已通过 `src/features/albums` 自动化测试；仍建议做浏览器桌面 / 窄屏视觉检查。
+- Albums 按集合标题懒加载、服务端分页、分块并发、全集合曲风筛选、集合搜索 / 本地排序、曲风搜索已通过 `src/features/albums` 自动化测试；仍建议做浏览器桌面 / 窄屏视觉检查。
 
 下一轮推荐先执行：
 
@@ -125,7 +179,7 @@ npm run build
 
 ## 当前风险
 
-- Albums 懒加载已通过自动化测试；仍有桌面 / 窄屏浏览器视觉检查风险未覆盖。
+- Albums 懒加载与新筛选控件已通过自动化测试；仍有桌面 / 窄屏浏览器视觉检查风险未覆盖，尤其是集合按钮列表和曲风按钮列表在真实数据量下的滚动表现。
 - Inbox 导入数量不一致需要拆分排查：preview candidates、saved candidates、Review plan items、commit 后 public rows 的口径可能不同。
 - Review plan 数量可能包含 artist、album、archive_collection、archive_item 多种实体，不能直接和候选专辑数量等同。
 - 同一专辑跨不同榜单时，专辑实体应复用，但档案条目不能按专辑去重；后续排查数量时必须分开看 `albums` 和 `archive_items`。
@@ -134,10 +188,11 @@ npm run build
 - 大型 Review plan 会超过 Supabase 默认返回上限，提交阶段必须分页读取；否则 artist/album 会占掉前 1000 条，archive item 只会部分写入。
 - 重复导入已存在榜单时，代码现在会回填非空评语；但历史数据不会自动迁移，需要用户重新提交导入计划或后续补 SQL 修正。
 - 生成计划后档案袋未成功 push 可能来自权限 / RLS、commit 流程失败、external source 冲突、或 UI 未刷新。
-- Inbox 一键导入目前仍复用前端顺序三步提交链路，后续需要补结果状态追踪和部分失败恢复。
+- Inbox 一键导入目前仍复用前端顺序三步提交链路；页面摘要能帮助定位数量差异阶段，但还不能恢复部分失败。
+- Archive URL 导入复用同一条前端顺序三步链路，因此数据库级任务状态、部分失败恢复和耗时优化应作为共享能力处理，避免两个入口各自修一遍。
 - 分块优化降低了 PostgREST 大请求导致 `Bad Request` 的风险，但正式提交仍是前端逐条多表写入，大榜单速度仍可能受网络往返和 RLS 检查影响。
 - 受限并发已经缓解候选保存、Review plan 生成和 external source 预取的串行等待；如果真实环境仍慢，根因大概率在正式提交阶段的前端多表往返，需要评估 RPC / 后台任务。
-- Albums 服务端分页后，曲风筛选当前只覆盖已加载页；如需对整个 496 条集合做曲风筛选，需要服务端筛选或专门的聚合索引。
+- Albums 全集合曲风筛选当前复用 `external_sources.raw_payload.metadata.styles`，筛选时会轻量读取全集合 item ids 与 external metadata；后续如果集合规模继续增长，建议升级为正式曲风索引表或预聚合字段。
 - 当前正式导入仍是前端顺序多表写入，不是数据库事务；中途失败会有部分写入风险。
 
 ## 下一轮推荐任务
@@ -152,6 +207,8 @@ npm run build
 优先级 2：验证 Inbox 一键导入流程。
 
 - 复现用户提到的“生成计划后档案袋没有成功 push”。
+- 使用 `/archive` 新增集合 URL 导入入口复测同一链接，确认自定义标题 / 说明和数量结果。
+- 记录两个入口导入成功后的摘要：preview、saved、planned、committed 四个数字。
 - 使用两个包含同一专辑的不同榜单，验证专辑复用但档案条目分别保留。
 - 使用 `5e9fb16311ee091e615c2a7f` 验证真实大榜单导入数量。
 - 重新生成该链接的 Review plan 后提交，确认 58 页确认项全部被 commit 读取。

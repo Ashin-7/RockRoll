@@ -40,6 +40,13 @@ interface ExternalSourceRow {
   raw_payload: unknown;
 }
 
+interface AlbumExternalMetadata {
+  coverUrl: string;
+  artistName: string;
+  styles: string[];
+  reviewNote: string;
+}
+
 const albumTypes: AlbumType[] = ['album', 'ep', 'live', 'compilation'];
 const supabaseInFilterChunkSize = 200;
 const supabaseBatchConcurrency = 3;
@@ -95,7 +102,7 @@ function readStringArray(value: unknown): string[] {
   return value.filter((item): item is string => typeof item === 'string' && item.trim().length > 0);
 }
 
-function mapExternalMetadataRows(rows: ExternalSourceRow[]) {
+function mapExternalMetadataRows(rows: ExternalSourceRow[]): Map<string, AlbumExternalMetadata> {
   return new Map(
     rows.map((row) => {
       const payload = isRecord(row.raw_payload) ? row.raw_payload : {};
@@ -112,6 +119,14 @@ function mapExternalMetadataRows(rows: ExternalSourceRow[]) {
       ];
     }),
   );
+}
+
+function collectAvailableStyles(rows: ExternalSourceRow[]): string[] {
+  return Array.from(
+    new Set(
+      Array.from(mapExternalMetadataRows(rows).values()).flatMap((metadata) => metadata.styles),
+    ),
+  ).sort((left, right) => left.localeCompare(right));
 }
 
 function chunkArray<T>(items: T[], chunkSize: number): T[][] {
@@ -244,11 +259,30 @@ async function loadExternalSourceRowsByAlbumIds(
   return externalSourceRows;
 }
 
+async function loadCollectionAlbumItems(
+  supabase: ReturnType<typeof getSupabase>,
+  collectionId: string,
+): Promise<ArchiveItemRow[]> {
+  const { data, error } = await supabase
+    .from('archive_items')
+    .select('collection_id,entity_id,position,note')
+    .eq('collection_id', collectionId)
+    .eq('entity_type', 'album')
+    .order('position', { ascending: true, nullsFirst: false });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return (data ?? []) as ArchiveItemRow[];
+}
+
 async function buildAlbumCollections(
   supabase: ReturnType<typeof getSupabase>,
   collections: ArchiveCollectionRow[],
   items: ArchiveItemRow[],
   totalAlbumCountByCollectionId: Record<string, number> = {},
+  externalSourceRows?: ExternalSourceRow[],
 ): Promise<AlbumCollectionSummary[]> {
   const albumIds = Array.from(new Set(items.map((item) => item.entity_id)));
   if (albumIds.length === 0) {
@@ -259,12 +293,13 @@ async function buildAlbumCollections(
     }));
   }
 
-  const [albumRows, externalSourceRows] = await Promise.all([
+  const [albumRows, resolvedExternalSourceRows] = await Promise.all([
     loadAlbumRowsByIds(supabase, albumIds),
-    loadExternalSourceRowsByAlbumIds(supabase, albumIds),
+    externalSourceRows ? Promise.resolve(externalSourceRows) : loadExternalSourceRowsByAlbumIds(supabase, albumIds),
   ]);
   const albumsById = new Map(albumRows.map((album) => [album.id, mapAlbumRow(album)]));
-  const metadataByAlbumId = mapExternalMetadataRows(externalSourceRows);
+  const metadataByAlbumId = mapExternalMetadataRows(resolvedExternalSourceRows);
+  const availableStyles = collectAvailableStyles(resolvedExternalSourceRows);
   const itemsByCollectionId = items.reduce<Record<string, AlbumCollectionAlbumSummary[]>>((groupedItems, item) => {
     const album = albumsById.get(item.entity_id);
     if (!album) {
@@ -291,6 +326,7 @@ async function buildAlbumCollections(
   return collections.map((collection) => ({
     ...mapCollectionRow(collection),
     totalAlbumCount: totalAlbumCountByCollectionId[collection.id] ?? itemsByCollectionId[collection.id]?.length ?? 0,
+    availableStyles,
     albums: [...(itemsByCollectionId[collection.id] ?? [])].sort(compareAlbumRank),
   }));
 }
@@ -358,24 +394,55 @@ export async function getAlbumCollectionById(
     return null;
   }
 
-  const itemQuery = supabase
-    .from('archive_items')
-    .select('collection_id,entity_id,position,note', page ? { count: 'exact' } : undefined)
-    .eq('collection_id', collectionId)
-    .eq('entity_type', 'album')
-    .order('position', { ascending: true, nullsFirst: false });
   const from = page ? page.pageIndex * page.pageSize : 0;
   const to = page ? from + page.pageSize - 1 : 0;
-  const { data: itemData, error: itemError, count } = await (page ? itemQuery.range(from, to) : itemQuery);
+  const selectedStyle = page?.style?.trim() ?? '';
+  let fullCollectionItems: ArchiveItemRow[] | null = null;
+  let fullExternalSourceRows: ExternalSourceRow[] | undefined;
+  let availableStyles: string[] | undefined;
+  let itemRows: ArchiveItemRow[];
+  let totalAlbumCount: number;
 
-  if (itemError) {
-    throw new Error(itemError.message);
+  if (page) {
+    fullCollectionItems = await loadCollectionAlbumItems(supabase, collectionId);
+    const fullAlbumIds = Array.from(new Set(fullCollectionItems.map((item) => item.entity_id)));
+    fullExternalSourceRows = await loadExternalSourceRowsByAlbumIds(supabase, fullAlbumIds);
+    availableStyles = collectAvailableStyles(fullExternalSourceRows);
   }
 
-  const [collectionSummary] = await buildAlbumCollections(supabase, [collection], (itemData ?? []) as ArchiveItemRow[], {
-    [collection.id]: page ? count ?? 0 : ((itemData ?? []) as ArchiveItemRow[]).length,
-  });
-  return collectionSummary ?? null;
+  if (page && selectedStyle) {
+    const metadataByAlbumId = mapExternalMetadataRows(fullExternalSourceRows ?? []);
+    const filteredItems = (fullCollectionItems ?? []).filter((item) =>
+      metadataByAlbumId.get(item.entity_id)?.styles.includes(selectedStyle),
+    );
+    itemRows = filteredItems.slice(from, to + 1);
+    totalAlbumCount = filteredItems.length;
+  } else {
+    const itemQuery = supabase
+      .from('archive_items')
+      .select('collection_id,entity_id,position,note', page ? { count: 'exact' } : undefined)
+      .eq('collection_id', collectionId)
+      .eq('entity_type', 'album')
+      .order('position', { ascending: true, nullsFirst: false });
+    const { data: itemData, error: itemError, count } = await (page ? itemQuery.range(from, to) : itemQuery);
+
+    if (itemError) {
+      throw new Error(itemError.message);
+    }
+
+    itemRows = (itemData ?? []) as ArchiveItemRow[];
+    totalAlbumCount = page ? count ?? 0 : itemRows.length;
+  }
+
+  const [collectionSummary] = await buildAlbumCollections(supabase, [collection], itemRows, {
+    [collection.id]: totalAlbumCount,
+  }, fullExternalSourceRows);
+  return collectionSummary
+    ? {
+        ...collectionSummary,
+        availableStyles: availableStyles ?? collectionSummary.availableStyles,
+      }
+    : null;
 }
 
 export async function listAlbums(): Promise<AlbumSummary[]> {

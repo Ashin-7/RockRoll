@@ -1,0 +1,223 @@
+- generic [ref=e3]:
+  - complementary [ref=e4]:
+    - generic [ref=e7]:
+      - text: RockRoll
+      - generic [ref=e8]: Private room
+    - generic [ref=e9]:
+      - generic [ref=e10]: Guest
+      - generic "Guest" [ref=e11]:
+        - link "Auth" [ref=e12] [cursor=pointer]:
+          - /url: "#auth"
+    - button "中文" [ref=e13] [cursor=pointer]
+    - navigation "Primary" [ref=e14]:
+      - link "Backstage" [ref=e15] [cursor=pointer]:
+        - /url: "#backstage"
+      - link "Songs" [ref=e16] [cursor=pointer]:
+        - /url: "#songs"
+      - link "Artists" [ref=e17] [cursor=pointer]:
+        - /url: "#artists"
+      - link "Practice" [ref=e18] [cursor=pointer]:
+        - /url: "#practice"
+      - link "Archive" [ref=e19] [cursor=pointer]:
+        - /url: "#archive"
+      - link "Inbox" [ref=e20] [cursor=pointer]:
+        - /url: "#inbox"
+      - link "Library" [ref=e21] [cursor=pointer]:
+        - /url: "#library"
+  - main [ref=e22]:
+    - generic [ref=e23]:
+      - generic [ref=e24]:
+        - generic [ref=e25]:
+          - paragraph [ref=e26]: Personal liner notes
+          - heading "Music Archive" [level=1] [ref=e27]
+        - generic [ref=e28]:
+          - generic [ref=e29]: "8"
+          - paragraph [ref=e30]: Collections filed
+      - generic "Archive library sections" [ref=e31]:
+        - article [ref=e32]:
+          - heading "Artists" [level=2] [ref=e33]
+          - paragraph [ref=e34]: Band, artist, and musician dossiers.
+        - article [ref=e35]:
+          - heading "Albums" [level=2] [ref=e36]:
+            - link "Albums" [ref=e37] [cursor=pointer]:
+              - /url: "#albums"
+          - paragraph [ref=e38]: Records, EPs, live albums, and editions.
+        - article [ref=e39]:
+          - heading "Genres" [level=2] [ref=e40]
+          - paragraph [ref=e41]: Rock, jazz, blues, funk, metal, classical, fusion, and more.
+      - generic [ref=e42]:
+        - region "Archive collections" [ref=e43]:
+          - generic [ref=e45]:
+            - paragraph [ref=e46]: Collection index
+            - heading "Archive collections" [level=2] [ref=e47]
+          - table "Archive collections" [ref=e75]:
+            - row "Collection Source Type Description Actions" [ref=e76]:
+              - columnheader "Collection" [ref=e77]
+              - columnheader "Source" [ref=e78]
+              - columnheader "Type" [ref=e79]
+              - columnheader "Description" [ref=e80]
+              - columnheader "Actions" [ref=e81]
+            - row "最佳华语流行专辑 2010s anontraveler Open source link album_rank 这十年有个大的趋势就是主流音乐的另类小众硬地化，尤其是港台。一些新的歌手，柯泯薰、黄玠玮、冯颖琪、范安婷等都有着明显的另类音乐影响来源，但又是典型而主流音乐。其实全球都有这个趋势，随着大主流音乐的崩盘，主流音乐和独立音乐之间而界限越发模糊。 而另一方面，随着某些口径的收紧和时代上升的变迁，整个音乐都变得更关注自我和身边生活，政治议题越来越淡出，很难见到90年代到00初那些从讽刺到愤怒到歌颂到悲悯的各种更加丰富的情感走入半主流视野，即使这个时代独立音乐走向半主流。 10年代大量独立音乐使用英语演唱，不过考虑到大部分也就初中英文水准，也不妨收入。 参考： [【个人精选】2010年代华语主流流行乐专辑20张推荐 - 雪岭洞箫声Snowii](https://zhuanlan.zhihu.com/p/150214926) [【盘点向】2010s 华语高分流行乐专辑回顾 - 半月凝霜Frostii](https://zhuanlan.zhihu.com/p/407143984) [石田吉藏 的 华语最佳500张发行 榜单](https://www.anontraveler.com/rank/version/647a1b28ab0a877f000408e9) Edit 最佳华语流行专辑 2010s Delete 最佳华语流行专辑 2010s" [ref=e82]:
+              - cell "最佳华语流行专辑 2010s" [ref=e83]:
+                - link "最佳华语流行专辑 2010s" [ref=e84] [cursor=pointer]:
+                  - /url: "#archive/670f4720-b5a3-4193-a272-607880d3374a"
+              - cell "anontraveler Open source link" [ref=e85]:
+                - generic [ref=e86]: anontraveler
+                - link "Open source link" [ref=e87] [cursor=pointer]:
+                  - /url: https://www.anontraveler.com/rank/version/6482dd303011d7c07d0dab6d
+              - cell "album_rank" [ref=e88]
+              - cell "这十年有个大的趋势就是主流音乐的另类小众硬地化，尤其是港台。一些新的歌手，柯泯薰、黄玠玮、冯颖琪、范安婷等都有着明显的另类音乐影响来源，但又是典型而主流音乐。其实全球都有这个趋势，随着大主流音乐的崩盘，主流音乐和独立音乐之间而界限越发模糊。 而另一方面，随着某些口径的收紧和时代上升的变迁，整个音乐都变得更关注自我和身边生活，政治议题越来越淡出，很难见到90年代到00初那些从讽刺到愤怒到歌颂到悲悯的各种更加丰富的情感走入半主流视野，即使这个时代独立音乐走向半主流。 10年代大量独立音乐使用英语演唱，不过考虑到大部分也就初中英文水准，也不妨收入。 参考： [【个人精选】2010年代华语主流流行乐专辑20张推荐 - 雪岭洞箫声Snowii](https://zhuanlan.zhihu.com/p/150214926) [【盘点向】2010s 华语高分流行乐专辑回顾 - 半月凝霜Frostii](https://zhuanlan.zhihu.com/p/407143984) [石田吉藏 的 华语最佳500张发行 榜单](https://www.anontraveler.com/rank/version/647a1b28ab0a877f000408e9)" [ref=e89]
+              - cell "Edit 最佳华语流行专辑 2010s Delete 最佳华语流行专辑 2010s" [ref=e90]:
+                - button "Edit 最佳华语流行专辑 2010s" [ref=e91] [cursor=pointer]: Edit
+                - button "Delete 最佳华语流行专辑 2010s" [ref=e92] [cursor=pointer]: Delete
+            - row [ref=e93]:
+              - cell "最佳华语流行专辑 1990s [2025重置版]" [ref=e94]:
+                - link "最佳华语流行专辑 1990s [2025重置版]" [ref=e95] [cursor=pointer]:
+                  - /url: "#archive/9c3b192c-8426-4074-be79-75114c4db2fa"
+              - cell "anontraveler Open source link" [ref=e96]:
+                - generic [ref=e97]: anontraveler
+                - link "Open source link" [ref=e98] [cursor=pointer]:
+                  - /url: https://www.anontraveler.com/rank/version/64f00100115b0a0eb20109ec
+              - cell "album_rank" [ref=e99]
+              - cell [ref=e100]
+              - cell "Edit 最佳华语流行专辑 1990s [2025重置版] Delete 最佳华语流行专辑 1990s [2025重置版]" [ref=e101]:
+                - button "Edit 最佳华语流行专辑 1990s [2025重置版]" [ref=e102] [cursor=pointer]: Edit
+                - button "Delete 最佳华语流行专辑 1990s [2025重置版]" [ref=e103] [cursor=pointer]: Delete
+            - row "最让我们记念的中国泛摇滚专辑 榜单 anontraveler Open source link album_rank 我的国摇记忆恐怕也都挺久远的了。先po出来用作扩展候选。 Edit 最让我们记念的中国泛摇滚专辑 榜单 Delete 最让我们记念的中国泛摇滚专辑 榜单" [ref=e104]:
+              - cell "最让我们记念的中国泛摇滚专辑 榜单" [ref=e105]:
+                - link "最让我们记念的中国泛摇滚专辑 榜单" [ref=e106] [cursor=pointer]:
+                  - /url: "#archive/59842a1b-f47a-48a4-8972-5d08b731b7bc"
+              - cell "anontraveler Open source link" [ref=e107]:
+                - generic [ref=e108]: anontraveler
+                - link "Open source link" [ref=e109] [cursor=pointer]:
+                  - /url: https://www.anontraveler.com/rank/version/5ec3c78011ee0923b0336e9e
+              - cell "album_rank" [ref=e110]
+              - cell "我的国摇记忆恐怕也都挺久远的了。先po出来用作扩展候选。" [ref=e111]
+              - cell "Edit 最让我们记念的中国泛摇滚专辑 榜单 Delete 最让我们记念的中国泛摇滚专辑 榜单" [ref=e112]:
+                - button "Edit 最让我们记念的中国泛摇滚专辑 榜单" [ref=e113] [cursor=pointer]: Edit
+                - button "Delete 最让我们记念的中国泛摇滚专辑 榜单" [ref=e114] [cursor=pointer]: Delete
+            - row "郭佳 的 新人入门必了解的通俗音乐坐标专辑 anontraveler Open source link album_rank 目标读者，已经有一定国摇或者欧美新世纪（50张）以上的基础聆听量，有一些喜欢的乐队、音乐人，希望系统的了解摇滚。 这是一份试图用500张专辑勾勒出摇滚音乐全景的入门榜单。它不求穷尽每一条支流的最深处，但希望为已经建立起基本听感的听众，提供一条清晰的路径，从“知其然”走向“知其所以然”。 从60年代民谣与英美蓝调复兴出发，披头士与迪伦奠定了现代流行/摇滚的地基，嬉皮与迷幻是其第一次扩张，随即迎来了70年代的黄金十年：华丽、硬摇、前卫、唱作人、雷鬼、迪斯科、金属等风格群体性爆发，建立起摇滚的中心地带。而后，朋克如一剂猛药，80年代的后朋克、新浪潮与哥特美学成为新秩序的代言，合成器的引入带来了工业与电子的前哨。 进入90年代，独立精神成主流叙事，Grunge、Britpop、Shoegaze、Post-rock、Alt-country、Lo-fi等风格交错共生，女性音乐人发出强音，情绪表达愈加复杂化。2000年前后，跨界融合、复古浪潮和全球在地声音相互激荡，摇滚既是风格也是态度，既是传统也是开放系统。 本榜单以摇滚为核心，兼顾流行、电子、实验、民谣与爵士等临界类型，尤其注意那些在不同年代、不同地理文化语境中推动风格演化的关键专辑。每一张的选入都力求“好听”与“重要性”并存，能沿线深入挖掘背后的历史与脉络。 它是一个广义摇滚地图，也是一张时间的唱片船票。欢迎你从任何一处上车，往前或往回听，终点是你自己的听觉世界观。 Edit 郭佳 的 新人入门必了解的通俗音乐坐标专辑 Delete 郭佳 的 新人入门必了解的通俗音乐坐标专辑" [ref=e115]:
+              - cell "郭佳 的 新人入门必了解的通俗音乐坐标专辑" [ref=e116]:
+                - link "郭佳 的 新人入门必了解的通俗音乐坐标专辑" [ref=e117] [cursor=pointer]:
+                  - /url: "#archive/53a1b5c0-139e-4bca-8e8d-9b35342b2af1"
+              - cell "anontraveler Open source link" [ref=e118]:
+                - generic [ref=e119]: anontraveler
+                - link "Open source link" [ref=e120] [cursor=pointer]:
+                  - /url: https://www.anontraveler.com/rank/version/5e9fb16311ee091e615c2a7f
+              - cell "album_rank" [ref=e121]
+              - cell "目标读者，已经有一定国摇或者欧美新世纪（50张）以上的基础聆听量，有一些喜欢的乐队、音乐人，希望系统的了解摇滚。 这是一份试图用500张专辑勾勒出摇滚音乐全景的入门榜单。它不求穷尽每一条支流的最深处，但希望为已经建立起基本听感的听众，提供一条清晰的路径，从“知其然”走向“知其所以然”。 从60年代民谣与英美蓝调复兴出发，披头士与迪伦奠定了现代流行/摇滚的地基，嬉皮与迷幻是其第一次扩张，随即迎来了70年代的黄金十年：华丽、硬摇、前卫、唱作人、雷鬼、迪斯科、金属等风格群体性爆发，建立起摇滚的中心地带。而后，朋克如一剂猛药，80年代的后朋克、新浪潮与哥特美学成为新秩序的代言，合成器的引入带来了工业与电子的前哨。 进入90年代，独立精神成主流叙事，Grunge、Britpop、Shoegaze、Post-rock、Alt-country、Lo-fi等风格交错共生，女性音乐人发出强音，情绪表达愈加复杂化。2000年前后，跨界融合、复古浪潮和全球在地声音相互激荡，摇滚既是风格也是态度，既是传统也是开放系统。 本榜单以摇滚为核心，兼顾流行、电子、实验、民谣与爵士等临界类型，尤其注意那些在不同年代、不同地理文化语境中推动风格演化的关键专辑。每一张的选入都力求“好听”与“重要性”并存，能沿线深入挖掘背后的历史与脉络。 它是一个广义摇滚地图，也是一张时间的唱片船票。欢迎你从任何一处上车，往前或往回听，终点是你自己的听觉世界观。" [ref=e122]
+              - cell "Edit 郭佳 的 新人入门必了解的通俗音乐坐标专辑 Delete 郭佳 的 新人入门必了解的通俗音乐坐标专辑" [ref=e123]:
+                - button "Edit 郭佳 的 新人入门必了解的通俗音乐坐标专辑" [ref=e124] [cursor=pointer]: Edit
+                - button "Delete 郭佳 的 新人入门必了解的通俗音乐坐标专辑" [ref=e125] [cursor=pointer]: Delete
+            - row "泛摇滚领域坐标专辑 - 现代摇滚早期篇 anontraveler Open source link album_rank 前朋、朋克、后朋、新浪潮、新迷幻、早期硬核,60-80年代。目标300张左右。 和经典摇滚那一集不同，经典摇滚一般专辑之间差异不会太大，有一定差异我也会选入两张或以上，比如Neil Young，专辑间差异还没有Zappa一首歌之间的两段落来的大。但是对于现代摇滚偏实验的那些，几乎每张专辑都有很大的差异，如果按照有名、重要而且有差异，这个单子就收不住容量了。所以注意，扩展区的质量不一定低于正式区，很多是音乐人的其他优秀作品，为了单子容量牺牲掉入选，但是依然值得听的；或者是相对历史上影响比较小知名度较低的质量优秀作品。 所以，除了VU、Zappa这样的乐队、艺人，大部分情况下，一个乐队只收入一张最经典作品，其他的大家自行去了解即可，顶多在扩展区随便放一下。还有过于迪哥的作品除了古早有时代意义的，也尽量不选。想了解我额外再做个史前另类全书这样的榜单来选大迪专辑。 还有就是，尽量不选偏极端化的作品，更实验的作品请移步这个单子 [泛摇滚领域坐标专辑 - 实验、极端、黑暗篇](https://www.anontraveler.com/rank/version/662739610b931e2d02041ed9)。 [网易云歌单](https://music.163.com/#/playlist?id=12338152104) Edit 泛摇滚领域坐标专辑 - 现代摇滚早期篇 Delete 泛摇滚领域坐标专辑 - 现代摇滚早期篇" [ref=e126]:
+              - cell "泛摇滚领域坐标专辑 - 现代摇滚早期篇" [ref=e127]:
+                - link "泛摇滚领域坐标专辑 - 现代摇滚早期篇" [ref=e128] [cursor=pointer]:
+                  - /url: "#archive/aaf1387f-6f99-4f7e-9d99-a3293e0d3d74"
+              - cell "anontraveler Open source link" [ref=e129]:
+                - generic [ref=e130]: anontraveler
+                - link "Open source link" [ref=e131] [cursor=pointer]:
+                  - /url: https://www.anontraveler.com/rank/version/65f3ea0c4e5b897fbb0a7c21
+              - cell "album_rank" [ref=e132]
+              - cell "前朋、朋克、后朋、新浪潮、新迷幻、早期硬核,60-80年代。目标300张左右。 和经典摇滚那一集不同，经典摇滚一般专辑之间差异不会太大，有一定差异我也会选入两张或以上，比如Neil Young，专辑间差异还没有Zappa一首歌之间的两段落来的大。但是对于现代摇滚偏实验的那些，几乎每张专辑都有很大的差异，如果按照有名、重要而且有差异，这个单子就收不住容量了。所以注意，扩展区的质量不一定低于正式区，很多是音乐人的其他优秀作品，为了单子容量牺牲掉入选，但是依然值得听的；或者是相对历史上影响比较小知名度较低的质量优秀作品。 所以，除了VU、Zappa这样的乐队、艺人，大部分情况下，一个乐队只收入一张最经典作品，其他的大家自行去了解即可，顶多在扩展区随便放一下。还有过于迪哥的作品除了古早有时代意义的，也尽量不选。想了解我额外再做个史前另类全书这样的榜单来选大迪专辑。 还有就是，尽量不选偏极端化的作品，更实验的作品请移步这个单子 [泛摇滚领域坐标专辑 - 实验、极端、黑暗篇](https://www.anontraveler.com/rank/version/662739610b931e2d02041ed9)。 [网易云歌单](https://music.163.com/#/playlist?id=12338152104)" [ref=e133]
+              - cell "Edit 泛摇滚领域坐标专辑 - 现代摇滚早期篇 Delete 泛摇滚领域坐标专辑 - 现代摇滚早期篇" [ref=e134]:
+                - button "Edit 泛摇滚领域坐标专辑 - 现代摇滚早期篇" [ref=e135] [cursor=pointer]: Edit
+                - button "Delete 泛摇滚领域坐标专辑 - 现代摇滚早期篇" [ref=e136] [cursor=pointer]: Delete
+            - row "2024年度专辑 anontraveler Open source link album_rank 又到了年底盘点的时刻 Edit 2024年度专辑 Delete 2024年度专辑" [ref=e137]:
+              - cell "2024年度专辑" [ref=e138]:
+                - link "2024年度专辑" [ref=e139] [cursor=pointer]:
+                  - /url: "#archive/3ef8bc9b-ebae-47ad-b31f-fb494242b0d8"
+              - cell "anontraveler Open source link" [ref=e140]:
+                - generic [ref=e141]: anontraveler
+                - link "Open source link" [ref=e142] [cursor=pointer]:
+                  - /url: https://www.anontraveler.com/rank/rank/6728a34bf606a567b7054484
+              - cell "album_rank" [ref=e143]
+              - cell "又到了年底盘点的时刻" [ref=e144]
+              - cell "Edit 2024年度专辑 Delete 2024年度专辑" [ref=e145]:
+                - button "Edit 2024年度专辑" [ref=e146] [cursor=pointer]: Edit
+                - button "Delete 2024年度专辑" [ref=e147] [cursor=pointer]: Delete
+            - row [ref=e148]:
+              - cell "郭佳的 最佳华语流行专辑 2000s [2025重置版]" [ref=e149]:
+                - link "郭佳的 最佳华语流行专辑 2000s [2025重置版]" [ref=e150] [cursor=pointer]:
+                  - /url: "#archive/e1bad98b-37f2-4608-8148-ffb31701ffc1"
+              - cell "anontraveler Open source link" [ref=e151]:
+                - generic [ref=e152]: anontraveler
+                - link "Open source link" [ref=e153] [cursor=pointer]:
+                  - /url: https://www.anontraveler.com/rank/version/644bcb3e4e4edac7470ec6f7
+              - cell "album_rank" [ref=e154]
+              - cell [ref=e155]
+              - cell "Edit 郭佳的 最佳华语流行专辑 2000s [2025重置版] Delete 郭佳的 最佳华语流行专辑 2000s [2025重置版]" [ref=e156]:
+                - button "Edit 郭佳的 最佳华语流行专辑 2000s [2025重置版]" [ref=e157] [cursor=pointer]: Edit
+                - button "Delete 郭佳的 最佳华语流行专辑 2000s [2025重置版]" [ref=e158] [cursor=pointer]: Delete
+            - row "泛摇滚领域坐标专辑 - 经典摇滚年代篇 anontraveler Open source link album_rank 想给新入坑萌新们做个相对质量高点的专辑推荐很久了。想想还是分开做比较容易。这一辑收录朋克运动以前的经典摇滚（选到1980年）。 同一组乐队，如果风格差异不大，除非都是里程碑级别，一般情况下就只选一张了。这一张并不代表他们水平最高的一张，有时候只是最早一张或者有名曲的一张。风格有差异但知名度稍低的就放扩展区了。 2024//06/16更新，将部分具有现代性的作品移到现代摇滚篇了。 07/19更新，T0区扩展到70张。 11/08更新，80年几张硬摇重金调整了下移到了现代主流摇滚 Edit 泛摇滚领域坐标专辑 - 经典摇滚年代篇 Delete 泛摇滚领域坐标专辑 - 经典摇滚年代篇" [ref=e159]:
+              - cell "泛摇滚领域坐标专辑 - 经典摇滚年代篇" [ref=e160]:
+                - link "泛摇滚领域坐标专辑 - 经典摇滚年代篇" [ref=e161] [cursor=pointer]:
+                  - /url: "#archive/d8486058-5bb4-4250-9af3-e4944a73f4a1"
+              - cell "anontraveler Open source link" [ref=e162]:
+                - generic [ref=e163]: anontraveler
+                - link "Open source link" [ref=e164] [cursor=pointer]:
+                  - /url: https://www.anontraveler.com/rank/version/65f3e6194e5b897fbb0a7bfa#nav-header
+              - cell "album_rank" [ref=e165]
+              - cell "想给新入坑萌新们做个相对质量高点的专辑推荐很久了。想想还是分开做比较容易。这一辑收录朋克运动以前的经典摇滚（选到1980年）。 同一组乐队，如果风格差异不大，除非都是里程碑级别，一般情况下就只选一张了。这一张并不代表他们水平最高的一张，有时候只是最早一张或者有名曲的一张。风格有差异但知名度稍低的就放扩展区了。 2024//06/16更新，将部分具有现代性的作品移到现代摇滚篇了。 07/19更新，T0区扩展到70张。 11/08更新，80年几张硬摇重金调整了下移到了现代主流摇滚" [ref=e166]
+              - cell "Edit 泛摇滚领域坐标专辑 - 经典摇滚年代篇 Delete 泛摇滚领域坐标专辑 - 经典摇滚年代篇" [ref=e167]:
+                - button "Edit 泛摇滚领域坐标专辑 - 经典摇滚年代篇" [ref=e168] [cursor=pointer]: Edit
+                - button "Delete 泛摇滚领域坐标专辑 - 经典摇滚年代篇" [ref=e169] [cursor=pointer]: Delete
+        - generic [ref=e49]:
+          - generic [ref=e50]:
+            - paragraph [ref=e51]: Collection / create
+            - heading "Add collection" [level=2] [ref=e52]
+          - generic [ref=e53]:
+            - group "URL import" [ref=e54]:
+              - generic [ref=e55]: URL import
+              - generic [ref=e56]:
+                - text: Anontraveler rank URL
+                - textbox "Anontraveler rank URL" [ref=e57]: https://www.anontraveler.com/rank/version/647a1b28ab0a877f000408e9
+            - button "Preview collection" [ref=e59] [cursor=pointer]
+          - region "Confirm collection data" [ref=e170]:
+            - generic [ref=e171]:
+              - paragraph [ref=e172]: Import preview
+              - heading "Confirm collection data" [level=3] [ref=e173]
+            - group "Identity" [ref=e174]:
+              - generic [ref=e175]: Identity
+              - generic [ref=e176]:
+                - text: Title
+                - textbox "Title" [ref=e177]: 石田吉藏 的 华语最佳500张发行 榜单
+              - generic [ref=e178]:
+                - text: Description
+                - textbox "Description" [ref=e179]: "在公众号被删了六次，希望在这里可以保存下去…… #一次发完很累，持续更新中# 原引言： 这是一个非常主观的个人整理，从今年1月到5月如此短暂而集中的收听历程里会无法避免地遗漏一些实际上应该拥有位置的音乐人与作品，对此我并不把这份List或者Ranking标榜为“权威”，只做个人华语收听的整理并希望可以给有意拓展华语方向的乐迷朋友们提供一份参考。欢迎异议，但对于一些考虑不周的地方，还请大家多多海涵。 而不同于“专辑榜”，这一份排名收录了许多EP、Mixtape形式的发行，在流派选择上也因为本人的流行乐迷口味没有加入太多重型、爵士、前卫的内容。 再次申明这一份List会非常主观，不必太过于认真对待。除此之外，感谢整理过程中许多乐迷朋友们的支持与帮助。"
+            - generic [ref=e180]:
+              - paragraph [ref=e181]: 500 archive items
+              - paragraph [ref=e182]: 500 albums
+              - paragraph [ref=e183]: 0 skipped songs
+            - generic [ref=e184]:
+              - article [ref=e185]:
+                - generic [ref=e186]: "# 1"
+                - img "红旗下的蛋 cover" [ref=e188]
+                - generic [ref=e189]:
+                  - paragraph [ref=e190]: 崔健
+                  - heading "红旗下的蛋" [level=4] [ref=e191]
+                  - generic "红旗下的蛋 metadata" [ref=e192]:
+                    - generic [ref=e193]: "[ 1994 ]"
+                    - generic [ref=e194]: 录音室专辑
+              - article [ref=e195]:
+                - generic [ref=e196]: "# 2"
+                - img "意難平 cover" [ref=e198]
+                - generic [ref=e199]:
+                  - paragraph [ref=e200]: 達明一派
+                  - heading "意難平" [level=4] [ref=e201]
+                  - generic "意難平 metadata" [ref=e202]:
+                    - generic [ref=e203]: "[ 1989 ]"
+                    - generic [ref=e204]: 录音室专辑
+                    - generic [ref=e205]: 通俗流行
+                    - generic [ref=e206]: 波普流行
+                    - generic [ref=e207]: 电子
+              - article [ref=e208]:
+                - generic [ref=e209]: "# 3"
+                - img "駱駝．飛鳥．魚 cover" [ref=e211]
+                - generic [ref=e212]:
+                  - paragraph [ref=e213]: 齊豫
+                  - heading "駱駝．飛鳥．魚" [level=4] [ref=e214]
+                  - generic "駱駝．飛鳥．魚 metadata" [ref=e215]:
+                    - generic [ref=e216]: "[ 1997 ]"
+                    - generic [ref=e217]: 录音室专辑
+                    - generic [ref=e218]: 抒情芭乐
+                    - generic [ref=e219]: 声乐

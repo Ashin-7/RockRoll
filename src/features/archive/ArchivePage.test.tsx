@@ -4,6 +4,8 @@ import { describe, expect, it, vi } from 'vitest';
 import { renderWithI18n } from '../../test/render';
 import { ArchivePage } from './ArchivePage';
 import { ArchiveCollectionSummary } from './archive.types';
+import { AnontravelerPreview } from '../inbox/anontraveler.types';
+import { ImportCandidateSummary } from '../inbox/inbox.types';
 
 const collections: ArchiveCollectionSummary[] = [
   {
@@ -13,6 +15,78 @@ const collections: ArchiveCollectionSummary[] = [
     sourceUrl: 'https://example.test/rank/version/1',
     description: 'Albums to explore.',
     collectionType: 'album_rank',
+  },
+];
+
+const anontravelerPreview: AnontravelerPreview = {
+  versionId: 'version-1',
+  sourceUrl: 'https://www.anontraveler.com/rank/version/version-1',
+  collection: {
+    externalId: 'version-1',
+    title: 'Preview collection title',
+    description: 'Preview collection description.',
+    source: 'anontraveler',
+    collectionType: 'album_rank',
+  },
+  artists: [{ externalId: 'artist-1', name: 'Artist one' }],
+  albums: [
+    {
+      externalId: 'album-1',
+      title: 'Album one',
+      artistName: 'Artist one',
+      releaseYear: 2001,
+      coverUrl: 'https://img.example.test/album-one.jpg',
+      styles: ['Rock'],
+      albumType: 'Album',
+      note: 'Opening note.',
+    },
+    {
+      externalId: 'album-2',
+      title: 'Album two',
+      artistName: 'Artist two',
+      releaseYear: 2002,
+      coverUrl: '',
+      styles: ['Pop'],
+      albumType: 'Album',
+      note: '',
+    },
+    {
+      externalId: 'album-3',
+      title: 'Album three',
+      artistName: 'Artist three',
+      releaseYear: 2003,
+      coverUrl: '',
+      styles: ['Folk'],
+      albumType: 'Album',
+      note: '',
+    },
+    {
+      externalId: 'album-4',
+      title: 'Album four',
+      artistName: 'Artist four',
+      releaseYear: 2004,
+      coverUrl: '',
+      styles: ['Jazz'],
+      albumType: 'Album',
+      note: '',
+    },
+  ],
+  archiveItems: [
+    { externalId: 'item-1', albumExternalId: 'album-1', displayTitle: 'Album one', position: 1, note: 'Opening note.' },
+    { externalId: 'item-2', albumExternalId: 'album-2', displayTitle: 'Album two', position: 2, note: '' },
+    { externalId: 'item-3', albumExternalId: 'album-3', displayTitle: 'Album three', position: 3, note: '' },
+    { externalId: 'item-4', albumExternalId: 'album-4', displayTitle: 'Album four', position: 4, note: '' },
+  ],
+  skippedSongs: 2,
+};
+
+const previewCandidates: ImportCandidateSummary[] = [
+  {
+    id: 'anontraveler:album:album-1',
+    entityType: 'album',
+    displayTitle: 'Album one',
+    displaySubtitle: 'Artist one',
+    sourceName: 'anontraveler',
   },
 ];
 
@@ -30,25 +104,33 @@ describe('ArchivePage', () => {
   });
 
   it('loads and renders archive collections', async () => {
+    const user = userEvent.setup();
+
     renderWithI18n(<ArchivePage onLoadCollections={async () => collections} />);
 
     expect(screen.getByText('Loading archive collections...')).toBeInTheDocument();
     expect(await screen.findByText('Classic rock guide')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Classic rock guide' })).toHaveAttribute(
-      'href',
-      '#archive/collection-1',
-    );
-    expect(screen.getByText('anontraveler')).toBeInTheDocument();
+    expect(screen.queryByRole('table', { name: 'Archive collections' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: 'Source' })).not.toBeInTheDocument();
+
+    const collectionCard = screen.getByText('Classic rock guide').closest('details');
+    expect(collectionCard).not.toBeNull();
+    expect(collectionCard).not.toHaveAttribute('open');
+
+    expect(screen.getAllByText('anontraveler').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('album_rank').length).toBeGreaterThan(0);
+
+    await user.click(screen.getByText('Classic rock guide'));
+
+    expect(collectionCard).toHaveAttribute('open');
+    expect(screen.getByRole('link', { name: 'Open collection' })).toHaveAttribute('href', '#archive/collection-1');
     expect(screen.getByRole('link', { name: 'Open source link' })).toHaveAttribute(
       'href',
       'https://example.test/rank/version/1',
     );
     expect(screen.getByText('Albums to explore.')).toHaveClass('archive-collection-description');
-    expect(screen.getByText('Collection')).toBeInTheDocument();
-    expect(screen.getByRole('columnheader', { name: 'Source' })).toBeInTheDocument();
-    expect(screen.getByRole('columnheader', { name: 'Type' })).toBeInTheDocument();
-    expect(screen.getByRole('columnheader', { name: 'Description' })).toBeInTheDocument();
-    expect(screen.getByRole('columnheader', { name: 'Actions' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Edit Classic rock guide' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Delete Classic rock guide' })).toBeInTheDocument();
   });
 
   it('creates an archive collection and refreshes the list', async () => {
@@ -75,6 +157,80 @@ describe('ArchivePage', () => {
     expect(await screen.findByText('Archive collection added.')).toBeInTheDocument();
   });
 
+  it('previews an Anontraveler collection URL and imports it with custom title and description', async () => {
+    const user = userEvent.setup();
+    const loadCollections = vi.fn().mockResolvedValueOnce([]).mockResolvedValueOnce(collections);
+    const previewAnontraveler = vi.fn().mockResolvedValue(anontravelerPreview);
+    const mapPreviewCandidates = vi.fn().mockReturnValue(previewCandidates);
+    const saveCandidatesDraft = vi.fn().mockResolvedValue({ importJobId: 'job-1', savedCount: 1 });
+    const createReviewPlan = vi.fn().mockResolvedValue({ plannedCount: 6, items: [] });
+    const commitPublicImport = vi.fn().mockResolvedValue({ createdCount: 4, matchedCount: 1, skippedCount: 0 });
+
+    renderWithI18n(
+      <ArchivePage
+        onLoadCollections={loadCollections}
+        onLoadImportRole={async () => 'admin'}
+        onPreviewAnontraveler={previewAnontraveler}
+        onMapAnontravelerPreviewCandidates={mapPreviewCandidates}
+        onSaveCandidatesDraft={saveCandidatesDraft}
+        onCreateReviewPlan={createReviewPlan}
+        onCommitPublicImportReviewPlan={commitPublicImport}
+      />,
+    );
+
+    await user.type(await screen.findByLabelText('Anontraveler rank URL'), anontravelerPreview.sourceUrl);
+    await user.click(screen.getByRole('button', { name: 'Preview collection' }));
+
+    expect(previewAnontraveler).toHaveBeenCalledWith(anontravelerPreview.sourceUrl);
+    expect(await screen.findByDisplayValue('Preview collection title')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Preview collection description.')).toBeInTheDocument();
+    expect(screen.getByText('4 archive items')).toBeInTheDocument();
+    expect(screen.getByText('4 albums')).toBeInTheDocument();
+    expect(screen.getByText('2 skipped songs')).toBeInTheDocument();
+    expect(screen.getByText('Album one')).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'Album one cover' })).toHaveAttribute(
+      'src',
+      'https://img.example.test/album-one.jpg',
+    );
+    expect(screen.getByText('[ 2001 ]')).toBeInTheDocument();
+    expect(screen.getByText('Album three')).toBeInTheDocument();
+    expect(screen.queryByText('Album four')).not.toBeInTheDocument();
+
+    await user.clear(screen.getByLabelText('Title'));
+    await user.type(screen.getByLabelText('Title'), 'Custom archive title');
+    await user.clear(screen.getByLabelText('Description'));
+    await user.type(screen.getByLabelText('Description'), 'Custom archive description.');
+    await user.click(screen.getByRole('button', { name: 'Import collection' }));
+
+    expect(mapPreviewCandidates).toHaveBeenCalledWith(anontravelerPreview);
+    expect(saveCandidatesDraft).toHaveBeenCalledWith({
+      sourceName: 'anontraveler',
+      query: anontravelerPreview.sourceUrl,
+      candidates: previewCandidates,
+    });
+    expect(createReviewPlan).toHaveBeenCalledWith({
+      importJobId: 'job-1',
+      sourceName: 'anontraveler',
+      sourceUrl: anontravelerPreview.sourceUrl,
+      candidates: previewCandidates,
+      archiveCollection: {
+        externalId: 'version-1',
+        title: 'Custom archive title',
+        description: 'Custom archive description.',
+        collectionType: 'album_rank',
+      },
+      archiveItems: anontravelerPreview.archiveItems,
+    });
+    expect(commitPublicImport).toHaveBeenCalled();
+    await waitFor(() => expect(loadCollections).toHaveBeenCalledTimes(2));
+    expect(await screen.findByText('Import finished: 4 created, 1 matched, 0 skipped.')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'Import summary: preview 4 archive items, saved 1 candidates, planned 6 review items, committed 5 rows.',
+      ),
+    ).toBeInTheDocument();
+  });
+
   it('edits an archive collection and refreshes the list', async () => {
     const user = userEvent.setup();
     const loadCollections = vi.fn().mockResolvedValue(collections);
@@ -83,6 +239,7 @@ describe('ArchivePage', () => {
     renderWithI18n(<ArchivePage onLoadCollections={loadCollections} onUpdateCollection={updateCollection} />);
 
     await screen.findByText('Classic rock guide');
+    await user.click(screen.getByText('Classic rock guide'));
     await user.click(screen.getByRole('button', { name: 'Edit Classic rock guide' }));
     expect(screen.getByText('Collection / edit')).toBeInTheDocument();
 
@@ -111,6 +268,7 @@ describe('ArchivePage', () => {
     renderWithI18n(<ArchivePage onDeleteCollection={deleteCollection} onLoadCollections={loadCollections} />);
 
     await screen.findByText('Classic rock guide');
+    await user.click(screen.getByText('Classic rock guide'));
     await user.click(screen.getByRole('button', { name: 'Delete Classic rock guide' }));
 
     expect(deleteCollection).toHaveBeenCalledWith('collection-1');

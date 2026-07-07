@@ -226,6 +226,14 @@ describe('albums.service', () => {
       error: null,
     });
     const itemOrderMock = vi.fn(() => ({ range: itemRangeMock }));
+    const allItemsOrderMock = vi.fn().mockResolvedValue({
+      data: [{ collection_id: 'collection-1', entity_id: 'album-26', position: 26, note: 'Page note.' }],
+      error: null,
+    });
+    const itemSelectMock = vi
+      .fn()
+      .mockReturnValueOnce({ eq: vi.fn(() => ({ eq: vi.fn(() => ({ order: allItemsOrderMock })) })) })
+      .mockReturnValueOnce({ eq: vi.fn(() => ({ eq: vi.fn(() => ({ order: itemOrderMock })) })) });
     const albumInMock = vi.fn().mockResolvedValue({
       data: [
         {
@@ -251,7 +259,7 @@ describe('albums.service', () => {
         return {
           delete: deleteMock,
           insert: insertMock,
-          select: vi.fn(() => ({ eq: itemEqMock })),
+          select: itemSelectMock,
           update: updateMock,
         };
       }
@@ -276,6 +284,89 @@ describe('albums.service', () => {
     expect(itemRangeMock).toHaveBeenCalledWith(25, 49);
     expect(albumInMock).toHaveBeenCalledWith('id', ['album-26']);
     expect(externalInMock).toHaveBeenCalledWith('entity_id', ['album-26']);
+  });
+
+  it('filters a collection by style across all collection items while loading only the requested result page', async () => {
+    const collectionEqMock = vi.fn().mockResolvedValue({
+      data: [
+        {
+          id: 'collection-1',
+          title: 'Large import guide',
+          source: 'anontraveler',
+          source_url: 'https://example.test/rank/version/large',
+          description: 'Large import.',
+        },
+      ],
+      error: null,
+    });
+    const allItemRows = [
+      { collection_id: 'collection-1', entity_id: 'album-rock', position: 1, note: '' },
+      { collection_id: 'collection-1', entity_id: 'album-folk-1', position: 2, note: 'First folk note.' },
+      { collection_id: 'collection-1', entity_id: 'album-folk-2', position: 3, note: 'Second folk note.' },
+    ];
+    const allItemsOrderMock = vi.fn().mockResolvedValue({ data: allItemRows, error: null });
+    const pageRangeMock = vi.fn();
+    const pageOrderMock = vi.fn(() => ({ range: pageRangeMock }));
+    const itemSelectMock = vi
+      .fn()
+      .mockReturnValueOnce({ eq: vi.fn(() => ({ eq: vi.fn(() => ({ order: allItemsOrderMock })) })) })
+      .mockReturnValueOnce({ eq: vi.fn(() => ({ eq: vi.fn(() => ({ order: pageOrderMock })) })) });
+    const albumInMock = vi.fn().mockResolvedValue({
+      data: [
+        {
+          id: 'album-folk-1',
+          title: 'Blue',
+          release_year: 1971,
+          album_type: 'album',
+          notes: '',
+          artists: { name: 'Joni Mitchell' },
+        },
+      ],
+      error: null,
+    });
+    const externalInMock = vi.fn().mockResolvedValue({
+      data: [
+        { entity_id: 'album-rock', raw_payload: { metadata: { styles: ['Rock'] } } },
+        { entity_id: 'album-folk-1', raw_payload: { metadata: { styles: ['Folk'], note: 'Imported folk note.' } } },
+        { entity_id: 'album-folk-2', raw_payload: { metadata: { styles: ['Folk', 'Singer-songwriter'] } } },
+      ],
+      error: null,
+    });
+    const externalEqMock = vi.fn(() => ({ in: externalInMock }));
+    fromMock.mockImplementation((tableName?: string) => {
+      if (tableName === 'archive_collections') {
+        return { delete: deleteMock, insert: insertMock, select: vi.fn(() => ({ eq: collectionEqMock })), update: updateMock };
+      }
+      if (tableName === 'archive_items') {
+        return { delete: deleteMock, insert: insertMock, select: itemSelectMock, update: updateMock };
+      }
+      if (tableName === 'albums') {
+        return { delete: deleteMock, insert: insertMock, select: vi.fn(() => ({ in: albumInMock })), update: updateMock };
+      }
+      if (tableName === 'external_sources') {
+        return { delete: deleteMock, insert: insertMock, select: vi.fn(() => ({ eq: externalEqMock })), update: updateMock };
+      }
+      return { delete: deleteMock, insert: insertMock, select: selectMock, update: updateMock };
+    });
+    const { getAlbumCollectionById } = await import('./albums.service');
+
+    await expect(getAlbumCollectionById('collection-1', { pageIndex: 0, pageSize: 1, style: 'Folk' })).resolves.toEqual(
+      expect.objectContaining({
+        totalAlbumCount: 2,
+        availableStyles: ['Folk', 'Rock', 'Singer-songwriter'],
+        albums: [
+          expect.objectContaining({
+            id: 'album-folk-1',
+            rank: 2,
+            reviewNote: 'Imported folk note.',
+          }),
+        ],
+      }),
+    );
+
+    expect(pageRangeMock).not.toHaveBeenCalled();
+    expect(albumInMock).toHaveBeenCalledWith('id', ['album-folk-1']);
+    expect(externalInMock).toHaveBeenCalledWith('entity_id', ['album-rock', 'album-folk-1', 'album-folk-2']);
   });
 
   it('lists albums grouped by public import collection with imported metadata', async () => {
@@ -369,6 +460,7 @@ describe('albums.service', () => {
         sourceUrl: 'https://example.test/rank/version/1',
         description: 'Albums to explore.',
         totalAlbumCount: 1,
+        availableStyles: ['Blues rock', 'Psychedelic rock'],
         albums: [
           {
             id: 'album-1',

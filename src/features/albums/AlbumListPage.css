@@ -1,4 +1,4 @@
-.albums-page {
+﻿.albums-page {
   display: grid;
   gap: var(--space-5);
 }
@@ -286,7 +286,8 @@
   text-transform: uppercase;
 }
 
-.albums-filter-bar select {
+.albums-filter-bar select,
+.albums-filter-bar input {
   width: 100%;
   min-height: 2.5rem;
   border: 1px solid rgba(167, 162, 154, 0.22);
@@ -294,6 +295,106 @@
   background: rgba(17, 16, 15, 0.74);
   color: var(--color-paper);
   padding: 0.65rem 0.75rem;
+}
+
+.albums-filter-panel {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.albums-option-list,
+.albums-style-options {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.albums-option-list {
+  max-height: 12rem;
+  overflow: auto;
+  padding-right: 0.2rem;
+}
+
+.albums-option-row {
+  align-items: center;
+  display: grid;
+  gap: 0.35rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+  transition: transform 140ms ease, opacity 140ms ease, background-color 140ms ease;
+}
+
+.albums-option-row:hover {
+  transform: translateY(-1px);
+}
+
+.albums-option-row > button,
+.albums-style-options button {
+  min-height: 2.25rem;
+  border: 1px solid rgba(167, 162, 154, 0.18);
+  border-radius: 0.5rem;
+  background: rgba(17, 16, 15, 0.54);
+  color: var(--color-paper);
+  cursor: pointer;
+  font-weight: 700;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  padding: 0.5rem 0.65rem;
+  text-align: left;
+  transition: border-color 140ms ease, background-color 140ms ease, color 140ms ease, transform 140ms ease;
+}
+
+.albums-style-options {
+  grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+  max-height: 10.5rem;
+  overflow: auto;
+  padding-right: 0.2rem;
+}
+
+.albums-option-row > button:hover,
+.albums-option-row > button:focus-visible,
+.albums-style-options button:hover,
+.albums-style-options button:focus-visible,
+.albums-option-row > button.is-selected,
+.albums-style-options button.is-selected {
+  border-color: rgba(242, 169, 59, 0.54);
+  background: rgba(242, 169, 59, 0.14);
+  color: var(--color-paper);
+}
+
+.albums-option-row__actions {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.albums-option-row__actions button {
+  min-height: 2.25rem;
+  width: 2.25rem;
+  border: 1px solid rgba(167, 162, 154, 0.18);
+  border-radius: 0.5rem;
+  background: rgba(17, 16, 15, 0.48);
+  color: var(--color-paper-muted);
+  cursor: pointer;
+  font-weight: 700;
+  transition: border-color 140ms ease, background-color 140ms ease, color 140ms ease;
+}
+
+.albums-option-row__actions button:hover:not(:disabled),
+.albums-option-row__actions button:focus-visible:not(:disabled) {
+  border-color: rgba(242, 169, 59, 0.48);
+  color: var(--color-amber);
+}
+
+.albums-option-row__actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.38;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .albums-option-row,
+  .albums-option-row > button,
+  .albums-style-options button,
+  .albums-option-row__actions button {
+    transition: none;
+  }
 }
 
 .albums-collections {

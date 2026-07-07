@@ -1,0 +1,4 @@
+[     217ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:5173/node_modules/.vite/deps/react-dom-BTq0yq41.js?v=80ea0a85:17230
+[     337ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:5173/favicon.ico:0
+[  355608ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:5173/node_modules/.vite/deps/react-dom-BTq0yq41.js?v=80ea0a85:17230
+[  778734ms] [LOG] [vite] server connection lost. Polling for restart... @ http://localhost:5173/@vite/client:992

@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react';
+﻿import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { renderWithI18n } from '../../test/render';
@@ -43,6 +43,91 @@ const albumCollections: AlbumCollectionSummary[] = [
 const albumCollectionOptions: AlbumCollectionOption[] = albumCollections.map(({ albums: _albums, ...collection }) => collection);
 
 describe('AlbumListPage', () => {
+  it('searches collection categories and lets users reorder them manually', async () => {
+    const user = userEvent.setup();
+    const secondCollection: AlbumCollectionSummary = {
+      ...albumCollections[0],
+      id: 'collection-2',
+      title: 'Folk essentials',
+      albums: [{
+        ...albumCollections[0].albums[0],
+        id: 'album-2',
+        title: 'Blue',
+        artistName: 'Joni Mitchell',
+      }],
+    };
+    const options = [albumCollections[0], secondCollection].map(({ albums: _albums, ...collection }) => collection);
+    const onLoadAlbumCollection = vi.fn()
+      .mockResolvedValueOnce(albumCollections[0])
+      .mockResolvedValueOnce(secondCollection);
+
+    renderWithI18n(
+      <AlbumListPage
+        onLoadAlbumCollectionOptions={vi.fn().mockResolvedValue(options)}
+        onLoadAlbumCollection={onLoadAlbumCollection}
+      />,
+    );
+
+    expect(await screen.findByRole('button', { name: 'Classic rock guide' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Folk essentials' })).toBeInTheDocument();
+
+    await user.type(screen.getByLabelText('Search collection categories'), 'folk');
+
+    expect(screen.queryByRole('button', { name: 'Classic rock guide' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Folk essentials' })).toBeInTheDocument();
+
+    await user.clear(screen.getByLabelText('Search collection categories'));
+    await user.click(screen.getByRole('button', { name: 'Move Folk essentials up' }));
+
+    const categoryButtons = Array.from(document.querySelectorAll('.albums-option-row > button'));
+    expect(categoryButtons.map((button) => button.textContent)).toEqual(['Folk essentials', 'Classic rock guide']);
+
+    await user.click(screen.getByRole('button', { name: 'Folk essentials' }));
+
+    expect(onLoadAlbumCollection).toHaveBeenLastCalledWith('collection-2', { pageIndex: 0, pageSize: 25 });
+    expect(await screen.findByText('Blue')).toBeInTheDocument();
+  });
+
+  it('searches existing style options before applying a style filter', async () => {
+    const user = userEvent.setup();
+    const collectionWithStyles: AlbumCollectionSummary = {
+      ...albumCollections[0],
+      availableStyles: ['Blues rock', 'Folk', 'Psychedelic rock'],
+    };
+    const folkCollection: AlbumCollectionSummary = {
+      ...collectionWithStyles,
+      albums: [{
+        ...albumCollections[0].albums[0],
+        id: 'album-2',
+        title: 'Blue',
+        artistName: 'Joni Mitchell',
+        styles: ['Folk'],
+      }],
+    };
+    const onLoadAlbumCollection = vi.fn()
+      .mockResolvedValueOnce(collectionWithStyles)
+      .mockResolvedValueOnce(folkCollection);
+
+    renderWithI18n(
+      <AlbumListPage
+        onLoadAlbumCollectionOptions={vi.fn().mockResolvedValue(albumCollectionOptions)}
+        onLoadAlbumCollection={onLoadAlbumCollection}
+      />,
+    );
+
+    expect(await screen.findByRole('button', { name: 'Psychedelic rock' })).toBeInTheDocument();
+
+    await user.type(screen.getByLabelText('Search styles'), 'folk');
+
+    expect(screen.queryByRole('button', { name: 'Blues rock' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Folk' })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Folk' }));
+
+    expect(onLoadAlbumCollection).toHaveBeenLastCalledWith('collection-1', { pageIndex: 0, pageSize: 25, style: 'Folk' });
+    expect(await screen.findByText('Blue')).toBeInTheDocument();
+  });
+
   it('loads collection titles first and then loads the selected collection albums', async () => {
     const onLoadAlbumCollectionOptions = vi.fn().mockResolvedValue(albumCollectionOptions);
     const onLoadAlbumCollection = vi.fn().mockResolvedValue(albumCollections[0]);
@@ -125,7 +210,7 @@ describe('AlbumListPage', () => {
     expect(await screen.findByText('Axis: Bold as Love')).toBeInTheDocument();
     expect(screen.getByText('Blue')).toBeInTheDocument();
 
-    await user.selectOptions(screen.getByLabelText('Filter by style'), 'Folk');
+    await user.click(screen.getByRole('button', { name: 'Folk' }));
 
     expect(screen.queryByText('Axis: Bold as Love')).not.toBeInTheDocument();
     expect(screen.getByText('Blue')).toBeInTheDocument();
@@ -202,6 +287,71 @@ describe('AlbumListPage', () => {
     expect(screen.getByText('Showing 26-26 of 26 albums')).toBeInTheDocument();
   });
 
+  it('filters the selected collection by style through the service instead of the current page only', async () => {
+    const user = userEvent.setup();
+    const firstPage: AlbumCollectionSummary = {
+      ...albumCollections[0],
+      totalAlbumCount: 26,
+      availableStyles: ['Folk', 'Psychedelic rock'],
+      albums: Array.from({ length: 25 }, (_, index) => ({
+        ...albumCollections[0].albums[0],
+        id: `album-${index + 1}`,
+        title: `Album ${index + 1}`,
+        rank: index + 1,
+        styles: ['Psychedelic rock'],
+      })),
+    };
+    const folkPage: AlbumCollectionSummary = {
+      ...albumCollections[0],
+      totalAlbumCount: 26,
+      availableStyles: ['Folk', 'Psychedelic rock'],
+      albums: [{
+        ...albumCollections[0].albums[0],
+        id: 'album-26',
+        title: 'Blue',
+        artistName: 'Joni Mitchell',
+        rank: 26,
+        styles: ['Folk'],
+      }],
+    };
+    const folkSecondPage: AlbumCollectionSummary = {
+      ...albumCollections[0],
+      totalAlbumCount: 26,
+      availableStyles: ['Folk', 'Psychedelic rock'],
+      albums: [{
+        ...albumCollections[0].albums[0],
+        id: 'album-27',
+        title: 'Court and Spark',
+        artistName: 'Joni Mitchell',
+        rank: 27,
+        styles: ['Folk'],
+      }],
+    };
+    const onLoadAlbumCollection = vi.fn()
+      .mockResolvedValueOnce(firstPage)
+      .mockResolvedValueOnce(folkPage)
+      .mockResolvedValueOnce(folkSecondPage);
+
+    renderWithI18n(
+      <AlbumListPage
+        onLoadAlbumCollectionOptions={vi.fn().mockResolvedValue(albumCollectionOptions)}
+        onLoadAlbumCollection={onLoadAlbumCollection}
+      />,
+    );
+
+    expect(await screen.findByText('Album 1')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Folk' }));
+
+    expect(onLoadAlbumCollection).toHaveBeenLastCalledWith('collection-1', { pageIndex: 0, pageSize: 25, style: 'Folk' });
+    expect(await screen.findByText('Blue')).toBeInTheDocument();
+    expect(screen.getByText('Showing 1-25 of 26 albums')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Next page' }));
+
+    expect(onLoadAlbumCollection).toHaveBeenLastCalledWith('collection-1', { pageIndex: 1, pageSize: 25, style: 'Folk' });
+    expect(await screen.findByText('Court and Spark')).toBeInTheDocument();
+  });
+
   it('places collection pagination after the album list', async () => {
     const pagedCollection: AlbumCollectionSummary = {
       ...albumCollections[0],
@@ -263,7 +413,7 @@ describe('AlbumListPage legacy props', () => {
 
     expect(await screen.findByText('Ungrouped albums')).toBeInTheDocument();
     expect(screen.getByText('Axis: Bold as Love')).toBeInTheDocument();
-    await user.selectOptions(screen.getByLabelText('Filter by style'), 'All styles');
+    await user.click(screen.getByRole('button', { name: 'All styles' }));
     expect(screen.getByText('Axis: Bold as Love')).toBeInTheDocument();
   });
 });

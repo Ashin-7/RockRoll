@@ -52,6 +52,7 @@ export function InboxPage({
   const [isPreviewLoading, setIsPreviewLoading] = useState(false);
   const [importRole, setImportRole] = useState<ImportUserRole>('anonymous');
   const [commitMessage, setCommitMessage] = useState('');
+  const [commitSummary, setCommitSummary] = useState('');
   const [commitError, setCommitError] = useState('');
   const [isCommittingPublicImport, setIsCommittingPublicImport] = useState(false);
 
@@ -88,6 +89,7 @@ export function InboxPage({
     event.preventDefault();
     setPreviewError('');
     setCommitMessage('');
+    setCommitSummary('');
     setCommitError('');
     setAnontravelerPreview(null);
     setIsPreviewLoading(true);
@@ -111,17 +113,19 @@ export function InboxPage({
     const candidatesToImport = mapAnontravelerPreviewCandidates(anontravelerPreview);
 
     setCommitMessage('');
+    setCommitSummary('');
     setCommitError('');
     setIsCommittingPublicImport(true);
 
     try {
+      const previewArchiveItemCount = anontravelerPreview.archiveItems.length;
       const draft = await onSaveCandidatesDraft({
         sourceName: 'anontraveler',
         query: sourceUrl,
         candidates: candidatesToImport,
       });
 
-      await onCreateReviewPlan({
+      const reviewPlan = await onCreateReviewPlan({
         importJobId: draft.importJobId,
         sourceName: 'anontraveler',
         sourceUrl,
@@ -136,6 +140,7 @@ export function InboxPage({
       });
 
       const result = await onCommitPublicImportReviewPlan();
+      const committedCount = result.createdCount + result.matchedCount + result.skippedCount;
       setAnontravelerPreview(null);
       setAnontravelerUrl('');
       setCommitMessage(
@@ -143,6 +148,14 @@ export function InboxPage({
           created: result.createdCount,
           matched: result.matchedCount,
           skipped: result.skippedCount,
+        }),
+      );
+      setCommitSummary(
+        formatMessage(t('inbox.fullImportSummary'), {
+          preview: previewArchiveItemCount,
+          saved: draft.savedCount,
+          planned: reviewPlan.plannedCount,
+          committed: committedCount,
         }),
       );
     } catch (caughtError) {
@@ -269,6 +282,7 @@ export function InboxPage({
       </section>
 
       {commitMessage ? <p>{commitMessage}</p> : null}
+      {commitSummary ? <p>{commitSummary}</p> : null}
       {commitError ? <p role="alert">{commitError}</p> : null}
     </section>
   );

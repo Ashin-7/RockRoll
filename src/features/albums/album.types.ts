@@ -27,11 +27,13 @@ export interface AlbumCollectionOption {
 export interface AlbumCollectionSummary extends AlbumCollectionOption {
   albums: AlbumCollectionAlbumSummary[];
   totalAlbumCount?: number;
+  availableStyles?: string[];
 }
 
 export interface AlbumCollectionPageInput {
   pageIndex: number;
   pageSize: number;
+  style?: string;
 }
 
 export type AlbumDetail = AlbumSummary;

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+﻿import { useEffect, useMemo, useState } from 'react';
 import { useI18n } from '../../i18n/I18nProvider';
 import { AlbumCollectionOption, AlbumCollectionPageInput, AlbumCollectionSummary, AlbumSummary } from './album.types';
 import { getAlbumCollectionById, listAlbumCollectionOptions, listAlbumCollections } from './albums.service';
@@ -52,15 +52,21 @@ export function AlbumListPage({
   );
   const [collectionOptions, setCollectionOptions] = useState<AlbumCollectionOption[]>([]);
   const [selectedCollectionId, setSelectedCollectionId] = useState('');
+  const [collectionSearch, setCollectionSearch] = useState('');
   const [isLoading, setIsLoading] = useState(!hasProvidedAlbums);
   const [error, setError] = useState('');
   const [selectedStyle, setSelectedStyle] = useState('');
+  const [styleSearch, setStyleSearch] = useState('');
   const [collectionPageIndexes, setCollectionPageIndexes] = useState<Record<string, number>>({});
   const [expandedDescriptionIds, setExpandedDescriptionIds] = useState<Record<string, boolean>>({});
   const [expandedNoteIds, setExpandedNoteIds] = useState<Record<string, boolean>>({});
 
-  async function loadCollectionPage(collectionId: string, pageIndex: number) {
-    const nextCollection = await onLoadAlbumCollection(collectionId, { pageIndex, pageSize: albumPageSize });
+  async function loadCollectionPage(collectionId: string, pageIndex: number, styleName = selectedStyle) {
+    const pageInput: AlbumCollectionPageInput = { pageIndex, pageSize: albumPageSize };
+    if (styleName) {
+      pageInput.style = styleName;
+    }
+    const nextCollection = await onLoadAlbumCollection(collectionId, pageInput);
     setLoadedCollections(nextCollection ? [nextCollection] : []);
     setCollectionPageIndexes((currentPageIndexes) => ({
       ...currentPageIndexes,
@@ -72,6 +78,8 @@ export function AlbumListPage({
     if (hasProvidedAlbums) {
       setCollectionOptions([]);
       setSelectedCollectionId('');
+      setCollectionSearch('');
+      setStyleSearch('');
       setLoadedCollections(mapFlatAlbumsToCollection(albums));
       setIsLoading(false);
       return;
@@ -90,6 +98,8 @@ export function AlbumListPage({
             setLoadedCollections(nextCollections);
             setCollectionOptions(nextCollections.map(({ albums: _albums, ...collection }) => collection));
             setSelectedCollectionId(nextCollections[0]?.id ?? '');
+            setCollectionSearch('');
+            setStyleSearch('');
           }
           return;
         }
@@ -102,6 +112,8 @@ export function AlbumListPage({
         if (isMounted) {
           setCollectionOptions(nextOptions);
           setSelectedCollectionId(firstCollectionId);
+          setCollectionSearch('');
+          setStyleSearch('');
           setLoadedCollections(firstCollection ? [firstCollection] : []);
           setCollectionPageIndexes(firstCollectionId ? { [firstCollectionId]: 0 } : {});
         }
@@ -142,14 +154,36 @@ export function AlbumListPage({
   const styleOptions = useMemo(
     () =>
       Array.from(
-        new Set(displayCollections.flatMap((collection) => collection.albums.flatMap((album) => album.styles))),
+        new Set(
+          displayCollections.flatMap((collection) =>
+            collection.availableStyles ?? collection.albums.flatMap((album) => album.styles),
+          ),
+        ),
       ).sort((left, right) => left.localeCompare(right)),
     [displayCollections],
   );
+  const filteredCollectionOptions = useMemo(() => {
+    const normalizedSearch = collectionSearch.trim().toLocaleLowerCase();
+    if (!normalizedSearch) {
+      return collectionOptions;
+    }
+
+    return collectionOptions.filter((collection) =>
+      collection.title.toLocaleLowerCase().includes(normalizedSearch),
+    );
+  }, [collectionOptions, collectionSearch]);
+  const filteredStyleOptions = useMemo(() => {
+    const normalizedSearch = styleSearch.trim().toLocaleLowerCase();
+    if (!normalizedSearch) {
+      return styleOptions;
+    }
+
+    return styleOptions.filter((styleName) => styleName.toLocaleLowerCase().includes(normalizedSearch));
+  }, [styleOptions, styleSearch]);
   const filteredCollections = displayCollections
     .map((collection) => ({
       ...collection,
-      albums: selectedStyle
+      albums: selectedStyle && !usesServerPagination
         ? collection.albums.filter((album) => album.styles.includes(selectedStyle))
         : collection.albums,
     }))
@@ -176,7 +210,7 @@ export function AlbumListPage({
     setIsLoading(true);
     setError('');
     try {
-      await loadCollectionPage(collectionId, nextPageIndex);
+      await loadCollectionPage(collectionId, nextPageIndex, selectedStyle);
     } catch (caughtError) {
       setError(caughtError instanceof Error ? caughtError.message : t('albums.loadError'));
     } finally {
@@ -187,11 +221,32 @@ export function AlbumListPage({
   async function handleSelectCollection(collectionId: string) {
     setSelectedCollectionId(collectionId);
     setSelectedStyle('');
+    setStyleSearch('');
     setIsLoading(true);
     setError('');
 
     try {
       await loadCollectionPage(collectionId, 0);
+    } catch (caughtError) {
+      setError(caughtError instanceof Error ? caughtError.message : t('albums.loadError'));
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  async function handleSelectStyle(styleName: string) {
+    setSelectedStyle(styleName);
+    setStyleSearch('');
+
+    if (!usesServerPagination || !selectedCollectionId) {
+      setCollectionPageIndexes({});
+      return;
+    }
+
+    setIsLoading(true);
+    setError('');
+    try {
+      await loadCollectionPage(selectedCollectionId, 0, styleName);
     } catch (caughtError) {
       setError(caughtError instanceof Error ? caughtError.message : t('albums.loadError'));
     } finally {
@@ -213,6 +268,20 @@ export function AlbumListPage({
     }));
   }
 
+  function moveCollectionOption(collectionId: string, direction: -1 | 1) {
+    setCollectionOptions((currentOptions) => {
+      const currentIndex = currentOptions.findIndex((collection) => collection.id === collectionId);
+      const nextIndex = currentIndex + direction;
+      if (currentIndex < 0 || nextIndex < 0 || nextIndex >= currentOptions.length) {
+        return currentOptions;
+      }
+
+      const nextOptions = [...currentOptions];
+      [nextOptions[currentIndex], nextOptions[nextIndex]] = [nextOptions[nextIndex], nextOptions[currentIndex]];
+      return nextOptions;
+    });
+  }
+
   return (
     <section className="albums-page">
       <div className="albums-hero">
@@ -228,40 +297,82 @@ export function AlbumListPage({
 
       <section className="albums-toolbar" aria-label={t('albums.toolbarLabel')}>
         {!hasProvidedAlbums && collectionOptions.length > 0 ? (
-          <div className="albums-filter-bar">
+          <div className="albums-filter-bar albums-filter-panel">
             <label htmlFor="album-collection-filter">
               Collection category
-              <select
+              <input
                 id="album-collection-filter"
-                value={selectedCollectionId}
-                onChange={(event) => handleSelectCollection(event.target.value)}
-              >
-                {collectionOptions.map((collection) => (
-                  <option key={collection.id} value={collection.id}>
-                    {collection.title}
-                  </option>
-                ))}
-              </select>
+                type="search"
+                value={collectionSearch}
+                aria-label="Search collection categories"
+                onChange={(event) => setCollectionSearch(event.target.value)}
+              />
             </label>
+            <div className="albums-option-list" aria-label="Collection categories">
+              {filteredCollectionOptions.map((collection) => {
+                const collectionIndex = collectionOptions.findIndex((option) => option.id === collection.id);
+                return (
+                  <div className="albums-option-row" key={collection.id}>
+                    <button
+                      type="button"
+                      className={collection.id === selectedCollectionId ? 'is-selected' : ''}
+                      onClick={() => handleSelectCollection(collection.id)}
+                    >
+                      {collection.title}
+                    </button>
+                    <div className="albums-option-row__actions">
+                      <button
+                        type="button"
+                        aria-label={`Move ${collection.title} up`}
+                        disabled={collectionIndex <= 0}
+                        onClick={() => moveCollectionOption(collection.id, -1)}
+                      >
+                        鈫?                      </button>
+                      <button
+                        type="button"
+                        aria-label={`Move ${collection.title} down`}
+                        disabled={collectionIndex < 0 || collectionIndex >= collectionOptions.length - 1}
+                        onClick={() => moveCollectionOption(collection.id, 1)}
+                      >
+                        鈫?                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         ) : null}
         {!isLoading && displayCollections.length > 0 ? (
-          <div className="albums-filter-bar">
+          <div className="albums-filter-bar albums-filter-panel">
             <label htmlFor="album-style-filter">
               {t('albums.styleFilterLabel')}
-              <select
+              <input
                 id="album-style-filter"
-                value={selectedStyle}
-                onChange={(event) => setSelectedStyle(event.target.value)}
-              >
-                <option value="">{t('albums.allStyles')}</option>
-                {styleOptions.map((styleName) => (
-                  <option key={styleName} value={styleName}>
-                    {styleName}
-                  </option>
-                ))}
-              </select>
+                type="search"
+                value={styleSearch}
+                aria-label="Search styles"
+                onChange={(event) => setStyleSearch(event.target.value)}
+              />
             </label>
+            <div className="albums-style-options" aria-label="Style options">
+              <button
+                type="button"
+                className={!selectedStyle ? 'is-selected' : ''}
+                onClick={() => handleSelectStyle('')}
+              >
+                {t('albums.allStyles')}
+              </button>
+              {filteredStyleOptions.map((styleName) => (
+                <button
+                  type="button"
+                  className={styleName === selectedStyle ? 'is-selected' : ''}
+                  key={styleName}
+                  onClick={() => handleSelectStyle(styleName)}
+                >
+                  {styleName}
+                </button>
+              ))}
+            </div>
           </div>
         ) : null}
       </section>

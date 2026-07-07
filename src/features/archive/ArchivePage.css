@@ -34,7 +34,8 @@
 .archive-section-kicker,
 .archive-form-mode,
 .archive-table-row p,
-.archive-table-row h3 {
+.archive-table-row h3,
+.archive-collection-card__body p {
   margin: 0;
 }
 
@@ -42,6 +43,11 @@
 .archive-collections,
 .archive-collection-list,
 .archive-form,
+.archive-url-import,
+.archive-manual-form,
+.archive-import-preview,
+.archive-import-preview__samples,
+.archive-collection-cards,
 .archive-table {
   display: grid;
   gap: 1rem;
@@ -87,6 +93,68 @@
 
 .archive-table-row h3 {
   font-size: 1rem;
+}
+
+.archive-collection-card {
+  border: 1px solid var(--color-border, #d7d7d7);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.archive-collection-card__summary {
+  align-items: center;
+  cursor: pointer;
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  list-style: none;
+  padding: 0.85rem 1rem;
+}
+
+.archive-collection-card__summary::-webkit-details-marker {
+  display: none;
+}
+
+.archive-collection-card__summary::after {
+  border: 1px solid var(--color-border, #d7d7d7);
+  border-radius: 999px;
+  color: var(--color-muted, #666);
+  content: "+";
+  display: inline-grid;
+  font-weight: 700;
+  height: 1.5rem;
+  place-items: center;
+  width: 1.5rem;
+}
+
+.archive-collection-card[open] .archive-collection-card__summary::after {
+  content: "-";
+}
+
+.archive-collection-card__summary:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+}
+
+.archive-collection-card__title {
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.archive-collection-card__meta {
+  color: var(--color-muted, #666);
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 0.85rem;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.archive-collection-card__body {
+  border-top: 1px solid var(--color-border, #d7d7d7);
+  display: grid;
+  gap: 0.75rem;
+  padding: 1rem;
 }
 
 .archive-source-cell {
@@ -147,6 +215,91 @@
   min-height: 5rem;
 }
 
+.archive-import-preview {
+  border-top: 1px solid var(--color-border, #d7d7d7);
+  padding-top: 1rem;
+}
+
+.archive-import-preview h3,
+.archive-import-sample h4,
+.archive-import-sample p {
+  margin: 0;
+}
+
+.archive-import-preview__counts {
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+}
+
+.archive-import-preview__counts p,
+.archive-import-sample {
+  border: 1px solid var(--color-border, #d7d7d7);
+  border-radius: 8px;
+  margin: 0;
+  padding: 0.75rem;
+}
+
+.archive-import-sample {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: 2.5rem 4.5rem minmax(0, 1fr);
+}
+
+.archive-import-sample > span {
+  color: var(--color-muted, #666);
+  font-weight: 700;
+}
+
+.archive-import-sample__cover {
+  align-items: center;
+  aspect-ratio: 1;
+  background: var(--color-surface-subtle, #f4f4f4);
+  border: 1px solid var(--color-border, #d7d7d7);
+  border-radius: 6px;
+  display: flex;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.archive-import-sample__cover img {
+  height: 100%;
+  object-fit: cover;
+  width: 100%;
+}
+
+.archive-import-sample__cover span {
+  color: var(--color-muted, #666);
+  font-size: 0.75rem;
+  padding: 0.25rem;
+  text-align: center;
+}
+
+.archive-import-sample__body {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.archive-import-sample__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.archive-import-sample__meta span {
+  border: 1px solid var(--color-border, #d7d7d7);
+  border-radius: 999px;
+  color: var(--color-muted, #666);
+  font-size: 0.8rem;
+  padding: 0.15rem 0.45rem;
+}
+
+.archive-import-sample p,
+.archive-import-sample__note {
+  color: var(--color-muted, #666);
+}
+
 .archive-form-actions {
   align-items: center;
   display: flex;
@@ -159,6 +312,7 @@
 }
 
 .archive-row-actions {
+  align-items: center;
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
@@ -176,5 +330,14 @@
 
   .archive-collections {
     grid-template-columns: 1fr;
+  }
+
+  .archive-collection-card__summary {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .archive-collection-card__meta {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
   }
 }
