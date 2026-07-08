@@ -580,6 +580,16 @@ npm run build
 - 更新类型
 - 更新文档
 
+权限边界：
+
+- Practice 和 Songs / 曲目是普通登录用户可拥有和维护的核心私有 CRUD 能力。
+- 除 Practice 和 Songs / 曲目外，所有涉及新增、编辑、删除、导入、确认、提交、匹配、回填、批量处理等写操作的入口，默认仅管理员可见、可触发、可通过 RLS。
+- Archive / 档案正式资料的查询可以公共开放；公共开放仅限读取明确标记为 public 的资料，不代表允许匿名或普通用户写入。
+- Artist、Album、Archive collection、Archive item、External source、Import job / candidate / draft / review item 等资料库和导入相关 CRUD，必须明确区分 anon、authenticated user、admin 的权限。
+- 前端隐藏按钮只是体验层；真正权限必须由 Supabase RLS / policy / RPC 权限保证，禁止只靠 UI 判断。
+- 新增任何 CRUD 或导入入口前，必须先写清楚权限矩阵：谁可见、谁可读、谁可写、谁可删除、失败时怎么提示。
+- 当前权限矩阵维护在 `docs/PERMISSIONS.md`；改动权限前必须同步更新该文档。
+
 ---
 
 # 环境变量规则

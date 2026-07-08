@@ -1,5 +1,7 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { useI18n } from '../../i18n/I18nProvider';
+import { getCurrentUserImportRole } from '../inbox/inbox.service';
+import { ImportUserRole } from '../inbox/inbox.types';
 import { addArchiveItem, deleteArchiveItem, getArchiveCollectionById, updateArchiveItem } from './archive.service';
 import { ArchiveCollectionDetail, ArchiveItemSummary, CreateArchiveItemInput, UpdateArchiveItemInput } from './archive.types';
 import './ArchiveDetailPage.css';
@@ -9,6 +11,7 @@ interface ArchiveDetailPageProps {
   onAddItem?: (input: CreateArchiveItemInput) => Promise<void>;
   onDeleteItem?: (itemId: string) => Promise<void>;
   onLoadCollection?: (archiveId: string) => Promise<ArchiveCollectionDetail | null>;
+  onLoadImportRole?: typeof getCurrentUserImportRole;
   onUpdateItem?: (input: UpdateArchiveItemInput) => Promise<void>;
 }
 
@@ -33,6 +36,7 @@ export function ArchiveDetailPage({
   onAddItem = addArchiveItem,
   onDeleteItem = deleteArchiveItem,
   onLoadCollection = getArchiveCollectionById,
+  onLoadImportRole = getCurrentUserImportRole,
   onUpdateItem = updateArchiveItem,
 }: ArchiveDetailPageProps) {
   const { t } = useI18n();
@@ -42,6 +46,7 @@ export function ArchiveDetailPage({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [itemPageIndex, setItemPageIndex] = useState(0);
+  const [importRole, setImportRole] = useState<ImportUserRole>('anonymous');
 
   async function loadCollection() {
     if (!archiveId) {
@@ -66,6 +71,29 @@ export function ArchiveDetailPage({
   useEffect(() => {
     loadCollection();
   }, [archiveId]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadRole() {
+      try {
+        const nextRole = await onLoadImportRole();
+        if (isMounted) {
+          setImportRole(nextRole);
+        }
+      } catch {
+        if (isMounted) {
+          setImportRole('anonymous');
+        }
+      }
+    }
+
+    loadRole();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [onLoadImportRole]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -146,6 +174,7 @@ export function ArchiveDetailPage({
     .replace('{start}', String(collection.items.length === 0 ? 0 : currentItemStart + 1))
     .replace('{end}', String(currentItemEnd))
     .replace('{total}', String(collection.items.length));
+  const canManageArchive = importRole === 'admin';
 
   return (
     <section className="archive-detail-page">
@@ -236,14 +265,16 @@ export function ArchiveDetailPage({
                         </div>
                         <p>{itemNote || t('archiveDetail.noNote')}</p>
                       </div>
-                      <div className="archive-detail-row-actions">
-                        <button type="button" onClick={() => handleEditItem(item)}>
-                          {t('archiveDetail.editAction')}
-                        </button>
-                        <button type="button" onClick={() => handleDeleteItem(item.id)}>
-                          {t('archiveDetail.deleteAction')}
-                        </button>
-                      </div>
+                      {canManageArchive ? (
+                        <div className="archive-detail-row-actions">
+                          <button type="button" onClick={() => handleEditItem(item)}>
+                            {t('archiveDetail.editAction')}
+                          </button>
+                          <button type="button" onClick={() => handleDeleteItem(item.id)}>
+                            {t('archiveDetail.deleteAction')}
+                          </button>
+                        </div>
+                      ) : null}
                     </article>
                   );
                 })}
@@ -252,62 +283,64 @@ export function ArchiveDetailPage({
           ) : null}
         </section>
 
-        <form className="archive-detail-form" onSubmit={handleSubmit}>
-          <div className="archive-detail-form-heading">
-            <p className="archive-detail-form-mode">
-              {editingItem ? t('archiveDetail.editMode') : t('archiveDetail.formMode')}
-            </p>
-            <h2>{editingItem ? t('archiveDetail.editAlbumItemTitle') : t('archiveDetail.addAlbumItemTitle')}</h2>
-          </div>
-          <fieldset>
-            <legend>{t('archiveDetail.albumLinkSection')}</legend>
-            <label>
-              {t('archiveDetail.albumIdLabel')}
-              <input
-                required
-                value={form.entityId}
-                onChange={(event) => setForm((current) => ({ ...current, entityId: event.target.value }))}
-              />
-            </label>
-            <label>
-              {t('archiveDetail.displayTitleLabel')}
-              <input
-                required
-                value={form.displayTitle}
-                onChange={(event) => setForm((current) => ({ ...current, displayTitle: event.target.value }))}
-              />
-            </label>
-          </fieldset>
-          <fieldset>
-            <legend>{t('archiveDetail.placementSection')}</legend>
-            <label>
-              {t('archiveDetail.positionLabel')}
-              <input
-                min="1"
-                type="number"
-                value={form.position}
-                onChange={(event) => setForm((current) => ({ ...current, position: event.target.value }))}
-              />
-            </label>
-            <label>
-              {t('archiveDetail.noteLabel')}
-              <textarea
-                value={form.note}
-                onChange={(event) => setForm((current) => ({ ...current, note: event.target.value }))}
-              />
-            </label>
-          </fieldset>
-          <div className="archive-detail-form-actions">
-            <button type="submit">
-              {editingItem ? t('archiveDetail.updateAlbumItemSubmit') : t('archiveDetail.addAlbumItemSubmit')}
-            </button>
-            {editingItem ? (
-              <button type="button" onClick={handleCancelEdit}>
-                {t('archiveDetail.cancelEdit')}
+        {canManageArchive ? (
+          <form className="archive-detail-form" onSubmit={handleSubmit}>
+            <div className="archive-detail-form-heading">
+              <p className="archive-detail-form-mode">
+                {editingItem ? t('archiveDetail.editMode') : t('archiveDetail.formMode')}
+              </p>
+              <h2>{editingItem ? t('archiveDetail.editAlbumItemTitle') : t('archiveDetail.addAlbumItemTitle')}</h2>
+            </div>
+            <fieldset>
+              <legend>{t('archiveDetail.albumLinkSection')}</legend>
+              <label>
+                {t('archiveDetail.albumIdLabel')}
+                <input
+                  required
+                  value={form.entityId}
+                  onChange={(event) => setForm((current) => ({ ...current, entityId: event.target.value }))}
+                />
+              </label>
+              <label>
+                {t('archiveDetail.displayTitleLabel')}
+                <input
+                  required
+                  value={form.displayTitle}
+                  onChange={(event) => setForm((current) => ({ ...current, displayTitle: event.target.value }))}
+                />
+              </label>
+            </fieldset>
+            <fieldset>
+              <legend>{t('archiveDetail.placementSection')}</legend>
+              <label>
+                {t('archiveDetail.positionLabel')}
+                <input
+                  min="1"
+                  type="number"
+                  value={form.position}
+                  onChange={(event) => setForm((current) => ({ ...current, position: event.target.value }))}
+                />
+              </label>
+              <label>
+                {t('archiveDetail.noteLabel')}
+                <textarea
+                  value={form.note}
+                  onChange={(event) => setForm((current) => ({ ...current, note: event.target.value }))}
+                />
+              </label>
+            </fieldset>
+            <div className="archive-detail-form-actions">
+              <button type="submit">
+                {editingItem ? t('archiveDetail.updateAlbumItemSubmit') : t('archiveDetail.addAlbumItemSubmit')}
               </button>
-            ) : null}
-          </div>
-        </form>
+              {editingItem ? (
+                <button type="button" onClick={handleCancelEdit}>
+                  {t('archiveDetail.cancelEdit')}
+                </button>
+              ) : null}
+            </div>
+          </form>
+        ) : null}
       </div>
     </section>
   );

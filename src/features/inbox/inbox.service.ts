@@ -448,6 +448,13 @@ function buildReviewPlanRows(input: CreateImportReviewPlanInput, userId: string)
   return [...candidateRows, ...archiveCollectionRows, ...archiveItemRows];
 }
 
+async function requireImportAdmin(permissionMessage: string): Promise<void> {
+  const role = await getCurrentUserImportRole();
+  if (role !== 'admin') {
+    throw new Error(permissionMessage);
+  }
+}
+
 export async function listImportCandidates(): Promise<ImportCandidateSummary[]> {
   let supabase: ReturnType<typeof getSupabase>;
   try {
@@ -458,6 +465,7 @@ export async function listImportCandidates(): Promise<ImportCandidateSummary[]> 
     }
     throw caughtError;
   }
+  await requireImportAdmin('Only admins can view import candidates.');
   const { data, error } = await supabase
     .from('import_candidates')
     .select('id,entity_type,display_title,display_subtitle,source_name')
@@ -543,6 +551,7 @@ export async function deleteImportDraftJob(importJobId: string): Promise<DeleteI
 
 export async function listImportDraftJobs(): Promise<ImportDraftJobSummary[]> {
   const supabase = getSupabase();
+  await requireImportAdmin('Only admins can view import draft jobs.');
   const { data: jobData, error: jobError } = await supabase
     .from('import_jobs')
     .select('id,source_name,query,completed_at')
@@ -610,6 +619,7 @@ export async function getCurrentUserImportRole(): Promise<ImportUserRole> {
 
 export async function listImportReviewItems(): Promise<ImportReviewItemSummary[]> {
   const supabase = getSupabase();
+  await requireImportAdmin('Only admins can view import review items.');
   const { data, error } = await supabase
     .from('import_review_items')
     .select(importReviewItemSelectColumns);

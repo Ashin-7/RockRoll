@@ -26,6 +26,12 @@ vi.mock('../../lib/supabase', () => ({
   getSupabase: () => getSupabaseMock(),
 }));
 
+function mockSessionWithProfileRole(role: 'admin' | 'user') {
+  getSessionMock.mockResolvedValue({ data: { session: { user: { id: 'user-1' } } }, error: null });
+  selectMock.mockReturnValue({ eq: eqMock });
+  maybeSingleMock.mockResolvedValue({ data: { role }, error: null });
+}
+
 function createTrackedDeferred<T>() {
   let resolve!: (value: T) => void;
   let isResolved = false;
@@ -821,7 +827,7 @@ describe('albums.service', () => {
   });
 
   it('creates an album for the current user', async () => {
-    getSessionMock.mockResolvedValue({ data: { session: { user: { id: 'user-1' } } }, error: null });
+    mockSessionWithProfileRole('admin');
     insertMock.mockResolvedValue({ error: null });
     const { createAlbum } = await import('./albums.service');
 
@@ -844,7 +850,36 @@ describe('albums.service', () => {
     });
   });
 
+  it('rejects album writes for non-admin users', async () => {
+    mockSessionWithProfileRole('user');
+    const { createAlbum, deleteAlbum, updateAlbum } = await import('./albums.service');
+
+    await expect(
+      createAlbum({
+        title: 'New Album',
+        artistId: 'artist-1',
+        releaseYear: 2026,
+        albumType: 'album',
+        notes: 'Practice references.',
+      }),
+    ).rejects.toThrow('Admin permission is required to manage albums.');
+    await expect(
+      updateAlbum('album-1', {
+        title: 'Updated Album',
+        artistId: null,
+        releaseYear: 1968,
+        albumType: 'live',
+        notes: 'Live notes.',
+      }),
+    ).rejects.toThrow('Admin permission is required to manage albums.');
+    await expect(deleteAlbum('album-1')).rejects.toThrow('Admin permission is required to manage albums.');
+    expect(insertMock).not.toHaveBeenCalled();
+    expect(updateMock).not.toHaveBeenCalled();
+    expect(deleteMock).not.toHaveBeenCalled();
+  });
+
   it('updates an album in Supabase', async () => {
+    mockSessionWithProfileRole('admin');
     updateEqMock.mockResolvedValue({ error: null });
     const { updateAlbum } = await import('./albums.service');
 
@@ -868,6 +903,7 @@ describe('albums.service', () => {
   });
 
   it('deletes an album in Supabase', async () => {
+    mockSessionWithProfileRole('admin');
     deleteEqMock.mockResolvedValue({ error: null });
     const { deleteAlbum } = await import('./albums.service');
 

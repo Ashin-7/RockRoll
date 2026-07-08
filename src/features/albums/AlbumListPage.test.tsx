@@ -43,7 +43,7 @@ const albumCollections: AlbumCollectionSummary[] = [
 const albumCollectionOptions: AlbumCollectionOption[] = albumCollections.map(({ albums: _albums, ...collection }) => collection);
 
 describe('AlbumListPage', () => {
-  it('searches collection categories and lets users reorder them manually', async () => {
+  it('searches collection categories in the trigger input and selects from a floating list', async () => {
     const user = userEvent.setup();
     const secondCollection: AlbumCollectionSummary = {
       ...albumCollections[0],
@@ -68,24 +68,31 @@ describe('AlbumListPage', () => {
       />,
     );
 
-    expect(await screen.findByRole('button', { name: 'Classic rock guide' })).toBeInTheDocument();
+    const collectionFilter = await screen.findByRole('searchbox', { name: 'Collection category' });
+    expect(collectionFilter).toHaveValue('Classic rock guide');
+    expect(screen.queryByRole('button', { name: 'Folk essentials' })).not.toBeInTheDocument();
+
+    await user.click(collectionFilter);
+    expect(collectionFilter).toHaveValue('');
+
+    expect(screen.getByRole('button', { name: 'Classic rock guide' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Folk essentials' })).toBeInTheDocument();
 
-    await user.type(screen.getByLabelText('Search collection categories'), 'folk');
+    await user.type(collectionFilter, 'folk');
 
     expect(screen.queryByRole('button', { name: 'Classic rock guide' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Folk essentials' })).toBeInTheDocument();
 
-    await user.clear(screen.getByLabelText('Search collection categories'));
-    await user.click(screen.getByRole('button', { name: 'Move Folk essentials up' }));
-
-    const categoryButtons = Array.from(document.querySelectorAll('.albums-option-row > button'));
-    expect(categoryButtons.map((button) => button.textContent)).toEqual(['Folk essentials', 'Classic rock guide']);
+    await user.clear(collectionFilter);
+    expect(screen.queryByRole('button', { name: 'Move Folk essentials up' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Move Folk essentials down' })).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Folk essentials' }));
 
     expect(onLoadAlbumCollection).toHaveBeenLastCalledWith('collection-2', { pageIndex: 0, pageSize: 25 });
     expect(await screen.findByText('Blue')).toBeInTheDocument();
+    expect(screen.getByRole('searchbox', { name: 'Collection category' })).toHaveValue('Folk essentials');
+    expect(screen.queryByRole('button', { name: 'Classic rock guide' })).not.toBeInTheDocument();
   });
 
   it('searches existing style options before applying a style filter', async () => {
@@ -115,9 +122,16 @@ describe('AlbumListPage', () => {
       />,
     );
 
-    expect(await screen.findByRole('button', { name: 'Psychedelic rock' })).toBeInTheDocument();
+    const styleFilter = await screen.findByRole('searchbox', { name: 'Filter by style' });
+    expect(styleFilter).toHaveValue('All styles');
+    expect(screen.queryByRole('button', { name: 'Psychedelic rock' })).not.toBeInTheDocument();
 
-    await user.type(screen.getByLabelText('Search styles'), 'folk');
+    await user.click(styleFilter);
+    expect(styleFilter).toHaveValue('');
+
+    expect(screen.getByRole('button', { name: 'Psychedelic rock' })).toBeInTheDocument();
+
+    await user.type(styleFilter, 'folk');
 
     expect(screen.queryByRole('button', { name: 'Blues rock' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Folk' })).toBeInTheDocument();
@@ -126,6 +140,32 @@ describe('AlbumListPage', () => {
 
     expect(onLoadAlbumCollection).toHaveBeenLastCalledWith('collection-1', { pageIndex: 0, pageSize: 25, style: 'Folk' });
     expect(await screen.findByText('Blue')).toBeInTheDocument();
+    expect(screen.getByRole('searchbox', { name: 'Filter by style' })).toHaveValue('Folk');
+    expect(screen.queryByRole('button', { name: 'Psychedelic rock' })).not.toBeInTheDocument();
+  });
+
+  it('closes filter dropdowns when focus moves outside the toolbar control', async () => {
+    const user = userEvent.setup();
+    const collectionWithStyles: AlbumCollectionSummary = {
+      ...albumCollections[0],
+      availableStyles: ['Blues rock', 'Folk', 'Psychedelic rock'],
+    };
+
+    renderWithI18n(
+      <AlbumListPage
+        onLoadAlbumCollectionOptions={vi.fn().mockResolvedValue(albumCollectionOptions)}
+        onLoadAlbumCollection={vi.fn().mockResolvedValue(collectionWithStyles)}
+      />,
+    );
+
+    const styleFilter = await screen.findByRole('searchbox', { name: 'Filter by style' });
+    await user.click(styleFilter);
+    expect(screen.getByRole('button', { name: 'Psychedelic rock' })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('heading', { name: 'Classic rock guide' }));
+
+    expect(screen.queryByRole('button', { name: 'Psychedelic rock' })).not.toBeInTheDocument();
+    expect(styleFilter).toHaveValue('All styles');
   });
 
   it('loads collection titles first and then loads the selected collection albums', async () => {
@@ -156,13 +196,10 @@ describe('AlbumListPage', () => {
     expect(screen.getByAltText('Axis: Bold as Love cover')).toBeInTheDocument();
     expect(screen.getByText('#7')).toBeInTheDocument();
     expect(screen.getByText('1967')).toBeInTheDocument();
-    expect(screen.getAllByText('Psychedelic rock')).toHaveLength(2);
-    expect(screen.getAllByText('Blues rock')).toHaveLength(2);
+    expect(screen.getAllByText('Psychedelic rock')).toHaveLength(1);
+    expect(screen.getAllByText('Blues rock')).toHaveLength(1);
     expect(screen.getByText('Essential guitar record.')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Open source link' })).toHaveAttribute(
-      'href',
-      'https://example.test/rank/version/1',
-    );
+    expect(screen.queryByRole('link', { name: 'Open source link' })).not.toBeInTheDocument();
   });
 
   it('hides manual album creation and points users to link import', async () => {
@@ -210,6 +247,7 @@ describe('AlbumListPage', () => {
     expect(await screen.findByText('Axis: Bold as Love')).toBeInTheDocument();
     expect(screen.getByText('Blue')).toBeInTheDocument();
 
+    await user.click(screen.getByRole('searchbox', { name: 'Filter by style' }));
     await user.click(screen.getByRole('button', { name: 'Folk' }));
 
     expect(screen.queryByText('Axis: Bold as Love')).not.toBeInTheDocument();
@@ -340,6 +378,7 @@ describe('AlbumListPage', () => {
     );
 
     expect(await screen.findByText('Album 1')).toBeInTheDocument();
+    await user.click(screen.getByRole('searchbox', { name: 'Filter by style' }));
     await user.click(screen.getByRole('button', { name: 'Folk' }));
 
     expect(onLoadAlbumCollection).toHaveBeenLastCalledWith('collection-1', { pageIndex: 0, pageSize: 25, style: 'Folk' });
@@ -350,6 +389,23 @@ describe('AlbumListPage', () => {
 
     expect(onLoadAlbumCollection).toHaveBeenLastCalledWith('collection-1', { pageIndex: 1, pageSize: 25, style: 'Folk' });
     expect(await screen.findByText('Court and Spark')).toBeInTheDocument();
+  });
+
+  it('hides the description expand action when the collection description fits', async () => {
+    const scrollHeightSpy = vi.spyOn(HTMLElement.prototype, 'scrollHeight', 'get').mockReturnValue(48);
+    const clientHeightSpy = vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(48);
+    const collectionWithShortDescription: AlbumCollectionSummary = {
+      ...albumCollections[0],
+      description: 'A short collection note.',
+    };
+
+    renderWithI18n(<AlbumListPage onLoadAlbumCollections={vi.fn().mockResolvedValue([collectionWithShortDescription])} />);
+
+    expect(await screen.findByRole('heading', { name: 'Classic rock guide' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Show full description' })).not.toBeInTheDocument();
+
+    scrollHeightSpy.mockRestore();
+    clientHeightSpy.mockRestore();
   });
 
   it('places collection pagination after the album list', async () => {
@@ -375,6 +431,8 @@ describe('AlbumListPage', () => {
 
   it('expands and collapses long collection descriptions', async () => {
     const user = userEvent.setup();
+    const scrollHeightSpy = vi.spyOn(HTMLElement.prototype, 'scrollHeight', 'get').mockReturnValue(96);
+    const clientHeightSpy = vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(48);
     const collectionWithLongDescription: AlbumCollectionSummary = {
       ...albumCollections[0],
       description: 'A long collection description that explains why this canon exists and how the ranking should be read.',
@@ -389,6 +447,9 @@ describe('AlbumListPage', () => {
 
     expect(toggle).toHaveAttribute('aria-expanded', 'true');
     expect(screen.getByRole('button', { name: 'Collapse description' })).toBeInTheDocument();
+
+    scrollHeightSpy.mockRestore();
+    clientHeightSpy.mockRestore();
   });
 
   it('expands and collapses album notes from the text itself', async () => {
@@ -413,6 +474,7 @@ describe('AlbumListPage legacy props', () => {
 
     expect(await screen.findByText('Ungrouped albums')).toBeInTheDocument();
     expect(screen.getByText('Axis: Bold as Love')).toBeInTheDocument();
+    await user.click(screen.getByRole('searchbox', { name: 'Filter by style' }));
     await user.click(screen.getByRole('button', { name: 'All styles' }));
     expect(screen.getByText('Axis: Bold as Love')).toBeInTheDocument();
   });

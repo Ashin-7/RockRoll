@@ -1,7 +1,13 @@
 import { FormEvent, useEffect, useState } from 'react';
+import { ActionBar, Button, Field, FormSection, SearchableDropdown, SearchableDropdownOption } from '../../components/ui';
 import { useI18n } from '../../i18n/I18nProvider';
-import { AnontravelerPreview } from '../inbox/anontraveler.types';
-import { mapAnontravelerPreviewCandidates, previewAnontravelerImport } from '../inbox/anontraveler.service';
+import { AnontravelerPreview, AnontravelerRankDirectoryPage, AnontravelerRankIndexItem } from '../inbox/anontraveler.types';
+import {
+  mapAnontravelerPreviewCandidates,
+  previewAnontravelerImport,
+  scanAnontravelerRankDirectory,
+  scanAnontravelerRankDirectoryPage,
+} from '../inbox/anontraveler.service';
 import {
   commitPublicImportReviewPlan,
   createImportReviewPlan,
@@ -24,6 +30,8 @@ interface ArchivePageProps {
   onLoadCollections?: () => Promise<ArchiveCollectionSummary[]>;
   onUpdateCollection?: (collectionId: string, input: UpdateArchiveCollectionInput) => Promise<void>;
   onPreviewAnontraveler?: typeof previewAnontravelerImport;
+  onScanAnontravelerRankDirectory?: typeof scanAnontravelerRankDirectory;
+  onScanAnontravelerRankDirectoryPage?: typeof scanAnontravelerRankDirectoryPage;
   onMapAnontravelerPreviewCandidates?: typeof mapAnontravelerPreviewCandidates;
   onSaveCandidatesDraft?: typeof saveImportCandidatesDraft;
   onCreateReviewPlan?: typeof createImportReviewPlan;
@@ -46,12 +54,29 @@ function formatMessage(template: string, values: Record<string, string | number>
   );
 }
 
+function mergeRankDirectoryItems(
+  currentItems: AnontravelerRankIndexItem[],
+  nextItems: AnontravelerRankIndexItem[],
+): AnontravelerRankIndexItem[] {
+  const itemsByVersionId = new Map(currentItems.map((item) => [item.versionId, item] as const));
+
+  nextItems.forEach((item) => {
+    if (!itemsByVersionId.has(item.versionId)) {
+      itemsByVersionId.set(item.versionId, item);
+    }
+  });
+
+  return Array.from(itemsByVersionId.values());
+}
+
 export function ArchivePage({
   onCreateCollection = createArchiveCollection,
   onDeleteCollection = deleteArchiveCollection,
   onLoadCollections = listArchiveCollections,
   onUpdateCollection = updateArchiveCollection,
   onPreviewAnontraveler = previewAnontravelerImport,
+  onScanAnontravelerRankDirectory = scanAnontravelerRankDirectory,
+  onScanAnontravelerRankDirectoryPage = scanAnontravelerRankDirectoryPage,
   onMapAnontravelerPreviewCandidates = mapAnontravelerPreviewCandidates,
   onSaveCandidatesDraft = saveImportCandidatesDraft,
   onCreateReviewPlan = createImportReviewPlan,
@@ -66,6 +91,11 @@ export function ArchivePage({
   const [previewTitle, setPreviewTitle] = useState('');
   const [previewDescription, setPreviewDescription] = useState('');
   const [previewError, setPreviewError] = useState('');
+  const [rankDirectoryItems, setRankDirectoryItems] = useState<AnontravelerRankIndexItem[]>([]);
+  const [rankDirectorySearch, setRankDirectorySearch] = useState('');
+  const [rankDirectoryPage, setRankDirectoryPage] = useState<AnontravelerRankDirectoryPage | null>(null);
+  const [rankDirectoryError, setRankDirectoryError] = useState('');
+  const [isRankDirectoryLoading, setIsRankDirectoryLoading] = useState(false);
   const [isPreviewLoading, setIsPreviewLoading] = useState(false);
   const [importRole, setImportRole] = useState<ImportUserRole>('anonymous');
   const [isImportingCollection, setIsImportingCollection] = useState(false);
@@ -75,6 +105,7 @@ export function ArchivePage({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const canManageArchive = importRole === 'admin';
 
   async function loadCollections() {
     setIsLoading(true);
@@ -117,6 +148,10 @@ export function ArchivePage({
 
   async function handlePreviewAnontraveler(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    await previewAnontravelerUrl(anontravelerUrl.trim());
+  }
+
+  async function previewAnontravelerUrl(sourceUrl: string) {
     setMessage(null);
     setPreviewError('');
     setImportError('');
@@ -125,7 +160,7 @@ export function ArchivePage({
     setIsPreviewLoading(true);
 
     try {
-      const preview = await onPreviewAnontraveler(anontravelerUrl.trim());
+      const preview = await onPreviewAnontraveler(sourceUrl);
       setAnontravelerPreview(preview);
       setPreviewTitle(preview.collection.title);
       setPreviewDescription(preview.collection.description);
@@ -135,6 +170,71 @@ export function ArchivePage({
       setIsPreviewLoading(false);
     }
   }
+
+  async function handleScanRankDirectory() {
+    setRankDirectoryError('');
+    setIsRankDirectoryLoading(true);
+
+    try {
+      if (onScanAnontravelerRankDirectoryPage) {
+        const directoryPage = await onScanAnontravelerRankDirectoryPage(0);
+        setRankDirectoryPage(directoryPage);
+        setRankDirectoryItems(directoryPage.items);
+      } else {
+        const items = await onScanAnontravelerRankDirectory('https://www.anontraveler.com/rank');
+        setRankDirectoryPage(null);
+        setRankDirectoryItems(items);
+      }
+    } catch (caughtError) {
+      setRankDirectoryError(caughtError instanceof Error ? caughtError.message : t('archive.rankDirectoryScanError'));
+    } finally {
+      setIsRankDirectoryLoading(false);
+    }
+  }
+
+  async function handleLoadMoreRankDirectory() {
+    if (!rankDirectoryPage?.hasMore || isRankDirectoryLoading || !onScanAnontravelerRankDirectoryPage) {
+      return;
+    }
+
+    setRankDirectoryError('');
+    setIsRankDirectoryLoading(true);
+
+    try {
+      const nextPage = await onScanAnontravelerRankDirectoryPage(rankDirectoryPage.page + 1);
+      setRankDirectoryPage(nextPage);
+      setRankDirectoryItems((currentItems) => mergeRankDirectoryItems(currentItems, nextPage.items));
+    } catch (caughtError) {
+      setRankDirectoryError(caughtError instanceof Error ? caughtError.message : t('archive.rankDirectoryScanError'));
+    } finally {
+      setIsRankDirectoryLoading(false);
+    }
+  }
+
+  async function handleSelectRankDirectoryItem(item: AnontravelerRankIndexItem) {
+    setAnontravelerUrl(item.sourceUrl);
+    setPreviewError('');
+    setImportError('');
+    setImportSummary('');
+    setAnontravelerPreview(null);
+  }
+
+  async function handleSelectRankDirectoryItemById(versionId: string) {
+    const selectedItem = rankDirectoryItems.find((item) => item.versionId === versionId);
+    if (selectedItem) {
+      await handleSelectRankDirectoryItem(selectedItem);
+    }
+  }
+
+  const rankDirectoryOptions: SearchableDropdownOption[] = rankDirectoryItems.map((item) => ({
+    id: item.versionId,
+    label: item.title,
+    meta: item.itemCount === null
+      ? t('archive.rankDirectoryNoItemCount')
+      : t('archive.rankDirectoryItemCount').replace('{count}', String(item.itemCount)),
+    status: item.status,
+    value: item.versionId,
+  }));
 
   async function handleImportAnontravelerCollection() {
     if (!anontravelerPreview) {
@@ -296,43 +396,53 @@ export function ArchivePage({
           {error ? <p role="alert">{error}</p> : null}
           {!isLoading && !error && collections.length === 0 ? <p>{t('archive.collectionsEmpty')}</p> : null}
           {!isLoading && !error && collections.length > 0 ? (
-            <div className="archive-collection-cards" aria-label={t('archive.collectionsTitle')}>
-              {collections.map((collection) => (
-                <details className="archive-collection-card" key={collection.id}>
-                  <summary className="archive-collection-card__summary">
-                    <span className="archive-collection-card__title">{collection.title}</span>
-                    <span className="archive-collection-card__meta">
-                      <span>{collection.source}</span>
-                      <span>{collection.collectionType}</span>
-                    </span>
-                  </summary>
-                  <div className="archive-collection-card__body">
-                    <p className="archive-collection-description">{collection.description || t('archive.noDescription')}</p>
-                    <div className="archive-source-cell">
-                      <span>{collection.source}</span>
-                      {collection.sourceUrl ? <a href={collection.sourceUrl}>Open source link</a> : null}
+            <details className="archive-collection-index" open>
+              <summary className="archive-collection-index__summary">
+                <span>{t('archive.collectionsTitle')}</span>
+                <span>{collections.length}</span>
+              </summary>
+              <div className="archive-collection-cards" aria-label={t('archive.collectionsTitle')}>
+                {collections.map((collection) => (
+                  <article className="archive-collection-card" key={collection.id}>
+                    <div className="archive-collection-card__summary">
+                      <span className="archive-collection-card__title">{collection.title}</span>
+                      <span className="archive-collection-card__meta">
+                        <span>{collection.source}</span>
+                        <span>{collection.collectionType}</span>
+                      </span>
                     </div>
-                    <div className="archive-row-actions">
-                      <a href={`#archive/${encodeURIComponent(collection.id)}`}>{t('archive.openCollectionAction')}</a>
-                      <button
-                        type="button"
-                        aria-label={`${t('archive.editAction')} ${collection.title}`}
-                        onClick={() => handleEditCollection(collection)}
-                      >
-                        {t('archive.editAction')}
-                      </button>
-                      <button
-                        type="button"
-                        aria-label={`${t('archive.deleteAction')} ${collection.title}`}
-                        onClick={() => handleDeleteCollection(collection)}
-                      >
-                        {t('archive.deleteAction')}
-                      </button>
+                    <div className="archive-collection-card__body">
+                      <p className="archive-collection-description">{collection.description || t('archive.noDescription')}</p>
+                      <div className="archive-source-cell">
+                        <span>{collection.source}</span>
+                        {collection.sourceUrl ? <a href={collection.sourceUrl}>Open source link</a> : null}
+                      </div>
+                      <div className="archive-row-actions">
+                        <a href={`#archive/${encodeURIComponent(collection.id)}`}>{t('archive.openCollectionAction')}</a>
+                        {canManageArchive ? (
+                          <>
+                            <Button
+                              type="button"
+                              aria-label={`${t('archive.editAction')} ${collection.title}`}
+                              onClick={() => handleEditCollection(collection)}
+                            >
+                              {t('archive.editAction')}
+                            </Button>
+                            <Button
+                              type="button"
+                              aria-label={`${t('archive.deleteAction')} ${collection.title}`}
+                              onClick={() => handleDeleteCollection(collection)}
+                            >
+                              {t('archive.deleteAction')}
+                            </Button>
+                          </>
+                        ) : null}
+                      </div>
                     </div>
-                  </div>
-                </details>
-              ))}
-            </div>
+                  </article>
+                ))}
+              </div>
+            </details>
           ) : null}
         </section>
 
@@ -343,22 +453,45 @@ export function ArchivePage({
           </div>
           {editingCollectionId ? null : (
             <form className="archive-url-import" onSubmit={handlePreviewAnontraveler}>
-              <fieldset>
-                <legend>{t('archive.urlImportSection')}</legend>
-                <label>
-                  {t('archive.anontravelerUrlLabel')}
+              <FormSection title={t('archive.urlImportSection')}>
+                <Field label={t('archive.anontravelerUrlLabel')}>
                   <input
                     required
                     value={anontravelerUrl}
                     onChange={(event) => setAnontravelerUrl(event.target.value)}
                   />
-                </label>
-              </fieldset>
-              <div className="archive-form-actions">
-                <button type="submit" disabled={isPreviewLoading || isImportingCollection}>
+                </Field>
+              </FormSection>
+              <ActionBar className="archive-form-actions">
+                <Button type="submit" disabled={isPreviewLoading || isImportingCollection} variant="primary">
                   {isPreviewLoading ? t('archive.urlImportPreviewLoading') : t('archive.urlImportPreviewSubmit')}
-                </button>
-              </div>
+                </Button>
+              </ActionBar>
+              <section className="archive-rank-directory" aria-label={t('archive.rankDirectoryTitle')}>
+                <Button type="button" onClick={handleScanRankDirectory} disabled={isRankDirectoryLoading}>
+                  {isRankDirectoryLoading ? t('archive.rankDirectoryScanLoading') : t('archive.rankDirectoryScanSubmit')}
+                </Button>
+                {rankDirectoryError ? <p role="alert">{rankDirectoryError}</p> : null}
+                {rankDirectoryItems.length > 0 ? (
+                  <SearchableDropdown
+                    className="archive-rank-directory__dropdown"
+                    label={t('archive.rankDirectoryTitle')}
+                    options={rankDirectoryOptions}
+                    searchLabel={t('archive.rankDirectorySearchLabel')}
+                    searchValue={rankDirectorySearch}
+                    onSearchChange={setRankDirectorySearch}
+                    onSelect={handleSelectRankDirectoryItemById}
+                    selectLabel={t('archive.rankDirectorySelect')}
+                  />
+                ) : null}
+                {rankDirectoryPage?.hasMore ? (
+                  <Button type="button" onClick={handleLoadMoreRankDirectory} disabled={isRankDirectoryLoading}>
+                    {isRankDirectoryLoading
+                      ? t('archive.rankDirectoryLoadMoreLoading')
+                      : t('archive.rankDirectoryLoadMore')}
+                  </Button>
+                ) : null}
+              </section>
             </form>
           )}
 
@@ -371,24 +504,21 @@ export function ArchivePage({
                 <p className="archive-form-mode">{t('archive.urlImportPreviewKicker')}</p>
                 <h3>{t('archive.urlImportPreviewTitle')}</h3>
               </div>
-              <fieldset>
-                <legend>{t('archive.identitySection')}</legend>
-                <label>
-                  {t('archive.collectionTitleLabel')}
+              <FormSection title={t('archive.identitySection')}>
+                <Field label={t('archive.collectionTitleLabel')}>
                   <input
                     required
                     value={previewTitle}
                     onChange={(event) => setPreviewTitle(event.target.value)}
                   />
-                </label>
-                <label>
-                  {t('archive.descriptionLabel')}
+                </Field>
+                <Field label={t('archive.descriptionLabel')}>
                   <textarea
                     value={previewDescription}
                     onChange={(event) => setPreviewDescription(event.target.value)}
                   />
-                </label>
-              </fieldset>
+                </Field>
+              </FormSection>
               <div className="archive-import-preview__counts">
                 <p>{t('archive.urlImportArchiveItemsCount').replace('{count}', String(anontravelerPreview.archiveItems.length))}</p>
                 <p>{t('archive.urlImportAlbumsCount').replace('{count}', String(anontravelerPreview.albums.length))}</p>
@@ -421,66 +551,60 @@ export function ArchivePage({
                 ))}
               </div>
               {importRole === 'admin' ? (
-                <button
+                <Button
                   type="button"
                   onClick={handleImportAnontravelerCollection}
                   disabled={isImportingCollection || anontravelerPreview.archiveItems.length === 0}
                 >
                   {isImportingCollection ? t('archive.urlImportSubmitLoading') : t('archive.urlImportSubmit')}
-                </button>
+                </Button>
               ) : null}
               {isImportingCollection ? <p role="status">{t('archive.urlImportStatus')}</p> : null}
               {importError ? <p role="alert">{importError}</p> : null}
             </section>
           ) : null}
 
-          {!anontravelerPreview ? (
+          {canManageArchive && !anontravelerPreview ? (
             <form className="archive-manual-form" onSubmit={handleSubmit}>
-              <fieldset>
-                <legend>{t('archive.identitySection')}</legend>
-                <label>
-                  {t('archive.collectionTitleLabel')}
+              <FormSection title={t('archive.identitySection')}>
+                <Field label={t('archive.collectionTitleLabel')}>
                   <input
                     required
                     value={form.title}
                     onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))}
                   />
-                </label>
-                <label>
-                  {t('archive.descriptionLabel')}
+                </Field>
+                <Field label={t('archive.descriptionLabel')}>
                   <textarea
                     value={form.description}
                     onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))}
                   />
-                </label>
-              </fieldset>
-              <fieldset>
-                <legend>{t('archive.sourceProfileSection')}</legend>
-                <label>
-                  {t('archive.sourceLabel')}
+                </Field>
+              </FormSection>
+              <FormSection title={t('archive.sourceProfileSection')}>
+                <Field label={t('archive.sourceLabel')}>
                   <input
                     value={form.source}
                     onChange={(event) => setForm((current) => ({ ...current, source: event.target.value }))}
                   />
-                </label>
-                <label>
-                  {t('archive.sourceUrlLabel')}
+                </Field>
+                <Field label={t('archive.sourceUrlLabel')}>
                   <input
                     value={form.sourceUrl}
                     onChange={(event) => setForm((current) => ({ ...current, sourceUrl: event.target.value }))}
                   />
-                </label>
-              </fieldset>
-              <div className="archive-form-actions">
+                </Field>
+              </FormSection>
+              <ActionBar className="archive-form-actions">
                 {editingCollectionId ? (
-                  <button type="button" onClick={handleCancelEdit}>
+                  <Button type="button" onClick={handleCancelEdit}>
                     {t('archive.cancelEdit')}
-                  </button>
+                  </Button>
                 ) : null}
-                <button type="submit">
+                <Button type="submit" variant="primary">
                   {editingCollectionId ? t('archive.updateCollectionSubmit') : t('archive.addCollectionSubmit')}
-                </button>
-              </div>
+                </Button>
+              </ActionBar>
             </form>
           ) : null}
           {message ? <p role="status">{message}</p> : null}

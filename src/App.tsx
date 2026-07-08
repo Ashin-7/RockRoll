@@ -10,7 +10,7 @@ import { ArtistListPage } from './features/artists/ArtistListPage';
 import { AuthPage } from './features/auth/AuthPage';
 import { AuthSession, getCurrentSession, onAuthStateChange, signOut } from './features/auth/auth.service';
 import { BackstagePage } from './features/backstage/BackstagePage';
-import { InboxPage } from './features/inbox/InboxPage';
+import { InboxDisabledPage } from './features/inbox/InboxDisabledPage';
 import { LibraryPage } from './features/library/LibraryPage';
 import { PracticeHistoryPage } from './features/practice/PracticeHistoryPage';
 import { SongDetailPage } from './features/songs/SongDetailPage';
@@ -87,7 +87,7 @@ export default function App() {
     practice: <PracticeHistoryPage />,
     archive: <ArchivePage />,
     archiveDetail: <ArchiveDetailPage archiveId={getArchiveIdForHash(hash)} />,
-    inbox: <InboxPage />,
+    inbox: <InboxDisabledPage />,
     library: <LibraryPage />,
     auth: <AuthPage />,
   }[route];

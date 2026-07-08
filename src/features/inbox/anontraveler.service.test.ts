@@ -350,4 +350,231 @@ describe('anontraveler.service', () => {
     expect(mappedCandidates.map((candidate) => candidate.displayTitle)).toEqual(['Rank One', 'Rank Two']);
     expect(mappedCandidates.map((candidate) => candidate.metadata?.sourceRank)).toEqual([1, 2]);
   });
+
+  it('parses rank directory links into pending index items', async () => {
+    const { parseAnontravelerRankDirectory } = await import('./anontraveler.service');
+    const discoveredAt = '2026-07-08T01:00:00.000Z';
+
+    expect(
+      parseAnontravelerRankDirectory(
+        `
+          <a href="/rank/version/version-1">Classic rock guide</a>
+          <span>496 albums</span>
+          <a href="https://www.anontraveler.com/rank/rank/rank-2">2024 albums</a>
+          <span>100 items</span>
+          <a href="/artist/not-a-rank">Ignored artist</a>
+        `,
+        discoveredAt,
+      ),
+    ).toEqual([
+      {
+        title: 'Classic rock guide',
+        versionId: 'version-1',
+        sourceUrl: 'https://www.anontraveler.com/rank/version/version-1',
+        itemCount: 496,
+        status: 'pending',
+        discoveredAt,
+        lastImportedAt: null,
+      },
+      {
+        title: '2024 albums',
+        versionId: 'rank-2',
+        sourceUrl: 'https://www.anontraveler.com/rank/rank/rank-2',
+        itemCount: 100,
+        status: 'pending',
+        discoveredAt,
+        lastImportedAt: null,
+      },
+    ]);
+  });
+
+  it('merges repeated directory scans without overwriting import state', async () => {
+    const { mergeAnontravelerRankDirectoryItems } = await import('./anontraveler.service');
+
+    expect(
+      mergeAnontravelerRankDirectoryItems(
+        [
+          {
+            title: 'Old title',
+            versionId: 'version-1',
+            sourceUrl: 'https://www.anontraveler.com/rank/version/version-1',
+            itemCount: null,
+            status: 'imported',
+            discoveredAt: '2026-07-01T00:00:00.000Z',
+            lastImportedAt: '2026-07-02T00:00:00.000Z',
+          },
+        ],
+        [
+          {
+            title: 'New title',
+            versionId: 'version-1',
+            sourceUrl: 'https://www.anontraveler.com/rank/version/version-1',
+            itemCount: 496,
+            status: 'pending',
+            discoveredAt: '2026-07-08T00:00:00.000Z',
+            lastImportedAt: null,
+          },
+        ],
+      ),
+    ).toEqual([
+      {
+        title: 'New title',
+        versionId: 'version-1',
+        sourceUrl: 'https://www.anontraveler.com/rank/version/version-1',
+        itemCount: 496,
+        status: 'imported',
+        discoveredAt: '2026-07-01T00:00:00.000Z',
+        lastImportedAt: '2026-07-02T00:00:00.000Z',
+      },
+    ]);
+  });
+
+  it('rejects non-directory scan URLs', async () => {
+    const { scanAnontravelerRankDirectory } = await import('./anontraveler.service');
+
+    await expect(scanAnontravelerRankDirectory('https://www.anontraveler.com/rank/version/version-1')).rejects.toThrow(
+      'Only the Anontraveler rank directory URL is supported for scanning.',
+    );
+  });
+
+  it('scans only the directory page and does not fetch rank details', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        data: {
+          ranks: [{ _id: 'version-1', title: 'Classic rock guide' }],
+        },
+      }),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    const { scanAnontravelerRankDirectory } = await import('./anontraveler.service');
+
+    await expect(
+      scanAnontravelerRankDirectory('https://www.anontraveler.com/rank', '2026-07-08T01:00:00.000Z'),
+    ).resolves.toEqual([
+      expect.objectContaining({
+        title: 'Classic rock guide',
+        versionId: 'version-1',
+        status: 'pending',
+      }),
+    ]);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledWith('https://www.anontraveler.com/api/rank/ranks/all/0', {
+      headers: { accept: 'application/json' },
+    });
+  });
+
+  it('maps the real Anontraveler rank directory API into selectable rank URLs', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        data: {
+          pages: { total: 82, pageNow: 1, perPage: 10 },
+          ranks: [
+            {
+              _id: '644bca772bf0db963b0b5642',
+              title: '中国通俗音乐',
+              desc: '中国的各种音乐',
+              type: { index: 2, name: '专辑榜' },
+            },
+            {
+              _id: '69259dcf5a353131fe005487',
+              title: '日本音乐',
+              desc: '涵盖日本流行、实验、摇滚等各种内容',
+              type: { index: 2, name: '专辑榜' },
+            },
+          ],
+        },
+        rstno: 1,
+      }),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    const { scanAnontravelerRankDirectory } = await import('./anontraveler.service');
+
+    await expect(
+      scanAnontravelerRankDirectory('https://www.anontraveler.com/rank', '2026-07-08T01:00:00.000Z'),
+    ).resolves.toEqual([
+      {
+        title: '中国通俗音乐',
+        versionId: '644bca772bf0db963b0b5642',
+        sourceUrl: 'https://www.anontraveler.com/rank/rank/644bca772bf0db963b0b5642',
+        itemCount: null,
+        status: 'pending',
+        discoveredAt: '2026-07-08T01:00:00.000Z',
+        lastImportedAt: null,
+      },
+      {
+        title: '日本音乐',
+        versionId: '69259dcf5a353131fe005487',
+        sourceUrl: 'https://www.anontraveler.com/rank/rank/69259dcf5a353131fe005487',
+        itemCount: null,
+        status: 'pending',
+        discoveredAt: '2026-07-08T01:00:00.000Z',
+        lastImportedAt: null,
+      },
+    ]);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledWith('https://www.anontraveler.com/api/rank/ranks/all/0', {
+      headers: { accept: 'application/json' },
+    });
+  });
+
+  it('loads a paged rank directory and reports whether more pages are available', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        data: {
+          pages: { total: 12, pageNow: 2, perPage: 10 },
+          ranks: [
+            { _id: 'rank-2', title: 'Second page rank' },
+            { _id: 'rank-2', title: 'Duplicated rank' },
+          ],
+        },
+      }),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    const { scanAnontravelerRankDirectoryPage } = await import('./anontraveler.service');
+
+    await expect(scanAnontravelerRankDirectoryPage(1, '2026-07-08T01:00:00.000Z')).resolves.toEqual({
+      items: [
+        {
+          title: 'Second page rank',
+          versionId: 'rank-2',
+          sourceUrl: 'https://www.anontraveler.com/rank/rank/rank-2',
+          itemCount: null,
+          status: 'pending',
+          discoveredAt: '2026-07-08T01:00:00.000Z',
+          lastImportedAt: null,
+        },
+      ],
+      total: 12,
+      page: 1,
+      perPage: 10,
+      hasMore: false,
+    });
+    expect(fetchMock).toHaveBeenCalledWith('https://www.anontraveler.com/api/rank/ranks/all/1', {
+      headers: { accept: 'application/json' },
+    });
+  });
+
+  it('marks earlier rank directory pages as having more pages', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        data: {
+          pages: { total: 12, pageNow: 1, perPage: 10 },
+          ranks: [{ _id: 'rank-1', title: 'First page rank' }],
+        },
+      }),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    const { scanAnontravelerRankDirectoryPage } = await import('./anontraveler.service');
+
+    await expect(scanAnontravelerRankDirectoryPage(0, '2026-07-08T01:00:00.000Z')).resolves.toMatchObject({
+      total: 12,
+      page: 0,
+      perPage: 10,
+      hasMore: true,
+    });
+  });
 });

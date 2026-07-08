@@ -1,5 +1,7 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { useI18n } from '../../i18n/I18nProvider';
+import { getCurrentUserImportRole } from '../inbox/inbox.service';
+import { ImportUserRole } from '../inbox/inbox.types';
 import { AlbumDetail, AlbumType, UpdateAlbumInput } from './album.types';
 import { deleteAlbum, getAlbumById, updateAlbum } from './albums.service';
 import './AlbumDetailPage.css';
@@ -8,6 +10,7 @@ interface AlbumDetailPageProps {
   albumId: string | null;
   onDeleteAlbum?: (albumId: string) => Promise<void>;
   onLoadAlbum?: (albumId: string) => Promise<AlbumDetail | null>;
+  onLoadImportRole?: typeof getCurrentUserImportRole;
   onUpdateAlbum?: (albumId: string, input: UpdateAlbumInput) => Promise<void>;
 }
 
@@ -23,6 +26,7 @@ export function AlbumDetailPage({
   albumId,
   onDeleteAlbum = deleteAlbum,
   onLoadAlbum = getAlbumById,
+  onLoadImportRole = getCurrentUserImportRole,
   onUpdateAlbum = updateAlbum,
 }: AlbumDetailPageProps) {
   const { t } = useI18n();
@@ -36,6 +40,7 @@ export function AlbumDetailPage({
   const [releaseYear, setReleaseYear] = useState('');
   const [albumType, setAlbumType] = useState<AlbumType>('album');
   const [notes, setNotes] = useState('');
+  const [importRole, setImportRole] = useState<ImportUserRole>('anonymous');
 
   useEffect(() => {
     if (!albumId) {
@@ -75,6 +80,29 @@ export function AlbumDetailPage({
       isMounted = false;
     };
   }, [albumId, onLoadAlbum, t]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadRole() {
+      try {
+        const nextRole = await onLoadImportRole();
+        if (isMounted) {
+          setImportRole(nextRole);
+        }
+      } catch {
+        if (isMounted) {
+          setImportRole('anonymous');
+        }
+      }
+    }
+
+    loadRole();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [onLoadImportRole]);
 
   function startEditing(nextAlbum: AlbumDetail) {
     setTitle(nextAlbum.title);
@@ -131,6 +159,8 @@ export function AlbumDetailPage({
     }
   }
 
+  const canManageAlbum = importRole === 'admin';
+
   return (
     <section className="album-detail-page">
       <a className="album-detail-page__back" href="#albums">
@@ -152,16 +182,20 @@ export function AlbumDetailPage({
             </div>
             <div className="album-detail-hero__actions">
               <span>{t(albumTypeMessageKeys[album.albumType])}</span>
-              <button aria-label="Edit album" onClick={() => startEditing(album)} type="button">
-                {t('albumDetail.edit')}
-              </button>
-              <button aria-label="Delete album" disabled={isDeleting} onClick={handleDeleteAlbum} type="button">
-                {t('albumDetail.delete')}
-              </button>
+              {canManageAlbum ? (
+                <>
+                  <button aria-label="Edit album" onClick={() => startEditing(album)} type="button">
+                    {t('albumDetail.edit')}
+                  </button>
+                  <button aria-label="Delete album" disabled={isDeleting} onClick={handleDeleteAlbum} type="button">
+                    {t('albumDetail.delete')}
+                  </button>
+                </>
+              ) : null}
             </div>
           </div>
 
-          {isEditing ? (
+          {canManageAlbum && isEditing ? (
             <form className="album-detail-edit-form" onSubmit={handleUpdateAlbum}>
               <div className="album-detail-edit-form__header">
                 <p>{t('albumDetail.formMode')}</p>

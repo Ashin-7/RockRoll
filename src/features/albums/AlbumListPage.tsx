@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from 'react';
+﻿import { type FocusEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { useI18n } from '../../i18n/I18nProvider';
 import { AlbumCollectionOption, AlbumCollectionPageInput, AlbumCollectionSummary, AlbumSummary } from './album.types';
 import { getAlbumCollectionById, listAlbumCollectionOptions, listAlbumCollections } from './albums.service';
@@ -14,6 +14,59 @@ interface AlbumListPageProps {
     page?: AlbumCollectionPageInput,
   ) => Promise<AlbumCollectionSummary | null>;
   onLoadAlbumCollections?: () => Promise<AlbumCollectionSummary[]>;
+}
+
+interface CollectionDescriptionProps {
+  collapseLabel: string;
+  description: string;
+  expandLabel: string;
+  isExpanded: boolean;
+  onToggle: () => void;
+}
+
+function CollectionDescription({
+  collapseLabel,
+  description,
+  expandLabel,
+  isExpanded,
+  onToggle,
+}: CollectionDescriptionProps) {
+  const descriptionRef = useRef<HTMLSpanElement | null>(null);
+  const [canExpand, setCanExpand] = useState(false);
+
+  useEffect(() => {
+    if (isExpanded) {
+      return undefined;
+    }
+
+    function measureOverflow() {
+      const descriptionElement = descriptionRef.current;
+      if (!descriptionElement) {
+        setCanExpand(false);
+        return;
+      }
+
+      setCanExpand(descriptionElement.scrollHeight > descriptionElement.clientHeight + 1);
+    }
+
+    measureOverflow();
+    window.addEventListener('resize', measureOverflow);
+
+    return () => {
+      window.removeEventListener('resize', measureOverflow);
+    };
+  }, [description, isExpanded]);
+
+  return (
+    <div className="albums-collection__description">
+      <span ref={descriptionRef} className={isExpanded ? 'is-expanded' : ''}>{description}</span>
+      {canExpand ? (
+        <button type="button" aria-expanded={isExpanded} onClick={onToggle}>
+          {isExpanded ? collapseLabel : expandLabel}
+        </button>
+      ) : null}
+    </div>
+  );
 }
 
 function mapFlatAlbumsToCollection(albums: AlbumSummary[] = []): AlbumCollectionSummary[] {
@@ -53,10 +106,12 @@ export function AlbumListPage({
   const [collectionOptions, setCollectionOptions] = useState<AlbumCollectionOption[]>([]);
   const [selectedCollectionId, setSelectedCollectionId] = useState('');
   const [collectionSearch, setCollectionSearch] = useState('');
+  const [isCollectionDropdownOpen, setIsCollectionDropdownOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(!hasProvidedAlbums);
   const [error, setError] = useState('');
   const [selectedStyle, setSelectedStyle] = useState('');
   const [styleSearch, setStyleSearch] = useState('');
+  const [isStyleDropdownOpen, setIsStyleDropdownOpen] = useState(false);
   const [collectionPageIndexes, setCollectionPageIndexes] = useState<Record<string, number>>({});
   const [expandedDescriptionIds, setExpandedDescriptionIds] = useState<Record<string, boolean>>({});
   const [expandedNoteIds, setExpandedNoteIds] = useState<Record<string, boolean>>({});
@@ -180,6 +235,12 @@ export function AlbumListPage({
 
     return styleOptions.filter((styleName) => styleName.toLocaleLowerCase().includes(normalizedSearch));
   }, [styleOptions, styleSearch]);
+  const selectedCollectionLabel = collectionOptions.find((collection) => collection.id === selectedCollectionId)?.title
+    ?? collectionOptions[0]?.title
+    ?? '';
+  const selectedStyleLabel = selectedStyle || t('albums.allStyles');
+  const collectionInputValue = isCollectionDropdownOpen ? collectionSearch : selectedCollectionLabel;
+  const styleInputValue = isStyleDropdownOpen ? styleSearch : selectedStyleLabel;
   const filteredCollections = displayCollections
     .map((collection) => ({
       ...collection,
@@ -268,18 +329,36 @@ export function AlbumListPage({
     }));
   }
 
-  function moveCollectionOption(collectionId: string, direction: -1 | 1) {
-    setCollectionOptions((currentOptions) => {
-      const currentIndex = currentOptions.findIndex((collection) => collection.id === collectionId);
-      const nextIndex = currentIndex + direction;
-      if (currentIndex < 0 || nextIndex < 0 || nextIndex >= currentOptions.length) {
-        return currentOptions;
-      }
+  async function selectCollectionFromDropdown(collectionId: string) {
+    setIsCollectionDropdownOpen(false);
+    setCollectionSearch('');
+    await handleSelectCollection(collectionId);
+  }
 
-      const nextOptions = [...currentOptions];
-      [nextOptions[currentIndex], nextOptions[nextIndex]] = [nextOptions[nextIndex], nextOptions[currentIndex]];
-      return nextOptions;
-    });
+  async function selectStyleFromDropdown(styleName: string) {
+    setIsStyleDropdownOpen(false);
+    setStyleSearch('');
+    await handleSelectStyle(styleName);
+  }
+
+  function handleCollectionDropdownBlur(event: FocusEvent<HTMLDivElement>) {
+    const nextTarget = event.relatedTarget;
+    if (nextTarget instanceof Node && event.currentTarget.contains(nextTarget)) {
+      return;
+    }
+
+    setIsCollectionDropdownOpen(false);
+    setCollectionSearch('');
+  }
+
+  function handleStyleDropdownBlur(event: FocusEvent<HTMLDivElement>) {
+    const nextTarget = event.relatedTarget;
+    if (nextTarget instanceof Node && event.currentTarget.contains(nextTarget)) {
+      return;
+    }
+
+    setIsStyleDropdownOpen(false);
+    setStyleSearch('');
   }
 
   return (
@@ -297,82 +376,80 @@ export function AlbumListPage({
 
       <section className="albums-toolbar" aria-label={t('albums.toolbarLabel')}>
         {!hasProvidedAlbums && collectionOptions.length > 0 ? (
-          <div className="albums-filter-bar albums-filter-panel">
-            <label htmlFor="album-collection-filter">
-              Collection category
-              <input
-                id="album-collection-filter"
-                type="search"
-                value={collectionSearch}
-                aria-label="Search collection categories"
-                onChange={(event) => setCollectionSearch(event.target.value)}
-              />
-            </label>
-            <div className="albums-option-list" aria-label="Collection categories">
-              {filteredCollectionOptions.map((collection) => {
-                const collectionIndex = collectionOptions.findIndex((option) => option.id === collection.id);
-                return (
-                  <div className="albums-option-row" key={collection.id}>
+          <div className="albums-filter-dropdown" onBlur={handleCollectionDropdownBlur}>
+            <span>Collection category</span>
+            <input
+              className="albums-filter-input"
+              type="search"
+              value={collectionInputValue}
+              aria-label="Collection category"
+              aria-expanded={isCollectionDropdownOpen}
+              aria-controls="album-collection-filter-panel"
+              onFocus={() => setIsCollectionDropdownOpen(true)}
+              onClick={() => setIsCollectionDropdownOpen(true)}
+              onChange={(event) => {
+                setCollectionSearch(event.target.value);
+                setIsCollectionDropdownOpen(true);
+              }}
+            />
+            {isCollectionDropdownOpen ? (
+              <div className="albums-dropdown-panel" id="album-collection-filter-panel">
+                <div className="albums-dropdown-list" aria-label="Collection categories">
+                  {filteredCollectionOptions.map((collection) => (
                     <button
                       type="button"
-                      className={collection.id === selectedCollectionId ? 'is-selected' : ''}
-                      onClick={() => handleSelectCollection(collection.id)}
+                      className={`albums-dropdown-option${collection.id === selectedCollectionId ? ' is-selected' : ''}`}
+                      key={collection.id}
+                      onClick={() => selectCollectionFromDropdown(collection.id)}
                     >
                       {collection.title}
                     </button>
-                    <div className="albums-option-row__actions">
-                      <button
-                        type="button"
-                        aria-label={`Move ${collection.title} up`}
-                        disabled={collectionIndex <= 0}
-                        onClick={() => moveCollectionOption(collection.id, -1)}
-                      >
-                        鈫?                      </button>
-                      <button
-                        type="button"
-                        aria-label={`Move ${collection.title} down`}
-                        disabled={collectionIndex < 0 || collectionIndex >= collectionOptions.length - 1}
-                        onClick={() => moveCollectionOption(collection.id, 1)}
-                      >
-                        鈫?                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
           </div>
         ) : null}
         {!isLoading && displayCollections.length > 0 ? (
-          <div className="albums-filter-bar albums-filter-panel">
-            <label htmlFor="album-style-filter">
-              {t('albums.styleFilterLabel')}
-              <input
-                id="album-style-filter"
-                type="search"
-                value={styleSearch}
-                aria-label="Search styles"
-                onChange={(event) => setStyleSearch(event.target.value)}
-              />
-            </label>
-            <div className="albums-style-options" aria-label="Style options">
-              <button
-                type="button"
-                className={!selectedStyle ? 'is-selected' : ''}
-                onClick={() => handleSelectStyle('')}
-              >
-                {t('albums.allStyles')}
-              </button>
-              {filteredStyleOptions.map((styleName) => (
-                <button
-                  type="button"
-                  className={styleName === selectedStyle ? 'is-selected' : ''}
-                  key={styleName}
-                  onClick={() => handleSelectStyle(styleName)}
-                >
-                  {styleName}
-                </button>
-              ))}
-            </div>
+          <div className="albums-filter-dropdown" onBlur={handleStyleDropdownBlur}>
+            <span>{t('albums.styleFilterLabel')}</span>
+            <input
+              className="albums-filter-input"
+              type="search"
+              value={styleInputValue}
+              aria-label={t('albums.styleFilterLabel')}
+              aria-expanded={isStyleDropdownOpen}
+              aria-controls="album-style-filter-panel"
+              onFocus={() => setIsStyleDropdownOpen(true)}
+              onClick={() => setIsStyleDropdownOpen(true)}
+              onChange={(event) => {
+                setStyleSearch(event.target.value);
+                setIsStyleDropdownOpen(true);
+              }}
+            />
+            {isStyleDropdownOpen ? (
+              <div className="albums-dropdown-panel" id="album-style-filter-panel">
+                <div className="albums-dropdown-list" aria-label="Style options">
+                  <button
+                    type="button"
+                    className={`albums-dropdown-option${!selectedStyle ? ' is-selected' : ''}`}
+                    onClick={() => selectStyleFromDropdown('')}
+                  >
+                    {t('albums.allStyles')}
+                  </button>
+                  {filteredStyleOptions.map((styleName) => (
+                    <button
+                      type="button"
+                      className={`albums-dropdown-option${styleName === selectedStyle ? ' is-selected' : ''}`}
+                      key={styleName}
+                      onClick={() => selectStyleFromDropdown(styleName)}
+                    >
+                      {styleName}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : null}
           </div>
         ) : null}
       </section>
@@ -406,23 +483,20 @@ export function AlbumListPage({
                     <p>{collection.source}</p>
                     <h2>{collection.title}</h2>
                     {collection.description ? (
-                      <div className="albums-collection__description">
-                        <span className={isDescriptionExpanded ? 'is-expanded' : ''}>{collection.description}</span>
-                        <button
-                          type="button"
-                          aria-expanded={isDescriptionExpanded}
-                          onClick={() => toggleCollectionDescription(collection.id)}
-                        >
-                          {isDescriptionExpanded ? t('albums.collapseDescription') : t('albums.expandDescription')}
-                        </button>
-                      </div>
+                      <CollectionDescription
+                        collapseLabel={t('albums.collapseDescription')}
+                        description={collection.description}
+                        expandLabel={t('albums.expandDescription')}
+                        isExpanded={isDescriptionExpanded}
+                        onToggle={() => toggleCollectionDescription(collection.id)}
+                      />
                     ) : null}
                   </div>
                   <div className="albums-collection__meta">
                     <span>
                       {t('albums.collectionCount').replace('{count}', String(collectionAlbumCount))}
                     </span>
-                    {collection.sourceUrl ? <a href={collection.sourceUrl}>{t('albums.openSourceLink')}</a> : null}
+                    {/* 暂时隐藏来源入口，后续需要时可恢复 collection.sourceUrl 链接。 */}
                   </div>
                 </header>
 

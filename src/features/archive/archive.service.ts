@@ -40,6 +40,10 @@ interface DemoArchiveItem extends ArchiveItemSummary {
   collectionId: string;
 }
 
+interface ProfileRoleRow {
+  role: string;
+}
+
 const entityTypes: ArchiveEntityType[] = ['artist', 'album', 'song'];
 const demoSessionStorageKey = 'rockroll.demoSession';
 const demoCollectionsStorageKey = 'rockroll.demoArchiveCollections';
@@ -138,6 +142,40 @@ function writeDemoItems(items: DemoArchiveItem[]) {
   window.localStorage.setItem(demoItemsStorageKey, JSON.stringify(items));
 }
 
+async function requireArchiveAdmin(
+  supabase: ReturnType<typeof getSupabase>,
+  signInMessage: string,
+  permissionMessage: string,
+): Promise<string> {
+  const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+
+  if (sessionError) {
+    throw new Error(sessionError.message);
+  }
+
+  const userId = sessionData.session?.user?.id;
+
+  if (!userId) {
+    throw new Error(signInMessage);
+  }
+
+  const { data: profileData, error: profileError } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', userId)
+    .maybeSingle();
+
+  if (profileError) {
+    throw new Error(profileError.message);
+  }
+
+  if ((profileData as ProfileRoleRow | null)?.role !== 'admin') {
+    throw new Error(permissionMessage);
+  }
+
+  return userId;
+}
+
 export async function getArchiveSummary(): Promise<ArchiveCountSummary> {
   return {
     artists: 0,
@@ -194,17 +232,11 @@ export async function createArchiveCollection(input: CreateArchiveCollectionInpu
     throw caughtError;
   }
 
-  const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-
-  if (sessionError) {
-    throw new Error(sessionError.message);
-  }
-
-  const userId = sessionData.session?.user?.id;
-
-  if (!userId) {
-    throw new Error('Sign in before adding archive collections.');
-  }
+  const userId = await requireArchiveAdmin(
+    supabase,
+    'Sign in before adding archive collections.',
+    'Admin permission is required to manage archive collections.',
+  );
 
   const { error } = await supabase.from('archive_collections').insert({
     user_id: userId,
@@ -251,6 +283,12 @@ export async function updateArchiveCollection(
     throw caughtError;
   }
 
+  await requireArchiveAdmin(
+    supabase,
+    'Sign in before editing archive collections.',
+    'Admin permission is required to manage archive collections.',
+  );
+
   const { error } = await supabase
     .from('archive_collections')
     .update({
@@ -282,6 +320,12 @@ export async function deleteArchiveCollection(collectionId: string): Promise<voi
     }
     throw caughtError;
   }
+
+  await requireArchiveAdmin(
+    supabase,
+    'Sign in before deleting archive collections.',
+    'Admin permission is required to manage archive collections.',
+  );
 
   const { error } = await supabase.from('archive_collections').delete().eq('id', collectionId);
 
@@ -398,17 +442,11 @@ export async function addArchiveItem(input: CreateArchiveItemInput): Promise<voi
     throw caughtError;
   }
 
-  const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-
-  if (sessionError) {
-    throw new Error(sessionError.message);
-  }
-
-  const userId = sessionData.session?.user?.id;
-
-  if (!userId) {
-    throw new Error('Sign in before adding archive items.');
-  }
+  const userId = await requireArchiveAdmin(
+    supabase,
+    'Sign in before adding archive items.',
+    'Admin permission is required to manage archive items.',
+  );
 
   const { error } = await supabase.from('archive_items').insert({
     user_id: userId,
@@ -453,6 +491,12 @@ export async function updateArchiveItem(input: UpdateArchiveItemInput): Promise<
     throw caughtError;
   }
 
+  await requireArchiveAdmin(
+    supabase,
+    'Sign in before editing archive items.',
+    'Admin permission is required to manage archive items.',
+  );
+
   const { error } = await supabase
     .from('archive_items')
     .update({
@@ -482,6 +526,12 @@ export async function deleteArchiveItem(itemId: string): Promise<void> {
     }
     throw caughtError;
   }
+
+  await requireArchiveAdmin(
+    supabase,
+    'Sign in before deleting archive items.',
+    'Admin permission is required to manage archive items.',
+  );
 
   const { error } = await supabase.from('archive_items').delete().eq('id', itemId);
 

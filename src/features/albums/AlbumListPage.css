@@ -216,7 +216,6 @@
 }
 
 .albums-toolbar,
-.albums-filter-bar,
 .albums-collection {
   border: 1px solid rgba(167, 162, 154, 0.16);
   border-radius: 0.85rem;
@@ -224,10 +223,12 @@
 }
 
 .albums-toolbar {
-  align-items: center;
+  align-items: start;
   display: grid;
-  gap: var(--space-3);
-  padding: var(--space-3);
+  gap: var(--space-2);
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 18rem));
+  justify-content: start;
+  padding: var(--space-2);
 }
 
 .albums-toolbar p,
@@ -270,129 +271,132 @@
   color: var(--color-amber);
 }
 
-.albums-filter-bar {
+.albums-filter-dropdown {
+  display: grid;
+  gap: 0.25rem;
   min-width: 0;
-  border: 0;
-  background: transparent;
-  padding: 0;
+  position: relative;
 }
 
-.albums-filter-bar label {
-  display: grid;
-  gap: var(--space-2);
+.albums-filter-dropdown > span {
   color: var(--color-silver);
-  font-size: 0.74rem;
+  font-size: 0.66rem;
+  font-weight: 700;
   letter-spacing: 0.12em;
+  padding: 0 0.25rem;
   text-transform: uppercase;
 }
 
-.albums-filter-bar select,
-.albums-filter-bar input {
-  width: 100%;
-  min-height: 2.5rem;
-  border: 1px solid rgba(167, 162, 154, 0.22);
-  border-radius: 0.5rem;
-  background: rgba(17, 16, 15, 0.74);
-  color: var(--color-paper);
-  padding: 0.65rem 0.75rem;
-}
-
-.albums-filter-panel {
-  display: grid;
-  gap: var(--space-2);
-}
-
-.albums-option-list,
-.albums-style-options {
-  display: grid;
-  gap: 0.35rem;
-}
-
-.albums-option-list {
-  max-height: 12rem;
-  overflow: auto;
-  padding-right: 0.2rem;
-}
-
-.albums-option-row {
+.albums-filter-input {
   align-items: center;
+  width: 100%;
+  min-height: 3rem;
+  border: 1px solid rgba(167, 162, 154, 0.2);
+  border-radius: 0.6rem;
+  background: rgba(17, 16, 15, 0.58);
+  color: var(--color-paper);
+  cursor: text;
+  font: inherit;
+  font-weight: 800;
+  padding: 0.5rem 0.7rem;
+  padding-right: 2rem;
+  text-align: left;
+  transition: border-color 140ms ease, background-color 140ms ease, color 140ms ease;
+}
+
+.albums-filter-dropdown::after {
+  border-bottom: 2px solid var(--color-silver);
+  border-right: 2px solid var(--color-silver);
+  content: "";
+  height: 0.45rem;
+  pointer-events: none;
+  position: absolute;
+  right: 0.8rem;
+  top: 2.15rem;
+  transform: rotate(45deg) translateY(-0.1rem);
+  width: 0.45rem;
+}
+
+.albums-filter-dropdown:focus-within::after {
+  transform: rotate(225deg) translate(-0.05rem, -0.05rem);
+}
+
+.albums-filter-input:hover,
+.albums-filter-input:focus-visible {
+  border-color: rgba(242, 169, 59, 0.5);
+  background: rgba(242, 169, 59, 0.12);
+}
+
+.albums-dropdown-panel {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 0.35rem);
+  left: 0;
   display: grid;
-  gap: 0.35rem;
-  grid-template-columns: minmax(0, 1fr) auto;
-  transition: transform 140ms ease, opacity 140ms ease, background-color 140ms ease;
+  gap: 0.5rem;
+  box-sizing: border-box;
+  width: 100%;
+  border: 1px solid rgba(167, 162, 154, 0.2);
+  border-radius: 0.65rem;
+  background: rgba(24, 23, 22, 0.98);
+  box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.26);
+  padding: 0.55rem;
 }
 
-.albums-option-row:hover {
-  transform: translateY(-1px);
+.albums-dropdown-list {
+  display: grid;
+  gap: 0.2rem;
+  max-height: 14rem;
+  overflow: auto;
+  padding: 0.1rem 0.25rem 0.1rem 0.1rem;
+  scrollbar-color: rgba(242, 169, 59, 0.5) rgba(17, 16, 15, 0.58);
+  scrollbar-width: thin;
 }
 
-.albums-option-row > button,
-.albums-style-options button {
-  min-height: 2.25rem;
-  border: 1px solid rgba(167, 162, 154, 0.18);
-  border-radius: 0.5rem;
-  background: rgba(17, 16, 15, 0.54);
+.albums-dropdown-list::-webkit-scrollbar {
+  width: 0.45rem;
+}
+
+.albums-dropdown-list::-webkit-scrollbar-track {
+  border-radius: 999px;
+  background: rgba(17, 16, 15, 0.58);
+}
+
+.albums-dropdown-list::-webkit-scrollbar-thumb {
+  border: 1px solid rgba(24, 23, 22, 0.98);
+  border-radius: 999px;
+  background: rgba(242, 169, 59, 0.52);
+}
+
+.albums-dropdown-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(242, 169, 59, 0.72);
+}
+
+.albums-dropdown-option {
+  min-height: 2.35rem;
+  border: 0;
+  border-radius: 0.45rem;
+  background: transparent;
   color: var(--color-paper);
   cursor: pointer;
   font-weight: 700;
   min-width: 0;
   overflow-wrap: anywhere;
-  padding: 0.5rem 0.65rem;
+  padding: 0.5rem 0.6rem;
   text-align: left;
-  transition: border-color 140ms ease, background-color 140ms ease, color 140ms ease, transform 140ms ease;
-}
-
-.albums-style-options {
-  grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
-  max-height: 10.5rem;
-  overflow: auto;
-  padding-right: 0.2rem;
-}
-
-.albums-option-row > button:hover,
-.albums-option-row > button:focus-visible,
-.albums-style-options button:hover,
-.albums-style-options button:focus-visible,
-.albums-option-row > button.is-selected,
-.albums-style-options button.is-selected {
-  border-color: rgba(242, 169, 59, 0.54);
-  background: rgba(242, 169, 59, 0.14);
-  color: var(--color-paper);
-}
-
-.albums-option-row__actions {
-  display: flex;
-  gap: 0.25rem;
-}
-
-.albums-option-row__actions button {
-  min-height: 2.25rem;
-  width: 2.25rem;
-  border: 1px solid rgba(167, 162, 154, 0.18);
-  border-radius: 0.5rem;
-  background: rgba(17, 16, 15, 0.48);
-  color: var(--color-paper-muted);
-  cursor: pointer;
-  font-weight: 700;
   transition: border-color 140ms ease, background-color 140ms ease, color 140ms ease;
 }
 
-.albums-option-row__actions button:hover:not(:disabled),
-.albums-option-row__actions button:focus-visible:not(:disabled) {
-  border-color: rgba(242, 169, 59, 0.48);
-  color: var(--color-amber);
+.albums-dropdown-option:hover,
+.albums-dropdown-option:focus-visible,
+.albums-dropdown-option.is-selected {
+  background: rgba(242, 169, 59, 0.14);
 }
 
-.albums-option-row__actions button:disabled {
-  cursor: not-allowed;
-  opacity: 0.38;
-}
 
 @media (prefers-reduced-motion: reduce) {
-  .albums-option-row,
-  .albums-option-row > button,
-  .albums-style-options button,
-  .albums-option-row__actions button {
+  .albums-filter-input,
+  .albums-dropdown-option {
     transition: none;
   }
 }

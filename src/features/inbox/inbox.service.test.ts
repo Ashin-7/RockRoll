@@ -170,6 +170,14 @@ describe('inbox.service', () => {
     expect(orderMock).toHaveBeenCalledWith('created_at', { ascending: false });
   });
 
+  it('rejects listing import candidates for non-admin users', async () => {
+    profileSingleMock.mockResolvedValue({ data: { role: 'user' }, error: null });
+    const { listImportCandidates } = await import('./inbox.service');
+
+    await expect(listImportCandidates()).rejects.toThrow('Only admins can view import candidates.');
+    expect(candidateSelectMock).not.toHaveBeenCalled();
+  });
+
   it('uses local demo import candidates when Supabase is not configured', async () => {
     vi.stubEnv('VITE_ENABLE_DEMO_MODE', 'true');
     getSupabaseMock.mockImplementation(() => {
@@ -248,6 +256,14 @@ describe('inbox.service', () => {
     expect(jobLimitMock).toHaveBeenCalledWith(10);
     expect(candidateSelectMock).toHaveBeenCalledWith('import_job_id');
     expect(candidateInMock).toHaveBeenCalledWith('import_job_id', ['job-1', 'job-2']);
+  });
+
+  it('rejects listing import draft jobs for non-admin users', async () => {
+    profileSingleMock.mockResolvedValue({ data: { role: 'user' }, error: null });
+    const { listImportDraftJobs } = await import('./inbox.service');
+
+    await expect(listImportDraftJobs()).rejects.toThrow('Only admins can view import draft jobs.');
+    expect(jobSelectMock).not.toHaveBeenCalled();
   });
 
   it('deletes an import draft job so its candidate index rows cascade away', async () => {
@@ -633,6 +649,14 @@ describe('inbox.service', () => {
 
     await expect(getCurrentUserImportRole()).resolves.toBe('anonymous');
     expect(fromMock).not.toHaveBeenCalledWith('profiles');
+  });
+
+  it('rejects listing import review items for non-admin users', async () => {
+    profileSingleMock.mockResolvedValue({ data: { role: 'user' }, error: null });
+    const { listImportReviewItems } = await import('./inbox.service');
+
+    await expect(listImportReviewItems()).rejects.toThrow('Only admins can view import review items.');
+    expect(selectMock).not.toHaveBeenCalled();
   });
 
   it('commits create review items into public formal library records as an admin', async () => {

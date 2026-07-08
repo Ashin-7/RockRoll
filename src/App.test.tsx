@@ -12,6 +12,7 @@ vi.mock('./features/auth/auth.service', () => ({
   signInWithPassword: vi.fn().mockResolvedValue(undefined),
   signInWithEmail: vi.fn().mockResolvedValue(undefined),
   signUpWithPassword: vi.fn().mockResolvedValue(undefined),
+  resendSignupConfirmation: vi.fn().mockResolvedValue(undefined),
   signOut: vi.fn().mockResolvedValue(undefined),
 }));
 
@@ -53,5 +54,18 @@ describe('App', () => {
 
     expect(screen.getByText('RockRoll')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Sign in to your archive.' })).toBeInTheDocument();
+  });
+
+  it('keeps the inbox hash route as a disabled entry notice', () => {
+    window.location.hash = '#inbox';
+
+    renderWithI18n(<App />);
+
+    expect(screen.getByRole('heading', { name: 'Import inbox paused' })).toBeInTheDocument();
+    expect(
+      screen.getByText('The inbox import entry is temporarily disabled. Use Archive -> Add collection for URL imports.'),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Open Archive' })).toHaveAttribute('href', '#archive');
+    expect(screen.queryByRole('button', { name: 'Preview Anontraveler' })).not.toBeInTheDocument();
   });
 });

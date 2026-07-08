@@ -47,6 +47,17 @@ describe('ArchiveDetailPage', () => {
     expect(screen.getByRole('button', { name: 'Next page' })).toBeDisabled();
   });
 
+  it('hides archive item write actions for non-admin users', async () => {
+    renderWithI18n(
+      <ArchiveDetailPage archiveId="collection-1" onLoadCollection={vi.fn().mockResolvedValue(collection)} />,
+    );
+
+    expect(await screen.findByText('Please Please Me')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Add album item' })).not.toBeInTheDocument();
+  });
+
   it('renders archive items with imported album metadata and paginates the index', async () => {
     const user = userEvent.setup();
     const pagedCollection: ArchiveCollectionDetail = {
@@ -92,7 +103,12 @@ describe('ArchiveDetailPage', () => {
     const onLoadCollection = vi.fn().mockResolvedValueOnce({ ...collection, items: [] }).mockResolvedValueOnce(collection);
 
     renderWithI18n(
-      <ArchiveDetailPage archiveId="collection-1" onAddItem={onAddItem} onLoadCollection={onLoadCollection} />,
+      <ArchiveDetailPage
+        archiveId="collection-1"
+        onAddItem={onAddItem}
+        onLoadCollection={onLoadCollection}
+        onLoadImportRole={async () => 'admin'}
+      />,
     );
 
     expect(await screen.findByText('Classic rock guide')).toBeInTheDocument();
@@ -128,6 +144,7 @@ describe('ArchiveDetailPage', () => {
       <ArchiveDetailPage
         archiveId="collection-1"
         onLoadCollection={onLoadCollection}
+        onLoadImportRole={async () => 'admin'}
         onUpdateItem={onUpdateItem}
       />,
     );
@@ -167,6 +184,7 @@ describe('ArchiveDetailPage', () => {
         archiveId="collection-1"
         onDeleteItem={onDeleteItem}
         onLoadCollection={onLoadCollection}
+        onLoadImportRole={async () => 'admin'}
       />,
     );
 

@@ -29,6 +29,14 @@ describe('AlbumDetailPage', () => {
     expect(screen.getByText('Songs, media links, archive collections, and artist relationships will collect here as the MVP grows.')).toBeInTheDocument();
   });
 
+  it('hides album write actions for non-admin users', async () => {
+    renderWithI18n(<AlbumDetailPage albumId="album-1" onLoadAlbum={vi.fn().mockResolvedValue(album)} />);
+
+    expect(await screen.findByText('Axis: Bold as Love')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Edit album' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Delete album' })).not.toBeInTheDocument();
+  });
+
   it('edits an album and reloads its detail', async () => {
     const user = userEvent.setup();
     const onUpdateAlbum = vi.fn().mockResolvedValue(undefined);
@@ -40,7 +48,14 @@ describe('AlbumDetailPage', () => {
       notes: 'Updated notes.',
     });
 
-    renderWithI18n(<AlbumDetailPage albumId="album-1" onLoadAlbum={onLoadAlbum} onUpdateAlbum={onUpdateAlbum} />);
+    renderWithI18n(
+      <AlbumDetailPage
+        albumId="album-1"
+        onLoadAlbum={onLoadAlbum}
+        onLoadImportRole={async () => 'admin'}
+        onUpdateAlbum={onUpdateAlbum}
+      />,
+    );
 
     expect(await screen.findByText('Axis: Bold as Love')).toBeInTheDocument();
 
@@ -78,7 +93,12 @@ describe('AlbumDetailPage', () => {
     window.location.hash = '#album/album-1';
 
     renderWithI18n(
-      <AlbumDetailPage albumId="album-1" onDeleteAlbum={onDeleteAlbum} onLoadAlbum={vi.fn().mockResolvedValue(album)} />,
+      <AlbumDetailPage
+        albumId="album-1"
+        onDeleteAlbum={onDeleteAlbum}
+        onLoadAlbum={vi.fn().mockResolvedValue(album)}
+        onLoadImportRole={async () => 'admin'}
+      />,
     );
 
     expect(await screen.findByText('Axis: Bold as Love')).toBeInTheDocument();

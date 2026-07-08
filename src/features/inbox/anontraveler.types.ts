@@ -1,3 +1,23 @@
+export type AnontravelerRankIndexStatus = 'pending' | 'imported' | 'failed' | 'skipped';
+
+export interface AnontravelerRankIndexItem {
+  title: string;
+  versionId: string;
+  sourceUrl: string;
+  itemCount: number | null;
+  status: AnontravelerRankIndexStatus;
+  discoveredAt: string;
+  lastImportedAt: string | null;
+}
+
+export interface AnontravelerRankDirectoryPage {
+  items: AnontravelerRankIndexItem[];
+  total: number;
+  page: number;
+  perPage: number;
+  hasMore: boolean;
+}
+
 export interface AnontravelerPreviewArtist {
   externalId: string;
   name: string;

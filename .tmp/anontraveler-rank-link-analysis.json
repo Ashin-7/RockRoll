@@ -1,0 +1,36 @@
+{
+  "ok": true,
+  "status": 200,
+  "requestCount": 1,
+  "requested": [
+    {
+      "url": "https://www.anontraveler.com/rank",
+      "accept": "text/html"
+    }
+  ],
+  "htmlLength": 2663,
+  "anchorCount": 7,
+  "hrefDistribution": {
+    "/rank": 2,
+    "other path": 5
+  },
+  "rankAnchorCount": 2,
+  "rankAnchors": [
+    {
+      "href": "#",
+      "text": "Anonymous Traveler",
+      "title": "",
+      "ariaLabel": "",
+      "category": "/rank"
+    },
+    {
+      "href": "http://www.anontraveler.com/rank",
+      "text": "榜单",
+      "title": "",
+      "ariaLabel": "",
+      "category": "/rank"
+    }
+  ],
+  "candidateCount": 0,
+  "candidateSamples": []
+}

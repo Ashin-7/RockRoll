@@ -47,6 +47,10 @@ interface AlbumExternalMetadata {
   reviewNote: string;
 }
 
+interface ProfileRoleRow {
+  role: string;
+}
+
 const albumTypes: AlbumType[] = ['album', 'ep', 'live', 'compilation'];
 const supabaseInFilterChunkSize = 200;
 const supabaseBatchConcurrency = 3;
@@ -211,6 +215,36 @@ function readDemoAlbums(): AlbumSummary[] {
 
 function writeDemoAlbums(albums: AlbumSummary[]) {
   window.localStorage.setItem(demoAlbumsStorageKey, JSON.stringify(albums));
+}
+
+async function requireAlbumAdmin(supabase: ReturnType<typeof getSupabase>, signInMessage: string): Promise<string> {
+  const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+
+  if (sessionError) {
+    throw new Error(sessionError.message);
+  }
+
+  const userId = sessionData.session?.user?.id;
+
+  if (!userId) {
+    throw new Error(signInMessage);
+  }
+
+  const { data: profileData, error: profileError } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', userId)
+    .maybeSingle();
+
+  if (profileError) {
+    throw new Error(profileError.message);
+  }
+
+  if ((profileData as ProfileRoleRow | null)?.role !== 'admin') {
+    throw new Error('Admin permission is required to manage albums.');
+  }
+
+  return userId;
 }
 
 function findDemoAlbum(albumId: string): AlbumDetail | null {
@@ -533,17 +567,7 @@ export async function createAlbum(input: CreateAlbumInput): Promise<void> {
     throw caughtError;
   }
 
-  const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-
-  if (sessionError) {
-    throw new Error(sessionError.message);
-  }
-
-  const userId = sessionData.session?.user?.id;
-
-  if (!userId) {
-    throw new Error('Sign in before adding albums.');
-  }
+  const userId = await requireAlbumAdmin(supabase, 'Sign in before adding albums.');
 
   const { error } = await supabase.from('albums').insert({
     user_id: userId,
@@ -586,6 +610,8 @@ export async function updateAlbum(albumId: string, input: UpdateAlbumInput): Pro
     throw caughtError;
   }
 
+  await requireAlbumAdmin(supabase, 'Sign in before editing albums.');
+
   const { error } = await supabase
     .from('albums')
     .update({
@@ -616,6 +642,8 @@ export async function deleteAlbum(albumId: string): Promise<void> {
     }
     throw caughtError;
   }
+
+  await requireAlbumAdmin(supabase, 'Sign in before deleting albums.');
 
   const { error } = await supabase.from('albums').delete().eq('id', albumId);
 

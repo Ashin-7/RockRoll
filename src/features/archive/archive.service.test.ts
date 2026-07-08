@@ -22,6 +22,12 @@ vi.mock('../../lib/supabase', () => ({
   getSupabase: () => getSupabaseMock(),
 }));
 
+function mockSessionWithProfileRole(role: 'admin' | 'user') {
+  getSessionMock.mockResolvedValue({ data: { session: { user: { id: 'user-1' } } }, error: null });
+  selectMock.mockReturnValue({ eq: eqMaybeSingleMock });
+  maybeSingleMock.mockResolvedValue({ data: { role }, error: null });
+}
+
 describe('archive.service', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -66,7 +72,7 @@ describe('archive.service', () => {
   });
 
   it('creates an archive collection for the current user', async () => {
-    getSessionMock.mockResolvedValue({ data: { session: { user: { id: 'user-1' } } }, error: null });
+    mockSessionWithProfileRole('admin');
     insertMock.mockResolvedValue({ error: null });
     const { createArchiveCollection } = await import('./archive.service');
 
@@ -89,7 +95,38 @@ describe('archive.service', () => {
     });
   });
 
+  it('rejects archive collection writes for non-admin users', async () => {
+    mockSessionWithProfileRole('user');
+    const { createArchiveCollection, deleteArchiveCollection, updateArchiveCollection } = await import('./archive.service');
+
+    await expect(
+      createArchiveCollection({
+        title: 'Classic rock guide',
+        source: 'anontraveler',
+        sourceUrl: 'https://example.test/rank/version/1',
+        description: 'Albums to explore.',
+        collectionType: 'album_rank',
+      }),
+    ).rejects.toThrow('Admin permission is required to manage archive collections.');
+    await expect(
+      updateArchiveCollection('collection-1', {
+        title: 'Updated guide',
+        source: 'manual',
+        sourceUrl: 'https://example.test/updated',
+        description: 'Updated albums to explore.',
+        collectionType: 'album_rank',
+      }),
+    ).rejects.toThrow('Admin permission is required to manage archive collections.');
+    await expect(deleteArchiveCollection('collection-1')).rejects.toThrow(
+      'Admin permission is required to manage archive collections.',
+    );
+    expect(insertMock).not.toHaveBeenCalled();
+    expect(updateMock).not.toHaveBeenCalled();
+    expect(deleteMock).not.toHaveBeenCalled();
+  });
+
   it('updates an archive collection in Supabase', async () => {
+    mockSessionWithProfileRole('admin');
     updateEqMock.mockResolvedValue({ error: null });
     const { updateArchiveCollection } = await import('./archive.service');
 
@@ -113,6 +150,7 @@ describe('archive.service', () => {
   });
 
   it('deletes an archive collection from Supabase', async () => {
+    mockSessionWithProfileRole('admin');
     deleteEqMock.mockResolvedValue({ error: null });
     const { deleteArchiveCollection } = await import('./archive.service');
 
@@ -253,7 +291,7 @@ describe('archive.service', () => {
   });
 
   it('adds an album item to an archive collection', async () => {
-    getSessionMock.mockResolvedValue({ data: { session: { user: { id: 'user-1' } } }, error: null });
+    mockSessionWithProfileRole('admin');
     insertMock.mockResolvedValue({ error: null });
     const { addArchiveItem } = await import('./archive.service');
 
@@ -282,7 +320,44 @@ describe('archive.service', () => {
     });
   });
 
+  it('rejects archive item writes for non-admin users', async () => {
+    mockSessionWithProfileRole('user');
+    const { addArchiveItem, deleteArchiveItem, updateArchiveItem } = await import('./archive.service');
+
+    await expect(
+      addArchiveItem({
+        collectionId: 'collection-1',
+        entityType: 'album',
+        entityId: 'album-1',
+        displayTitle: 'Please Please Me',
+        position: 1,
+        note: 'Beat music marker.',
+        externalSource: 'anontraveler',
+        externalId: 'external-item-1',
+      }),
+    ).rejects.toThrow('Admin permission is required to manage archive items.');
+    await expect(
+      updateArchiveItem({
+        itemId: 'item-1',
+        entityType: 'album',
+        entityId: 'album-2',
+        displayTitle: 'With the Beatles',
+        position: 2,
+        note: 'Updated note.',
+        externalSource: 'anontraveler',
+        externalId: 'external-item-2',
+      }),
+    ).rejects.toThrow('Admin permission is required to manage archive items.');
+    await expect(deleteArchiveItem('item-1')).rejects.toThrow(
+      'Admin permission is required to manage archive items.',
+    );
+    expect(insertMock).not.toHaveBeenCalled();
+    expect(updateMock).not.toHaveBeenCalled();
+    expect(deleteMock).not.toHaveBeenCalled();
+  });
+
   it('updates an archive item in Supabase', async () => {
+    mockSessionWithProfileRole('admin');
     updateEqMock.mockResolvedValue({ error: null });
     const { updateArchiveItem } = await import('./archive.service');
 
@@ -311,6 +386,7 @@ describe('archive.service', () => {
   });
 
   it('deletes an archive item from Supabase', async () => {
+    mockSessionWithProfileRole('admin');
     deleteEqMock.mockResolvedValue({ error: null });
     const { deleteArchiveItem } = await import('./archive.service');
 

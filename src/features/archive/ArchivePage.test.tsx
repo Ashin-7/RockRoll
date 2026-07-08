@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { renderWithI18n } from '../../test/render';
 import { ArchivePage } from './ArchivePage';
 import { ArchiveCollectionSummary } from './archive.types';
-import { AnontravelerPreview } from '../inbox/anontraveler.types';
+import { AnontravelerPreview, AnontravelerRankDirectoryPage } from '../inbox/anontraveler.types';
 import { ImportCandidateSummary } from '../inbox/inbox.types';
 
 const collections: ArchiveCollectionSummary[] = [
@@ -90,47 +90,95 @@ const previewCandidates: ImportCandidateSummary[] = [
   },
 ];
 
+const rankDirectoryItems = [
+  {
+    title: 'Classic rock guide',
+    versionId: 'version-1',
+    sourceUrl: 'https://www.anontraveler.com/rank/version/version-1',
+    itemCount: 496,
+    status: 'pending' as const,
+    discoveredAt: '2026-07-08T01:00:00.000Z',
+    lastImportedAt: null,
+  },
+  {
+    title: 'Imported guide',
+    versionId: 'version-2',
+    sourceUrl: 'https://www.anontraveler.com/rank/version/version-2',
+    itemCount: null,
+    status: 'imported' as const,
+    discoveredAt: '2026-07-08T01:00:00.000Z',
+    lastImportedAt: '2026-07-08T02:00:00.000Z',
+  },
+];
+
+function rankDirectoryPage(
+  items: AnontravelerRankDirectoryPage['items'],
+  page: number,
+  total: number,
+  hasMore: boolean,
+): AnontravelerRankDirectoryPage {
+  return {
+    items,
+    total,
+    page,
+    perPage: 2,
+    hasMore,
+  };
+}
+
 describe('ArchivePage', () => {
-  it('renders archive sections', () => {
-    renderWithI18n(<ArchivePage />);
+  it('renders archive sections', async () => {
+    renderWithI18n(<ArchivePage onLoadImportRole={async () => 'admin'} />);
 
     expect(screen.getByText('Music Archive')).toBeInTheDocument();
     expect(screen.getByText('Artists')).toBeInTheDocument();
     expect(screen.getByText('Albums')).toBeInTheDocument();
     expect(screen.getByText('Genres')).toBeInTheDocument();
     expect(screen.getByText('Collection / create')).toBeInTheDocument();
-    expect(screen.getByText('Identity')).toBeInTheDocument();
+    expect(await screen.findByText('Identity')).toBeInTheDocument();
     expect(screen.getByText('Source profile')).toBeInTheDocument();
   });
 
   it('loads and renders archive collections', async () => {
     const user = userEvent.setup();
 
-    renderWithI18n(<ArchivePage onLoadCollections={async () => collections} />);
+    renderWithI18n(<ArchivePage onLoadCollections={async () => collections} onLoadImportRole={async () => 'admin'} />);
 
     expect(screen.getByText('Loading archive collections...')).toBeInTheDocument();
     expect(await screen.findByText('Classic rock guide')).toBeInTheDocument();
     expect(screen.queryByRole('table', { name: 'Archive collections' })).not.toBeInTheDocument();
     expect(screen.queryByRole('columnheader', { name: 'Source' })).not.toBeInTheDocument();
 
-    const collectionCard = screen.getByText('Classic rock guide').closest('details');
+    const collectionIndex = screen.getAllByText('Archive collections')[1].closest('details');
+    expect(collectionIndex).not.toBeNull();
+    expect(collectionIndex).toHaveAttribute('open');
+
+    const collectionCard = screen.getByText('Classic rock guide').closest('article');
     expect(collectionCard).not.toBeNull();
-    expect(collectionCard).not.toHaveAttribute('open');
+    expect(screen.getByText('Classic rock guide').closest('details')).toBe(collectionIndex);
 
     expect(screen.getAllByText('anontraveler').length).toBeGreaterThan(0);
     expect(screen.getAllByText('album_rank').length).toBeGreaterThan(0);
-
-    await user.click(screen.getByText('Classic rock guide'));
-
-    expect(collectionCard).toHaveAttribute('open');
     expect(screen.getByRole('link', { name: 'Open collection' })).toHaveAttribute('href', '#archive/collection-1');
     expect(screen.getByRole('link', { name: 'Open source link' })).toHaveAttribute(
       'href',
       'https://example.test/rank/version/1',
     );
     expect(screen.getByText('Albums to explore.')).toHaveClass('archive-collection-description');
-    expect(screen.getByRole('button', { name: 'Edit Classic rock guide' })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'Edit Classic rock guide' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Delete Classic rock guide' })).toBeInTheDocument();
+  });
+
+  it('hides archive collection write actions for non-admin users', async () => {
+    renderWithI18n(
+      <ArchivePage onLoadCollections={async () => collections} onLoadImportRole={async () => 'user'} />,
+    );
+
+    expect(await screen.findByText('Classic rock guide')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Open collection' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Edit Classic rock guide' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Delete Classic rock guide' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Add collection' })).not.toBeInTheDocument();
   });
 
   it('creates an archive collection and refreshes the list', async () => {
@@ -138,7 +186,13 @@ describe('ArchivePage', () => {
     const loadCollections = vi.fn().mockResolvedValueOnce([]).mockResolvedValueOnce(collections);
     const createCollection = vi.fn().mockResolvedValue(undefined);
 
-    renderWithI18n(<ArchivePage onCreateCollection={createCollection} onLoadCollections={loadCollections} />);
+    renderWithI18n(
+      <ArchivePage
+        onCreateCollection={createCollection}
+        onLoadCollections={loadCollections}
+        onLoadImportRole={async () => 'admin'}
+      />,
+    );
 
     await user.type(await screen.findByLabelText('Title'), 'Classic rock guide');
     await user.type(screen.getByLabelText('Source'), 'anontraveler');
@@ -231,12 +285,112 @@ describe('ArchivePage', () => {
     ).toBeInTheDocument();
   });
 
+  it('scans the Anontraveler directory and fills the URL without previewing or importing', async () => {
+    const user = userEvent.setup();
+    const scanRankDirectoryPage = vi.fn().mockResolvedValue(rankDirectoryPage(rankDirectoryItems, 0, 2, false));
+    const previewAnontraveler = vi.fn().mockResolvedValue(anontravelerPreview);
+    const saveCandidatesDraft = vi.fn().mockResolvedValue({ importJobId: 'job-1', savedCount: 1 });
+    const createReviewPlan = vi.fn().mockResolvedValue({ plannedCount: 6, items: [] });
+    const commitPublicImport = vi.fn().mockResolvedValue({ createdCount: 4, matchedCount: 1, skippedCount: 0 });
+
+    renderWithI18n(
+      <ArchivePage
+        onLoadCollections={vi.fn().mockResolvedValue([])}
+        onScanAnontravelerRankDirectoryPage={scanRankDirectoryPage}
+        onPreviewAnontraveler={previewAnontraveler}
+        onSaveCandidatesDraft={saveCandidatesDraft}
+        onCreateReviewPlan={createReviewPlan}
+        onCommitPublicImportReviewPlan={commitPublicImport}
+      />,
+    );
+
+    await user.click(await screen.findByRole('button', { name: 'Scan Anontraveler directory' }));
+
+    expect(scanRankDirectoryPage).toHaveBeenCalledWith(0);
+    expect(await screen.findByText('Classic rock guide')).toBeInTheDocument();
+    expect(screen.getByText('496 items')).toBeInTheDocument();
+    expect(screen.getByText('pending')).toBeInTheDocument();
+    expect(screen.getByText('Imported guide')).toBeInTheDocument();
+    expect(screen.getByText('Unknown count')).toBeInTheDocument();
+    expect(screen.getByText('imported')).toBeInTheDocument();
+
+    await user.type(screen.getByLabelText('Search ranks'), 'Imported');
+    expect(screen.queryByText('Classic rock guide')).not.toBeInTheDocument();
+    expect(screen.getByText('Imported guide')).toBeInTheDocument();
+    await user.clear(screen.getByLabelText('Search ranks'));
+
+    await user.click(screen.getByRole('button', { name: 'Select Classic rock guide' }));
+
+    expect(screen.getByLabelText('Anontraveler rank URL')).toHaveValue(
+      'https://www.anontraveler.com/rank/version/version-1',
+    );
+    expect(previewAnontraveler).not.toHaveBeenCalled();
+    expect(screen.queryByDisplayValue('Preview collection title')).not.toBeInTheDocument();
+    expect(saveCandidatesDraft).not.toHaveBeenCalled();
+    expect(createReviewPlan).not.toHaveBeenCalled();
+    expect(commitPublicImport).not.toHaveBeenCalled();
+  });
+
+  it('loads more Anontraveler directory pages and deduplicates ranks', async () => {
+    const user = userEvent.setup();
+    const scanRankDirectoryPage = vi
+      .fn()
+      .mockResolvedValueOnce(rankDirectoryPage(rankDirectoryItems.slice(0, 1), 0, 3, true))
+      .mockResolvedValueOnce(rankDirectoryPage([rankDirectoryItems[0], rankDirectoryItems[1]], 1, 3, false));
+    const previewAnontraveler = vi.fn().mockResolvedValue(anontravelerPreview);
+    const saveCandidatesDraft = vi.fn().mockResolvedValue({ importJobId: 'job-1', savedCount: 1 });
+    const createReviewPlan = vi.fn().mockResolvedValue({ plannedCount: 6, items: [] });
+    const commitPublicImport = vi.fn().mockResolvedValue({ createdCount: 4, matchedCount: 1, skippedCount: 0 });
+
+    renderWithI18n(
+      <ArchivePage
+        onLoadCollections={vi.fn().mockResolvedValue([])}
+        onScanAnontravelerRankDirectoryPage={scanRankDirectoryPage}
+        onPreviewAnontraveler={previewAnontraveler}
+        onSaveCandidatesDraft={saveCandidatesDraft}
+        onCreateReviewPlan={createReviewPlan}
+        onCommitPublicImportReviewPlan={commitPublicImport}
+      />,
+    );
+
+    await user.click(await screen.findByRole('button', { name: 'Scan Anontraveler directory' }));
+
+    expect(scanRankDirectoryPage).toHaveBeenCalledWith(0);
+    expect(await screen.findByText('Classic rock guide')).toBeInTheDocument();
+    expect(screen.queryByText('Imported guide')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Load more ranks' })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Load more ranks' }));
+
+    expect(scanRankDirectoryPage).toHaveBeenCalledWith(1);
+    expect(await screen.findByText('Imported guide')).toBeInTheDocument();
+    expect(screen.getAllByText('Classic rock guide')).toHaveLength(1);
+    expect(screen.queryByRole('button', { name: 'Load more ranks' })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Select Imported guide' }));
+
+    expect(screen.getByLabelText('Anontraveler rank URL')).toHaveValue(
+      'https://www.anontraveler.com/rank/version/version-2',
+    );
+    expect(previewAnontraveler).not.toHaveBeenCalled();
+    expect(screen.queryByDisplayValue('Preview collection title')).not.toBeInTheDocument();
+    expect(saveCandidatesDraft).not.toHaveBeenCalled();
+    expect(createReviewPlan).not.toHaveBeenCalled();
+    expect(commitPublicImport).not.toHaveBeenCalled();
+  });
+
   it('edits an archive collection and refreshes the list', async () => {
     const user = userEvent.setup();
     const loadCollections = vi.fn().mockResolvedValue(collections);
     const updateCollection = vi.fn().mockResolvedValue(undefined);
 
-    renderWithI18n(<ArchivePage onLoadCollections={loadCollections} onUpdateCollection={updateCollection} />);
+    renderWithI18n(
+      <ArchivePage
+        onLoadCollections={loadCollections}
+        onLoadImportRole={async () => 'admin'}
+        onUpdateCollection={updateCollection}
+      />,
+    );
 
     await screen.findByText('Classic rock guide');
     await user.click(screen.getByText('Classic rock guide'));
@@ -265,7 +419,13 @@ describe('ArchivePage', () => {
     const loadCollections = vi.fn().mockResolvedValueOnce(collections).mockResolvedValueOnce([]);
     const deleteCollection = vi.fn().mockResolvedValue(undefined);
 
-    renderWithI18n(<ArchivePage onDeleteCollection={deleteCollection} onLoadCollections={loadCollections} />);
+    renderWithI18n(
+      <ArchivePage
+        onDeleteCollection={deleteCollection}
+        onLoadCollections={loadCollections}
+        onLoadImportRole={async () => 'admin'}
+      />,
+    );
 
     await screen.findByText('Classic rock guide');
     await user.click(screen.getByText('Classic rock guide'));

@@ -16,7 +16,6 @@ const navItems: Array<{ href: string; labelKey: MessageKey }> = [
   { href: '#artists', labelKey: 'nav.artists' },
   { href: '#practice', labelKey: 'nav.practice' },
   { href: '#archive', labelKey: 'nav.archive' },
-  { href: '#inbox', labelKey: 'nav.inbox' },
   { href: '#library', labelKey: 'nav.library' },
 ];
 

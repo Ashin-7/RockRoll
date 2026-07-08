@@ -1,0 +1,106 @@
+{
+  "ok": true,
+  "status": 200,
+  "requestCount": 1,
+  "requested": [
+    {
+      "url": "https://www.anontraveler.com/rank",
+      "accept": "text/html"
+    }
+  ],
+  "htmlLength": 2663,
+  "scriptCount": 3,
+  "externalScriptCount": 3,
+  "inlineScriptCount": 0,
+  "scripts": [
+    {
+      "src": "https://code.jquery.com/jquery-3.3.1.slim.min.js",
+      "type": "",
+      "id": "",
+      "async": false,
+      "defer": false,
+      "bodyLength": 0,
+      "bodyPreview": ""
+    },
+    {
+      "src": "https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js",
+      "type": "",
+      "id": "",
+      "async": false,
+      "defer": false,
+      "bodyLength": 0,
+      "bodyPreview": ""
+    },
+    {
+      "src": "https://stackpath.bootstrapcdn.com/bootstrap/4.1.2/js/bootstrap.min.js",
+      "type": "",
+      "id": "",
+      "async": false,
+      "defer": false,
+      "bodyLength": 0,
+      "bodyPreview": ""
+    }
+  ],
+  "externalScriptSrcs": [
+    "https://code.jquery.com/jquery-3.3.1.slim.min.js",
+    "https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js",
+    "https://stackpath.bootstrapcdn.com/bootstrap/4.1.2/js/bootstrap.min.js"
+  ],
+  "markers": {
+    "hasNextData": false,
+    "hasNuxt": false,
+    "hasVite": false,
+    "hasReactRoot": false,
+    "hasVueRoot": false,
+    "hasHydrationTerms": false
+  },
+  "keywordSummary": {
+    "rank": {
+      "count": 1,
+      "samples": [
+        "rank"
+      ]
+    },
+    "version": {
+      "count": 0,
+      "samples": []
+    },
+    "bangdan": {
+      "count": 1,
+      "samples": [
+        "榜单"
+      ]
+    },
+    "apiPath": {
+      "count": 0,
+      "samples": []
+    },
+    "static": {
+      "count": 0,
+      "samples": []
+    },
+    "assets": {
+      "count": 0,
+      "samples": []
+    }
+  },
+  "potentialApiStrings": [
+    "https://stackpath.bootstrapcdn.com/bootstrap/4.1.2/css/bootstrap.min.css",
+    "http://www.anontraveler.com//misc/main.css",
+    "http://www.anontraveler.com/",
+    "http://www.anontraveler.com/rank",
+    "http://www.anontraveler.com/genres",
+    "http://www.anontraveler.com/genres/catelog",
+    "http://www.anontraveler.com/meta/albums",
+    "http://www.anontraveler.com/meta/artists",
+    "https://code.jquery.com/jquery-3.3.1.slim.min.js",
+    "https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js",
+    "https://stackpath.bootstrapcdn.com/bootstrap/4.1.2/js/bootstrap.min.js"
+  ],
+  "likelySource": {
+    "inlineJson": false,
+    "externalJsBundle": true,
+    "frontendApi": true,
+    "renderedDom": true
+  }
+}
