@@ -474,7 +474,18 @@ describe('inbox.service', () => {
           },
         ],
       }),
-    ).resolves.toEqual({ plannedCount: 4, items: [] });
+    ).resolves.toEqual({
+      plannedCount: 4,
+      plannedCounts: {
+        artist: 1,
+        album: 1,
+        archive_collection: 1,
+        archive_item: 1,
+        song: 0,
+        media_asset: 0,
+      },
+      items: [],
+    });
 
     expect(fromMock).toHaveBeenCalledWith('import_review_items');
     expect(reviewUpsertMock).toHaveBeenCalledWith(
@@ -587,7 +598,18 @@ describe('inbox.service', () => {
         },
         archiveItems,
       }),
-    ).resolves.toEqual({ plannedCount: 803, items: [] });
+    ).resolves.toEqual({
+      plannedCount: 803,
+      plannedCounts: {
+        artist: 0,
+        album: 401,
+        archive_collection: 1,
+        archive_item: 401,
+        song: 0,
+        media_asset: 0,
+      },
+      items: [],
+    });
 
     expect(reviewUpsertMock).toHaveBeenCalledTimes(5);
     expect(reviewUpsertMock.mock.calls[0][0]).toHaveLength(200);
@@ -629,7 +651,18 @@ describe('inbox.service', () => {
     requests[2].resolve({ error: null });
     requests[3].resolve({ error: null });
 
-    await expect(resultPromise).resolves.toEqual({ plannedCount: 601, items: [] });
+    await expect(resultPromise).resolves.toEqual({
+      plannedCount: 601,
+      plannedCounts: {
+        artist: 0,
+        album: 601,
+        archive_collection: 0,
+        archive_item: 0,
+        song: 0,
+        media_asset: 0,
+      },
+      items: [],
+    });
   });
 
   it('reads the current user import role from profiles', async () => {
@@ -1220,6 +1253,17 @@ describe('inbox.service', () => {
           },
         ],
       }),
-    ).resolves.toEqual({ plannedCount: 1, items: [] });
+    ).resolves.toEqual({
+      plannedCount: 1,
+      plannedCounts: {
+        artist: 0,
+        album: 1,
+        archive_collection: 0,
+        archive_item: 0,
+        song: 0,
+        media_asset: 0,
+      },
+      items: [],
+    });
   });
 });

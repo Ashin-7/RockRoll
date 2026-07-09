@@ -91,6 +91,7 @@ interface CreateImportReviewPlanInput {
 
 interface CreateImportReviewPlanResult {
   plannedCount: number;
+  plannedCounts: Record<ImportEntityType, number>;
   items: ImportReviewItemSummary[];
 }
 
@@ -145,6 +146,14 @@ const commitReviewItemPageSize = 1000;
 const supabaseWriteBatchSize = 200;
 const supabaseInFilterBatchSize = 200;
 const supabaseBatchConcurrency = 3;
+const emptyPlannedCounts: Record<ImportEntityType, number> = {
+  artist: 0,
+  album: 0,
+  archive_collection: 0,
+  archive_item: 0,
+  song: 0,
+  media_asset: 0,
+};
 
 function isMissingSupabaseEnvError(error: unknown): boolean {
   return error instanceof Error && error.message.startsWith('Missing VITE_SUPABASE_');
@@ -448,6 +457,18 @@ function buildReviewPlanRows(input: CreateImportReviewPlanInput, userId: string)
   return [...candidateRows, ...archiveCollectionRows, ...archiveItemRows];
 }
 
+function countReviewPlanRowsByEntityType(
+  rows: Array<{ entity_type: ImportEntityType }>,
+): Record<ImportEntityType, number> {
+  return rows.reduce<Record<ImportEntityType, number>>(
+    (counts, row) => ({
+      ...counts,
+      [row.entity_type]: counts[row.entity_type] + 1,
+    }),
+    { ...emptyPlannedCounts },
+  );
+}
+
 async function requireImportAdmin(permissionMessage: string): Promise<void> {
   const role = await getCurrentUserImportRole();
   if (role !== 'admin') {
@@ -654,6 +675,7 @@ export async function createImportReviewPlan(
   if (reviewRows.length === 0) {
     return {
       plannedCount: 0,
+      plannedCounts: { ...emptyPlannedCounts },
       items: [],
     };
   }
@@ -670,6 +692,7 @@ export async function createImportReviewPlan(
 
   return {
     plannedCount: reviewRows.length,
+    plannedCounts: countReviewPlanRowsByEntityType(reviewRows),
     items: [],
   };
 }

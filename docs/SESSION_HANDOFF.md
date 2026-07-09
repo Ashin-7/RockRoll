@@ -342,30 +342,20 @@ npm run build
 
 ## 下一轮推荐任务
 
-最新状态：权限落地实现已完成。下一轮不要重复做 UI/service/RLS 收口；优先在真实 Supabase 环境 apply migration 后做权限验证，或继续 Anontraveler 目录扫描真实浏览器检查。
+最新状态：P0 / P1 的本地代码、自动化测试项和真实 Supabase 权限验证已完成。下一轮不要重复做 UI/service/RLS 收口；优先做真实大榜单导入验证，或在真实导入仍失败时进入 P2 的数据库级导入任务状态追踪。
 
-优先级 -1：权限落地实现。不要重新做权限盘点，直接读取 `docs/PERMISSIONS_AUDIT.md`，先做 UI 可见性收口：ArchivePage 隐藏非 admin 的手动集合 CRUD 和集合编辑 / 删除；ArchiveDetailPage 隐藏非 admin 的条目 CRUD；AlbumDetailPage 隐藏非 admin 的编辑 / 删除。随后再做 Archive / Albums service admin guard 和 RLS migration。
+真实 Supabase 权限验证已完成：`20260708064649` 已应用到 remote，RLS 探针确认普通 user 写入 artist / archive_collection 被拒绝，admin 写入 artist / album / archive_collection / archive_item / external_source 可用，探针 rollback 后无测试数据残留。
 
-优先级 -1：权限矩阵收口。
 
-- `docs/PERMISSIONS.md` 已完成，下一步不要重新设计矩阵，直接进入权限落地盘点。
-- 先检查 Archive / Albums / Library / Import UI 是否仍暴露普通用户可操作的非 Practice / Songs CRUD。
-- 再检查 service 层和 Supabase RLS / policy 是否能阻止普通用户写 public 资料、导入状态和 external source 映射。
-- 最后把缺口拆成小任务：先前端可见性和 service 测试，再 RLS / migration。
-
-优先级 0：Anontraveler 目录扫描后续设计。
-
-- Archive 目录扫描已支持加载更多；下一步先在 UI 手动验证扫描第一页、加载更多、选择榜单后只填 URL。
-- 如后续要保存目录扫描状态，再决定前端暂存 / localStorage，或新增正式表。
-- 如果要长期保存目录状态，再单独设计 migration、RLS 和管理员写入权限。
-- 不要把目录扫描结果直接批量导入。
-
-优先级 1：真实导入验证。
+优先级 0：真实大榜单导入验证。
 
 - 用真实 Supabase 重新导入 `5e9fb16311ee091e615c2a7f`，确认 archive item 数量能从历史 80 补齐到预览 496。
-- 确认 200 条分块 + 3 路受限并发后导入不再显示 `Bad Request`，并记录真实环境下预览、生成计划、正式提交三个阶段的耗时。
-- 重试已报唯一约束的集合，确认重复导入会复用旧 archive item 并补 external source 映射。
-- 用两个包含相同专辑的不同榜单验证：专辑实体可复用，榜单条目必须分别保留。
+- 记录 Archive 导入摘要：preview、saved、planned、planned breakdown、committed。
+
+优先级 1：数据库级导入任务状态追踪和失败恢复。
+
+- 在真实导入验证仍出现部分失败、重复点击或阶段不清时，再设计最小数据库级状态字段 / 表。
+- 先记录失败阶段、错误信息、可重试范围和幂等键，不要直接上后台 worker。
 
 优先级 2：验证 Inbox 一键导入流程。
 
@@ -411,8 +401,9 @@ npm run build
 - src/App.tsx
 - 如涉及权限或 schema，再读取最小必要的 supabase/migrations
 
-先读取 `docs/PERMISSIONS.md` 和 `docs/PERMISSIONS_AUDIT.md`；不要重新设计权限矩阵，也不要重新做权限盘点。直接按审计结果先处理 UI 可见性收口。
-先处理 docs/NEXT_TASKS.md 中的最高优先级：ArchivePage、ArchiveDetailPage、AlbumDetailPage 的非 admin 写入口隐藏。
+P0 / P1 的本地代码与自动化测试项已完成。不要重新做权限 UI/service/RLS 收口。
+优先处理 docs/NEXT_TASKS.md 中的真实大榜单导入数量验证；权限验证不要重复做。
+如果没有真实 Supabase 管理员账号或无法 apply migration，则进入 P2：数据库级导入任务状态追踪和失败恢复的最小设计。
 不要扫描整个仓库。
 不要运行 npm install。
 不要做架构重构。

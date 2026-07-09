@@ -2,7 +2,7 @@ import { FormEvent, useEffect, useState } from 'react';
 import { useI18n } from '../../i18n/I18nProvider';
 import { AnontravelerPreview } from './anontraveler.types';
 import { mapAnontravelerPreviewCandidates, previewAnontravelerImport } from './anontraveler.service';
-import { ImportUserRole } from './inbox.types';
+import { ImportEntityType, ImportUserRole } from './inbox.types';
 import {
   commitPublicImportReviewPlan,
   createImportReviewPlan,
@@ -25,6 +25,25 @@ function formatMessage(template: string, values: Record<string, string | number>
     (nextMessage, [key, value]) => nextMessage.replace(`{${key}}`, String(value)),
     template,
   );
+}
+
+const emptyPlannedCounts: Record<ImportEntityType, number> = {
+  artist: 0,
+  album: 0,
+  archive_collection: 0,
+  archive_item: 0,
+  song: 0,
+  media_asset: 0,
+};
+
+function formatPlannedBreakdown(
+  template: string,
+  plannedCounts: Partial<Record<ImportEntityType, number>> | undefined,
+): string {
+  return formatMessage(template, {
+    ...emptyPlannedCounts,
+    ...plannedCounts,
+  });
 }
 
 function formatImportError(caughtError: unknown): string {
@@ -150,14 +169,14 @@ export function InboxPage({
           skipped: result.skippedCount,
         }),
       );
-      setCommitSummary(
-        formatMessage(t('inbox.fullImportSummary'), {
+      const summary = formatMessage(t('inbox.fullImportSummary'), {
           preview: previewArchiveItemCount,
           saved: draft.savedCount,
           planned: reviewPlan.plannedCount,
           committed: committedCount,
-        }),
-      );
+        });
+      const plannedBreakdown = formatPlannedBreakdown(t('import.plannedBreakdown'), reviewPlan.plannedCounts);
+      setCommitSummary(`${summary} ${plannedBreakdown}`);
     } catch (caughtError) {
       setCommitError(formatImportError(caughtError));
     } finally {

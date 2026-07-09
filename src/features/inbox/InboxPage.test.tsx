@@ -119,7 +119,18 @@ describe('InboxPage', () => {
     const user = userEvent.setup();
     const onPreviewAnontraveler = vi.fn().mockResolvedValue(anontravelerPreview);
     const onSaveCandidatesDraft = vi.fn().mockResolvedValue({ importJobId: 'job-1', savedCount: 5 });
-    const onCreateReviewPlan = vi.fn().mockResolvedValue({ plannedCount: 6, items: [] });
+    const onCreateReviewPlan = vi.fn().mockResolvedValue({
+      plannedCount: 6,
+      plannedCounts: {
+        artist: 1,
+        album: 1,
+        archive_collection: 1,
+        archive_item: 3,
+        song: 0,
+        media_asset: 0,
+      },
+      items: [],
+    });
     const onCommitPublicImportReviewPlan = vi.fn().mockResolvedValue({
       createdCount: 4,
       matchedCount: 1,
@@ -169,7 +180,7 @@ describe('InboxPage', () => {
     expect(await screen.findByText('Public import committed: created 4, matched 1, skipped 0.')).toBeInTheDocument();
     expect(
       screen.getByText(
-        'Import summary: preview 4 archive items, saved 5 candidates, planned 6 review items, committed 5 rows.',
+        'Import summary: preview 4 archive items, saved 5 candidates, planned 6 review items, committed 5 rows. Planned breakdown: artists 1, albums 1, archive collections 1, archive items 3, songs 0, media assets 0.',
       ),
     ).toBeInTheDocument();
     expect(screen.queryByText('Classic rock guide')).not.toBeInTheDocument();

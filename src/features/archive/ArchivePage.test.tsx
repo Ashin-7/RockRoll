@@ -217,7 +217,18 @@ describe('ArchivePage', () => {
     const previewAnontraveler = vi.fn().mockResolvedValue(anontravelerPreview);
     const mapPreviewCandidates = vi.fn().mockReturnValue(previewCandidates);
     const saveCandidatesDraft = vi.fn().mockResolvedValue({ importJobId: 'job-1', savedCount: 1 });
-    const createReviewPlan = vi.fn().mockResolvedValue({ plannedCount: 6, items: [] });
+    const createReviewPlan = vi.fn().mockResolvedValue({
+      plannedCount: 6,
+      plannedCounts: {
+        artist: 1,
+        album: 1,
+        archive_collection: 1,
+        archive_item: 3,
+        song: 0,
+        media_asset: 0,
+      },
+      items: [],
+    });
     const commitPublicImport = vi.fn().mockResolvedValue({ createdCount: 4, matchedCount: 1, skippedCount: 0 });
 
     renderWithI18n(
@@ -280,7 +291,7 @@ describe('ArchivePage', () => {
     expect(await screen.findByText('Import finished: 4 created, 1 matched, 0 skipped.')).toBeInTheDocument();
     expect(
       screen.getByText(
-        'Import summary: preview 4 archive items, saved 1 candidates, planned 6 review items, committed 5 rows.',
+        'Import summary: preview 4 archive items, saved 1 candidates, planned 6 review items, committed 5 rows. Planned breakdown: artists 1, albums 1, archive collections 1, archive items 3, songs 0, media assets 0.',
       ),
     ).toBeInTheDocument();
   });

@@ -151,11 +151,11 @@ git diff --check -- src/features/albums/AlbumListPage.tsx src/features/albums/Al
 
 追加完成：Archive 目录扫描已完成 Playwright 真实浏览器验证。桌面和窄屏截图已保存到 `output/playwright/`；扫描第一页、加载更多、选择榜单只填 URL 均通过，未自动预览、未自动导入、未请求榜单详情页。
 
-权限矩阵已新增到 `docs/PERMISSIONS.md`。下一步进入权限落地盘点：对照矩阵检查 Archive / Albums / Library / Import 当前 UI、service 和 RLS，列出哪些 CRUD / 导入入口仍需要管理员可见、管理员操作或后端权限测试。
+权限矩阵、权限落地盘点和权限落地 P0 已完成。不要重新盘点或重复做 UI/service/RLS 收口；下一步只保留真实 Supabase apply migration 后的权限验证。
 
-盘点顺序建议：先 Archive URL 导入和手动集合 CRUD，再 Albums 资料展示与隐藏写入口，再 Inbox service / import_* 写入路径，最后确认现有 migration / RLS 是否覆盖 public 读取和 admin 写入。
+真实权限验证顺序建议：先 apply admin-only public library 写入 migration，再用普通用户验证 Archive / Albums / import_* 写入被拒绝，最后用 admin 验证资料库维护和导入仍可用。
 
-Archive 目录扫描已支持逐页加载目录 API，并且代码层面已收束为“选择榜单后只填 URL，不自动预览”。ArchivePage 自动化测试已覆盖扫描第一页、加载更多、去重、选择后只填 URL，以及不触发 preview / candidates / Review plan / commit。下一步优先做真实浏览器视觉检查；Inbox 页面 UI 暂不作为优先增强对象。
+Archive 目录扫描已支持逐页加载目录 API，并且代码层面已收束为“选择榜单后只填 URL，不自动预览”。ArchivePage 自动化测试和 Playwright 真实浏览器验证已覆盖扫描第一页、加载更多、去重、选择后只填 URL，以及不触发 preview / candidates / Review plan / commit。Inbox 页面 UI 暂不作为优先增强对象。
 
 推荐命令：
 
@@ -174,6 +174,8 @@ npm run build
 
 ## 下一个功能任务：验证共享导入与结果状态
 
+当前本地可自动化部分已完成：导入成功摘要已覆盖 preview / saved / planned / committed 四段数量，`createImportReviewPlan` 现在额外返回按实体类型拆分的 `plannedCounts`，Inbox 与 Archive 成功摘要会展示计划明细。Albums 首屏服务端分页、翻页和完整集合曲风筛选已有测试覆盖。
+
 目标：在真实 Supabase 环境验证 Inbox 与 Archive 两个入口的一键导入是否都能补齐大榜单，并确认分块优化后不再出现导入后 `Bad Request`。
 
 建议排查顺序：
@@ -188,22 +190,21 @@ npm run build
 8. 如果真实环境仍出现部分失败，再补数据库级导入任务状态和失败恢复，减少重复点击和阶段不清的问题。
 9. 如果真实环境仍慢，下一步考虑把正式提交迁移为数据库 RPC 或后台任务；当前 3 路并发只优化分块保存/预取阶段，不能消除前端逐条多表提交的网络往返。
 
-建议先补测试：
+本地覆盖状态：
 
-- 一键导入内部保存的候选数量与 preview 映射数量一致。
-- Review plan 数量按实体类型可解释。
-- 重复生成计划不会产生重复不可控数据。
-- commit 成功后档案袋集合可被读取。
-- `/albums` 首屏集合详情只请求当前页 25 条数据，翻页时再请求下一页。
-- `/albums` 曲风筛选对完整集合生效，翻页时保留当前曲风。
+- 已覆盖：一键导入内部保存候选、生成 Review plan、正式提交的摘要口径。
+- 已覆盖：Review plan 数量按实体类型可解释。
+- 已覆盖：重复生成计划使用 `user_id,source_name,source_id,entity_type` upsert，不产生重复不可控数据。
+- 已覆盖：commit 成功后档案集合和条目可被 archive service 读取。
+- 已覆盖：`/albums` 首屏集合详情只请求当前页 25 条数据，翻页时再请求下一页。
+- 已覆盖：`/albums` 曲风筛选对完整集合生效，翻页时保留当前曲风。
 
 ## 后续功能队列
 
-最新优先级 -1：权限落地实现。已完成 `docs/PERMISSIONS.md` 和 `docs/PERMISSIONS_AUDIT.md`；下一步先做 UI 可见性收口，再做 Archive / Albums service admin guard，最后新增 RLS migration。
+最新完成：P0 / P1 的本地代码与自动化测试项已完成。权限落地代码侧已完成；共享导入数量摘要和 planned 明细已完成；Albums 分页与完整集合曲风筛选已覆盖。
 
-最新完成：权限落地实现已完成。保留后续验证项：真实 Supabase 环境 apply migration 后，用普通用户验证 Archive / Albums / import_* 写入与读取会被拒绝，用 admin 验证导入和资料库维护仍可用。
+真实 Supabase 权限验证已完成：admin-only public library 写入 migration 已应用到 remote，RLS 探针确认普通 user 写入被拒绝、admin 写入可用且无测试数据残留。下一步进入真实大榜单导入验证，记录写入数量、重复导入 note 回填和 `Bad Request` 是否消失。
 
--1. 权限落地盘点：`docs/PERMISSIONS.md` 已完成；下一步检查 Archive / Albums / Library / Import UI、service、RLS 与测试缺口，并按小步任务修正。
 0. Anontraveler 全榜单导入三阶段设计：先做榜单目录扫描，只保存榜单索引；再稳定单榜单导入数量口径；最后做围绕 Archive 新增集合入口的批量队列导入，支持失败记录、失败重试和重复导入幂等。
    - 已完成第一阶段的最小代码基础：目录 HTML 解析、目录项字段、状态枚举、`versionId` 去重合并和单页扫描函数。下一步不要直接批量导入，应先决定目录索引是暂存前端状态还是新增正式表。
    - Archive 新增集合 URL 导入区域已接入最小选择 UI；当前仅扫描目录、展示 title / itemCount / status，并把用户选择的 `sourceUrl` 填入现有输入框。

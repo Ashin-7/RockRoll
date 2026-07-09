@@ -14,7 +14,7 @@ import {
   getCurrentUserImportRole,
   saveImportCandidatesDraft,
 } from '../inbox/inbox.service';
-import { ImportUserRole } from '../inbox/inbox.types';
+import { ImportEntityType, ImportUserRole } from '../inbox/inbox.types';
 import { ArchiveCollectionSummary, CreateArchiveCollectionInput, UpdateArchiveCollectionInput } from './archive.types';
 import {
   createArchiveCollection,
@@ -52,6 +52,25 @@ function formatMessage(template: string, values: Record<string, string | number>
     (nextMessage, [key, value]) => nextMessage.replace(`{${key}}`, String(value)),
     template,
   );
+}
+
+const emptyPlannedCounts: Record<ImportEntityType, number> = {
+  artist: 0,
+  album: 0,
+  archive_collection: 0,
+  archive_item: 0,
+  song: 0,
+  media_asset: 0,
+};
+
+function formatPlannedBreakdown(
+  template: string,
+  plannedCounts: Partial<Record<ImportEntityType, number>> | undefined,
+): string {
+  return formatMessage(template, {
+    ...emptyPlannedCounts,
+    ...plannedCounts,
+  });
 }
 
 function mergeRankDirectoryItems(
@@ -286,14 +305,14 @@ export function ArchivePage({
           skipped: result.skippedCount,
         }),
       );
-      setImportSummary(
-        formatMessage(t('archive.urlImportSummary'), {
+      const summary = formatMessage(t('archive.urlImportSummary'), {
           preview: previewArchiveItemCount,
           saved: draft.savedCount,
           planned: reviewPlan.plannedCount,
           committed: committedCount,
-        }),
-      );
+        });
+      const plannedBreakdown = formatPlannedBreakdown(t('import.plannedBreakdown'), reviewPlan.plannedCounts);
+      setImportSummary(`${summary} ${plannedBreakdown}`);
       await loadCollections();
     } catch (caughtError) {
       setImportError(caughtError instanceof Error ? caughtError.message : t('archive.urlImportError'));

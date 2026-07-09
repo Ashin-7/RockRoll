@@ -711,3 +711,33 @@ Invoke-WebRequest -Uri http://127.0.0.1:5174/#archive -UseBasicParsing -TimeoutS
 ```
 
 窄屏结果：`overflow = false`，扫描按钮和选择按钮均可见。
+
+## 追加完成：共享导入计划数量明细
+
+完成范围：
+- `createImportReviewPlan` 返回值新增 `plannedCounts`，按 `artist`、`album`、`archive_collection`、`archive_item`、`song`、`media_asset` 拆分 Review plan 数量。
+- Inbox 与 Archive 的一键导入成功摘要追加计划明细，避免 `planned` 数量大于 preview 时无法判断差异来自哪类实体。
+- 该改动不改变导入链路、写入顺序、RLS 或 commit 行为，只补充结果状态可解释性。
+
+验证：
+```powershell
+$env:HOME=(Resolve-Path .\.tmp).Path; $env:USERPROFILE=(Resolve-Path .\.tmp).Path; $env:TEMP=(Resolve-Path .\.tmp).Path; $env:TMP=(Resolve-Path .\.tmp).Path; C:\Users\Ashin\AppData\Local\nvm\v20.20.2\node.exe .\node_modules\vitest\vitest.mjs --run src/features/inbox src/features/archive src/features/albums
+$env:HOME=(Resolve-Path .\.tmp).Path; $env:USERPROFILE=(Resolve-Path .\.tmp).Path; $env:TEMP=(Resolve-Path .\.tmp).Path; $env:TMP=(Resolve-Path .\.tmp).Path; C:\Users\Ashin\AppData\Local\nvm\v20.20.2\node.exe .\node_modules\typescript\bin\tsc -b; if ($LASTEXITCODE -eq 0) { C:\Users\Ashin\AppData\Local\nvm\v20.20.2\node.exe .\node_modules\vite\bin\vite.js build }
+```
+
+结果：Archive / Albums / Inbox 合计 11 个测试文件、113 个用例通过；TypeScript build 与 Vite production build 通过。Vite 仍提示既有 chunk size 警告。
+
+当前 P0 / P1 状态：
+- P0 权限落地已完成真实 Supabase 验证：`20260708064649_restrict_public_library_writes_to_admin.sql` 已应用到 linked remote，public library 相关表 RLS 已启用，普通 user 写入被 RLS 拒绝，admin 写入探针通过且已 rollback。
+- P1 共享导入数量口径的本地可自动化覆盖已完成：preview / saved / planned / committed 摘要、planned 按实体类型拆分、Albums 服务端分页与完整集合曲风筛选均有测试。
+- 真实大榜单导入补齐、重复导入在真实数据上的 note 回填和 `Bad Request` 复测仍待执行。
+
+真实 Supabase 权限验证：
+```powershell
+supabase db push --linked --dry-run
+supabase db push --linked --yes
+supabase migration list --linked
+supabase db query --linked --file .tmp\verify-public-library-policies.sql
+```
+
+结果：`20260708064649` 已出现在 remote migration history；`artists`、`albums`、`archive_collections`、`archive_items`、`external_sources` 均启用 RLS；旧 owner/private 写入 policy 未残留为写入入口；事务内 RLS 探针显示普通 user 插入 artist / archive_collection 被 `42501` 拒绝，admin 插入 artist / album / archive_collection / archive_item / external_source 均通过；探针最终 rollback，确认测试数据残留为 0。
