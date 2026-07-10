@@ -41,6 +41,11 @@ export interface ImportReviewItemSummary {
   errorMessage: string | null;
 }
 
+export interface MatchImportReviewItemInput {
+  reviewItemId: string;
+  targetEntityId: string;
+}
+
 export type ImportUserRole = 'anonymous' | 'user' | 'admin';
 
 export interface CommitImportReviewPlanResult {

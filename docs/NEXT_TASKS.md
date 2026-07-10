@@ -23,7 +23,7 @@
 - 针对 `https://www.anontraveler.com/rank/version/5e9fb16311ee091e615c2a7f` 复核真实 API：预览 496 个条目无缺失；修正为即使来源 item 有 `_id`，`archive_item` external id 也必须带榜单命名空间，避免来源复用 item id 时入库阶段继续去重。
 - 修复重复导入同一集合时触发 `archive_items_collection_id_entity_type_entity_id_key` 的问题：当新版 source id 没命中 external source，但同集合里已存在同一 album 的 archive item，会复用旧条目、回填 note，并补写新的 external source 映射。
 - 修复大榜单提交只写入前 1000 条 Review plan 的问题：`commitPublicImportReviewPlan` 现在分页读取全部 `import_review_items`，避免 496 专辑榜单因 artist/album/review item 总数超过 1000 而只提交约 80 条 archive item。
-- 已用只读 REST 查询确认 `5e9fb16311ee091e615c2a7f` 当前数据库集合确实只有 80 条 `archive_items`，页面显示 80 不是 Albums 页面二次去重，而是之前提交部分写入后的真实状态。
+- 已用只读查询复核 `5e9fb16311ee091e615c2a7f` 当前真实库状态：Anontraveler preview 为 496 个 album archive item；当前数据库目标集合已有 496 条 album `archive_items`、496 条 archive item external source 映射和 496 条集合内 album external source 映射。此前 80 条只是历史部分写入状态。
 - Inbox 导入流程仍有待优化：步骤偏繁琐，生成计划后正式推送和导入数量需要继续排查。
 - Inbox 页面已进一步简化为预览后一键完整导入：页面不再暴露草稿、候选索引和 Review plan，内部仍复用保存候选、生成计划、正式提交三步链路。
 - Inbox 大批量导入已做服务层分块优化：候选保存、Review plan upsert、external source `.in()` 预取、import job 删除都按 200 条分块，降低 PostgREST `Bad Request` 和大响应等待风险。
@@ -134,10 +134,8 @@ git diff --check -- src/features/albums/AlbumListPage.tsx src/features/albums/Al
 仍需补充验证：
 
 - Archive 目录选择的桌面 / 窄屏浏览器截图仍需补做；本轮已启动 Vite 并确认本地页面 200，但 Playwright 浏览器二进制缺失，未执行 `npx playwright install`。
-- 真实 Supabase 环境中，需要重新提交一次已导入榜单或执行数据修正，旧的 `archive_items.note` 才会被回填。
-- 真实 Supabase 环境中，需要重新导入 `https://www.anontraveler.com/rank/version/5e9fb16311ee091e615c2a7f`，确认正式写入的 `archive_items` 与预览 496 条一致。
-- 真实 Supabase 环境中，需要用 `/archive` 新增集合 URL 导入入口跑一次同样的大榜单，确认自定义标题 / 说明能写入正式集合，且数量与 Inbox 入口一致。
-- 当前该集合已有 80 条历史部分写入数据，因之前 Review plan / import job 已清空，需要重新预览、保存草稿、生成计划并提交，才能补齐剩余 archive item。
+- 真实 Supabase 环境中，`5e9fb16311ee091e615c2a7f` 已只读验证为 496 条正式 `archive_items`，无需继续按 80 条历史状态补齐。
+- 真实 Supabase 环境中，建议选择另一个未导入或可安全重复导入的榜单，继续验证 Archive URL 导入入口的自定义标题 / 说明、重复导入 note 回填、`Bad Request` 是否消失，以及数量摘要是否清晰。
 - 对已经生成过旧 archive item 的集合，重新提交导入计划时应不再报 `archive_items_collection_id_entity_type_entity_id_key`，并会补齐新的 external source 映射。
 - Albums 集合标题懒加载、服务端分页、分块并发、全集合曲风筛选、集合搜索 / 本地排序、曲风搜索已通过 `src/features/albums` 自动化测试；仍建议在浏览器里做一次桌面 / 窄屏视觉检查，重点看按钮列表高度、滚动和窄屏布局。
 
@@ -203,7 +201,7 @@ npm run build
 
 最新完成：P0 / P1 的本地代码与自动化测试项已完成。权限落地代码侧已完成；共享导入数量摘要和 planned 明细已完成；Albums 分页与完整集合曲风筛选已覆盖。
 
-真实 Supabase 权限验证已完成：admin-only public library 写入 migration 已应用到 remote，RLS 探针确认普通 user 写入被拒绝、admin 写入可用且无测试数据残留。下一步进入真实大榜单导入验证，记录写入数量、重复导入 note 回填和 `Bad Request` 是否消失。
+真实 Supabase 权限验证已完成：admin-only public library 写入 migration 已应用到 remote，RLS 探针确认普通 user 写入被拒绝、admin 写入可用且无测试数据残留。真实大榜单 `5e9fb16311ee091e615c2a7f` 已只读验证为 496 条正式 `archive_items`；下一步用另一个榜单验证跨榜单幂等、重复导入 note 回填和 `Bad Request` 是否消失。
 
 0. Anontraveler 全榜单导入三阶段设计：先做榜单目录扫描，只保存榜单索引；再稳定单榜单导入数量口径；最后做围绕 Archive 新增集合入口的批量队列导入，支持失败记录、失败重试和重复导入幂等。
    - 已完成第一阶段的最小代码基础：目录 HTML 解析、目录项字段、状态枚举、`versionId` 去重合并和单页扫描函数。下一步不要直接批量导入，应先决定目录索引是暂存前端状态还是新增正式表。
@@ -212,6 +210,8 @@ npm run build
    - 已修正目录扫描数据源：改用 `/api/rank/ranks/all/0` 的 `data.ranks`，当前只加载第一页 10 条，不自动翻页、不访问详情页。
    - 已支持用户点击“加载更多榜单”后逐页加载更多目录页；仍不自动访问详情页、不预览、不导入。
 1. `match_existing` 的最小手动匹配 UI / service。
+   - service 基础已完成：管理员可把 artist / album Review item 绑定到同类型已有 public 实体，且会验证目标存在。
+   - 下一步只设计并接入最小 UI；需先确定放在 Archive 预览阶段还是独立 Review 阶段，不能重新暴露已停用的 Inbox 主入口，也不能破坏当前正常的一键导入路径。
 2. 数据库级正式导入任务状态追踪和失败恢复，避免重复点击或部分失败后不清楚状态。
 3. Review plan 明细展示专辑封面 / 点评 / 年代 / 风格，便于导入前检查。
 4. 专辑封面与曲风正规化，例如 `albums.cover_url` 和 `album_styles` / `album_genres`。

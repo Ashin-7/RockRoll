@@ -213,7 +213,7 @@ git diff --check -- src/features/inbox src/features/albums src/features/archive 
 - 针对真实链接 `https://www.anontraveler.com/rank/version/5e9fb16311ee091e615c2a7f` 继续修正：即使来源 item 有 `_id`，`archive_item` external id 也会带上榜单命名空间，避免不同榜单复用 item id 时被入库匹配为同一条目。
 - 修复同一集合重复导入时触发 `archive_items_collection_id_entity_type_entity_id_key` 的问题：当新版 archive item source id 未命中旧 external source，但同集合已存在同一 album 条目时，提交会复用旧 `archive_items`、更新评语并补写新 external source 映射，不再重复插入。
 - 修复大榜单正式提交只读取前 1000 条 Review plan 的问题：提交阶段现在分页读取全部 `import_review_items`，避免大型 Anontraveler 榜单只写入前段 artist/album 后，archive item 只剩少量被处理。
-- 已只读核查真实数据：`5e9fb16311ee091e615c2a7f` 预览应有 496 条 album archive item，但当前 Supabase 集合中只有 80 条，属于旧提交部分写入后的数据库状态，不是 `/albums` 页面二次去重。
+- 已只读核查真实数据：`5e9fb16311ee091e615c2a7f` 预览应有 496 条 album archive item；历史曾出现 Supabase 集合只有 80 条的部分写入状态，当前复核已补齐为 496 条正式 `archive_items`，不是 `/albums` 页面二次去重。
 
 验证状态：
 
@@ -605,8 +605,8 @@ git diff --check -- AGENTS.md docs/PERMISSIONS.md docs/PROJECT_STATUS.md docs/NE
 0. 权限矩阵已新增到 `docs/PERMISSIONS.md`；下一步对照矩阵盘点 Archive / Albums / Library / Import 的 UI、service、RLS 和测试缺口，再按小步任务落地。
 1. 在真实 Supabase 数据上重新提交一次用户提到的榜单，确认旧 `archive_items.note` 被回填后 `/albums` 不再显示“暂无笔记”。
 2. 在真实 Supabase 数据上导入两个包含相同专辑的不同榜单，确认 `albums` 可复用但 `archive_items` 数量按榜单条目保留。
-3. 重新导入 `https://www.anontraveler.com/rank/version/5e9fb16311ee091e615c2a7f`，确认档案条目数量与预览 496 条一致。
-4. 因该集合当前数据库只有 80 条历史部分写入数据，重新导入时需要重新生成 Review plan 后再提交，不能只刷新 `/albums`。
+3. `https://www.anontraveler.com/rank/version/5e9fb16311ee091e615c2a7f` 已只读验证为 496 条正式 `archive_items`；后续不要再把 80 条当作当前状态。
+4. 选择另一个未导入或可安全重复导入的榜单，继续验证重复导入 note 回填、`Bad Request` 是否消失，以及 created / matched / skipped 摘要是否清晰。
 5. 对已经报过唯一约束的集合重新提交一次，确认不再出现 `archive_items_collection_id_entity_type_entity_id_key`。
 6. 验证 Albums 懒加载和 Archive 相关测试；若失败，先修复回归，再继续新功能。
 7. 在真实 Supabase 环境验证 Archive URL 导入入口：同一链接的预览数量、正式写入数量和 `/albums` 展示数量应一致。
@@ -730,7 +730,8 @@ $env:HOME=(Resolve-Path .\.tmp).Path; $env:USERPROFILE=(Resolve-Path .\.tmp).Pat
 当前 P0 / P1 状态：
 - P0 权限落地已完成真实 Supabase 验证：`20260708064649_restrict_public_library_writes_to_admin.sql` 已应用到 linked remote，public library 相关表 RLS 已启用，普通 user 写入被 RLS 拒绝，admin 写入探针通过且已 rollback。
 - P1 共享导入数量口径的本地可自动化覆盖已完成：preview / saved / planned / committed 摘要、planned 按实体类型拆分、Albums 服务端分页与完整集合曲风筛选均有测试。
-- 真实大榜单导入补齐、重复导入在真实数据上的 note 回填和 `Bad Request` 复测仍待执行。
+- 真实大榜单 `5e9fb16311ee091e615c2a7f` 已完成只读验证：Anontraveler preview 为 496 个 album archive item；按当前映射 saved candidates 为 931（435 artist + 496 album），planned review items 为 1428（435 artist + 496 album + 1 archive_collection + 496 archive_item）；真实 Supabase 目标 collection 当前已有 496 条 album `archive_items`，已不再是历史 80 条部分写入状态。
+- 真实大榜单补齐数量已确认；重复导入的 note 回填和 `Bad Request` 写入复测仍建议用另一个未导入或可安全重复验证的榜单继续验证。
 
 真实 Supabase 权限验证：
 ```powershell
@@ -741,3 +742,20 @@ supabase db query --linked --file .tmp\verify-public-library-policies.sql
 ```
 
 结果：`20260708064649` 已出现在 remote migration history；`artists`、`albums`、`archive_collections`、`archive_items`、`external_sources` 均启用 RLS；旧 owner/private 写入 policy 未残留为写入入口；事务内 RLS 探针显示普通 user 插入 artist / archive_collection 被 `42501` 拒绝，admin 插入 artist / album / archive_collection / archive_item / external_source 均通过；探针最终 rollback，确认测试数据残留为 0。
+
+## 追加完成：`match_existing` service 基础
+
+完成范围：
+- 用户已确认新的真实榜单导入正常，当前不提前建设数据库级失败恢复或后台任务。
+- 新增 `matchImportReviewItem`，允许管理员把 artist / album Review item 手动绑定到同类型的已有 public 正式实体。
+- 匹配前会读取 Review item 的真实实体类型，并验证目标 public 实体仍存在；不允许手动匹配 archive collection / archive item，避免跨榜单误合并。
+- 匹配成功后更新 `planned_action = 'match_existing'`、`target_entity_id`，并清空旧 skip / error 状态；后续 commit 继续复用已有正式实体并补 external source 映射。
+- 非管理员、目标不存在、Review item 不存在或实体类型不支持时明确失败，不修改 Review item。
+- 本次没有新增 migration，没有改变 Archive 一键导入主流程，也没有恢复 Inbox 页面入口。
+
+验证：
+```powershell
+$env:HOME=(Resolve-Path .\.tmp).Path; $env:USERPROFILE=(Resolve-Path .\.tmp).Path; $env:TEMP=(Resolve-Path .\.tmp).Path; $env:TMP=(Resolve-Path .\.tmp).Path; C:\Users\Ashin\AppData\Local\nvm\v20.20.2\node.exe .\node_modules\vitest\vitest.mjs --run src/features/inbox/inbox.service.test.ts
+```
+
+结果：Inbox service 1 个测试文件、31 个用例通过。

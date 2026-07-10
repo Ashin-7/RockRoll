@@ -31,7 +31,7 @@
 - 针对 `https://www.anontraveler.com/rank/version/5e9fb16311ee091e615c2a7f` 进一步修正：来源 item `_id` 也不再作为全局去重键，`archive_item` external id 始终带榜单命名空间。
 - 修复同一集合重复导入时的 `archive_items_collection_id_entity_type_entity_id_key`：当旧 archive item 已存在但新 source id 尚未映射时，会按 collection + album 复用旧条目、更新 note，并补新 external source 映射。
 - 修复大型 Review plan 提交只读前 1000 条的问题：`commitPublicImportReviewPlan` 现在分页读取全部确认项，避免大榜单只写入少量 archive item。
-- 已核查真实数据：`5e9fb16311ee091e615c2a7f` 当前 Supabase 集合只有 80 条 `archive_items`，不是 `/albums` 页面二次去重，而是旧提交部分写入后的结果。
+- 已再次核查真实数据：`5e9fb16311ee091e615c2a7f` 当前 Supabase 集合已有 496 条 album `archive_items`，与 Anontraveler preview 496 条一致；80 条只是历史部分写入状态，不应再作为当前待补齐依据。
 - 用户反馈 Inbox 导入流程仍有 bug：步骤繁琐，生成计划后档案袋未成功 push 或数量不对，下一轮需要优先排查。
 - 已确认并实现新的 Inbox 主流程：页面只保留 URL 预览和管理员一键完整导入，草稿、候选索引、Review plan 不再暴露给用户。
 - 修复导入后 `Bad Request` 的高风险请求模式：候选保存、Review plan upsert、external source `.in()` 预取和 import job 删除均改为 200 条分块。
@@ -293,11 +293,9 @@ $env:HOME=(Resolve-Path .\.tmp).Path; $env:USERPROFILE=(Resolve-Path .\.tmp).Pat
 
 当前未完成验证：
 
-- 真实 Supabase 环境中，需要重新提交一次已导入榜单或单独执行数据修正，旧 `archive_items.note` 才会出现新增评语。
 - 真实 Supabase 环境中，建议导入两个包含相同专辑的不同榜单，确认 `archive_items` 数量按榜单条目保留。
-- 建议重新导入 `https://www.anontraveler.com/rank/version/5e9fb16311ee091e615c2a7f`，确认档案条目数量与预览 496 条一致。
-- 建议从 `/archive` 新增集合入口用同一链接导入一次，确认自定义标题 / 说明写入正式集合，且与 Inbox 入口的数量结果一致。
-- 当前该集合只有 80 条历史部分写入数据，需重新预览、保存草稿、生成 Review plan 并提交，才能补齐剩余 `archive_items`。
+- `5e9fb16311ee091e615c2a7f` 已只读验证为 496 条正式 `archive_items`，与预览一致；后续无需再围绕该链接做 80 -> 496 补齐验证。
+- 真实 Supabase 环境中，建议选择另一个未导入或可安全重复导入的榜单，从 `/archive` 新增集合入口验证自定义标题 / 说明、重复导入 note 回填、`Bad Request` 是否消失，以及数量摘要是否清晰。
 - 对已报过唯一约束的集合，建议重新提交一次导入计划，确认不会再触发 `archive_items_collection_id_entity_type_entity_id_key`。
 - Albums 按集合标题懒加载、服务端分页、分块并发、全集合曲风筛选、集合搜索 / 本地排序、曲风搜索已通过 `src/features/albums` 自动化测试；仍建议做浏览器桌面 / 窄屏视觉检查。
 
@@ -349,8 +347,8 @@ npm run build
 
 优先级 0：真实大榜单导入验证。
 
-- 用真实 Supabase 重新导入 `5e9fb16311ee091e615c2a7f`，确认 archive item 数量能从历史 80 补齐到预览 496。
-- 记录 Archive 导入摘要：preview、saved、planned、planned breakdown、committed。
+- `5e9fb16311ee091e615c2a7f` 已完成只读验证：preview 496，saved 931，planned 1428，真实库 committed 侧 collection 1 / archive_items 496。
+- 下一步选择另一个未导入或可安全重复导入的榜单，记录 Archive 导入摘要：preview、saved、planned、planned breakdown、committed，并验证 repeated import 的 matched / note 回填。
 
 优先级 1：数据库级导入任务状态追踪和失败恢复。
 
@@ -365,8 +363,8 @@ npm run build
 - 使用 `/archive` 新增集合 URL 导入入口复测同一链接，确认自定义标题 / 说明和数量结果。
 - 记录两个入口导入成功后的摘要：preview、saved、planned、committed 四个数字。
 - 使用两个包含同一专辑的不同榜单，验证专辑复用但档案条目分别保留。
-- 使用 `5e9fb16311ee091e615c2a7f` 验证真实大榜单导入数量。
-- 重新生成该链接的 Review plan 后提交，确认 58 页确认项全部被 commit 读取。
+- 不再使用 `5e9fb16311ee091e615c2a7f` 作为补齐验证对象；该链接当前真实库已为 496 条。
+- 使用另一个大榜单重新生成 Review plan 后提交，确认超过 1000 条确认项时 commit 仍会分页读取全部项目。
 - 重试已报唯一约束的提交路径，确认同集合同专辑会复用旧 archive item 并补映射。
 - 对比一键导入内部各阶段数量口径。
 - 查清是否是数据没有写入、写入后列表未刷新、权限失败，还是 Review plan 数量本来包含多实体。
@@ -418,3 +416,12 @@ P0 / P1 的本地代码与自动化测试项已完成。不要重新做权限 UI
 ```
 
 建议开启新对话，并粘贴以上提示词继续。
+
+## 追加交接：新榜单导入正常与 `match_existing` service 基础
+
+- 用户已确认新的真实榜单导入正常；当前不需要因历史部分失败提前建设数据库级失败恢复、后台队列或 worker。
+- 已新增 `matchImportReviewItem`，仅允许管理员手动匹配 artist / album Review item 到同类型已有 public 实体。
+- service 会验证 Review item 实体类型和目标 public 实体存在性；不支持 archive collection / archive item 手动匹配，避免跨榜单误合并。
+- 匹配成功后写入 `planned_action = 'match_existing'` 和 `target_entity_id`，后续沿用现有 commit 逻辑复用正式实体并补 external source 映射。
+- Inbox service 定向测试通过：1 个测试文件、31 个用例。
+- 下一步是确定最小手动匹配 UI 的位置。优先保持 Archive 一键导入不变，不恢复 Inbox 主入口；如无法在不破坏主流程的情况下接入，应先做短设计再实施。

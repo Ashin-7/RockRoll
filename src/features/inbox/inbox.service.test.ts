@@ -32,6 +32,12 @@ const reviewUpdateMock = vi.fn();
 const reviewSelectAfterUpdateMock = vi.fn();
 const reviewEqAfterUpdateMock = vi.fn();
 const reviewSingleAfterUpdateMock = vi.fn();
+const reviewLookupMaybeSingleMock = vi.fn();
+const reviewLookupEqMock = vi.fn(() => ({ maybeSingle: reviewLookupMaybeSingleMock }));
+const targetMaybeSingleMock = vi.fn();
+const targetVisibilityEqMock = vi.fn(() => ({ maybeSingle: targetMaybeSingleMock }));
+const targetIdEqMock = vi.fn(() => ({ eq: targetVisibilityEqMock }));
+const targetSelectMock = vi.fn(() => ({ eq: targetIdEqMock }));
 const jobSelectMock = vi.fn();
 const jobEqMock = vi.fn();
 const jobOrderMock = vi.fn();
@@ -52,7 +58,7 @@ const fromMock = vi.fn((tableName: string) => {
     return { insert: formalInsertMock, select: archiveItemSelectMock, update: formalUpdateMock };
   }
   if (tableName === 'artists' || tableName === 'albums' || tableName === 'archive_collections') {
-    return { insert: formalInsertMock };
+    return { insert: formalInsertMock, select: targetSelectMock };
   }
   if (tableName === 'external_sources') {
     return { select: externalSelectMock, insert: externalInsertMock };
@@ -125,6 +131,12 @@ describe('inbox.service', () => {
     reviewUpdateMock.mockReturnValue({ select: reviewSelectAfterUpdateMock });
     reviewSelectAfterUpdateMock.mockReturnValue({ eq: reviewEqAfterUpdateMock });
     reviewEqAfterUpdateMock.mockReturnValue({ single: reviewSingleAfterUpdateMock });
+    reviewLookupEqMock.mockReturnValue({ maybeSingle: reviewLookupMaybeSingleMock });
+    reviewLookupMaybeSingleMock.mockResolvedValue({ data: { entity_type: 'artist' }, error: null });
+    targetSelectMock.mockReturnValue({ eq: targetIdEqMock });
+    targetIdEqMock.mockReturnValue({ eq: targetVisibilityEqMock });
+    targetVisibilityEqMock.mockReturnValue({ maybeSingle: targetMaybeSingleMock });
+    targetMaybeSingleMock.mockResolvedValue({ data: { id: 'artist-existing-1' }, error: null });
     selectMock.mockReturnValue({ order: orderMock, range: defaultReviewRangeMock });
     defaultReviewRangeMock.mockImplementation((from: number) => (from === 0 ? orderMock() : { data: [], error: null }));
     profileSingleMock.mockResolvedValue({ data: { role: 'admin' }, error: null });
@@ -1232,6 +1244,100 @@ describe('inbox.service', () => {
     );
     expect(reviewEqAfterUpdateMock).toHaveBeenCalledWith('id', 'review-artist-1');
     expect(reviewSingleAfterUpdateMock).toHaveBeenCalled();
+  });
+
+  it('matches an artist review item to an existing public artist as an admin', async () => {
+    selectMock.mockReturnValue({ eq: reviewLookupEqMock });
+    reviewSingleAfterUpdateMock.mockResolvedValue({
+      data: {
+        id: 'review-artist-1',
+        entity_type: 'artist',
+        display_title: 'The Beatles',
+        source_name: 'anontraveler',
+        source_id: 'artist-1',
+        planned_action: 'match_existing',
+        target_entity_id: 'artist-existing-1',
+        skip_reason: '',
+        error_message: null,
+      },
+      error: null,
+    });
+    const { matchImportReviewItem } = await import('./inbox.service');
+
+    await expect(
+      matchImportReviewItem({
+        reviewItemId: 'review-artist-1',
+        targetEntityId: 'artist-existing-1',
+      }),
+    ).resolves.toEqual({
+      id: 'review-artist-1',
+      entityType: 'artist',
+      displayTitle: 'The Beatles',
+      sourceName: 'anontraveler',
+      sourceId: 'artist-1',
+      plannedAction: 'match_existing',
+      targetEntityId: 'artist-existing-1',
+      skipReason: '',
+      errorMessage: null,
+    });
+
+    expect(selectMock).toHaveBeenCalledWith('entity_type');
+    expect(reviewLookupEqMock).toHaveBeenCalledWith('id', 'review-artist-1');
+    expect(targetSelectMock).toHaveBeenCalledWith('id');
+    expect(targetIdEqMock).toHaveBeenCalledWith('id', 'artist-existing-1');
+    expect(targetVisibilityEqMock).toHaveBeenCalledWith('visibility', 'public');
+    expect(reviewUpdateMock).toHaveBeenCalledWith({
+      planned_action: 'match_existing',
+      target_entity_id: 'artist-existing-1',
+      skip_reason: '',
+      error_message: null,
+    });
+  });
+
+  it('rejects manual matching for unsupported review item entity types', async () => {
+    selectMock.mockReturnValue({ eq: reviewLookupEqMock });
+    reviewLookupMaybeSingleMock.mockResolvedValue({ data: { entity_type: 'archive_item' }, error: null });
+    const { matchImportReviewItem } = await import('./inbox.service');
+
+    await expect(
+      matchImportReviewItem({
+        reviewItemId: 'review-item-1',
+        targetEntityId: 'archive-item-existing-1',
+      }),
+    ).rejects.toThrow('Only artist and album review items can be matched manually.');
+
+    expect(targetSelectMock).not.toHaveBeenCalled();
+    expect(reviewUpdateMock).not.toHaveBeenCalled();
+  });
+
+  it('rejects manual matching when the public target entity does not exist', async () => {
+    selectMock.mockReturnValue({ eq: reviewLookupEqMock });
+    targetMaybeSingleMock.mockResolvedValue({ data: null, error: null });
+    const { matchImportReviewItem } = await import('./inbox.service');
+
+    await expect(
+      matchImportReviewItem({
+        reviewItemId: 'review-artist-1',
+        targetEntityId: 'missing-artist',
+      }),
+    ).rejects.toThrow('The selected public artist no longer exists.');
+
+    expect(reviewUpdateMock).not.toHaveBeenCalled();
+  });
+
+  it('rejects manual matching for non-admin users', async () => {
+    profileSingleMock.mockResolvedValue({ data: { role: 'user' }, error: null });
+    const { matchImportReviewItem } = await import('./inbox.service');
+
+    await expect(
+      matchImportReviewItem({
+        reviewItemId: 'review-artist-1',
+        targetEntityId: 'artist-existing-1',
+      }),
+    ).rejects.toThrow('Only admins can match import review items.');
+
+    expect(selectMock).not.toHaveBeenCalledWith('entity_type');
+    expect(reviewUpdateMock).not.toHaveBeenCalled();
   });
 
   it('sorts Anontraveler review items by source ranking while keeping commit dependencies', async () => {

@@ -4,6 +4,7 @@ import {
   ImportCandidateSummary,
   ImportDraftJobSummary,
   ImportEntityType,
+  MatchImportReviewItemInput,
   ImportReviewItemSummary,
   ImportReviewPlannedAction,
   ImportSource,
@@ -129,6 +130,14 @@ interface ArchiveItemIdRow {
   id: string;
 }
 
+interface ImportReviewEntityTypeRow {
+  entity_type: ImportEntityType;
+}
+
+interface ExistingPublicEntityRow {
+  id: string;
+}
+
 const demoImportCandidatesStorageKey = 'rockroll.demoImportCandidates';
 const importReviewItemSelectColumns =
   'id,entity_type,display_title,source_name,source_id,planned_action,target_entity_id,skip_reason,error_message,review_payload';
@@ -153,6 +162,10 @@ const emptyPlannedCounts: Record<ImportEntityType, number> = {
   archive_item: 0,
   song: 0,
   media_asset: 0,
+};
+const manualMatchTableByEntityType: Partial<Record<ImportEntityType, string>> = {
+  artist: 'artists',
+  album: 'albums',
 };
 
 function isMissingSupabaseEnvError(error: unknown): boolean {
@@ -965,6 +978,68 @@ export async function updateImportReviewItemAction(
       planned_action: input.plannedAction,
       skip_reason: input.plannedAction === 'skip' ? input.skipReason.trim() : '',
       target_entity_id: null,
+      error_message: null,
+    })
+    .select(importReviewItemSelectColumns)
+    .eq('id', input.reviewItemId)
+    .single();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return mapReviewItem(data as ImportReviewItemRow);
+}
+
+export async function matchImportReviewItem(
+  input: MatchImportReviewItemInput,
+): Promise<ImportReviewItemSummary> {
+  await getAuthenticatedUserId('You must sign in before matching an import review item.');
+  const role = await getCurrentUserImportRole();
+  if (role !== 'admin') {
+    throw new Error('Only admins can match import review items.');
+  }
+
+  const supabase = getSupabase();
+  const { data: reviewItemData, error: reviewItemError } = await supabase
+    .from('import_review_items')
+    .select('entity_type')
+    .eq('id', input.reviewItemId)
+    .maybeSingle();
+
+  if (reviewItemError) {
+    throw new Error(reviewItemError.message);
+  }
+  if (!reviewItemData) {
+    throw new Error('Import review item not found.');
+  }
+
+  const entityType = (reviewItemData as ImportReviewEntityTypeRow).entity_type;
+  const targetTable = manualMatchTableByEntityType[entityType];
+  if (!targetTable) {
+    throw new Error('Only artist and album review items can be matched manually.');
+  }
+
+  const { data: targetData, error: targetError } = await supabase
+    .from(targetTable)
+    .select('id')
+    .eq('id', input.targetEntityId)
+    .eq('visibility', 'public')
+    .maybeSingle();
+
+  if (targetError) {
+    throw new Error(targetError.message);
+  }
+  if (!(targetData as ExistingPublicEntityRow | null)?.id) {
+    throw new Error(`The selected public ${entityType} no longer exists.`);
+  }
+
+  const { data, error } = await supabase
+    .from('import_review_items')
+    .update({
+      planned_action: 'match_existing',
+      target_entity_id: input.targetEntityId,
+      skip_reason: '',
       error_message: null,
     })
     .select(importReviewItemSelectColumns)
