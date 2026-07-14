@@ -108,6 +108,24 @@ export interface RhythmGlyphResult {
   warnings: string[];
 }
 
+export interface RecognizedRhythmEvent {
+  page: number;
+  measureNumber: number;
+  tabEventOrder: number | null;
+  duration: RhythmDuration;
+  dots: 0 | 1;
+  isRest: boolean;
+  confidence: 'high' | 'medium';
+  sourceSymbols: string[];
+}
+
+export interface MeasureRhythmResult {
+  measureNumber: number;
+  status: 'recognized' | 'fallback';
+  events: RecognizedRhythmEvent[];
+  warning: string | null;
+}
+
 export interface TabScoreAnalysis {
   fileName: string;
   pageCount: number;
