@@ -20,6 +20,37 @@ const BEAM_MIN_THICKNESS_GAPS = 0.12;
 const BEAM_MAX_THICKNESS_GAPS = 0.6;
 const BEAM_MIN_WIDTH_GAPS = 0.8;
 const BEAM_CONTACT_TOLERANCE_GAPS = 0.2;
+const REST_RECT_MIN_WIDTH_GAPS = 0.8;
+const REST_RECT_MAX_WIDTH_GAPS = 1.4;
+const REST_RECT_MIN_HEIGHT_GAPS = 0.25;
+const REST_RECT_MAX_HEIGHT_GAPS = 0.5;
+const REST_LINE_ATTACHMENT_TOLERANCE_GAPS = 0.1;
+const QUARTER_REST_MIN_WIDTH_GAPS = 0.5;
+const QUARTER_REST_MAX_WIDTH_GAPS = 1;
+const QUARTER_REST_MIN_HEIGHT_GAPS = 2;
+const QUARTER_REST_MAX_HEIGHT_GAPS = 3.5;
+const QUARTER_REST_CENTER_TOLERANCE_GAPS = 0.5;
+const EIGHTH_REST_MIN_WIDTH_GAPS = 0.7;
+const EIGHTH_REST_MAX_WIDTH_GAPS = 1.4;
+const EIGHTH_REST_MIN_HEIGHT_GAPS = 1.5;
+const EIGHTH_REST_MAX_HEIGHT_GAPS = 3;
+const EIGHTH_REST_CENTER_TOLERANCE_GAPS = 0.75;
+const SIXTEENTH_REST_MIN_WIDTH_GAPS = 0.7;
+const SIXTEENTH_REST_MAX_WIDTH_GAPS = 1.4;
+const SIXTEENTH_REST_MIN_HEIGHT_GAPS = 2.5;
+const SIXTEENTH_REST_MAX_HEIGHT_GAPS = 4;
+const SIXTEENTH_REST_CENTER_TOLERANCE_GAPS = 0.75;
+const DOT_MIN_SIZE_GAPS = 0.15;
+const DOT_MAX_SIZE_GAPS = 0.35;
+const DOT_MIN_ASPECT_RATIO = 0.75;
+const DOT_MAX_ASPECT_RATIO = 1.33;
+const DOT_MIN_HORIZONTAL_GAP_GAPS = 0.15;
+const DOT_MAX_HORIZONTAL_GAP_GAPS = 0.5;
+const DOT_VERTICAL_TOLERANCE_GAPS = 0.25;
+const NORMALIZED_COMPARISON_TOLERANCE = 1e-9;
+const QUARTER_REST_TOPOLOGY = 'move-curve-line-curve-line-curve-close';
+const EIGHTH_REST_TOPOLOGY = 'move-line-curve-curve-line-close';
+const SIXTEENTH_REST_TOPOLOGY = 'move-line-curve-curve-line-curve-curve-line-close';
 
 type Bounds = PdfVectorPath['bounds'];
 type NoteheadKind = 'open' | 'filled';
@@ -27,6 +58,12 @@ type NoteheadKind = 'open' | 'filled';
 interface NoteheadCandidate {
   kind: NoteheadKind;
   path: PdfVectorPath;
+}
+
+interface ClassifiedGlyph {
+  event: RhythmGlyphEvent;
+  bounds: Bounds;
+  paths: PdfVectorPath[];
 }
 
 function getStaffGap(system: PairedStaffSystem): number {
@@ -42,6 +79,45 @@ function getWidth(bounds: Bounds): number {
 
 function getHeight(bounds: Bounds): number {
   return Math.abs(bounds.y2 - bounds.y1);
+}
+
+function getCenterY(bounds: Bounds): number {
+  return (bounds.y1 + bounds.y2) / 2;
+}
+
+function hasSizeInRange(
+  bounds: Bounds,
+  staffGap: number,
+  minWidthGaps: number,
+  maxWidthGaps: number,
+  minHeightGaps: number,
+  maxHeightGaps: number,
+): boolean {
+  const width = getWidth(bounds) / staffGap;
+  const height = getHeight(bounds) / staffGap;
+  return (
+    width >= minWidthGaps &&
+    width <= maxWidthGaps &&
+    height >= minHeightGaps &&
+    height <= maxHeightGaps
+  );
+}
+
+function getTopology(path: PdfVectorPath): string {
+  return path.commands.map((command) => command.type).join('-');
+}
+
+function isFilled(path: PdfVectorPath): boolean {
+  return path.paint === 'fill' || path.paint === 'fill-stroke';
+}
+
+function unionBounds(paths: PdfVectorPath[]): Bounds {
+  return {
+    x1: Math.min(...paths.map((path) => path.bounds.x1)),
+    y1: Math.min(...paths.map((path) => path.bounds.y1)),
+    x2: Math.max(...paths.map((path) => path.bounds.x2)),
+    y2: Math.max(...paths.map((path) => path.bounds.y2)),
+  };
 }
 
 function hasClosedContour(path: PdfVectorPath): boolean {
@@ -215,6 +291,94 @@ function isBeam(path: PdfVectorPath, staffGap: number): boolean {
   );
 }
 
+function isRectangularRest(path: PdfVectorPath, staffGap: number): boolean {
+  return (
+    isFilled(path) &&
+    isClosedStraightQuadrilateral(path) &&
+    hasSizeInRange(
+      path.bounds,
+      staffGap,
+      REST_RECT_MIN_WIDTH_GAPS,
+      REST_RECT_MAX_WIDTH_GAPS,
+      REST_RECT_MIN_HEIGHT_GAPS,
+      REST_RECT_MAX_HEIGHT_GAPS,
+    )
+  );
+}
+
+function isAttachedToLine(edgeY: number, lineY: number, staffGap: number): boolean {
+  return Math.abs(edgeY - lineY) <= REST_LINE_ATTACHMENT_TOLERANCE_GAPS * staffGap;
+}
+
+function matchesRestTopology(
+  path: PdfVectorPath,
+  staffGap: number,
+  topology: string,
+  minWidthGaps: number,
+  maxWidthGaps: number,
+  minHeightGaps: number,
+  maxHeightGaps: number,
+  centerToleranceGaps: number,
+  middleLineY: number,
+): boolean {
+  return (
+    isFilled(path) &&
+    getTopology(path) === topology &&
+    hasSizeInRange(
+      path.bounds,
+      staffGap,
+      minWidthGaps,
+      maxWidthGaps,
+      minHeightGaps,
+      maxHeightGaps,
+    ) &&
+    Math.abs(getCenterY(path.bounds) - middleLineY) <= centerToleranceGaps * staffGap
+  );
+}
+
+function isDot(path: PdfVectorPath, staffGap: number): boolean {
+  const width = getWidth(path.bounds);
+  const height = getHeight(path.bounds);
+  const aspectRatio = width / height;
+  return (
+    isFilled(path) &&
+    hasClosedContour(path) &&
+    path.commands.filter((command) => command.type === 'move').length === 1 &&
+    path.commands.filter((command) => command.type === 'close').length === 1 &&
+    width >= DOT_MIN_SIZE_GAPS * staffGap &&
+    width <= DOT_MAX_SIZE_GAPS * staffGap &&
+    height >= DOT_MIN_SIZE_GAPS * staffGap &&
+    height <= DOT_MAX_SIZE_GAPS * staffGap &&
+    aspectRatio >= DOT_MIN_ASPECT_RATIO - NORMALIZED_COMPARISON_TOLERANCE &&
+    aspectRatio <= DOT_MAX_ASPECT_RATIO + NORMALIZED_COMPARISON_TOLERANCE
+  );
+}
+
+function isPotentialRestOrDot(path: PdfVectorPath, staffGap: number): boolean {
+  const normalizedWidth = getWidth(path.bounds) / staffGap;
+  const normalizedHeight = getHeight(path.bounds) / staffGap;
+  const containsCurve = path.commands.some((command) => command.type === 'curve');
+  const isNearDotSize =
+    isFilled(path) &&
+    hasClosedContour(path) &&
+    normalizedWidth >= 0.1 &&
+    normalizedWidth < NOTEHEAD_MIN_WIDTH_GAPS &&
+    normalizedHeight >= 0.1 &&
+    normalizedHeight < NOTEHEAD_MIN_HEIGHT_GAPS;
+  return isRectangularRest(path, staffGap) || containsCurve || isNearDotSize;
+}
+
+function isImmediatelyRightOf(dotBounds: Bounds, eventBounds: Bounds, staffGap: number): boolean {
+  const horizontalGap = dotBounds.x1 - eventBounds.x2;
+  const verticalTolerance = DOT_VERTICAL_TOLERANCE_GAPS * staffGap;
+  return (
+    horizontalGap >= DOT_MIN_HORIZONTAL_GAP_GAPS * staffGap &&
+    horizontalGap <= DOT_MAX_HORIZONTAL_GAP_GAPS * staffGap &&
+    getCenterY(dotBounds) >= eventBounds.y1 - verticalTolerance &&
+    getCenterY(dotBounds) <= eventBounds.y2 + verticalTolerance
+  );
+}
+
 function areBeamLayersNonUnique(first: PdfVectorPath, second: PdfVectorPath): boolean {
   const regionsOverlap =
     intervalsOverlap(first.bounds.x1, first.bounds.x2, second.bounds.x1, second.bounds.x2, 0) &&
@@ -244,17 +408,110 @@ function createGlyph(
   systemIndex: number,
   duration: RhythmDuration,
   sourceSymbols: string[],
-): RhythmGlyphEvent {
+  attachedPaths: PdfVectorPath[] = [],
+): ClassifiedGlyph {
+  const paths = [notehead.path, ...attachedPaths];
   return {
-    page,
-    systemIndex,
-    x: (notehead.path.bounds.x1 + notehead.path.bounds.x2) / 2,
-    duration,
-    dots: 0,
-    isRest: false,
-    confidence: 'high',
-    sourceSymbols,
+    event: {
+      page,
+      systemIndex,
+      x: (notehead.path.bounds.x1 + notehead.path.bounds.x2) / 2,
+      duration,
+      dots: 0,
+      isRest: false,
+      confidence: 'high',
+      sourceSymbols,
+    },
+    bounds: unionBounds(paths),
+    paths,
   };
+}
+
+function createRestGlyph(
+  path: PdfVectorPath,
+  system: PairedStaffSystem,
+  systemIndex: number,
+  duration: RhythmDuration,
+): ClassifiedGlyph {
+  return {
+    event: {
+      page: system.page,
+      systemIndex,
+      x: (path.bounds.x1 + path.bounds.x2) / 2,
+      duration,
+      dots: 0,
+      isRest: true,
+      confidence: 'high',
+      sourceSymbols: [`${duration}-rest`],
+    },
+    bounds: path.bounds,
+    paths: [path],
+  };
+}
+
+function classifyRest(
+  path: PdfVectorPath,
+  system: PairedStaffSystem,
+  systemIndex: number,
+  staffGap: number,
+): ClassifiedGlyph | null {
+  if (isRectangularRest(path, staffGap)) {
+    if (isAttachedToLine(path.bounds.y1, system.standardLineYs[1], staffGap)) {
+      return createRestGlyph(path, system, systemIndex, 'whole');
+    }
+    if (isAttachedToLine(path.bounds.y2, system.standardLineYs[2], staffGap)) {
+      return createRestGlyph(path, system, systemIndex, 'half');
+    }
+    return null;
+  }
+
+  const middleLineY = system.standardLineYs[2];
+  if (
+    matchesRestTopology(
+      path,
+      staffGap,
+      QUARTER_REST_TOPOLOGY,
+      QUARTER_REST_MIN_WIDTH_GAPS,
+      QUARTER_REST_MAX_WIDTH_GAPS,
+      QUARTER_REST_MIN_HEIGHT_GAPS,
+      QUARTER_REST_MAX_HEIGHT_GAPS,
+      QUARTER_REST_CENTER_TOLERANCE_GAPS,
+      middleLineY,
+    )
+  ) {
+    return createRestGlyph(path, system, systemIndex, 'quarter');
+  }
+  if (
+    matchesRestTopology(
+      path,
+      staffGap,
+      EIGHTH_REST_TOPOLOGY,
+      EIGHTH_REST_MIN_WIDTH_GAPS,
+      EIGHTH_REST_MAX_WIDTH_GAPS,
+      EIGHTH_REST_MIN_HEIGHT_GAPS,
+      EIGHTH_REST_MAX_HEIGHT_GAPS,
+      EIGHTH_REST_CENTER_TOLERANCE_GAPS,
+      middleLineY,
+    )
+  ) {
+    return createRestGlyph(path, system, systemIndex, 'eighth');
+  }
+  if (
+    matchesRestTopology(
+      path,
+      staffGap,
+      SIXTEENTH_REST_TOPOLOGY,
+      SIXTEENTH_REST_MIN_WIDTH_GAPS,
+      SIXTEENTH_REST_MAX_WIDTH_GAPS,
+      SIXTEENTH_REST_MIN_HEIGHT_GAPS,
+      SIXTEENTH_REST_MAX_HEIGHT_GAPS,
+      SIXTEENTH_REST_CENTER_TOLERANCE_GAPS,
+      middleLineY,
+    )
+  ) {
+    return createRestGlyph(path, system, systemIndex, '16th');
+  }
+  return null;
 }
 
 function classifyNotehead(
@@ -265,7 +522,7 @@ function classifyNotehead(
   staffGap: number,
   warnings: string[],
   ambiguousPaths: Set<PdfVectorPath>,
-): RhythmGlyphEvent | null {
+): ClassifiedGlyph | null {
   const stems = paths.filter(
     (path) =>
       path !== notehead.path &&
@@ -281,7 +538,7 @@ function classifyNotehead(
     return createGlyph(notehead, system.page, systemIndex, 'whole', ['open-notehead']);
   }
   if (notehead.kind === 'open') {
-    return createGlyph(notehead, system.page, systemIndex, 'half', ['open-notehead', 'stem']);
+    return createGlyph(notehead, system.page, systemIndex, 'half', ['open-notehead', 'stem'], stems);
   }
   if (stems.length === 0) {
     warnings.push(`第 ${system.page} 页第 ${systemIndex + 1} 个系统存在无符干的实心符头。`);
@@ -312,16 +569,23 @@ function classifyNotehead(
 
   const sourceSymbols = ['filled-notehead', 'stem'];
   if (attachedBeams.length === 1) {
-    return createGlyph(notehead, system.page, systemIndex, 'eighth', [...sourceSymbols, 'beam-1']);
+    return createGlyph(
+      notehead,
+      system.page,
+      systemIndex,
+      'eighth',
+      [...sourceSymbols, 'beam-1'],
+      [...stems, ...attachedBeams],
+    );
   }
   if (attachedBeams.length === 2) {
     return createGlyph(notehead, system.page, systemIndex, '16th', [
       ...sourceSymbols,
       'beam-1',
       'beam-2',
-    ]);
+    ], [...stems, ...attachedBeams]);
   }
-  return createGlyph(notehead, system.page, systemIndex, 'quarter', sourceSymbols);
+  return createGlyph(notehead, system.page, systemIndex, 'quarter', sourceSymbols, stems);
 }
 
 export function recognizeRhythmGlyphs(
@@ -344,9 +608,18 @@ export function recognizeRhythmGlyphs(
     }
 
     const systemPaths = paths.filter((path) => isInsideSystemBand(path, system, staffGap));
+    const dotPaths = systemPaths.filter((path) => isDot(path, staffGap));
+    const restGlyphs = systemPaths
+      .filter((path) => !dotPaths.includes(path))
+      .map((path) => classifyRest(path, system, systemIndex, staffGap))
+      .filter((glyph): glyph is ClassifiedGlyph => glyph !== null);
+    const restPaths = new Set(restGlyphs.flatMap((glyph) => glyph.paths));
     const ambiguousPaths = new Set(
       systemPaths.filter(
-        (path) => isCompactNotehead(path, staffGap) && isBeam(path, staffGap),
+        (path) =>
+          !restPaths.has(path) &&
+          isCompactNotehead(path, staffGap) &&
+          isBeam(path, staffGap),
       ),
     );
     if (ambiguousPaths.size > 0) {
@@ -355,10 +628,16 @@ export function recognizeRhythmGlyphs(
       );
     }
     const noteheads: NoteheadCandidate[] = systemPaths
-      .filter((path) => !ambiguousPaths.has(path) && isCompactNotehead(path, staffGap))
+      .filter(
+        (path) =>
+          !restPaths.has(path) &&
+          !ambiguousPaths.has(path) &&
+          isCompactNotehead(path, staffGap),
+      )
       .map((path) => ({ path, kind: getNoteheadKind(path) }))
       .filter((candidate): candidate is NoteheadCandidate => candidate.kind !== null);
 
+    const classifiedGlyphs = [...restGlyphs];
     noteheads.forEach((notehead) => {
       const glyph = classifyNotehead(
         notehead,
@@ -370,9 +649,56 @@ export function recognizeRhythmGlyphs(
         ambiguousPaths,
       );
       if (glyph) {
-        glyphs.push(glyph);
+        classifiedGlyphs.push(glyph);
       }
     });
+
+    const usedPaths = new Set(classifiedGlyphs.flatMap((glyph) => glyph.paths));
+    const matchedDots = new Set<PdfVectorPath>();
+    classifiedGlyphs.forEach((glyph) => {
+      const matches = dotPaths.filter(
+        (dotPath) =>
+          !glyph.paths.includes(dotPath) &&
+          isImmediatelyRightOf(dotPath.bounds, glyph.bounds, staffGap),
+      );
+      matches.forEach((dotPath) => matchedDots.add(dotPath));
+
+      if (matches.length === 1) {
+        glyphs.push({
+          ...glyph.event,
+          dots: 1,
+          sourceSymbols: [...glyph.event.sourceSymbols, 'dot'],
+        });
+        return;
+      }
+      if (matches.length > 1) {
+        warnings.push(
+          `第 ${system.page} 页第 ${systemIndex + 1} 个系统存在两个附点或以上匹配，事件已降级。`,
+        );
+        glyphs.push({ ...glyph.event, confidence: 'medium' });
+        return;
+      }
+      glyphs.push(glyph.event);
+    });
+
+    dotPaths
+      .filter((dotPath) => !matchedDots.has(dotPath))
+      .forEach(() => {
+        warnings.push(`第 ${system.page} 页第 ${systemIndex + 1} 个系统存在孤立附点，未生成节奏事件。`);
+      });
+    systemPaths
+      .filter(
+        (path) =>
+          !usedPaths.has(path) &&
+          !dotPaths.includes(path) &&
+          !ambiguousPaths.has(path) &&
+          isPotentialRestOrDot(path, staffGap),
+      )
+      .forEach(() => {
+        warnings.push(
+          `第 ${system.page} 页第 ${systemIndex + 1} 个系统存在不符合明确拓扑或尺寸规则的休止符/附点路径。`,
+        );
+      });
   });
 
   return { glyphs, warnings };

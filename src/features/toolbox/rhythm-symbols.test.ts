@@ -67,6 +67,64 @@ function beam(y1: number, x1 = NOTE_X2, x2 = 75, y2 = y1 + 2): PdfVectorPath {
   return closedPath('fill', x1, y1, x2, y2);
 }
 
+function shapedPath(
+  bounds: PdfVectorPath['bounds'],
+  commandTypes: Array<'move' | 'line' | 'curve' | 'close'>,
+): PdfVectorPath {
+  const { x1, y1, x2, y2 } = bounds;
+  const commands = commandTypes.map((type, index): PdfVectorPath['commands'][number] => {
+    if (type === 'close') {
+      return { type };
+    }
+    const x = index % 2 === 0 ? x1 : x2;
+    const y = y1 + ((y2 - y1) * index) / (commandTypes.length - 1);
+    if (type === 'curve') {
+      return { type, x1, y1: y, x2, y2: y, x, y };
+    }
+    return { type, x, y };
+  });
+
+  return { page: PAGE, paint: 'fill', bounds, commands };
+}
+
+function wholeRest(x1 = 80, x2 = 90, height = 3.5): PdfVectorPath {
+  return closedPath('fill', x1, 50, x2, 50 + height);
+}
+
+function halfRest(x1 = 100, x2 = 110, height = 3.5): PdfVectorPath {
+  return closedPath('fill', x1, 60 - height, x2, 60);
+}
+
+function quarterRest(bounds = { x1: 120, y1: 45, x2: 128, y2: 75 }): PdfVectorPath {
+  return shapedPath(bounds, ['move', 'curve', 'line', 'curve', 'line', 'curve', 'close']);
+}
+
+function eighthRest(bounds = { x1: 140, y1: 47.5, x2: 150, y2: 72.5 }): PdfVectorPath {
+  return shapedPath(bounds, ['move', 'line', 'curve', 'curve', 'line', 'close']);
+}
+
+function sixteenthRest(bounds = { x1: 160, y1: 42.5, x2: 170, y2: 77.5 }): PdfVectorPath {
+  return shapedPath(bounds, [
+    'move',
+    'line',
+    'curve',
+    'curve',
+    'line',
+    'curve',
+    'curve',
+    'line',
+    'close',
+  ]);
+}
+
+function dot(x1: number, y1: number, size = 2): PdfVectorPath {
+  return rectangularDot(x1, y1, size, size);
+}
+
+function rectangularDot(x1: number, y1: number, width: number, height: number): PdfVectorPath {
+  return closedPath('fill', x1, y1, x1 + width, y1 + height);
+}
+
 function recognize(paths: PdfVectorPath[]) {
   return recognizeRhythmGlyphs(paths, [pairedSystem()]);
 }
@@ -120,6 +178,132 @@ describe('recognizeRhythmGlyphs', () => {
       'beam-1',
       'beam-2',
     ]);
+  });
+
+  it.each([
+    ['whole', wholeRest(), ['whole-rest']],
+    ['half', halfRest(), ['half-rest']],
+    ['quarter', quarterRest(), ['quarter-rest']],
+    ['eighth', eighthRest(), ['eighth-rest']],
+    ['16th', sixteenthRest(), ['16th-rest']],
+  ] as const)('classifies an explicit %s rest topology', (duration, rest, sourceSymbols) => {
+    expect(recognize([rest]).glyphs).toContainEqual(
+      expect.objectContaining({
+        duration,
+        dots: 0,
+        isRest: true,
+        confidence: 'high',
+        sourceSymbols,
+      }),
+    );
+  });
+
+  it('attaches exactly one small filled dot immediately right of a note', () => {
+    expect(recognize([notehead('fill'), stem(), dot(62, 57)]).glyphs).toContainEqual(
+      expect.objectContaining({
+        duration: 'quarter',
+        dots: 1,
+        isRest: false,
+        confidence: 'high',
+        sourceSymbols: ['filled-notehead', 'stem', 'dot'],
+      }),
+    );
+  });
+
+  it('attaches exactly one small filled dot immediately right of a rest', () => {
+    expect(recognize([quarterRest(), dot(130, 58)]).glyphs).toContainEqual(
+      expect.objectContaining({
+        duration: 'quarter',
+        dots: 1,
+        isRest: true,
+        confidence: 'high',
+        sourceSymbols: ['quarter-rest', 'dot'],
+      }),
+    );
+  });
+
+  it('downgrades an event and warns instead of choosing between two matching dots', () => {
+    const result = recognize([quarterRest(), dot(130, 57), dot(130, 61)]);
+
+    expect(result.glyphs).toContainEqual(
+      expect.objectContaining({
+        duration: 'quarter',
+        dots: 0,
+        isRest: true,
+        confidence: 'medium',
+        sourceSymbols: ['quarter-rest'],
+      }),
+    );
+    expect(result.warnings).toContainEqual(expect.stringContaining('两个附点'));
+  });
+
+  it('diagnoses an isolated dot without producing a glyph', () => {
+    const result = recognize([dot(130, 58)]);
+
+    expect(result.glyphs).toEqual([]);
+    expect(result.warnings).toContainEqual(expect.stringContaining('孤立附点'));
+  });
+
+  it('accepts the exact rest and dot normalized boundaries', () => {
+    const result = recognize([
+      wholeRest(80, 88, 2.5),
+      halfRest(100, 114, 5),
+      quarterRest({ x1: 120, y1: 50, x2: 125, y2: 70 }),
+      eighthRest({ x1: 140, y1: 52.5, x2: 147, y2: 67.5 }),
+      sixteenthRest({ x1: 160, y1: 40, x2: 174, y2: 80 }),
+      dot(89.5, 51.75, 1.5),
+    ]);
+
+    expect(result.glyphs).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ duration: 'whole', dots: 1, isRest: true }),
+        expect.objectContaining({ duration: 'half', dots: 0, isRest: true }),
+        expect.objectContaining({ duration: 'quarter', dots: 0, isRest: true }),
+        expect.objectContaining({ duration: 'eighth', dots: 0, isRest: true }),
+        expect.objectContaining({ duration: '16th', dots: 0, isRest: true }),
+      ]),
+    );
+  });
+
+  it.each([
+    ['whole minimum', 'whole', closedPath('fill', 80, 51, 88, 53.5)],
+    ['whole maximum', 'whole', closedPath('fill', 80, 49, 94, 54)],
+    ['half minimum', 'half', closedPath('fill', 100, 56.5, 108, 59)],
+    ['half maximum', 'half', closedPath('fill', 100, 56, 114, 61)],
+    ['quarter minimum', 'quarter', quarterRest({ x1: 120, y1: 55, x2: 125, y2: 75 })],
+    ['quarter maximum', 'quarter', quarterRest({ x1: 120, y1: 37.5, x2: 130, y2: 72.5 })],
+    ['eighth minimum', 'eighth', eighthRest({ x1: 140, y1: 60, x2: 147, y2: 75 })],
+    ['eighth maximum', 'eighth', eighthRest({ x1: 140, y1: 37.5, x2: 154, y2: 67.5 })],
+    ['16th minimum', '16th', sixteenthRest({ x1: 160, y1: 55, x2: 167, y2: 80 })],
+    ['16th maximum', '16th', sixteenthRest({ x1: 160, y1: 32.5, x2: 174, y2: 72.5 })],
+  ] as const)('accepts the %s normalized boundary', (_name, duration, rest) => {
+    expect(recognize([rest]).glyphs).toContainEqual(
+      expect.objectContaining({ duration, isRest: true, confidence: 'high' }),
+    );
+  });
+
+  it.each([
+    ['minimum size, minimum horizontal gap, and upper vertical tolerance', dot(61.5, 39.75, 1.5)],
+    ['maximum size, maximum horizontal gap, and lower vertical tolerance', dot(65, 63.75, 3.5)],
+    ['minimum aspect ratio', rectangularDot(62, 57, 2.625, 3.5)],
+    ['maximum aspect ratio', rectangularDot(62, 57, 3.5, 3.5 / 1.33)],
+  ])('accepts a dot at the exact %s boundary', (_name, boundaryDot) => {
+    expect(recognize([notehead('fill'), stem(), boundaryDot]).glyphs).toContainEqual(
+      expect.objectContaining({ duration: 'quarter', dots: 1, confidence: 'high' }),
+    );
+  });
+
+  it('rejects rest topology, line attachment, and dot geometry outside the exact rules', () => {
+    const wrongQuarterTopology = shapedPath(
+      { x1: 120, y1: 45, x2: 128, y2: 75 },
+      ['move', 'curve', 'line', 'curve', 'line', 'line', 'close'],
+    );
+    const detachedWholeRest = closedPath('fill', 80, 51.1, 90, 54.6);
+    const oversizedDot = dot(130, 58, 3.6);
+    const result = recognize([wrongQuarterTopology, detachedWholeRest, oversizedDot]);
+
+    expect(result.glyphs).toEqual([]);
+    expect(result.warnings).not.toEqual([]);
   });
 
   it('does not treat curved or five-corner closed contours as beams', () => {
