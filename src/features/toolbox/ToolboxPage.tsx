@@ -147,7 +147,7 @@ export function ToolboxPage({
                   </ul>
                 ) : null}
                 {rhythmFallbackCount > 0 ? (
-                  <p className="toolbox-rhythm__notice">{t('toolbox.rhythmMixedExportNotice')}</p>
+                  <p className="toolbox-rhythm__notice">{t('toolbox.rhythmFallbackExportNotice')}</p>
                 ) : null}
               </section>
             </div>
