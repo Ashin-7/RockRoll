@@ -49,6 +49,8 @@
 .archive-manual-form,
 .archive-import-preview,
 .archive-import-preview__samples,
+.archive-manual-match,
+.archive-manual-match__list,
 .archive-collection-cards,
 .archive-table {
   display: grid;
@@ -352,6 +354,24 @@
 .archive-import-sample p,
 .archive-import-sample__note {
   color: var(--color-muted, #666);
+}
+
+.archive-manual-match {
+  border-top: 1px solid var(--color-border, #d7d7d7);
+  padding-top: 1rem;
+}
+
+.archive-manual-match > p,
+.archive-manual-match__item p {
+  margin: 0;
+}
+
+.archive-manual-match__item {
+  border: 1px solid var(--color-border, #d7d7d7);
+  border-radius: 8px;
+  display: grid;
+  gap: 0.75rem;
+  padding: 0.75rem;
 }
 
 .archive-rank-directory {

@@ -5,7 +5,7 @@ import { renderWithI18n } from '../../test/render';
 import { ArchivePage } from './ArchivePage';
 import { ArchiveCollectionSummary } from './archive.types';
 import { AnontravelerPreview, AnontravelerRankDirectoryPage } from '../inbox/anontraveler.types';
-import { ImportCandidateSummary } from '../inbox/inbox.types';
+import { ImportCandidateSummary, ImportReviewItemSummary } from '../inbox/inbox.types';
 
 const collections: ArchiveCollectionSummary[] = [
   {
@@ -87,6 +87,42 @@ const previewCandidates: ImportCandidateSummary[] = [
     displayTitle: 'Album one',
     displaySubtitle: 'Artist one',
     sourceName: 'anontraveler',
+  },
+];
+
+const reviewItems: ImportReviewItemSummary[] = [
+  {
+    id: 'review-artist-1',
+    entityType: 'artist',
+    displayTitle: 'Artist one',
+    sourceName: 'anontraveler',
+    sourceId: 'artist-1',
+    plannedAction: 'create',
+    targetEntityId: null,
+    skipReason: '',
+    errorMessage: null,
+  },
+  {
+    id: 'review-album-1',
+    entityType: 'album',
+    displayTitle: 'Album one',
+    sourceName: 'anontraveler',
+    sourceId: 'album-1',
+    plannedAction: 'create',
+    targetEntityId: null,
+    skipReason: '',
+    errorMessage: null,
+  },
+  {
+    id: 'review-item-1',
+    entityType: 'archive_item',
+    displayTitle: 'Album one',
+    sourceName: 'anontraveler',
+    sourceId: 'item-1',
+    plannedAction: 'create',
+    targetEntityId: null,
+    skipReason: '',
+    errorMessage: null,
   },
 ];
 
@@ -179,6 +215,41 @@ describe('ArchivePage', () => {
     expect(screen.queryByRole('button', { name: 'Edit Classic rock guide' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Delete Classic rock guide' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Add collection' })).not.toBeInTheDocument();
+  });
+
+  it('lets admins match artist and album review items without changing the URL import flow', async () => {
+    const user = userEvent.setup();
+    const loadReviewItems = vi.fn().mockResolvedValue(reviewItems);
+    const matchReviewItem = vi.fn().mockResolvedValue({
+      ...reviewItems[0],
+      plannedAction: 'match_existing',
+      targetEntityId: 'artist-existing-1',
+    });
+
+    renderWithI18n(
+      <ArchivePage
+        onLoadCollections={async () => []}
+        onLoadImportRole={async () => 'admin'}
+        onLoadImportReviewItems={loadReviewItems}
+        onMatchImportReviewItem={matchReviewItem}
+      />,
+    );
+
+    await user.click(await screen.findByRole('button', { name: 'Load manual matches' }));
+
+    expect(loadReviewItems).toHaveBeenCalled();
+    expect(await screen.findByText('Artist one')).toBeInTheDocument();
+    expect(screen.getByText('Album one')).toBeInTheDocument();
+    expect(screen.queryByText('archive_item')).not.toBeInTheDocument();
+
+    await user.type(screen.getByLabelText('Existing public artist ID for Artist one'), 'artist-existing-1');
+    await user.click(screen.getByRole('button', { name: 'Match Artist one' }));
+
+    expect(matchReviewItem).toHaveBeenCalledWith({
+      reviewItemId: 'review-artist-1',
+      targetEntityId: 'artist-existing-1',
+    });
+    expect(await screen.findByText('Artist one is set to match an existing artist.')).toBeInTheDocument();
   });
 
   it('creates an archive collection and refreshes the list', async () => {

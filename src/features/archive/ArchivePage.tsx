@@ -12,9 +12,11 @@ import {
   commitPublicImportReviewPlan,
   createImportReviewPlan,
   getCurrentUserImportRole,
+  listImportReviewItems,
+  matchImportReviewItem,
   saveImportCandidatesDraft,
 } from '../inbox/inbox.service';
-import { ImportEntityType, ImportUserRole } from '../inbox/inbox.types';
+import { ImportEntityType, ImportReviewItemSummary, ImportUserRole } from '../inbox/inbox.types';
 import { ArchiveCollectionSummary, CreateArchiveCollectionInput, UpdateArchiveCollectionInput } from './archive.types';
 import {
   createArchiveCollection,
@@ -37,6 +39,8 @@ interface ArchivePageProps {
   onCreateReviewPlan?: typeof createImportReviewPlan;
   onLoadImportRole?: typeof getCurrentUserImportRole;
   onCommitPublicImportReviewPlan?: typeof commitPublicImportReviewPlan;
+  onLoadImportReviewItems?: typeof listImportReviewItems;
+  onMatchImportReviewItem?: typeof matchImportReviewItem;
 }
 
 const initialForm: CreateArchiveCollectionInput = {
@@ -101,6 +105,8 @@ export function ArchivePage({
   onCreateReviewPlan = createImportReviewPlan,
   onLoadImportRole = getCurrentUserImportRole,
   onCommitPublicImportReviewPlan = commitPublicImportReviewPlan,
+  onLoadImportReviewItems = listImportReviewItems,
+  onMatchImportReviewItem = matchImportReviewItem,
 }: ArchivePageProps) {
   const { t } = useI18n();
   const [collections, setCollections] = useState<ArchiveCollectionSummary[]>([]);
@@ -120,6 +126,12 @@ export function ArchivePage({
   const [isImportingCollection, setIsImportingCollection] = useState(false);
   const [importError, setImportError] = useState('');
   const [importSummary, setImportSummary] = useState('');
+  const [matchReviewItems, setMatchReviewItems] = useState<ImportReviewItemSummary[]>([]);
+  const [matchTargetIds, setMatchTargetIds] = useState<Record<string, string>>({});
+  const [matchError, setMatchError] = useState('');
+  const [matchMessage, setMatchMessage] = useState('');
+  const [isMatchListLoading, setIsMatchListLoading] = useState(false);
+  const [matchingReviewItemId, setMatchingReviewItemId] = useState<string | null>(null);
   const [editingCollectionId, setEditingCollectionId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -318,6 +330,44 @@ export function ArchivePage({
       setImportError(caughtError instanceof Error ? caughtError.message : t('archive.urlImportError'));
     } finally {
       setIsImportingCollection(false);
+    }
+  }
+
+  async function handleLoadManualMatches() {
+    setMatchError('');
+    setMatchMessage('');
+    setIsMatchListLoading(true);
+
+    try {
+      const reviewItems = await onLoadImportReviewItems();
+      setMatchReviewItems(reviewItems.filter((item) => item.entityType === 'artist' || item.entityType === 'album'));
+    } catch (caughtError) {
+      setMatchError(caughtError instanceof Error ? caughtError.message : 'Unable to load manual matches.');
+    } finally {
+      setIsMatchListLoading(false);
+    }
+  }
+
+  async function handleMatchExisting(reviewItem: ImportReviewItemSummary) {
+    const targetEntityId = (matchTargetIds[reviewItem.id] ?? '').trim();
+    if (!targetEntityId) {
+      setMatchError('Enter an existing public entity ID before matching.');
+      return;
+    }
+
+    setMatchError('');
+    setMatchMessage('');
+    setMatchingReviewItemId(reviewItem.id);
+
+    try {
+      const updatedItem = await onMatchImportReviewItem({ reviewItemId: reviewItem.id, targetEntityId });
+      setMatchReviewItems((items) => items.map((item) => (item.id === updatedItem.id ? updatedItem : item)));
+      setMatchTargetIds((targetIds) => ({ ...targetIds, [reviewItem.id]: '' }));
+      setMatchMessage(`${reviewItem.displayTitle} is set to match an existing ${reviewItem.entityType}.`);
+    } catch (caughtError) {
+      setMatchError(caughtError instanceof Error ? caughtError.message : 'Unable to match the review item.');
+    } finally {
+      setMatchingReviewItemId(null);
     }
   }
 
@@ -625,6 +675,55 @@ export function ArchivePage({
                 </Button>
               </ActionBar>
             </form>
+          ) : null}
+
+          {canManageArchive ? (
+            <section className="archive-manual-match" aria-label="Manual matching">
+              <div className="archive-form-heading">
+                <p className="archive-form-mode">Import / review</p>
+                <h3>Manual matching</h3>
+              </div>
+              <p>Match an artist or album review item to a known public entity. Archive items stay out of this flow.</p>
+              <Button type="button" onClick={handleLoadManualMatches} disabled={isMatchListLoading || matchingReviewItemId !== null}>
+                {isMatchListLoading ? 'Loading manual matches...' : 'Load manual matches'}
+              </Button>
+              {matchError ? <p role="alert">{matchError}</p> : null}
+              {matchMessage ? <p role="status">{matchMessage}</p> : null}
+              {matchReviewItems.length > 0 ? (
+                <div className="archive-manual-match__list">
+                  {matchReviewItems.map((reviewItem) => (
+                    <article className="archive-manual-match__item" key={reviewItem.id}>
+                      <div>
+                        <strong>{reviewItem.displayTitle}</strong>
+                        <p>{reviewItem.entityType} · {reviewItem.plannedAction}</p>
+                      </div>
+                      {reviewItem.plannedAction === 'match_existing' && reviewItem.targetEntityId ? (
+                        <p>Matched to {reviewItem.targetEntityId}</p>
+                      ) : (
+                        <>
+                          <Field label={`Existing public ${reviewItem.entityType} ID for ${reviewItem.displayTitle}`}>
+                            <input
+                              value={matchTargetIds[reviewItem.id] ?? ''}
+                              onChange={(event) => setMatchTargetIds((targetIds) => ({
+                                ...targetIds,
+                                [reviewItem.id]: event.target.value,
+                              }))}
+                            />
+                          </Field>
+                          <Button
+                            type="button"
+                            onClick={() => handleMatchExisting(reviewItem)}
+                            disabled={matchingReviewItemId !== null}
+                          >
+                            {matchingReviewItemId === reviewItem.id ? 'Matching...' : `Match ${reviewItem.displayTitle}`}
+                          </Button>
+                        </>
+                      )}
+                    </article>
+                  ))}
+                </div>
+              ) : null}
+            </section>
           ) : null}
           {message ? <p role="status">{message}</p> : null}
           {importSummary ? <p>{importSummary}</p> : null}
