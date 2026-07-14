@@ -16,6 +16,19 @@ export interface PdfLineSegment {
   y2: number;
 }
 
+export type PdfVectorCommand =
+  | { type: 'move'; x: number; y: number }
+  | { type: 'line'; x: number; y: number }
+  | { type: 'curve'; x1: number; y1: number; x2: number; y2: number; x: number; y: number }
+  | { type: 'close' };
+
+export interface PdfVectorPath {
+  page: number;
+  paint: 'fill' | 'stroke' | 'fill-stroke';
+  commands: PdfVectorCommand[];
+  bounds: { x1: number; y1: number; x2: number; y2: number };
+}
+
 export interface PdfDocumentSnapshot {
   fileName: string;
   pageCount: number;
@@ -23,6 +36,7 @@ export interface PdfDocumentSnapshot {
   vectorDrawingCount: number;
   imageCount: number;
   lineSegments?: PdfLineSegment[];
+  vectorPaths?: PdfVectorPath[];
   timeSignature?: {
     beats: number;
     beatType: number;

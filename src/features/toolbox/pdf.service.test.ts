@@ -90,4 +90,56 @@ describe('readPdfSnapshot', () => {
       lineSegments: [{ page: 1, x1: 20, y1: 32, x2: 50, y2: 32 }],
     });
   });
+
+  it('preserves transformed filled vector paths until their paint operator', async () => {
+    const loader: PdfJsLoader = async () => ({
+      OPS: {
+        closePath: 4,
+        constructPath: 10,
+        curveTo: 3,
+        fill: 14,
+        moveTo: 1,
+        restore: 12,
+        save: 11,
+        stroke: 15,
+        transform: 13,
+      },
+      getDocument: () => ({
+        promise: Promise.resolve({
+          numPages: 1,
+          destroy: () => undefined,
+          getPage: async () => ({
+            getAnnotations: async () => [],
+            getOperatorList: async () => ({
+              fnArray: [11, 13, 10, 14, 15, 12],
+              argsArray: [
+                [],
+                [2, 0, 0, 2, 10, 20],
+                [[1, 3, 4], [5, 6, 7, 4, 12, 4, 14, 6]],
+                [],
+                [],
+                [],
+              ],
+            }),
+            getTextContent: async () => ({ items: [] }),
+          }),
+        }),
+      }),
+    });
+
+    const snapshot = await readPdfSnapshot(file, loader);
+
+    expect(snapshot.vectorPaths).toEqual([
+      {
+        page: 1,
+        paint: 'fill',
+        commands: [
+          { type: 'move', x: 20, y: 32 },
+          { type: 'curve', x1: 24, y1: 28, x2: 34, y2: 28, x: 38, y: 32 },
+          { type: 'close' },
+        ],
+        bounds: { x1: 20, y1: 28, x2: 38, y2: 32 },
+      },
+    ]);
+  });
 });

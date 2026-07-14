@@ -1,4 +1,4 @@
-import type { PdfDocumentSnapshot, PdfLineSegment, PdfTextItem } from './toolbox.types';
+import type { PdfDocumentSnapshot, PdfLineSegment, PdfTextItem, PdfVectorCommand, PdfVectorPath } from './toolbox.types';
 import { validatePdfFile } from './tab-analyzer';
 
 const MAX_PDF_PAGES = 20;
@@ -165,6 +165,137 @@ function extractLineSegments(
   return segments;
 }
 
+function getPaintMode(operator: number, ops: Record<string, number>): PdfVectorPath['paint'] | null {
+  if (operator === ops.fill || operator === ops.eoFill) return 'fill';
+  if (operator === ops.stroke) return 'stroke';
+  if (operator === ops.fillStroke || operator === ops.eoFillStroke) return 'fill-stroke';
+  return null;
+}
+
+function getVectorPathBounds(commands: PdfVectorCommand[]): PdfVectorPath['bounds'] | null {
+  const points: Array<{ x: number; y: number }> = [];
+  commands.forEach((command) => {
+    if (command.type === 'move' || command.type === 'line') {
+      points.push({ x: command.x, y: command.y });
+    } else if (command.type === 'curve') {
+      points.push(
+        { x: command.x1, y: command.y1 },
+        { x: command.x2, y: command.y2 },
+        { x: command.x, y: command.y },
+      );
+    }
+  });
+  if (points.length === 0) {
+    return null;
+  }
+
+  return {
+    x1: Math.min(...points.map((point) => point.x)),
+    y1: Math.min(...points.map((point) => point.y)),
+    x2: Math.max(...points.map((point) => point.x)),
+    y2: Math.max(...points.map((point) => point.y)),
+  };
+}
+
+function extractVectorPaths(
+  fnArray: number[],
+  argsArray: unknown[][] | undefined,
+  page: number,
+  ops?: Record<string, number>,
+): PdfVectorPath[] {
+  if (!ops || typeof ops.constructPath !== 'number') {
+    return [];
+  }
+
+  const paths: PdfVectorPath[] = [];
+  let currentTransform: PdfTransform = [1, 0, 0, 1, 0, 0];
+  const transformStack: PdfTransform[] = [];
+  let pendingCommands: PdfVectorCommand[] = [];
+  let currentPoint: { x: number; y: number } | null = null;
+
+  fnArray.forEach((operator, index) => {
+    if (operator === ops.save) {
+      transformStack.push([...currentTransform] as PdfTransform);
+      return;
+    }
+    if (operator === ops.restore) {
+      currentTransform = transformStack.pop() ?? currentTransform;
+      return;
+    }
+    if (operator === ops.transform) {
+      const nextTransform = getTransform(argsArray?.[index]);
+      if (nextTransform) {
+        currentTransform = combineTransforms(currentTransform, nextTransform);
+      }
+      return;
+    }
+    if (operator === ops.endPath) {
+      pendingCommands = [];
+      currentPoint = null;
+      return;
+    }
+
+    const paint = getPaintMode(operator, ops);
+    if (paint) {
+      const bounds = getVectorPathBounds(pendingCommands);
+      if (bounds) {
+        paths.push({ page, paint, commands: pendingCommands, bounds });
+      }
+      pendingCommands = [];
+      currentPoint = null;
+      return;
+    }
+    if (operator !== ops.constructPath) {
+      return;
+    }
+
+    const pathArguments = argsArray?.[index];
+    const commands = pathArguments?.[0];
+    const coordinates = pathArguments?.[1];
+    if (!Array.isArray(commands) || !Array.isArray(coordinates)) {
+      return;
+    }
+
+    let coordinateIndex = 0;
+    commands.forEach((command) => {
+      const coordinateCount = getPathCoordinateCount(command, ops);
+      const values = coordinates.slice(coordinateIndex, coordinateIndex + coordinateCount);
+      coordinateIndex += coordinateCount;
+      if (values.some((value) => typeof value !== 'number')) {
+        currentPoint = null;
+        return;
+      }
+      const numbers = values as number[];
+
+      if (command === ops.moveTo || command === ops.lineTo) {
+        const point = applyTransform(numbers[0], numbers[1], currentTransform);
+        pendingCommands.push({ type: command === ops.moveTo ? 'move' : 'line', ...point });
+        currentPoint = point;
+      } else if (command === ops.curveTo) {
+        const first = applyTransform(numbers[0], numbers[1], currentTransform);
+        const second = applyTransform(numbers[2], numbers[3], currentTransform);
+        const end = applyTransform(numbers[4], numbers[5], currentTransform);
+        pendingCommands.push({ type: 'curve', x1: first.x, y1: first.y, x2: second.x, y2: second.y, x: end.x, y: end.y });
+        currentPoint = end;
+      } else if (command === ops.curveTo2 && currentPoint) {
+        const second = applyTransform(numbers[0], numbers[1], currentTransform);
+        const end = applyTransform(numbers[2], numbers[3], currentTransform);
+        pendingCommands.push({ type: 'curve', x1: currentPoint.x, y1: currentPoint.y, x2: second.x, y2: second.y, x: end.x, y: end.y });
+        currentPoint = end;
+      } else if (command === ops.curveTo3) {
+        const first = applyTransform(numbers[0], numbers[1], currentTransform);
+        const end = applyTransform(numbers[2], numbers[3], currentTransform);
+        pendingCommands.push({ type: 'curve', x1: first.x, y1: first.y, x2: end.x, y2: end.y, x: end.x, y: end.y });
+        currentPoint = end;
+      } else if (command === ops.closePath) {
+        pendingCommands.push({ type: 'close' });
+      }
+    });
+  });
+
+  return paths;
+}
+
 function normalizeTextItems(items: PdfTextContentItem[], page: number): PdfTextItem[] {
   return items
     .filter((item) => typeof item.str === 'string' && item.str.trim().length > 0)
@@ -207,6 +338,7 @@ export async function readPdfSnapshot(file: File, loadPdfJs: PdfJsLoader = getDe
 
     const textItems: PdfTextItem[] = [];
     const lineSegments: PdfLineSegment[] = [];
+    const vectorPaths: PdfVectorPath[] = [];
     let vectorDrawingCount = 0;
     let imageCount = 0;
 
@@ -219,6 +351,7 @@ export async function readPdfSnapshot(file: File, loadPdfJs: PdfJsLoader = getDe
       ]);
       textItems.push(...normalizeTextItems(textContent.items, pageNumber));
       lineSegments.push(...extractLineSegments(operatorList.fnArray, operatorList.argsArray, pageNumber, pdfjs.OPS));
+      vectorPaths.push(...extractVectorPaths(operatorList.fnArray, operatorList.argsArray, pageNumber, pdfjs.OPS));
       imageCount += annotations.filter((annotation) => annotation.subtype === 'Image').length;
       operatorList.fnArray.forEach((operator) => {
         if (isImageOperator(operator, pdfjs.OPS)) {
@@ -236,6 +369,7 @@ export async function readPdfSnapshot(file: File, loadPdfJs: PdfJsLoader = getDe
       vectorDrawingCount,
       imageCount,
       lineSegments,
+      ...(vectorPaths.length > 0 ? { vectorPaths } : {}),
       timeSignature: findTimeSignature(textItems),
     };
   } finally {
