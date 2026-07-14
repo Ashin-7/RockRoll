@@ -178,12 +178,12 @@ describe('analyzeTabScore', () => {
       vectorDrawingCount: 20,
       imageCount: 0,
       lineSegments: [
-        ...[40, 50, 60, 70, 80].map(horizontalLine),
+        ...[180, 185, 190, 195, 200].map(horizontalLine),
         ...[110, 120, 130, 140, 150, 160].map(horizontalLine),
       ],
       vectorPaths: [
-        closedPath('stroke', 55, 55, 65, 63),
-        closedPath('fill', 175, 55, 185, 63),
+        closedPath('stroke', 56, 187, 64, 192),
+        closedPath('fill', 176, 187, 184, 192),
       ],
       timeSignature: { beats: 4, beatType: 4 },
     };
@@ -217,7 +217,7 @@ describe('analyzeTabScore', () => {
       vectorDrawingCount: 20,
       imageCount: 0,
       lineSegments: [
-        ...[40, 50, 60, 70, 80].map(horizontalLine),
+        ...[180, 185, 190, 195, 200].map(horizontalLine),
         ...[110, 120, 130, 140, 150, 160].map(horizontalLine),
       ],
     };
