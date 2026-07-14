@@ -212,6 +212,7 @@ function extractVectorPaths(
   const transformStack: PdfTransform[] = [];
   let pendingCommands: PdfVectorCommand[] = [];
   let currentPoint: { x: number; y: number } | null = null;
+  let subpathStart: { x: number; y: number } | null = null;
 
   fnArray.forEach((operator, index) => {
     if (operator === ops.save) {
@@ -232,6 +233,7 @@ function extractVectorPaths(
     if (operator === ops.endPath) {
       pendingCommands = [];
       currentPoint = null;
+      subpathStart = null;
       return;
     }
 
@@ -243,6 +245,7 @@ function extractVectorPaths(
       }
       pendingCommands = [];
       currentPoint = null;
+      subpathStart = null;
       return;
     }
     if (operator !== ops.constructPath) {
@@ -263,6 +266,7 @@ function extractVectorPaths(
       coordinateIndex += coordinateCount;
       if (values.some((value) => typeof value !== 'number')) {
         currentPoint = null;
+        subpathStart = null;
         return;
       }
       const numbers = values as number[];
@@ -271,6 +275,9 @@ function extractVectorPaths(
         const point = applyTransform(numbers[0], numbers[1], currentTransform);
         pendingCommands.push({ type: command === ops.moveTo ? 'move' : 'line', ...point });
         currentPoint = point;
+        if (command === ops.moveTo) {
+          subpathStart = point;
+        }
       } else if (command === ops.curveTo) {
         const first = applyTransform(numbers[0], numbers[1], currentTransform);
         const second = applyTransform(numbers[2], numbers[3], currentTransform);
@@ -287,8 +294,24 @@ function extractVectorPaths(
         const end = applyTransform(numbers[2], numbers[3], currentTransform);
         pendingCommands.push({ type: 'curve', x1: first.x, y1: first.y, x2: end.x, y2: end.y, x: end.x, y: end.y });
         currentPoint = end;
+      } else if (command === ops.rectangle) {
+        const [x, y, width, height] = numbers;
+        const start = applyTransform(x, y, currentTransform);
+        const rightBottom = applyTransform(x + width, y, currentTransform);
+        const rightTop = applyTransform(x + width, y + height, currentTransform);
+        const leftTop = applyTransform(x, y + height, currentTransform);
+        pendingCommands.push(
+          { type: 'move', ...start },
+          { type: 'line', ...rightBottom },
+          { type: 'line', ...rightTop },
+          { type: 'line', ...leftTop },
+          { type: 'close' },
+        );
+        subpathStart = start;
+        currentPoint = start;
       } else if (command === ops.closePath) {
         pendingCommands.push({ type: 'close' });
+        currentPoint = subpathStart;
       }
     });
   });

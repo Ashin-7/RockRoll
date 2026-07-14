@@ -142,4 +142,122 @@ describe('readPdfSnapshot', () => {
       },
     ]);
   });
+
+  it('expands transformed rectangles into a single stroked closed path', async () => {
+    const loader: PdfJsLoader = async () => ({
+      OPS: {
+        constructPath: 10,
+        rectangle: 5,
+        stroke: 15,
+        transform: 13,
+      },
+      getDocument: () => ({
+        promise: Promise.resolve({
+          numPages: 1,
+          destroy: () => undefined,
+          getPage: async () => ({
+            getAnnotations: async () => [],
+            getOperatorList: async () => ({
+              fnArray: [13, 10, 15, 15],
+              argsArray: [
+                [2, 0, 0, 3, 10, 20],
+                [[5], [4, 5, 6, 7]],
+                [],
+                [],
+              ],
+            }),
+            getTextContent: async () => ({ items: [] }),
+          }),
+        }),
+      }),
+    });
+
+    const snapshot = await readPdfSnapshot(file, loader);
+
+    expect(snapshot.vectorPaths).toEqual([
+      {
+        page: 1,
+        paint: 'stroke',
+        commands: [
+          { type: 'move', x: 18, y: 35 },
+          { type: 'line', x: 30, y: 35 },
+          { type: 'line', x: 30, y: 56 },
+          { type: 'line', x: 18, y: 56 },
+          { type: 'close' },
+        ],
+        bounds: { x1: 18, y1: 35, x2: 30, y2: 56 },
+      },
+    ]);
+  });
+
+  it('restores the subpath start before a shorthand curve after close', async () => {
+    const loader: PdfJsLoader = async () => ({
+      OPS: {
+        closePath: 4,
+        constructPath: 10,
+        curveTo2: 6,
+        fill: 14,
+        lineTo: 2,
+        moveTo: 1,
+      },
+      getDocument: () => ({
+        promise: Promise.resolve({
+          numPages: 1,
+          destroy: () => undefined,
+          getPage: async () => ({
+            getAnnotations: async () => [],
+            getOperatorList: async () => ({
+              fnArray: [10, 14],
+              argsArray: [
+                [[1, 2, 4, 6], [2, 3, 8, 9, 12, 13, 14, 15]],
+                [],
+              ],
+            }),
+            getTextContent: async () => ({ items: [] }),
+          }),
+        }),
+      }),
+    });
+
+    const snapshot = await readPdfSnapshot(file, loader);
+
+    expect(snapshot.vectorPaths?.[0].commands).toEqual([
+      { type: 'move', x: 2, y: 3 },
+      { type: 'line', x: 8, y: 9 },
+      { type: 'close' },
+      { type: 'curve', x1: 2, y1: 3, x2: 12, y2: 13, x: 14, y: 15 },
+    ]);
+  });
+
+  it('discards an unpainted path on endPath', async () => {
+    const loader: PdfJsLoader = async () => ({
+      OPS: {
+        constructPath: 10,
+        endPath: 16,
+        lineTo: 2,
+        moveTo: 1,
+        stroke: 15,
+      },
+      getDocument: () => ({
+        promise: Promise.resolve({
+          numPages: 1,
+          destroy: () => undefined,
+          getPage: async () => ({
+            getAnnotations: async () => [],
+            getOperatorList: async () => ({
+              fnArray: [10, 16, 15],
+              argsArray: [
+                [[1, 2], [1, 2, 3, 4]],
+                [],
+                [],
+              ],
+            }),
+            getTextContent: async () => ({ items: [] }),
+          }),
+        }),
+      }),
+    });
+
+    await expect(readPdfSnapshot(file, loader)).resolves.not.toHaveProperty('vectorPaths');
+  });
 });
