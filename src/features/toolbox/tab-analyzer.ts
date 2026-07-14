@@ -1,3 +1,6 @@
+import { locateTabFrets } from './tab-geometry';
+import { groupTabFretEvents } from './tab-events';
+import { findTabStaffSystems } from './tab-staff-geometry';
 import { PdfDocumentSnapshot, PdfTextItem, TabScoreAnalysis } from './toolbox.types';
 
 const MAX_PDF_BYTES = 20 * 1024 * 1024;
@@ -31,7 +34,7 @@ function findTempo(textItems: PdfTextItem[]): number | null {
 function findMeasureNumbers(textItems: PdfTextItem[]): number[] {
   const candidates = textItems
     .filter((item) => /^\d{1,3}$/.test(item.text.trim()) && Math.abs(item.fontSize - 8) <= 0.05)
-    .sort((left, right) => left.page - right.page || left.y - right.y || left.x - right.x)
+    .sort((left, right) => left.page - right.page || right.y - left.y || left.x - right.x)
     .map((item) => Number(item.text));
 
   let longest: number[] = [];
@@ -76,6 +79,9 @@ export function analyzeTabScore(snapshot: PdfDocumentSnapshot): TabScoreAnalysis
 
   const tempo = findTempo(snapshot.textItems);
   const timeSignature = snapshot.timeSignature ?? { beats: 4, beatType: 4 };
+  const tabStaffSystems = findTabStaffSystems(snapshot.lineSegments ?? []);
+  const geometry = locateTabFrets(snapshot.textItems, measureNumbers, tabStaffSystems);
+  const fretEvents = groupTabFretEvents(geometry.positions);
   const warnings: string[] = [];
 
   if (!snapshot.timeSignature) {
@@ -84,7 +90,12 @@ export function analyzeTabScore(snapshot: PdfDocumentSnapshot): TabScoreAnalysis
   if (tempo === null) {
     warnings.push('Tempo was not detected; 120 BPM will be used.');
   }
+  warnings.push(...geometry.warnings);
+  warnings.push(...fretEvents.warnings);
   warnings.push('Note recognition is not available yet; exported measures will contain rests.');
+  if (geometry.positions.length > 0) {
+    warnings.push('Rhythm and technique recognition are not available yet.');
+  }
 
   return {
     fileName: snapshot.fileName,
@@ -95,6 +106,9 @@ export function analyzeTabScore(snapshot: PdfDocumentSnapshot): TabScoreAnalysis
     beatType: timeSignature.beatType,
     measureNumbers,
     vectorDrawingCount: snapshot.vectorDrawingCount,
+    tabStaffSystems,
+    fretPositions: geometry.positions,
+    fretEvents: fretEvents.events,
     warnings,
   };
 }
