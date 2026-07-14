@@ -17,6 +17,7 @@ const navItems: Array<{ href: string; labelKey: MessageKey }> = [
   { href: '#practice', labelKey: 'nav.practice' },
   { href: '#archive', labelKey: 'nav.archive' },
   { href: '#library', labelKey: 'nav.library' },
+  { href: '#toolbox', labelKey: 'nav.toolbox' },
 ];
 
 export function AppShell({

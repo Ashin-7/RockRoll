@@ -1,0 +1,119 @@
+.toolbox-page {
+  display: grid;
+  gap: var(--space-6);
+}
+
+.toolbox-hero {
+  align-items: end;
+  border-bottom: 1px solid rgba(242, 169, 59, 0.24);
+  display: grid;
+  gap: var(--space-6);
+  grid-template-columns: minmax(0, 1fr) minmax(15rem, 22rem);
+  padding-bottom: var(--space-6);
+}
+
+.toolbox-hero h1,
+.toolbox-output-panel h2 {
+  margin: 0;
+}
+
+.toolbox-hero h1 {
+  font-family: var(--font-display);
+  font-size: clamp(2.4rem, 7vw, 5.6rem);
+  letter-spacing: -0.055em;
+  line-height: 0.92;
+  max-width: 10ch;
+}
+
+.toolbox-hero__description,
+.toolbox-output-panel p {
+  color: var(--color-paper-muted);
+  line-height: 1.65;
+  max-width: 42rem;
+}
+
+.toolbox-local-badge {
+  border-left: 3px solid var(--color-amber);
+  color: var(--color-paper);
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+}
+
+.toolbox-steps {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.toolbox-steps li,
+.toolbox-panel-label {
+  color: var(--color-amber);
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.toolbox-steps li {
+  border-top: 1px solid rgba(167, 162, 154, 0.25);
+  padding-top: var(--space-3);
+}
+
+.toolbox-workbench {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: minmax(0, 1.45fr) minmax(17rem, 0.55fr);
+}
+
+.toolbox-input-panel,
+.toolbox-output-panel {
+  border: 1px solid rgba(167, 162, 154, 0.22);
+  border-radius: 1.2rem;
+  min-width: 0;
+  padding: clamp(1rem, 3vw, 2rem);
+}
+
+.toolbox-input-panel {
+  background: linear-gradient(145deg, rgba(247, 241, 232, 0.08), rgba(17, 16, 15, 0.42));
+  overflow: hidden;
+  position: relative;
+}
+
+.toolbox-input-panel input[type='file'] {
+  border-style: dashed;
+  min-height: 5rem;
+}
+
+.toolbox-staff {
+  display: grid;
+  gap: 0.55rem;
+  margin-top: var(--space-8);
+  opacity: 0.28;
+  transform: rotate(-1deg) scale(1.05);
+}
+
+.toolbox-staff span {
+  border-top: 1px solid var(--color-paper);
+}
+
+.toolbox-output-panel {
+  align-content: start;
+  background: rgba(123, 30, 43, 0.16);
+  display: grid;
+  gap: var(--space-4);
+}
+
+@media (max-width: 760px) {
+  .toolbox-hero,
+  .toolbox-workbench {
+    grid-template-columns: 1fr;
+  }
+
+  .toolbox-steps {
+    grid-template-columns: 1fr;
+  }
+}

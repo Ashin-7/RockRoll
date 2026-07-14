@@ -1,0 +1,83 @@
+import { describe, expect, it } from 'vitest';
+import { analyzeTabScore, validatePdfFile } from './tab-analyzer';
+import { PdfDocumentSnapshot, PdfTextItem } from './toolbox.types';
+
+function textItem(text: string, page: number, x: number, y: number, fontSize: number): PdfTextItem {
+  return { text, page, x, y, width: text.length * fontSize, height: fontSize, fontSize };
+}
+
+describe('validatePdfFile', () => {
+  it('rejects files that are not PDFs', () => {
+    const file = { name: 'tab.png', type: 'image/png', size: 1200 } as File;
+
+    expect(() => validatePdfFile(file)).toThrow('Choose a PDF file.');
+  });
+
+  it('rejects PDF files larger than 20 MB', () => {
+    const file = { name: 'large.pdf', type: 'application/pdf', size: 20 * 1024 * 1024 + 1 } as File;
+
+    expect(() => validatePdfFile(file)).toThrow('PDF files must be 20 MB or smaller.');
+  });
+});
+
+describe('analyzeTabScore', () => {
+  it('extracts the electronic tab score structure without treating fret numbers as measures', () => {
+    const measureItems = Array.from({ length: 18 }, (_, index) =>
+      textItem(String(index + 1), Math.floor(index / 6) + 1, 80 + (index % 6) * 80, 70 + Math.floor(index / 6) * 190, 8),
+    );
+    const snapshot: PdfDocumentSnapshot = {
+      fileName: 'endless rain.pdf',
+      pageCount: 4,
+      textItems: [
+        textItem('endless\u0001rain', 1, 210, 35, 31),
+        textItem('NotePad', 1, 266, 74, 17),
+        textItem('=92', 1, 39, 119, 9.52),
+        ...measureItems,
+        textItem('9', 1, 212, 263, 10),
+        textItem('17', 2, 524, 150, 10),
+        textItem('3', 2, 502, 86, 8.16),
+      ],
+      vectorDrawingCount: 1703,
+      imageCount: 0,
+    };
+
+    expect(analyzeTabScore(snapshot)).toEqual({
+      fileName: 'endless rain.pdf',
+      pageCount: 4,
+      title: 'endless rain',
+      tempo: 92,
+      beats: 4,
+      beatType: 4,
+      measureNumbers: Array.from({ length: 18 }, (_, index) => index + 1),
+      vectorDrawingCount: 1703,
+      warnings: [
+        'Time signature was not detected; 4/4 will be used.',
+        'Note recognition is not available yet; exported measures will contain rests.',
+      ],
+    });
+  });
+
+  it('rejects image-only PDFs instead of silently treating them as electronic scores', () => {
+    const snapshot: PdfDocumentSnapshot = {
+      fileName: 'scan.pdf',
+      pageCount: 2,
+      textItems: [],
+      vectorDrawingCount: 0,
+      imageCount: 2,
+    };
+
+    expect(() => analyzeTabScore(snapshot)).toThrow('Scanned or image-only PDFs are not supported yet.');
+  });
+
+  it('requires a reliable measure sequence before export', () => {
+    const snapshot: PdfDocumentSnapshot = {
+      fileName: 'unknown.pdf',
+      pageCount: 1,
+      textItems: [textItem('Untitled', 1, 20, 20, 20)],
+      vectorDrawingCount: 40,
+      imageCount: 0,
+    };
+
+    expect(() => analyzeTabScore(snapshot)).toThrow('No reliable measure sequence was detected.');
+  });
+});

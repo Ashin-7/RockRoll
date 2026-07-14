@@ -425,3 +425,23 @@ P0 / P1 的本地代码与自动化测试项已完成。不要重新做权限 UI
 - 匹配成功后写入 `planned_action = 'match_existing'` 和 `target_entity_id`，后续沿用现有 commit 逻辑复用正式实体并补 external source 映射。
 - Inbox service 定向测试通过：1 个测试文件、31 个用例。
 - 下一步是确定最小手动匹配 UI 的位置。优先保持 Archive 一键导入不变，不恢复 Inbox 主入口；如无法在不破坏主流程的情况下接入，应先做短设计再实施。
+
+## 追加交接：`match_existing` 最小 UI 已接入
+
+- `/archive` 现在有仅管理员可见的手动匹配区；加载既有 Review item 后，只显示 artist / album。
+- 管理员输入已有 public 实体 ID 即可执行 `match_existing`，archive collection / archive item 不会展示或匹配。
+- URL 预览和 Archive 一键导入链路没有变化，Inbox 主入口继续停用。
+- 本轮修改：`src/features/archive/ArchivePage.tsx`、`src/features/archive/ArchivePage.css`、`src/features/archive/ArchivePage.test.tsx`、三个状态文档。
+- 定向验证：`ArchivePage.test.tsx` 10 个用例通过。
+- 后续如要改善体验，可单独设计目标 artist / album 名称搜索；当前不要把该能力扩展为 Inbox 页面或改变一键导入时机。
+
+## 追加交接：PDF 六线谱工具箱阶段 1
+
+- 用户已确认：先支持类似 `endless rain.pdf` 的清晰电子六线谱；全程浏览器本地处理；输出 `.musicxml`，再由 Guitar Pro 8 另存为 `.gp`。
+- 已提交设计与实施计划，提交为 `06caa1f docs: plan local PDF tab toolbox`。
+- 已完成计划 Task 1：`#toolbox` 路由、导航、App 接入、中英文页面和响应式谱架工作台样式。
+- 已完成计划 Task 2：`validatePdfFile`、`analyzeTabScore` 和类型；拒绝非 PDF、超过 20 MB、扫描件及无可靠小节序列的文件。
+- 定向验证：路由/壳/App/ToolboxPage 共 4 个测试文件、15 个用例通过；分析器 1 个测试文件、5 个用例通过。
+- 尚未修改 `package.json` / lockfile，尚未安装 PDF.js，尚未生成 MusicXML。
+- 下一轮只读取：`AGENTS.md`、三个状态文档、上述设计/计划、`src/features/toolbox`、`src/app/routes.tsx`、`src/app/shell/AppShell.tsx`、`src/App.tsx`、`src/i18n/messages.ts`、`package.json`。
+- 下一步从计划 Task 3 开始：安装锁定的 `pdfjs-dist@4.10.38`，先写失败测试，再实现动态 PDF 快照适配器。

@@ -36,10 +36,10 @@
 **Interfaces:**
 - Produces: `ToolboxPage`, route name `toolbox`, hash `#toolbox`, bilingual `toolbox.*` messages.
 
-- [ ] Write failing route, navigation, App, and page-shell tests for `#toolbox`, local-only copy, and a PDF file input.
-- [ ] Run `vitest --run src/app/routes.test.tsx src/app/shell/AppShell.test.tsx src/App.test.tsx src/features/toolbox/ToolboxPage.test.tsx`; expect missing route/component failures.
-- [ ] Implement the minimal route, navigation item, page shell, accessible file input, and responsive feature styles.
-- [ ] Re-run the four tests; expect PASS.
+- [x] Write failing route, navigation, App, and page-shell tests for `#toolbox`, local-only copy, and a PDF file input.
+- [x] Run `vitest --run src/app/routes.test.tsx src/app/shell/AppShell.test.tsx src/App.test.tsx src/features/toolbox/ToolboxPage.test.tsx`; expect missing route/component failures.
+- [x] Implement the minimal route, navigation item, page shell, accessible file input, and responsive feature styles.
+- [x] Re-run the four tests; expect PASS.
 
 ### Task 2: Pure PDF Input Validation and Score Analysis
 
@@ -51,10 +51,10 @@
 **Interfaces:**
 - Produces: `PdfTextItem`, `PdfDocumentSnapshot`, `TabScoreAnalysis`, `validatePdfFile(file)`, `analyzeTabScore(snapshot)`.
 
-- [ ] Write failing tests that reject non-PDF/over-20-MB files and extract title, 92 BPM, 4/4, measures 1-18, vector-PDF status, and warnings from normalized fixtures.
-- [ ] Run `vitest --run src/features/toolbox/tab-analyzer.test.ts`; expect missing-module failure.
-- [ ] Implement pure validation and analysis with no PDF.js or React imports.
-- [ ] Re-run the analyzer test; expect PASS.
+- [x] Write failing tests that reject non-PDF/over-20-MB files and extract title, 92 BPM, 4/4, measures 1-18, vector-PDF status, and warnings from normalized fixtures.
+- [x] Run `vitest --run src/features/toolbox/tab-analyzer.test.ts`; expect missing-module failure.
+- [x] Implement pure validation and analysis with no PDF.js or React imports.
+- [x] Re-run the analyzer test; expect PASS.
 
 ### Task 3: Browser PDF.js Adapter
 
@@ -121,4 +121,3 @@
 - [ ] Use a temporary local verification script against `C:\Users\Ashin\Downloads\endless rain.pdf`; assert 4 pages, vector content, measures 1-18, and 92 BPM.
 - [ ] Open the generated XML with an XML parser; record that Guitar Pro manual-open verification remains user-side if the application is unavailable.
 - [ ] Update status, next tasks, and handoff with exact results and the next recognition stage: string/fret geometry before rhythm/techniques.
-

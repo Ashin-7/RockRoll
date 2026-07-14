@@ -759,3 +759,32 @@ $env:HOME=(Resolve-Path .\.tmp).Path; $env:USERPROFILE=(Resolve-Path .\.tmp).Pat
 ```
 
 结果：Inbox service 1 个测试文件、31 个用例通过。
+
+## 追加完成：`match_existing` 最小管理员 UI
+
+完成范围：
+- 在 `/archive` 增加仅管理员可见的手动匹配区；Inbox 主入口继续保持停用。
+- 该区读取既有 Review item，只展示 artist / album，明确排除 archive collection / archive item。
+- 管理员填入已有 public 实体 ID 后，调用既有 `matchImportReviewItem`；匹配完成后显示已匹配目标。
+- Archive 的 URL 预览与“一键导入”主流程、提交时机和权限模型均未改变。
+
+验证：
+```powershell
+$env:HOME=(Resolve-Path .\.tmp).Path; $env:USERPROFILE=(Resolve-Path .\.tmp).Path; $env:TEMP=(Resolve-Path .\.tmp).Path; $env:TMP=(Resolve-Path .\.tmp).Path; C:\Users\Ashin\AppData\Local\nvm\v20.20.2\node.exe .\node_modules\vitest\vitest.mjs --run src/features/archive/ArchivePage.test.tsx
+```
+
+结果：ArchivePage 1 个测试文件、10 个用例通过。
+
+## 进行中：本地 PDF 六线谱工具箱（阶段 1）
+
+已完成：
+- 新增 `#toolbox` 路由、主导航入口和中英文页面壳。
+- 文件输入明确仅在浏览器本地处理，不上传 Supabase。
+- 新增纯函数 PDF 校验与电子六线谱分析核心：20 MB 限制、扫描件拒绝、标题/速度/连续小节编号提取、默认拍号和未识别音符警告。
+- 分析器可区分样例中的 8pt 灰色小节编号与 10pt 品位数字；当前尚未接入真实 PDF.js 读取。
+- 设计与实施计划：`docs/superpowers/specs/2026-07-14-toolbox-pdf-tab-musicxml-design.md`、`docs/superpowers/plans/2026-07-14-toolbox-pdf-tab-musicxml.md`。
+
+下一阶段：
+- 新增并锁定 `pdfjs-dist@4.10.38`，动态读取本地 PDF 为规范化快照。
+- 实现安全 MusicXML 骨架与页面下载流程。
+- 使用本地 `endless rain.pdf` 验证 4 页、92 BPM、小节 1-18；原始 PDF 不进入仓库。

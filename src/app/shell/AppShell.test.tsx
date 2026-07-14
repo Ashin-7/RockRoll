@@ -19,6 +19,7 @@ describe('AppShell', () => {
     expect(screen.getByText('Archive')).toBeInTheDocument();
     expect(within(screen.getByRole('navigation', { name: 'Primary' })).queryByRole('link', { name: 'Inbox' })).toBeNull();
     expect(screen.getByText('Library')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Toolbox' })).toHaveAttribute('href', '#toolbox');
     expect(within(screen.getByRole('navigation', { name: 'Primary' })).queryByRole('link', { name: 'Auth' })).toBeNull();
     expect(screen.getByText('Guest')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Auth' })).toHaveAttribute('href', '#auth');

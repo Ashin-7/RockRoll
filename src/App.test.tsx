@@ -68,4 +68,16 @@ describe('App', () => {
     expect(screen.getByRole('link', { name: 'Open Archive' })).toHaveAttribute('href', '#archive');
     expect(screen.queryByRole('button', { name: 'Preview Anontraveler' })).not.toBeInTheDocument();
   });
+
+  it('opens the local PDF toolbox from the primary navigation', async () => {
+    window.location.hash = '#library';
+    const user = userEvent.setup();
+
+    renderWithI18n(<App />);
+
+    await user.click(screen.getByRole('link', { name: 'Toolbox' }));
+
+    expect(screen.getByRole('heading', { name: 'PDF Tab Workbench' })).toBeInTheDocument();
+    expect(screen.getByText('Your score stays in this browser. Nothing is uploaded.')).toBeInTheDocument();
+  });
 });

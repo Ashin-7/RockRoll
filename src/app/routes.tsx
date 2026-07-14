@@ -11,7 +11,8 @@ export type AppRoute =
   | 'archive'
   | 'archiveDetail'
   | 'inbox'
-  | 'library';
+  | 'library'
+  | 'toolbox';
 
 const routes: Record<string, AppRoute> = {
   '#auth': 'auth',
@@ -23,6 +24,7 @@ const routes: Record<string, AppRoute> = {
   '#archive': 'archive',
   '#inbox': 'inbox',
   '#library': 'library',
+  '#toolbox': 'toolbox',
 };
 
 export function getRouteForHash(hash: string): AppRoute {

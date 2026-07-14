@@ -18,6 +18,7 @@ describe('getRouteForHash', () => {
     expect(getRouteForHash('#archive/collection-1')).toBe('archiveDetail');
     expect(getRouteForHash('#inbox')).toBe('inbox');
     expect(getRouteForHash('#library')).toBe('library');
+    expect(getRouteForHash('#toolbox')).toBe('toolbox');
     expect(getRouteForHash('#auth')).toBe('auth');
   });
 

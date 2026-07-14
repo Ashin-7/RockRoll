@@ -15,6 +15,7 @@ import { LibraryPage } from './features/library/LibraryPage';
 import { PracticeHistoryPage } from './features/practice/PracticeHistoryPage';
 import { SongDetailPage } from './features/songs/SongDetailPage';
 import { SongListPage } from './features/songs/SongListPage';
+import { ToolboxPage } from './features/toolbox/ToolboxPage';
 
 export default function App() {
   const [hash, setHash] = useState(window.location.hash);
@@ -90,6 +91,7 @@ export default function App() {
     inbox: <InboxDisabledPage />,
     library: <LibraryPage />,
     auth: <AuthPage />,
+    toolbox: <ToolboxPage />,
   }[route];
 
   return (

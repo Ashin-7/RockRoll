@@ -209,9 +209,10 @@ npm run build
    - 真实目录页验证结果：请求成功、请求次数 1、未访问详情页，但解析数量为 0；需要先观察真实 HTML / hydration 数据结构，再修 parser。
    - 已修正目录扫描数据源：改用 `/api/rank/ranks/all/0` 的 `data.ranks`，当前只加载第一页 10 条，不自动翻页、不访问详情页。
    - 已支持用户点击“加载更多榜单”后逐页加载更多目录页；仍不自动访问详情页、不预览、不导入。
-1. `match_existing` 的最小手动匹配 UI / service。
-   - service 基础已完成：管理员可把 artist / album Review item 绑定到同类型已有 public 实体，且会验证目标存在。
-   - 下一步只设计并接入最小 UI；需先确定放在 Archive 预览阶段还是独立 Review 阶段，不能重新暴露已停用的 Inbox 主入口，也不能破坏当前正常的一键导入路径。
+1. `match_existing` 最小手动匹配 UI 已完成。
+   - 位于 `/archive`，仅管理员可见；只允许 artist / album Review item 匹配已有 public 实体。
+   - 保持 Archive 一键导入主流程，Inbox 主入口仍停用。
+   - 当前最小交互使用已有 public 实体 ID；如后续需要按名称搜索目标，应单独设计查询范围、分页和权限，不在当前 MVP 中扩展。
 2. 数据库级正式导入任务状态追踪和失败恢复，避免重复点击或部分失败后不清楚状态。
 3. Review plan 明细展示专辑封面 / 点评 / 年代 / 风格，便于导入前检查。
 4. 专辑封面与曲风正规化，例如 `albums.cover_url` 和 `album_styles` / `album_genres`。
@@ -253,3 +254,17 @@ npm run build
 - 不要绕过 RLS。
 - 不要让普通用户或匿名用户执行导入写入。
 - 不要在 Practice 和 Songs / 曲目之外新增普通用户可操作的 CRUD，除非先明确权限矩阵并得到确认。
+
+## 当前优先任务：完成 PDF 六线谱工具箱 MVP
+
+已完成：
+1. `#toolbox` 路由、导航、响应式页面壳和双语文案。
+2. 纯 PDF 文件校验与电子六线谱结构分析核心。
+
+下一步只执行：
+1. 按 `docs/superpowers/plans/2026-07-14-toolbox-pdf-tab-musicxml.md` 的 Task 3 接入 `pdfjs-dist@4.10.38` 动态适配器。
+2. 完成 Task 4 的 MusicXML 4.0 安全骨架生成。
+3. 完成 Task 5 的分析摘要、警告和本地下载流程。
+4. 用 `C:\Users\Ashin\Downloads\endless rain.pdf` 做只读验证，不复制进仓库、不上传。
+
+本轮不要进入品位/节奏几何识别；先保证真实 PDF 快照和合法 MusicXML 骨架纵向链路可用。
