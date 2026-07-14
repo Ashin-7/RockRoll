@@ -48,6 +48,38 @@ function hasClosedContour(path: PdfVectorPath): boolean {
   return path.commands.some((command) => command.type === 'close');
 }
 
+function isClosedStraightQuadrilateral(path: PdfVectorPath): boolean {
+  if (path.commands.length < 5 || path.commands[path.commands.length - 1].type !== 'close') {
+    return false;
+  }
+
+  const drawingCommands = path.commands.slice(0, -1);
+  if (drawingCommands[0].type !== 'move') {
+    return false;
+  }
+
+  const points: Array<{ x: number; y: number }> = [];
+  for (const [index, command] of drawingCommands.entries()) {
+    if ((index === 0 && command.type !== 'move') || (index > 0 && command.type !== 'line')) {
+      return false;
+    }
+    if (command.type === 'move' || command.type === 'line') {
+      points.push({ x: command.x, y: command.y });
+    }
+  }
+
+  const firstPoint = points[0];
+  const lastPoint = points[points.length - 1];
+  if (lastPoint.x === firstPoint.x && lastPoint.y === firstPoint.y) {
+    points.pop();
+  }
+
+  return (
+    points.length === 4 &&
+    new Set(points.map((point) => `${point.x}:${point.y}`)).size === 4
+  );
+}
+
 function getCommandPoint(command: PdfVectorCommand): { x: number; y: number } | null {
   if (command.type === 'move' || command.type === 'line' || command.type === 'curve') {
     return { x: command.x, y: command.y };
@@ -171,25 +203,27 @@ function boundsTouch(first: Bounds, second: Bounds, tolerance: number): boolean 
   );
 }
 
-function haveEqualBounds(first: Bounds, second: Bounds): boolean {
-  return (
-    first.x1 === second.x1 &&
-    first.y1 === second.y1 &&
-    first.x2 === second.x2 &&
-    first.y2 === second.y2
-  );
-}
-
 function isBeam(path: PdfVectorPath, staffGap: number): boolean {
   const width = getWidth(path.bounds);
   const height = getHeight(path.bounds);
   return (
     path.paint !== 'stroke' &&
-    hasClosedContour(path) &&
+    isClosedStraightQuadrilateral(path) &&
     width >= BEAM_MIN_WIDTH_GAPS * staffGap &&
     height >= BEAM_MIN_THICKNESS_GAPS * staffGap &&
     height <= BEAM_MAX_THICKNESS_GAPS * staffGap
   );
+}
+
+function areBeamLayersNonUnique(first: PdfVectorPath, second: PdfVectorPath): boolean {
+  const regionsOverlap =
+    intervalsOverlap(first.bounds.x1, first.bounds.x2, second.bounds.x1, second.bounds.x2, 0) &&
+    intervalsOverlap(first.bounds.y1, first.bounds.y2, second.bounds.y1, second.bounds.y2, 0);
+  const firstCenterY = (first.bounds.y1 + first.bounds.y2) / 2;
+  const secondCenterY = (second.bounds.y1 + second.bounds.y2) / 2;
+  const maximumThickness = Math.max(getHeight(first.bounds), getHeight(second.bounds));
+
+  return regionsOverlap || Math.abs(firstCenterY - secondCenterY) <= 0.5 * maximumThickness;
 }
 
 function isInsideSystemBand(path: PdfVectorPath, system: PairedStaffSystem, staffGap: number): boolean {
@@ -230,6 +264,7 @@ function classifyNotehead(
   systemIndex: number,
   staffGap: number,
   warnings: string[],
+  ambiguousPaths: Set<PdfVectorPath>,
 ): RhythmGlyphEvent | null {
   const stems = paths.filter(
     (path) =>
@@ -257,16 +292,21 @@ function classifyNotehead(
     (path) =>
       path !== notehead.path &&
       path !== stems[0] &&
+      !ambiguousPaths.has(path) &&
       isBeam(path, staffGap) &&
       boundsTouch(path.bounds, stems[0].bounds, BEAM_CONTACT_TOLERANCE_GAPS * staffGap),
   );
-  const hasDuplicateBeam = attachedBeams.some((beam, beamIndex) =>
-    attachedBeams.some(
-      (candidate, candidateIndex) => beamIndex !== candidateIndex && haveEqualBounds(beam.bounds, candidate.bounds),
-    ),
+  const hasNonUniqueBeamLayer = attachedBeams.some((beam, beamIndex) =>
+    attachedBeams.slice(beamIndex + 1).some((candidate) => areBeamLayersNonUnique(beam, candidate)),
   );
-  if (attachedBeams.length > 2 || hasDuplicateBeam) {
-    warnings.push(`第 ${system.page} 页第 ${systemIndex + 1} 个系统存在非唯一符梁组合。`);
+  if (hasNonUniqueBeamLayer) {
+    warnings.push(
+      `第 ${system.page} 页第 ${systemIndex + 1} 个系统存在重叠或间距过近的符梁轮廓，符梁层级不唯一。`,
+    );
+    return null;
+  }
+  if (attachedBeams.length > 2) {
+    warnings.push(`第 ${system.page} 页第 ${systemIndex + 1} 个系统存在超过两个可确认的符梁层级。`);
     return null;
   }
 
@@ -304,13 +344,31 @@ export function recognizeRhythmGlyphs(
     }
 
     const systemPaths = paths.filter((path) => isInsideSystemBand(path, system, staffGap));
+    const ambiguousPaths = new Set(
+      systemPaths.filter(
+        (path) => isCompactNotehead(path, staffGap) && isBeam(path, staffGap),
+      ),
+    );
+    if (ambiguousPaths.size > 0) {
+      warnings.push(
+        `第 ${system.page} 页第 ${systemIndex + 1} 个系统存在同时符合符头与符梁规则的歧义路径，已跳过该路径。`,
+      );
+    }
     const noteheads: NoteheadCandidate[] = systemPaths
-      .filter((path) => isCompactNotehead(path, staffGap))
+      .filter((path) => !ambiguousPaths.has(path) && isCompactNotehead(path, staffGap))
       .map((path) => ({ path, kind: getNoteheadKind(path) }))
       .filter((candidate): candidate is NoteheadCandidate => candidate.kind !== null);
 
     noteheads.forEach((notehead) => {
-      const glyph = classifyNotehead(notehead, systemPaths, system, systemIndex, staffGap, warnings);
+      const glyph = classifyNotehead(
+        notehead,
+        systemPaths,
+        system,
+        systemIndex,
+        staffGap,
+        warnings,
+        ambiguousPaths,
+      );
       if (glyph) {
         glyphs.push(glyph);
       }

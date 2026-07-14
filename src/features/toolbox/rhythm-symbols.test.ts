@@ -122,6 +122,51 @@ describe('recognizeRhythmGlyphs', () => {
     ]);
   });
 
+  it('does not treat curved or five-corner closed contours as beams', () => {
+    const curvedBeam: PdfVectorPath = {
+      ...beam(43),
+      commands: [
+        { type: 'move', x: 60, y: 43 },
+        { type: 'curve', x1: 65, y1: 42, x2: 70, y2: 44, x: 75, y: 43 },
+        { type: 'line', x: 75, y: 45 },
+        { type: 'line', x: 60, y: 45 },
+        { type: 'close' },
+      ],
+    };
+    const fiveCornerBeam: PdfVectorPath = {
+      ...beam(43),
+      commands: [
+        { type: 'move', x: 60, y: 43 },
+        { type: 'line', x: 68, y: 43 },
+        { type: 'line', x: 75, y: 44 },
+        { type: 'line', x: 68, y: 45 },
+        { type: 'line', x: 60, y: 45 },
+        { type: 'close' },
+      ],
+    };
+
+    expectDuration([notehead('fill'), stem(), curvedBeam], 'quarter', [
+      'filled-notehead',
+      'stem',
+    ]);
+    expectDuration([notehead('fill'), stem(), fiveCornerBeam], 'quarter', [
+      'filled-notehead',
+      'stem',
+    ]);
+  });
+
+  it('warns and excludes a path that matches both notehead and beam rules', () => {
+    const ambiguousShape = closedPath('fill', 60, 43, 70, 47);
+    const result = recognize([notehead('fill'), stem(), ambiguousShape]);
+
+    expect(result.glyphs).toEqual([
+      expect.objectContaining({ duration: 'quarter', x: (NOTE_X1 + NOTE_X2) / 2 }),
+    ]);
+    expect(result.warnings).toEqual([
+      expect.stringContaining('同时符合符头与符梁规则'),
+    ]);
+  });
+
   it('rejects a filled notehead without a stem', () => {
     expect(recognize([notehead('fill')]).glyphs).toEqual([]);
   });
@@ -175,6 +220,31 @@ describe('recognizeRhythmGlyphs', () => {
 
     expect(result.glyphs).toEqual([]);
     expect(result.warnings).toHaveLength(1);
+  });
+
+  it('warns and emits no glyph for slightly offset overlapping beam contours', () => {
+    const result = recognize([notehead('fill'), stem(), beam(43), beam(43.5)]);
+
+    expect(result.glyphs).toEqual([]);
+    expect(result.warnings).toEqual([expect.stringContaining('符梁层级不唯一')]);
+  });
+
+  it('warns and emits no glyph for nested beam contours', () => {
+    const outerBeam = beam(42.5, 59, 77, 45.5);
+    const innerBeam = beam(43, 60, 75, 45);
+    const result = recognize([notehead('fill'), stem(), outerBeam, innerBeam]);
+
+    expect(result.glyphs).toEqual([]);
+    expect(result.warnings).toEqual([expect.stringContaining('符梁层级不唯一')]);
+  });
+
+  it('warns when separate beam regions have non-unique vertical centers', () => {
+    const leftBeam = beam(43, 50, 58, 45);
+    const rightBeam = beam(44, 62, 70, 46);
+    const result = recognize([notehead('fill'), stem(), leftBeam, rightBeam]);
+
+    expect(result.glyphs).toEqual([]);
+    expect(result.warnings).toEqual([expect.stringContaining('符梁层级不唯一')]);
   });
 
   it('only diagnoses a medium-confidence paired system', () => {
