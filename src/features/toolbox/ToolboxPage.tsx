@@ -25,6 +25,9 @@ export function ToolboxPage({
   const [analysis, setAnalysis] = useState<TabScoreAnalysis | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const rhythmCheckedCount = analysis?.rhythmMeasures.length ?? 0;
+  const rhythmReadyCount = analysis?.rhythmMeasures.filter((measure) => measure.status === 'recognized').length ?? 0;
+  const rhythmFallbackCount = analysis?.rhythmMeasures.filter((measure) => measure.status === 'fallback').length ?? 0;
 
   function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
     setFile(event.target.files?.[0] ?? null);
@@ -120,6 +123,33 @@ export function ToolboxPage({
               <ul>
                 {analysis.warnings.map((warning) => <li key={warning}>{warning}</li>)}
               </ul>
+              <section className="toolbox-rhythm" aria-labelledby="toolbox-rhythm-title">
+                <h3 id="toolbox-rhythm-title">{t('toolbox.rhythmTitle')}</h3>
+                <p className="toolbox-rhythm__summary">
+                  {t('toolbox.rhythmChecked').replace('{count}', String(rhythmCheckedCount))}
+                  {' · '}
+                  {t('toolbox.rhythmReady').replace('{count}', String(rhythmReadyCount))}
+                  {' · '}
+                  {t('toolbox.rhythmFallback').replace('{count}', String(rhythmFallbackCount))}
+                </p>
+                {analysis.rhythmMeasures.length > 0 ? (
+                  <ul className="toolbox-rhythm__list">
+                    {analysis.rhythmMeasures.map((measure) => (
+                      <li className={`toolbox-rhythm__item toolbox-rhythm__item--${measure.status}`} key={measure.measureNumber}>
+                        <span>
+                          {t(measure.status === 'recognized'
+                            ? 'toolbox.rhythmRecognizedStatus'
+                            : 'toolbox.rhythmFallbackStatus').replace('{measure}', String(measure.measureNumber))}
+                        </span>
+                        {measure.warning ? <small>{measure.warning}</small> : null}
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+                {rhythmFallbackCount > 0 ? (
+                  <p className="toolbox-rhythm__notice">{t('toolbox.rhythmMixedExportNotice')}</p>
+                ) : null}
+              </section>
             </div>
           ) : null}
         </aside>
