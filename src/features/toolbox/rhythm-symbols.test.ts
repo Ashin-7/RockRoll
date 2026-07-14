@@ -18,7 +18,7 @@ function pairedSystem(): PairedStaffSystem {
       page: PAGE,
       x1: 20,
       x2: 220,
-      stringYs: [110, 120, 130, 140, 150, 160],
+      stringYs: [-50, -40, -30, -20, -10, 0],
       averageStringGap: 10,
       confidence: 'high',
     },
@@ -67,6 +67,32 @@ function beam(y1: number, x1 = NOTE_X2, x2 = 75, y2 = y1 + 2): PdfVectorPath {
   return closedPath('fill', x1, y1, x2, y2);
 }
 
+function flag(y1: number, y2: number): PdfVectorPath {
+  return {
+    page: PAGE,
+    paint: 'fill',
+    bounds: { x1: NOTE_X2, y1, x2: NOTE_X2 + 6, y2 },
+    commands: [
+      { type: 'move', x: NOTE_X2, y: 43 },
+      { type: 'curve', x1: 62, y1, x2: 66, y2, x: NOTE_X2 + 6, y: y2 },
+      { type: 'line', x: NOTE_X2, y: 43 },
+      { type: 'close' },
+    ],
+  };
+}
+
+function attachedCurve(x1 = 58, x2 = 75): PdfVectorPath {
+  return {
+    page: PAGE,
+    paint: 'stroke',
+    bounds: { x1, y1: 55, x2, y2: 60 },
+    commands: [
+      { type: 'move', x: x1, y: 55 },
+      { type: 'curve', x1: 62, y1: 60, x2: 70, y2: 60, x: x2, y: 55 },
+    ],
+  };
+}
+
 function shapedPath(
   bounds: PdfVectorPath['bounds'],
   commandTypes: Array<'move' | 'line' | 'curve' | 'close'>,
@@ -88,11 +114,11 @@ function shapedPath(
 }
 
 function wholeRest(x1 = 80, x2 = 90, height = 3.5): PdfVectorPath {
-  return closedPath('fill', x1, 50, x2, 50 + height);
+  return closedPath('fill', x1, 70 - height, x2, 70);
 }
 
 function halfRest(x1 = 100, x2 = 110, height = 3.5): PdfVectorPath {
-  return closedPath('fill', x1, 60 - height, x2, 60);
+  return closedPath('fill', x1, 60, x2, 60 + height);
 }
 
 function quarterRest(bounds = { x1: 120, y1: 45, x2: 128, y2: 75 }): PdfVectorPath {
@@ -180,6 +206,62 @@ describe('recognizeRhythmGlyphs', () => {
     ]);
   });
 
+  it('classifies one independent curved flag at the remote stem end as an eighth note', () => {
+    expectDuration([notehead('fill'), stem(), flag(43, 51)], 'eighth', [
+      'filled-notehead',
+      'stem',
+      'flag-1',
+    ]);
+  });
+
+  it('classifies two spatially independent flags at the remote stem end as a sixteenth note', () => {
+    expectDuration([notehead('fill'), stem(), flag(43, 51), flag(35, 43)], '16th', [
+      'filled-notehead',
+      'stem',
+      'flag-1',
+      'flag-2',
+    ]);
+  });
+
+  it('downgrades instead of mixing beam and flag evidence', () => {
+    const result = recognize([notehead('fill'), stem(), beam(43), flag(35, 43)]);
+
+    expect(result.glyphs).toContainEqual(expect.objectContaining({ confidence: 'medium' }));
+    expect(result.warnings).toContainEqual(expect.stringContaining('符梁与符尾'));
+  });
+
+  it('downgrades overlapping duplicate flags instead of counting them twice', () => {
+    const firstFlag = flag(43, 51);
+    const result = recognize([notehead('fill'), stem(), firstFlag, { ...firstFlag }]);
+
+    expect(result.glyphs).toContainEqual(expect.objectContaining({ confidence: 'medium' }));
+    expect(result.warnings).toContainEqual(expect.stringContaining('符尾'));
+  });
+
+  it('downgrades a glyph when an unconsumed tie-like curve is attached', () => {
+    const result = recognize([notehead('fill'), stem(), attachedCurve()]);
+
+    expect(result.glyphs).toContainEqual(
+      expect.objectContaining({ duration: 'quarter', confidence: 'medium' }),
+    );
+    expect(result.warnings).toContainEqual(expect.stringContaining('未识别附着路径'));
+  });
+
+  it('downgrades a glyph when an unknown filled path touches its geometry', () => {
+    const result = recognize([notehead('fill'), stem(), closedPath('fill', 46, 56, 50, 60)]);
+
+    expect(result.glyphs).toContainEqual(expect.objectContaining({ confidence: 'medium' }));
+    expect(result.warnings).toContainEqual(expect.stringContaining('未识别附着路径'));
+  });
+
+  it('does not let a distant clef-like curve downgrade an event', () => {
+    const result = recognize([notehead('fill'), stem(), attachedCurve(25, 35)]);
+
+    expect(result.glyphs).toContainEqual(
+      expect.objectContaining({ duration: 'quarter', confidence: 'high' }),
+    );
+  });
+
   it.each([
     ['eighth', [closedPath('fill', 60, 50, 70, 53)], ['beam-1']],
     [
@@ -264,7 +346,7 @@ describe('recognizeRhythmGlyphs', () => {
   });
 
   it('downgrades every affected event when one dot matches multiple events', () => {
-    const result = recognize([wholeRest(50, 60), wholeRest(52, 60), dot(62, 51)]);
+    const result = recognize([wholeRest(50, 60), wholeRest(52, 60), dot(62, 68)]);
 
     expect(result.glyphs).toHaveLength(2);
     expect(result.glyphs.every((glyph) => glyph.confidence === 'medium' && glyph.dots === 0)).toBe(
@@ -301,7 +383,7 @@ describe('recognizeRhythmGlyphs', () => {
       quarterRest({ x1: 120, y1: 50, x2: 125, y2: 70 }),
       eighthRest({ x1: 140, y1: 52.5, x2: 147, y2: 67.5 }),
       sixteenthRest({ x1: 160, y1: 40, x2: 174, y2: 80 }),
-      dot(89.5, 51.75, 1.5),
+      dot(89.5, 68, 1.5),
     ]);
 
     expect(result.glyphs).toEqual(
@@ -316,10 +398,10 @@ describe('recognizeRhythmGlyphs', () => {
   });
 
   it.each([
-    ['whole minimum', 'whole', closedPath('fill', 80, 51, 88, 53.5)],
-    ['whole maximum', 'whole', closedPath('fill', 80, 49, 94, 54)],
-    ['half minimum', 'half', closedPath('fill', 100, 56.5, 108, 59)],
-    ['half maximum', 'half', closedPath('fill', 100, 56, 114, 61)],
+    ['whole minimum', 'whole', closedPath('fill', 80, 67.5, 88, 70)],
+    ['whole maximum', 'whole', closedPath('fill', 80, 65, 94, 70)],
+    ['half minimum', 'half', closedPath('fill', 100, 60, 108, 62.5)],
+    ['half maximum', 'half', closedPath('fill', 100, 60, 114, 65)],
     ['quarter minimum', 'quarter', quarterRest({ x1: 120, y1: 55, x2: 125, y2: 75 })],
     ['quarter maximum', 'quarter', quarterRest({ x1: 120, y1: 37.5, x2: 130, y2: 72.5 })],
     ['eighth minimum', 'eighth', eighthRest({ x1: 140, y1: 60, x2: 147, y2: 75 })],
@@ -348,7 +430,7 @@ describe('recognizeRhythmGlyphs', () => {
       { x1: 120, y1: 45, x2: 128, y2: 75 },
       ['move', 'curve', 'line', 'curve', 'line', 'line', 'close'],
     );
-    const detachedWholeRest = closedPath('fill', 80, 51.1, 90, 54.6);
+    const detachedWholeRest = closedPath('fill', 80, 65.4, 90, 68.9);
     const oversizedDot = dot(130, 58, 3.6);
     const result = recognize([wrongQuarterTopology, detachedWholeRest, oversizedDot]);
 
@@ -379,14 +461,14 @@ describe('recognizeRhythmGlyphs', () => {
       ],
     };
 
-    expectDuration([notehead('fill'), stem(), curvedBeam], 'quarter', [
-      'filled-notehead',
-      'stem',
-    ]);
-    expectDuration([notehead('fill'), stem(), fiveCornerBeam], 'quarter', [
-      'filled-notehead',
-      'stem',
-    ]);
+    for (const unsupportedPath of [curvedBeam, fiveCornerBeam]) {
+      const result = recognize([notehead('fill'), stem(), unsupportedPath]);
+
+      expect(result.glyphs).toContainEqual(
+        expect.objectContaining({ duration: 'quarter', confidence: 'medium' }),
+      );
+      expect(result.warnings).toContainEqual(expect.stringContaining('未识别附着路径'));
+    }
   });
 
   it('warns and excludes a path that matches both notehead and beam rules', () => {

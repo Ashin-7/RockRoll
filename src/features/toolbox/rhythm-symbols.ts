@@ -20,6 +20,11 @@ const BEAM_MIN_THICKNESS_GAPS = 0.12;
 const BEAM_MAX_THICKNESS_GAPS = 0.6;
 const BEAM_MIN_WIDTH_GAPS = 0.8;
 const BEAM_CONTACT_TOLERANCE_GAPS = 0.2;
+const FLAG_MIN_WIDTH_GAPS = 0.3;
+const FLAG_MAX_WIDTH_GAPS = 1.2;
+const FLAG_MIN_HEIGHT_GAPS = 0.6;
+const FLAG_MAX_HEIGHT_GAPS = 1.8;
+const FLAG_CONTACT_TOLERANCE_GAPS = 0.2;
 const REST_RECT_MIN_WIDTH_GAPS = 0.8;
 const REST_RECT_MAX_WIDTH_GAPS = 1.4;
 const REST_RECT_MIN_HEIGHT_GAPS = 0.25;
@@ -291,6 +296,53 @@ function isBeam(path: PdfVectorPath, staffGap: number): boolean {
   );
 }
 
+function isFlagShape(path: PdfVectorPath, staffGap: number): boolean {
+  return (
+    isFilled(path) &&
+    hasClosedContour(path) &&
+    path.commands.some((command) => command.type === 'curve') &&
+    hasSizeInRange(
+      path.bounds,
+      staffGap,
+      FLAG_MIN_WIDTH_GAPS,
+      FLAG_MAX_WIDTH_GAPS,
+      FLAG_MIN_HEIGHT_GAPS,
+      FLAG_MAX_HEIGHT_GAPS,
+    )
+  );
+}
+
+function getStemEndBounds(stem: PdfVectorPath): [Bounds, Bounds] {
+  const x = (stem.bounds.x1 + stem.bounds.x2) / 2;
+  return [
+    { x1: x, y1: stem.bounds.y1, x2: x, y2: stem.bounds.y1 },
+    { x1: x, y1: stem.bounds.y2, x2: x, y2: stem.bounds.y2 },
+  ];
+}
+
+function getRemoteStemEnd(stem: PdfVectorPath, notehead: PdfVectorPath): Bounds {
+  const [first, second] = getStemEndBounds(stem);
+  const noteheadCenterY = getCenterY(notehead.bounds);
+  return Math.abs(first.y1 - noteheadCenterY) >= Math.abs(second.y1 - noteheadCenterY)
+    ? first
+    : second;
+}
+
+function findContextualFlagPaths(paths: PdfVectorPath[], staffGap: number): Set<PdfVectorPath> {
+  const stems = paths.filter((path) => isStem(path, staffGap));
+  const compactPaths = paths.filter((path) => isCompactNotehead(path, staffGap));
+  const tolerance = FLAG_CONTACT_TOLERANCE_GAPS * staffGap;
+
+  return new Set(paths.filter((flagPath) => (
+    isFlagShape(flagPath, staffGap) &&
+    stems.some((stem) => compactPaths.some((noteheadPath) => (
+      noteheadPath !== flagPath &&
+      boundsTouch(stem.bounds, noteheadPath.bounds, STEM_CONTACT_TOLERANCE_GAPS * staffGap) &&
+      boundsTouch(flagPath.bounds, getRemoteStemEnd(stem, noteheadPath), tolerance)
+    )))
+  )));
+}
+
 function isRectangularRest(path: PdfVectorPath, staffGap: number): boolean {
   return (
     isFilled(path) &&
@@ -390,6 +442,19 @@ function areBeamLayersNonUnique(first: PdfVectorPath, second: PdfVectorPath): bo
   return regionsOverlap || Math.abs(firstCenterY - secondCenterY) <= 0.5 * maximumThickness;
 }
 
+function areFlagLayersNonUnique(first: PdfVectorPath, second: PdfVectorPath): boolean {
+  const overlapWidth = Math.min(first.bounds.x2, second.bounds.x2) - Math.max(first.bounds.x1, second.bounds.x1);
+  const overlapHeight = Math.min(first.bounds.y2, second.bounds.y2) - Math.max(first.bounds.y1, second.bounds.y1);
+  const firstCenterY = getCenterY(first.bounds);
+  const secondCenterY = getCenterY(second.bounds);
+  const maximumHeight = Math.max(getHeight(first.bounds), getHeight(second.bounds));
+
+  return (
+    (overlapWidth > 0 && overlapHeight > 0) ||
+    Math.abs(firstCenterY - secondCenterY) <= 0.5 * maximumHeight
+  );
+}
+
 function isInsideSystemBand(path: PdfVectorPath, system: PairedStaffSystem, staffGap: number): boolean {
   const top = Math.min(...system.standardLineYs) - staffGap;
   const bottom = Math.max(...system.standardLineYs) + staffGap;
@@ -456,10 +521,10 @@ function classifyRest(
   staffGap: number,
 ): ClassifiedGlyph | null {
   if (isRectangularRest(path, staffGap)) {
-    if (isAttachedToLine(path.bounds.y1, system.standardLineYs[1], staffGap)) {
+    if (isAttachedToLine(path.bounds.y2, system.standardLineYs[3], staffGap)) {
       return createRestGlyph(path, system, systemIndex, 'whole');
     }
-    if (isAttachedToLine(path.bounds.y2, system.standardLineYs[2], staffGap)) {
+    if (isAttachedToLine(path.bounds.y1, system.standardLineYs[2], staffGap)) {
       return createRestGlyph(path, system, systemIndex, 'half');
     }
     return null;
@@ -522,6 +587,7 @@ function classifyNotehead(
   staffGap: number,
   warnings: string[],
   ambiguousPaths: Set<PdfVectorPath>,
+  flagPaths: Set<PdfVectorPath>,
 ): ClassifiedGlyph | null {
   const stems = paths.filter(
     (path) =>
@@ -553,6 +619,25 @@ function classifyNotehead(
       isBeam(path, staffGap) &&
       boundsTouch(path.bounds, stems[0].bounds, BEAM_CONTACT_TOLERANCE_GAPS * staffGap),
   );
+  const remoteStemEnd = getRemoteStemEnd(stems[0], notehead.path);
+  const attachedFlags = paths.filter(
+    (path) =>
+      flagPaths.has(path) &&
+      boundsTouch(path.bounds, remoteStemEnd, FLAG_CONTACT_TOLERANCE_GAPS * staffGap),
+  );
+  if (attachedBeams.length > 0 && attachedFlags.length > 0) {
+    warnings.push(`第 ${system.page} 页第 ${systemIndex + 1} 个系统存在符梁与符尾混合证据，事件已降级。`);
+    const glyph = createGlyph(
+      notehead,
+      system.page,
+      systemIndex,
+      'quarter',
+      ['filled-notehead', 'stem'],
+      [...stems, ...attachedBeams, ...attachedFlags],
+    );
+    glyph.event.confidence = 'medium';
+    return glyph;
+  }
   const hasNonUniqueBeamLayer = attachedBeams.some((beam, beamIndex) =>
     attachedBeams.slice(beamIndex + 1).some((candidate) => areBeamLayersNonUnique(beam, candidate)),
   );
@@ -565,6 +650,23 @@ function classifyNotehead(
   if (attachedBeams.length > 2) {
     warnings.push(`第 ${system.page} 页第 ${systemIndex + 1} 个系统存在超过两个可确认的符梁层级。`);
     return null;
+  }
+
+  const hasNonUniqueFlagLayer = attachedFlags.some((flag, flagIndex) =>
+    attachedFlags.slice(flagIndex + 1).some((candidate) => areFlagLayersNonUnique(flag, candidate)),
+  );
+  if (hasNonUniqueFlagLayer || attachedFlags.length > 2) {
+    warnings.push(`第 ${system.page} 页第 ${systemIndex + 1} 个系统存在不唯一或冲突的符尾结构，事件已降级。`);
+    const glyph = createGlyph(
+      notehead,
+      system.page,
+      systemIndex,
+      'quarter',
+      ['filled-notehead', 'stem'],
+      [...stems, ...attachedFlags],
+    );
+    glyph.event.confidence = 'medium';
+    return glyph;
   }
 
   const sourceSymbols = ['filled-notehead', 'stem'];
@@ -584,6 +686,23 @@ function classifyNotehead(
       'beam-1',
       'beam-2',
     ], [...stems, ...attachedBeams]);
+  }
+  if (attachedFlags.length === 1) {
+    return createGlyph(
+      notehead,
+      system.page,
+      systemIndex,
+      'eighth',
+      [...sourceSymbols, 'flag-1'],
+      [...stems, ...attachedFlags],
+    );
+  }
+  if (attachedFlags.length === 2) {
+    return createGlyph(notehead, system.page, systemIndex, '16th', [
+      ...sourceSymbols,
+      'flag-1',
+      'flag-2',
+    ], [...stems, ...attachedFlags]);
   }
   return createGlyph(notehead, system.page, systemIndex, 'quarter', sourceSymbols, stems);
 }
@@ -609,13 +728,14 @@ export function recognizeRhythmGlyphs(
 
     const systemPaths = paths.filter((path) => isInsideSystemBand(path, system, staffGap));
     const dotPaths = systemPaths.filter((path) => isDot(path, staffGap));
+    const flagPaths = findContextualFlagPaths(systemPaths, staffGap);
     const ambiguousPaths = new Set(
       systemPaths.filter(
         (path) => isCompactNotehead(path, staffGap) && isBeam(path, staffGap),
       ),
     );
     const noteheads: NoteheadCandidate[] = systemPaths
-      .filter((path) => !ambiguousPaths.has(path) && isCompactNotehead(path, staffGap))
+      .filter((path) => !ambiguousPaths.has(path) && !flagPaths.has(path) && isCompactNotehead(path, staffGap))
       .map((path) => ({ path, kind: getNoteheadKind(path) }))
       .filter((candidate): candidate is NoteheadCandidate => candidate.kind !== null);
 
@@ -629,6 +749,7 @@ export function recognizeRhythmGlyphs(
         staffGap,
         warnings,
         ambiguousPaths,
+        flagPaths,
       );
       if (glyph) {
         noteGlyphs.push(glyph);
@@ -654,6 +775,21 @@ export function recognizeRhythmGlyphs(
     const classifiedGlyphs = [...restGlyphs, ...noteGlyphs];
 
     const usedPaths = new Set(classifiedGlyphs.flatMap((glyph) => glyph.paths));
+    classifiedGlyphs.forEach((glyph) => {
+      const hasUnknownAttachedPath = systemPaths.some((path) => (
+        !usedPaths.has(path) &&
+        !dotPaths.includes(path) &&
+        !unresolvedAmbiguousPaths.has(path) &&
+        (isFilled(path) || path.commands.some((command) => command.type === 'curve')) &&
+        boundsTouch(path.bounds, glyph.bounds, STEM_CONTACT_TOLERANCE_GAPS * staffGap)
+      ));
+      if (hasUnknownAttachedPath) {
+        glyph.event.confidence = 'medium';
+        warnings.push(
+          `第 ${system.page} 页第 ${systemIndex + 1} 个系统存在未识别附着路径，受影响事件已降级。`,
+        );
+      }
+    });
     const dotMatches = new Map<PdfVectorPath, ClassifiedGlyph[]>();
     dotPaths.forEach((dotPath) => {
       dotMatches.set(
