@@ -609,35 +609,17 @@ export function recognizeRhythmGlyphs(
 
     const systemPaths = paths.filter((path) => isInsideSystemBand(path, system, staffGap));
     const dotPaths = systemPaths.filter((path) => isDot(path, staffGap));
-    const restGlyphs = systemPaths
-      .filter((path) => !dotPaths.includes(path))
-      .map((path) => classifyRest(path, system, systemIndex, staffGap))
-      .filter((glyph): glyph is ClassifiedGlyph => glyph !== null);
-    const restPaths = new Set(restGlyphs.flatMap((glyph) => glyph.paths));
     const ambiguousPaths = new Set(
       systemPaths.filter(
-        (path) =>
-          !restPaths.has(path) &&
-          isCompactNotehead(path, staffGap) &&
-          isBeam(path, staffGap),
+        (path) => isCompactNotehead(path, staffGap) && isBeam(path, staffGap),
       ),
     );
-    if (ambiguousPaths.size > 0) {
-      warnings.push(
-        `第 ${system.page} 页第 ${systemIndex + 1} 个系统存在同时符合符头与符梁规则的歧义路径，已跳过该路径。`,
-      );
-    }
     const noteheads: NoteheadCandidate[] = systemPaths
-      .filter(
-        (path) =>
-          !restPaths.has(path) &&
-          !ambiguousPaths.has(path) &&
-          isCompactNotehead(path, staffGap),
-      )
+      .filter((path) => !ambiguousPaths.has(path) && isCompactNotehead(path, staffGap))
       .map((path) => ({ path, kind: getNoteheadKind(path) }))
       .filter((candidate): candidate is NoteheadCandidate => candidate.kind !== null);
 
-    const classifiedGlyphs = [...restGlyphs];
+    const noteGlyphs: ClassifiedGlyph[] = [];
     noteheads.forEach((notehead) => {
       const glyph = classifyNotehead(
         notehead,
@@ -649,21 +631,57 @@ export function recognizeRhythmGlyphs(
         ambiguousPaths,
       );
       if (glyph) {
-        classifiedGlyphs.push(glyph);
+        noteGlyphs.push(glyph);
       }
     });
 
+    const consumedNotePaths = new Set(noteGlyphs.flatMap((glyph) => glyph.paths));
+    const restGlyphs = systemPaths
+      .filter((path) => !dotPaths.includes(path) && !consumedNotePaths.has(path))
+      .map((path) => classifyRest(path, system, systemIndex, staffGap))
+      .filter((glyph): glyph is ClassifiedGlyph => glyph !== null);
+    const restPaths = new Set(restGlyphs.flatMap((glyph) => glyph.paths));
+    const unresolvedAmbiguousPaths = new Set(
+      [...ambiguousPaths].filter(
+        (path) => !consumedNotePaths.has(path) && !restPaths.has(path),
+      ),
+    );
+    if (unresolvedAmbiguousPaths.size > 0) {
+      warnings.push(
+        `第 ${system.page} 页第 ${systemIndex + 1} 个系统存在同时符合符头与符梁规则的歧义路径，已跳过该路径。`,
+      );
+    }
+    const classifiedGlyphs = [...restGlyphs, ...noteGlyphs];
+
     const usedPaths = new Set(classifiedGlyphs.flatMap((glyph) => glyph.paths));
+    const dotMatches = new Map<PdfVectorPath, ClassifiedGlyph[]>();
+    dotPaths.forEach((dotPath) => {
+      dotMatches.set(
+        dotPath,
+        classifiedGlyphs.filter(
+          (glyph) =>
+            !glyph.paths.includes(dotPath) &&
+            isImmediatelyRightOf(dotPath.bounds, glyph.bounds, staffGap),
+        ),
+      );
+    });
+    const ambiguousDots = new Set(
+      dotPaths.filter((dotPath) => (dotMatches.get(dotPath)?.length ?? 0) > 1),
+    );
+    if (ambiguousDots.size > 0) {
+      warnings.push(
+        `第 ${system.page} 页第 ${systemIndex + 1} 个系统存在附点归属不唯一，受影响事件已降级。`,
+      );
+    }
+
     const matchedDots = new Set<PdfVectorPath>();
     classifiedGlyphs.forEach((glyph) => {
       const matches = dotPaths.filter(
-        (dotPath) =>
-          !glyph.paths.includes(dotPath) &&
-          isImmediatelyRightOf(dotPath.bounds, glyph.bounds, staffGap),
+        (dotPath) => dotMatches.get(dotPath)?.includes(glyph),
       );
-      matches.forEach((dotPath) => matchedDots.add(dotPath));
 
-      if (matches.length === 1) {
+      if (matches.length === 1 && !ambiguousDots.has(matches[0])) {
+        matchedDots.add(matches[0]);
         glyphs.push({
           ...glyph.event,
           dots: 1,
@@ -671,10 +689,12 @@ export function recognizeRhythmGlyphs(
         });
         return;
       }
-      if (matches.length > 1) {
-        warnings.push(
-          `第 ${system.page} 页第 ${systemIndex + 1} 个系统存在两个附点或以上匹配，事件已降级。`,
-        );
+      if (matches.length > 1 || matches.some((dotPath) => ambiguousDots.has(dotPath))) {
+        if (matches.length > 1) {
+          warnings.push(
+            `第 ${system.page} 页第 ${systemIndex + 1} 个系统存在两个附点或以上匹配，事件已降级。`,
+          );
+        }
         glyphs.push({ ...glyph.event, confidence: 'medium' });
         return;
       }
@@ -682,7 +702,9 @@ export function recognizeRhythmGlyphs(
     });
 
     dotPaths
-      .filter((dotPath) => !matchedDots.has(dotPath))
+      .filter(
+        (dotPath) => !matchedDots.has(dotPath) && (dotMatches.get(dotPath)?.length ?? 0) === 0,
+      )
       .forEach(() => {
         warnings.push(`第 ${system.page} 页第 ${systemIndex + 1} 个系统存在孤立附点，未生成节奏事件。`);
       });
@@ -691,7 +713,7 @@ export function recognizeRhythmGlyphs(
         (path) =>
           !usedPaths.has(path) &&
           !dotPaths.includes(path) &&
-          !ambiguousPaths.has(path) &&
+          !unresolvedAmbiguousPaths.has(path) &&
           isPotentialRestOrDot(path, staffGap),
       )
       .forEach(() => {

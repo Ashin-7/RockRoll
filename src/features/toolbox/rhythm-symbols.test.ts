@@ -181,6 +181,32 @@ describe('recognizeRhythmGlyphs', () => {
   });
 
   it.each([
+    ['eighth', [closedPath('fill', 60, 50, 70, 53)], ['beam-1']],
+    [
+      '16th',
+      [closedPath('fill', 60, 50, 70, 53), closedPath('fill', 60, 44, 70, 47)],
+      ['beam-1', 'beam-2'],
+    ],
+  ] as const)(
+    'keeps a staff-line-attached rectangular beam in a legal %s note structure',
+    (duration, beams, beamSymbols) => {
+      const result = recognize([notehead('fill'), stem(), ...beams]);
+
+      expect(result.glyphs).toEqual([
+        expect.objectContaining({
+          duration,
+          dots: 0,
+          isRest: false,
+          confidence: 'high',
+          sourceSymbols: ['filled-notehead', 'stem', ...beamSymbols],
+        }),
+      ]);
+      expect(result.glyphs).not.toContainEqual(expect.objectContaining({ isRest: true }));
+      expect(result.glyphs).not.toContainEqual(expect.objectContaining({ duration: 'quarter' }));
+    },
+  );
+
+  it.each([
     ['whole', wholeRest(), ['whole-rest']],
     ['half', halfRest(), ['half-rest']],
     ['quarter', quarterRest(), ['quarter-rest']],
@@ -235,6 +261,30 @@ describe('recognizeRhythmGlyphs', () => {
       }),
     );
     expect(result.warnings).toContainEqual(expect.stringContaining('两个附点'));
+  });
+
+  it('downgrades every affected event when one dot matches multiple events', () => {
+    const result = recognize([wholeRest(50, 60), wholeRest(52, 60), dot(62, 51)]);
+
+    expect(result.glyphs).toHaveLength(2);
+    expect(result.glyphs.every((glyph) => glyph.confidence === 'medium' && glyph.dots === 0)).toBe(
+      true,
+    );
+    expect(result.glyphs).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          duration: 'whole',
+          dots: 0,
+          isRest: true,
+          confidence: 'medium',
+          sourceSymbols: ['whole-rest'],
+        }),
+      ]),
+    );
+    expect(result.glyphs).not.toContainEqual(
+      expect.objectContaining({ dots: 1, sourceSymbols: expect.arrayContaining(['dot']) }),
+    );
+    expect(result.warnings).toContainEqual(expect.stringContaining('附点归属不唯一'));
   });
 
   it('diagnoses an isolated dot without producing a glyph', () => {
