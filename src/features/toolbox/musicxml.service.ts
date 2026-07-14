@@ -62,7 +62,7 @@ function createFretEventXml(event: RecognizedRhythmEvent, fretEvent: TabFretEven
   const duration = getEventDuration(event);
 
   return fretEvent.positions.map((position, index) => `
-      <note>${index === 0 ? '' : '<chord/>'}${createPitchXml(position)}<duration>${duration}</duration><type>${event.duration}</type>${event.dots === 1 ? '<dot/>' : ''}<notations><technical><string>${position.stringNumber}</string><fret>${position.fret}</fret></technical></notations></note>`).join('');
+      <note>${index === 0 ? '' : '<chord/>'}${createPitchXml(position)}<duration>${duration}</duration><type>${event.duration}</type>${event.dots === 1 ? '<dot/>' : ''}<notations><technical><string>${7 - position.stringNumber}</string><fret>${position.fret}</fret></technical></notations></note>`).join('');
 }
 
 function getFallbackDuration(analysis: TabScoreAnalysis): number {

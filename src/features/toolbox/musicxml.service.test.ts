@@ -100,7 +100,7 @@ describe('createMusicXml', () => {
     expect(xml).toContain('Some measures require fallback export.');
   });
 
-  it('exports recognized notes, chord positions, pitch, technical data, and explicit rests', () => {
+  it('exports recognized notes with internal pitches and standard MusicXML string numbers', () => {
     const document = new DOMParser().parseFromString(createMusicXml(analysis), 'application/xml');
     const measure = document.querySelector('measure[number="1"]')!;
     const notes = measure.querySelectorAll(':scope > note');
@@ -111,21 +111,21 @@ describe('createMusicXml', () => {
     expect(notes[0].querySelector('duration')?.textContent).toBe('6');
     expect(notes[0].querySelector('type')?.textContent).toBe('eighth');
     expect(notes[0].querySelector('dot')).not.toBeNull();
-    expect(notes[0].querySelector('technical > string')?.textContent).toBe('1');
+    expect(notes[0].querySelector('technical > string')?.textContent).toBe('6');
     expect(notes[0].querySelector('technical > fret')?.textContent).toBe('1');
 
     expect(notes[1].querySelector('chord')).not.toBeNull();
     expect(notes[1].querySelector('pitch > step')?.textContent).toBe('B');
     expect(notes[1].querySelector('pitch > octave')?.textContent).toBe('2');
     expect(notes[1].querySelector('duration')?.textContent).toBe('6');
-    expect(notes[1].querySelector('technical > string')?.textContent).toBe('2');
+    expect(notes[1].querySelector('technical > string')?.textContent).toBe('5');
     expect(notes[1].querySelector('technical > fret')?.textContent).toBe('2');
 
     expect(notes[2].querySelector('chord')).not.toBeNull();
     expect(notes[2].querySelector('pitch > step')?.textContent).toBe('F');
     expect(notes[2].querySelector('pitch > alter')?.textContent).toBe('1');
     expect(notes[2].querySelector('pitch > octave')?.textContent).toBe('4');
-    expect(notes[2].querySelector('technical > string')?.textContent).toBe('6');
+    expect(notes[2].querySelector('technical > string')?.textContent).toBe('1');
 
     expect(notes[3].querySelector('rest:not([measure])')).not.toBeNull();
     expect(notes[3].querySelector('duration')?.textContent).toBe('2');
