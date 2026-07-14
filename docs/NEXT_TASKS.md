@@ -268,3 +268,24 @@ npm run build
 4. 用 `C:\Users\Ashin\Downloads\endless rain.pdf` 做只读验证，不复制进仓库、不上传。
 
 本轮不要进入品位/节奏几何识别；先保证真实 PDF 快照和合法 MusicXML 骨架纵向链路可用。
+
+## Toolbox 显式节奏识别完成后的下一步
+
+已完成：
+1. 基于标准谱表矢量符号识别全音符、二分音符、四分音符、八分音符、十六分音符及对应休止符。
+2. 支持上述音符和休止符的单附点；不通过 TAB 横向间距猜测节奏。
+3. 节奏缺失、冲突、歧义、时值不闭合或无法完整映射时，整小节导出为等长全小节休止占位。
+4. Node.js `v20.20.2` 下 Toolbox 10 个测试文件、119 个用例通过；生产构建通过，只有既有 chunk size 警告；scoped `git diff --check` 通过。
+
+后续只在用户明确授权并提供本地样例时做真实 PDF 只读验证；不得复制、上传或提交 PDF。本轮未读取真实 PDF、未修改 Supabase、未生成 `.gp`。
+
+仍不支持：
+- tuplets / 连音；
+- ties / 连结线；
+- techniques / 演奏技巧；
+- scans / 扫描件；
+- playback / 回放；
+- manual editing / 手动编辑；
+- `.gp` 直接生成。
+
+轻微待办：英文单数摘要 `1 measures checked` 的 grammar minor，可在后续文案整理时改为单数，不阻塞 Toolbox MVP。

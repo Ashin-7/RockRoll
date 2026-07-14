@@ -445,3 +445,17 @@ P0 / P1 的本地代码与自动化测试项已完成。不要重新做权限 UI
 - 尚未修改 `package.json` / lockfile，尚未安装 PDF.js，尚未生成 MusicXML。
 - 下一轮只读取：`AGENTS.md`、三个状态文档、上述设计/计划、`src/features/toolbox`、`src/app/routes.tsx`、`src/app/shell/AppShell.tsx`、`src/App.tsx`、`src/i18n/messages.ts`、`package.json`。
 - 下一步从计划 Task 3 开始：安装锁定的 `pdfjs-dist@4.10.38`，先写失败测试，再实现动态 PDF 快照适配器。
+
+## 追加交接：Toolbox 显式节奏符号识别与安全回退
+
+- 已完成基于标准谱表矢量图形的显式节奏符号识别；节奏来自音符头、符干、符尾/符杠、休止符和附点，不使用 TAB 事件横向间距推断时值。
+- 音符与休止符均支持五种基础时值：全音符、二分音符、四分音符、八分音符、十六分音符；每个事件最多支持一个附点。
+- 小节只有在符号可唯一配对、TAB 事件可完整映射且总时值与拍号一致时标为 recognized；任何缺失、冲突、歧义或不闭合都会让整小节 fallback。
+- fallback 不输出部分识别结果，而是按当前拍号写入等长全小节休止占位，并在 MusicXML 警告摘要中列出对应小节。
+- Node.js `v20.20.2` 验证命令与结果：`npm test -- --run src/features/toolbox`，10 个测试文件、119 个用例全部通过；`npm run build`，TypeScript 与 Vite production build 通过，保留既有 `index` chunk 超过 500 kB 的提示；brief 指定的 scoped `git diff --check` 通过。
+- 本轮未读取、复制、上传或提交任何真实 PDF；没有访问本地 `endless rain.pdf`。未修改 Supabase，未生成 `.gp` 文件。
+- 仍不支持 tuplets、ties、techniques、scans、playback、manual editing 和 `.gp` 直接生成；这些能力不得被当前 MusicXML 输出状态暗示为已支持。
+- 已知非阻塞问题：英文单数节奏摘要显示 `1 measures checked`，属于 grammar minor，不影响功能。
+- 后续如需真实样例验证，必须先由用户明确授权，仅在本地只读处理，不复制到仓库、不上传。
+
+建议同步到原工作区时，优先保留本段标题“Toolbox 显式节奏符号识别与安全回退”及以上能力边界、验证数字和隐私声明；原工作区三个状态文档如更新更晚，只追加本段，不覆盖较新内容。

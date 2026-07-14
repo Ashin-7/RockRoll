@@ -788,3 +788,24 @@ $env:HOME=(Resolve-Path .\.tmp).Path; $env:USERPROFILE=(Resolve-Path .\.tmp).Pat
 - 新增并锁定 `pdfjs-dist@4.10.38`，动态读取本地 PDF 为规范化快照。
 - 实现安全 MusicXML 骨架与页面下载流程。
 - 使用本地 `endless rain.pdf` 验证 4 页、92 BPM、小节 1-18；原始 PDF 不进入仓库。
+
+## 追加完成：Toolbox 显式节奏符号识别与安全导出
+
+完成范围：
+- 已基于标准谱表矢量图形识别显式节奏符号，不使用 TAB 音符横向间距推断时值。
+- 音符与休止符均支持全音符、二分音符、四分音符、八分音符、十六分音符，以及最多一个附点。
+- 只有整小节节奏完整、符号可唯一配对且总时值与拍号一致时才输出识别结果；缺失、冲突、歧义或无法完整映射时，整小节回退为等长的全小节休止占位，不混入部分识别音符。
+- MusicXML 导出保留已确认的节奏和 TAB 位置；回退小节会进入警告摘要。
+- 当前仍不支持连音、连结线、演奏技巧、扫描件、回放、手动编辑与 `.gp` 直接生成。
+- 本轮未读取、复制、上传或提交任何真实 PDF；未修改 Supabase，也未生成 `.gp` 文件。
+
+验证（Node.js `v20.20.2`）：
+```powershell
+npm test -- --run src/features/toolbox
+npm run build
+git diff --check -- src/features/toolbox src/i18n/messages.ts docs/PROJECT_STATUS.md docs/NEXT_TASKS.md docs/SESSION_HANDOFF.md
+```
+
+结果：Toolbox 10 个测试文件、119 个用例通过；TypeScript build 与 Vite production build 通过。Vite 仍提示既有 `index` chunk 超过 500 kB；`git diff --check` 通过。
+
+已知轻微问题：英文单数摘要仍显示 `1 measures checked`，属于 grammar minor，不影响识别或导出。
