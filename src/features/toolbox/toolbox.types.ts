@@ -81,6 +81,15 @@ export interface TabStaffSystem {
   confidence: 'high' | 'medium';
 }
 
+export interface PairedStaffSystem {
+  page: number;
+  x1: number;
+  x2: number;
+  standardLineYs: [number, number, number, number, number];
+  tabSystem: TabStaffSystem;
+  confidence: 'high' | 'medium';
+}
+
 export interface TabScoreAnalysis {
   fileName: string;
   pageCount: number;
