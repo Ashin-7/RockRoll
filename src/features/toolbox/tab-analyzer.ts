@@ -110,7 +110,7 @@ export function analyzeTabScore(snapshot: PdfDocumentSnapshot): TabScoreAnalysis
   warnings.push(...fretEvents.warnings);
   warnings.push(...rhythmGlyphs.warnings);
   warnings.push('Note recognition is not available yet; exported measures will contain rests.');
-  if (geometry.positions.length > 0 && rhythmMeasures.length === 0) {
+  if (rhythmMeasures.length === 0) {
     warnings.push('Rhythm and technique recognition are not available yet.');
   }
   if (pairedSystems.length === 0) {

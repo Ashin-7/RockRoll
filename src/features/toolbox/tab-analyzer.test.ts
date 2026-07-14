@@ -82,6 +82,7 @@ describe('analyzeTabScore', () => {
       warnings: [
         'Time signature was not detected; 4/4 will be used.',
         'Note recognition is not available yet; exported measures will contain rests.',
+        'Rhythm and technique recognition are not available yet.',
         'No reliable paired staff was detected; exported measures will use the safe rest skeleton.',
       ],
     });
