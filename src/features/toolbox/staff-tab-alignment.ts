@@ -186,15 +186,20 @@ function findFiveLineSystems(lineSegments: PdfLineSegment[]): StandardStaffSyste
   return systems;
 }
 
-function pairWithUniqueTabSystem(
+interface PairingCandidate {
+  standard: StandardStaffSystem,
+  tabSystem: TabStaffSystem;
+  verticalGap: number;
+}
+
+function findNearestTabCandidate(
   standard: StandardStaffSystem,
   tabSystems: TabStaffSystem[],
-): PairedStaffSystem[] {
-  const standardBottom = standard.lineYs[4];
+): PairingCandidate | null {
   const eligibleTabs = tabSystems
     .map((tabSystem) => ({
       tabSystem,
-      verticalGap: tabSystem.stringYs[0] - standardBottom,
+      verticalGap: standard.lineYs[0] - tabSystem.stringYs[5],
     }))
     .filter(({ tabSystem, verticalGap }) => {
       const maximumVerticalGap =
@@ -209,20 +214,22 @@ function pairWithUniqueTabSystem(
     .sort((left, right) => left.verticalGap - right.verticalGap);
 
   if (eligibleTabs.length === 0 || eligibleTabs[1]?.verticalGap === eligibleTabs[0].verticalGap) {
-    return [];
+    return null;
   }
 
-  const tabSystem = eligibleTabs[0].tabSystem;
-  return [
-    {
-      page: standard.page,
-      x1: standard.x1,
-      x2: standard.x2,
-      standardLineYs: standard.lineYs,
-      tabSystem,
-      confidence: standard.confidence === 'high' && tabSystem.confidence === 'high' ? 'high' : 'medium',
-    },
-  ];
+  return { standard, ...eligibleTabs[0] };
+}
+
+function createPairedSystem(candidate: PairingCandidate): PairedStaffSystem {
+  const { standard, tabSystem } = candidate;
+  return {
+    page: standard.page,
+    x1: standard.x1,
+    x2: standard.x2,
+    standardLineYs: standard.lineYs,
+    tabSystem,
+    confidence: standard.confidence === 'high' && tabSystem.confidence === 'high' ? 'high' : 'medium',
+  };
 }
 
 export function findPairedStaffSystems(
@@ -230,5 +237,29 @@ export function findPairedStaffSystems(
   tabSystems: TabStaffSystem[],
 ): PairedStaffSystem[] {
   const standardSystems = findFiveLineSystems(lineSegments);
-  return standardSystems.flatMap((standard) => pairWithUniqueTabSystem(standard, tabSystems));
+  const candidates = standardSystems
+    .map((standard) => findNearestTabCandidate(standard, tabSystems))
+    .filter((candidate): candidate is PairingCandidate => candidate !== null);
+  const candidatesByTab = new Map<TabStaffSystem, PairingCandidate[]>();
+  candidates.forEach((candidate) => {
+    const competing = candidatesByTab.get(candidate.tabSystem) ?? [];
+    competing.push(candidate);
+    candidatesByTab.set(candidate.tabSystem, competing);
+  });
+
+  return [...candidatesByTab.values()].flatMap((competing) => {
+    const ordered = competing.sort((left, right) => left.verticalGap - right.verticalGap);
+    if (ordered.length === 1) {
+      return [createPairedSystem(ordered[0])];
+    }
+
+    const ambiguityThreshold = Math.max(
+      ordered[0].standard.averageLineGap,
+      ordered[1].standard.averageLineGap,
+      ordered[0].tabSystem.averageStringGap,
+    );
+    return ordered[1].verticalGap - ordered[0].verticalGap > ambiguityThreshold
+      ? [createPairedSystem(ordered[0])]
+      : [];
+  });
 }

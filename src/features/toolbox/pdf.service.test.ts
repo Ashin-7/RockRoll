@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readPdfSnapshot, type PdfJsLoader } from './pdf.service';
+import { findPairedStaffSystems } from './staff-tab-alignment';
+import { findTabStaffSystems } from './tab-staff-geometry';
 
 const file = {
   name: 'endless rain.pdf',
@@ -89,6 +91,37 @@ describe('readPdfSnapshot', () => {
     await expect(readPdfSnapshot(file, loader)).resolves.toMatchObject({
       lineSegments: [{ page: 1, x1: 20, y1: 32, x2: 50, y2: 32 }],
     });
+  });
+
+  it('preserves PDF.js bottom-to-top coordinates through staff and TAB pairing', async () => {
+    const ys = [160, 165, 170, 175, 180, 80, 90, 100, 110, 120, 130];
+    const loader: PdfJsLoader = async () => ({
+      OPS: { constructPath: 10, lineTo: 2, moveTo: 1 },
+      getDocument: () => ({
+        promise: Promise.resolve({
+          numPages: 1,
+          destroy: () => undefined,
+          getPage: async () => ({
+            getAnnotations: async () => [],
+            getOperatorList: async () => ({
+              fnArray: ys.map(() => 10),
+              argsArray: ys.map((y) => [[1, 2], [50, y, 250, y]]),
+            }),
+            getTextContent: async () => ({ items: [] }),
+          }),
+        }),
+      }),
+    });
+
+    const snapshot = await readPdfSnapshot(file, loader);
+    const tabSystems = findTabStaffSystems(snapshot.lineSegments ?? []);
+
+    expect(findPairedStaffSystems(snapshot.lineSegments ?? [], tabSystems)).toEqual([
+      expect.objectContaining({
+        standardLineYs: [160, 165, 170, 175, 180],
+        tabSystem: expect.objectContaining({ stringYs: [80, 90, 100, 110, 120, 130] }),
+      }),
+    ]);
   });
 
   it('preserves transformed filled vector paths until their paint operator', async () => {
