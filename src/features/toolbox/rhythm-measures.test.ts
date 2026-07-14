@@ -200,6 +200,80 @@ describe('buildMeasureRhythmResults', () => {
     );
   });
 
+  it('uses the median adjacent column gap for irregular TAB spacing', () => {
+    const tabEvents = [40, 50, 60, 160].map((x, index) => tabEvent(3, index + 1, x));
+    const result = build(
+      [glyph(40), glyph(50), glyph(72), glyph(160)],
+      tabEvents,
+    );
+
+    expect(result[0]).toEqual(
+      expect.objectContaining({
+        status: 'fallback',
+        warning: expect.any(String),
+      }),
+    );
+    expect(result[0].events).not.toContainEqual(
+      expect.objectContaining({ tabEventOrder: 3 }),
+    );
+  });
+
+  it.each([
+    ['accepts', 180, 'recognized'],
+    ['rejects', 180.01, 'fallback'],
+  ] as const)('%s a glyph at the half-median-gap tolerance boundary', (_name, x, status) => {
+    const tabEvents = [40, 80, 120, 160].map((eventX, index) =>
+      tabEvent(3, index + 1, eventX),
+    );
+    const result = build(
+      [glyph(40), glyph(80), glyph(120), glyph(x)],
+      tabEvents,
+    );
+
+    expect(result[0]).toEqual(expect.objectContaining({ status }));
+    if (status === 'recognized') {
+      expect(result[0].events).toContainEqual(expect.objectContaining({ tabEventOrder: 4 }));
+    } else {
+      expect(result[0].events).not.toContainEqual(expect.objectContaining({ tabEventOrder: 4 }));
+    }
+  });
+
+  it('falls back the measure when two glyphs compete for one TAB event', () => {
+    const result = build(
+      [
+        glyph(99, { duration: 'half' }),
+        glyph(101, { duration: 'half' }),
+      ],
+      [tabEvent(3, 1, 100)],
+    );
+
+    expect(result[0]).toEqual(
+      expect.objectContaining({
+        measureNumber: 3,
+        status: 'fallback',
+        events: [],
+        warning: expect.any(String),
+      }),
+    );
+    expect(result[0].warning).not.toHaveLength(0);
+  });
+
+  it('excludes a vertically valid TAB event outside the paired system x-range', () => {
+    const outsideEvent = tabEvent(3, 1, 221, [position(3, 221, 1, 110)]);
+    const result = build(
+      [glyph(219, { duration: 'whole' })],
+      [outsideEvent],
+    );
+
+    expect(result[0]).toEqual(
+      expect.objectContaining({
+        status: 'fallback',
+        events: [],
+        warning: expect.any(String),
+      }),
+    );
+  });
+
   it('does not pair TAB events from another staff system on the same page', () => {
     const secondSystem = pairedSystem({
       x1: 250,
