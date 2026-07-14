@@ -90,6 +90,24 @@ export interface PairedStaffSystem {
   confidence: 'high' | 'medium';
 }
 
+export type RhythmDuration = 'whole' | 'half' | 'quarter' | 'eighth' | '16th';
+
+export interface RhythmGlyphEvent {
+  page: number;
+  systemIndex: number;
+  x: number;
+  duration: RhythmDuration;
+  dots: 0 | 1;
+  isRest: boolean;
+  confidence: 'high' | 'medium';
+  sourceSymbols: string[];
+}
+
+export interface RhythmGlyphResult {
+  glyphs: RhythmGlyphEvent[];
+  warnings: string[];
+}
+
 export interface TabScoreAnalysis {
   fileName: string;
   pageCount: number;
