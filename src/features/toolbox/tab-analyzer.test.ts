@@ -1,9 +1,34 @@
 import { describe, expect, it } from 'vitest';
 import { analyzeTabScore, validatePdfFile } from './tab-analyzer';
-import { PdfDocumentSnapshot, PdfTextItem } from './toolbox.types';
+import { PdfDocumentSnapshot, PdfTextItem, PdfVectorPath } from './toolbox.types';
 
 function textItem(text: string, page: number, x: number, y: number, fontSize: number): PdfTextItem {
   return { text, page, x, y, width: text.length * fontSize, height: fontSize, fontSize };
+}
+
+function horizontalLine(y: number) {
+  return { page: 1, x1: 20, y1: y, x2: 220, y2: y };
+}
+
+function closedPath(
+  paint: PdfVectorPath['paint'],
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+): PdfVectorPath {
+  return {
+    page: 1,
+    paint,
+    bounds: { x1, y1, x2, y2 },
+    commands: [
+      { type: 'move', x: x1, y: y1 },
+      { type: 'line', x: x2, y: y1 },
+      { type: 'line', x: x2, y: y2 },
+      { type: 'line', x: x1, y: y2 },
+      { type: 'close' },
+    ],
+  };
 }
 
 describe('validatePdfFile', () => {
@@ -53,9 +78,11 @@ describe('analyzeTabScore', () => {
       tabStaffSystems: [],
       fretPositions: [],
       fretEvents: [],
+      rhythmMeasures: [],
       warnings: [
         'Time signature was not detected; 4/4 will be used.',
         'Note recognition is not available yet; exported measures will contain rests.',
+        'No reliable paired staff was detected; exported measures will use the safe rest skeleton.',
       ],
     });
   });
@@ -129,6 +156,77 @@ describe('analyzeTabScore', () => {
     }));
     expect(analysis.fretEvents).toHaveLength(2);
     expect(analysis.tabStaffSystems).toHaveLength(1);
+    expect(analysis.warnings).toContain('Rhythm and technique recognition are not available yet.');
+    expect(analysis.warnings).toContain(
+      'No reliable paired staff was detected; exported measures will use the safe rest skeleton.',
+    );
+    expect(analysis.rhythmMeasures).toEqual([]);
+  });
+
+  it('recognizes complete measures and falls back for missing or conflicting rhythm symbols', () => {
+    const snapshot: PdfDocumentSnapshot = {
+      fileName: 'explicit-rhythm.pdf',
+      pageCount: 1,
+      textItems: [
+        textItem('Explicit rhythm', 1, 20, 20, 20),
+        textItem('1', 1, 30, 25, 8),
+        textItem('2', 1, 150, 25, 8),
+        textItem('3', 1, 60, 110, 10),
+        textItem('5', 1, 180, 110, 10),
+      ],
+      vectorDrawingCount: 20,
+      imageCount: 0,
+      lineSegments: [
+        ...[40, 50, 60, 70, 80].map(horizontalLine),
+        ...[110, 120, 130, 140, 150, 160].map(horizontalLine),
+      ],
+      vectorPaths: [
+        closedPath('stroke', 55, 55, 65, 63),
+        closedPath('fill', 175, 55, 185, 63),
+      ],
+      timeSignature: { beats: 4, beatType: 4 },
+    };
+
+    const analysis = analyzeTabScore(snapshot);
+
+    expect(analysis.rhythmMeasures).toEqual([
+      expect.objectContaining({ measureNumber: 1, status: 'recognized' }),
+      expect.objectContaining({ measureNumber: 2, status: 'fallback' }),
+    ]);
+    expect(analysis.warnings).toContain(
+      'Measure 2 rhythm could not be confirmed; safe export fallback will be used.',
+    );
+    expect(analysis.warnings).not.toContain('Rhythm and technique recognition are not available yet.');
+    expect(analysis.warnings).not.toContain(
+      'No reliable paired staff was detected; exported measures will use the safe rest skeleton.',
+    );
+  });
+
+  it('keeps safe skeleton semantics when vector paths are unavailable', () => {
+    const snapshot: PdfDocumentSnapshot = {
+      fileName: 'no-vector-paths.pdf',
+      pageCount: 1,
+      textItems: [
+        textItem('No paths', 1, 20, 20, 20),
+        textItem('1', 1, 30, 25, 8),
+        textItem('2', 1, 150, 25, 8),
+        textItem('3', 1, 60, 110, 10),
+        textItem('5', 1, 180, 110, 10),
+      ],
+      vectorDrawingCount: 20,
+      imageCount: 0,
+      lineSegments: [
+        ...[40, 50, 60, 70, 80].map(horizontalLine),
+        ...[110, 120, 130, 140, 150, 160].map(horizontalLine),
+      ],
+    };
+
+    const analysis = analyzeTabScore(snapshot);
+
+    expect(analysis.rhythmMeasures).toEqual([]);
+    expect(analysis.warnings).toContain(
+      'Rhythm vector paths were unavailable; exported measures will use the safe rest skeleton.',
+    );
     expect(analysis.warnings).toContain('Rhythm and technique recognition are not available yet.');
   });
 });

@@ -1,5 +1,8 @@
 import { locateTabFrets } from './tab-geometry';
 import { groupTabFretEvents } from './tab-events';
+import { buildMeasureRhythmResults } from './rhythm-measures';
+import { recognizeRhythmGlyphs } from './rhythm-symbols';
+import { findPairedStaffSystems } from './staff-tab-alignment';
 import { findTabStaffSystems } from './tab-staff-geometry';
 import { PdfDocumentSnapshot, PdfTextItem, TabScoreAnalysis } from './toolbox.types';
 
@@ -82,6 +85,19 @@ export function analyzeTabScore(snapshot: PdfDocumentSnapshot): TabScoreAnalysis
   const tabStaffSystems = findTabStaffSystems(snapshot.lineSegments ?? []);
   const geometry = locateTabFrets(snapshot.textItems, measureNumbers, tabStaffSystems);
   const fretEvents = groupTabFretEvents(geometry.positions);
+  const pairedSystems = findPairedStaffSystems(snapshot.lineSegments ?? [], tabStaffSystems)
+    .filter((system) => system.confidence === 'high');
+  const rhythmGlyphs = recognizeRhythmGlyphs(snapshot.vectorPaths ?? [], pairedSystems);
+  const rhythmMeasures = snapshot.vectorPaths && pairedSystems.length > 0
+    ? buildMeasureRhythmResults({
+        glyphs: rhythmGlyphs.glyphs,
+        tabEvents: fretEvents.events,
+        pairedSystems,
+        measureNumbers,
+        beats: timeSignature.beats,
+        beatType: timeSignature.beatType,
+      })
+    : [];
   const warnings: string[] = [];
 
   if (!snapshot.timeSignature) {
@@ -92,10 +108,23 @@ export function analyzeTabScore(snapshot: PdfDocumentSnapshot): TabScoreAnalysis
   }
   warnings.push(...geometry.warnings);
   warnings.push(...fretEvents.warnings);
+  warnings.push(...rhythmGlyphs.warnings);
   warnings.push('Note recognition is not available yet; exported measures will contain rests.');
-  if (geometry.positions.length > 0) {
+  if (geometry.positions.length > 0 && rhythmMeasures.length === 0) {
     warnings.push('Rhythm and technique recognition are not available yet.');
   }
+  if (pairedSystems.length === 0) {
+    warnings.push('No reliable paired staff was detected; exported measures will use the safe rest skeleton.');
+  } else if (!snapshot.vectorPaths) {
+    warnings.push('Rhythm vector paths were unavailable; exported measures will use the safe rest skeleton.');
+  }
+  rhythmMeasures
+    .filter((measure) => measure.status === 'fallback')
+    .forEach((measure) => {
+      warnings.push(
+        `Measure ${measure.measureNumber} rhythm could not be confirmed; safe export fallback will be used.`,
+      );
+    });
 
   return {
     fileName: snapshot.fileName,
@@ -109,6 +138,7 @@ export function analyzeTabScore(snapshot: PdfDocumentSnapshot): TabScoreAnalysis
     tabStaffSystems,
     fretPositions: geometry.positions,
     fretEvents: fretEvents.events,
+    rhythmMeasures,
     warnings,
   };
 }

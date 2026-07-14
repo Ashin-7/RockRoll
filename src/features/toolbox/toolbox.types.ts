@@ -138,5 +138,6 @@ export interface TabScoreAnalysis {
   tabStaffSystems: TabStaffSystem[];
   fretPositions: TabFretPosition[];
   fretEvents: TabFretEvent[];
+  rhythmMeasures: MeasureRhythmResult[];
   warnings: string[];
 }
