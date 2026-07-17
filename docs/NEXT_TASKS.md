@@ -654,3 +654,48 @@ npm run build
 - `src/features/inbox/inbox.service.ts`
 
 不要扫描整个仓库，不运行 `npm install`，不执行真实导入、自动回填或远端 migration；远端 apply 与角色探针必须先取得用户明确授权。
+
+## 当前任务索引（2026-07-17，Web MVP 上线计划确认后）
+
+已确认产品与权限边界：
+
+- 注册保持开放；新账号默认普通用户，管理员只允许人工授予。
+- 资料库写入、导入、提交、匹配、回填和批量处理仅管理员可见、可触发，并必须由 service 与 RLS / RPC 拒绝非管理员请求。
+- 当前只屏蔽艺人列表并暂停其开发；不顺带修改其他导航。
+- Practice、Archive、Toolbox 是后续产品主线；Archive 继续作为导入主入口，Inbox 不恢复主导航。
+
+### P0：上线前必须完成
+
+1. Auth 冒烟：注册、邮箱确认、登录、退出、找回密码；确认新账号角色为 `user`，且客户端不能把自己提升为 `admin`。
+2. 三角色权限验收：分别验证 `anon`、普通用户、管理员的页面可见性、public 读取、私有 Practice / Songs 隔离和资料库写入结果。
+3. 管理员入口验收：非管理员看不到资料库新增、编辑、删除、导入、Review plan、Commit、Match existing、回填及批处理入口；直接调用对应 service / Data API 仍被拒绝并显示不泄露内部信息的权限提示。
+4. 数据与环境预检：确认生产 schema / migration 与待部署代码一致，核对 Supabase Auth 站点地址和重定向 URL，确认前端只使用公开客户端密钥且没有暴露 service role。
+5. 最小回归与构建：优先运行 Auth、Practice、Archive 和 Toolbox 定向测试，再执行一次生产构建；不重复真实导入。
+6. 预览环境冒烟：验证注册、登录、Practice 私有 CRUD、Archive public 读取、管理员入口可见性和非管理员越权拒绝。
+
+### 上线阶段
+
+1. **预检**：冻结本次部署范围，记录当前 commit、数据库 migration 状态、环境变量清单和回滚版本。
+2. **预览部署**：使用与生产相同的 Supabase 项目配置完成 P0 冒烟；不导入真实榜单，不修改一键导入或 `match_existing` 语义。
+3. **生产部署**：先部署前端，再检查首页、注册登录、Practice、Archive 和 Toolbox；数据库只允许执行已确认且与代码匹配的 additive migration。
+4. **观察期**：个人使用 24-72 小时，关注认证邮件、权限拒绝、浏览器错误和 Supabase 用量；没有实际滥用时保持开放注册。
+5. **回滚**：前端异常时回退到上一稳定部署；additive schema 保留，不做破坏性回滚或删除字段。
+
+### P1：上线后迭代
+
+1. 优先完善 Practice 核心闭环及其历史/统计，但保持用户数据严格隔离。
+2. Archive 仅做阅读体验和现有管理员维护流程的小步改进，不恢复 Inbox 主导航，不扩张导入语义。
+3. Toolbox 真实 PDF / Guitar Pro 8 验收仍需用户另行授权；未授权时不读取真实 PDF。
+4. 艺人列表继续屏蔽且不开发；其他模块是否屏蔽或收束需单独确认。
+5. 仅在出现垃圾注册、邮件投递或额度问题后，再评估 CAPTCHA、自定义 SMTP、速率限制或关闭注册。
+
+推荐下一轮只读取：
+
+- `AGENTS.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/NEXT_TASKS.md`
+- `docs/SESSION_HANDOFF.md`
+- `docs/PERMISSIONS.md`
+- 当前 P0 验收涉及的最小 feature / 配置文件
+
+不要扫描整个仓库，不运行 `npm install`，不重复真实导入，不恢复 Inbox 主导航，不改变一键导入或 `match_existing` 语义。开始部署、远端写入或角色探针前，先明确本轮授权范围。

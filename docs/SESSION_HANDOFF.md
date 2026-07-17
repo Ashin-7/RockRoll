@@ -1197,3 +1197,40 @@ Review plan 专辑封面、来源点评、年代与风格明细已完成，Archi
 ```
 
 建议开启新对话，并粘贴以上提示词继续。
+
+## 当前有效交接（2026-07-17，Web MVP 上线计划确认后）
+
+本轮确认：
+
+- 注册保持开放；新账号默认普通用户，不能自行升级为管理员。管理员只允许数据库侧人工授予。
+- 资料库新增、编辑、删除、导入、Review plan、Commit、Match existing、回填和批处理仅管理员可见；前端隐藏、service guard、Supabase RLS / RPC 三层必须一致。
+- public Archive 等正式资料继续按既有策略只读开放；普通用户只维护自己的 Practice 和 Songs / 曲目。
+- 当前只屏蔽艺人列表并暂停开发，不继续调整其他导航；Archive 仍是导入主入口，Inbox 不恢复主导航。
+- 首发门槛改为 Auth 冒烟、三角色权限验收、生产构建、环境与重定向配置核对和预览部署冒烟。关闭注册、CAPTCHA 与自定义 SMTP 不是首发阻塞项。
+- 本轮只修改 `docs/PROJECT_STATUS.md`、`docs/NEXT_TASKS.md`、`docs/SESSION_HANDOFF.md` 与 `docs/PERMISSIONS.md`；没有修改业务代码、Supabase 或依赖，没有执行真实导入、测试、构建、远端写入或部署。
+
+当前工作区：
+
+- 分支：`main`，跟踪 `origin/main`，当前 ahead 2。
+- 既有专辑正规化设计文档修改与 `.playwright-cli` 未跟踪文件未改动。
+
+下一轮提示词：
+
+```text
+继续 RockRoll Web MVP 上线准备。
+请只读取：
+- AGENTS.md
+- docs/PROJECT_STATUS.md
+- docs/NEXT_TASKS.md
+- docs/SESSION_HANDOFF.md
+- docs/PERMISSIONS.md
+- 当前 P0 验收涉及的最小 feature / 配置文件
+
+注册保持开放，新账号必须默认为普通用户且不能自行升级管理员。
+资料库写入、导入、提交、匹配、回填和批处理入口仅管理员可见，并由 service 与 Supabase RLS / RPC 拒绝非管理员请求。
+先执行 docs/NEXT_TASKS.md 的 P0 Auth 冒烟与三角色权限验收计划；开始远端写入、角色探针或部署前先说明具体影响范围。
+不要重复真实导入，不恢复 Inbox 主导航，不改变一键导入或 match_existing 语义，不开发艺人列表，不扫描整个仓库，不运行 npm install。
+完成后中文总结。
+```
+
+建议开启新对话，并粘贴以上提示词继续。

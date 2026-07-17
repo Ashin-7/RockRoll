@@ -1155,3 +1155,19 @@ git diff --check -- supabase/migrations src/features/archive src/features/inbox 
 ```
 
 结果：核心 4 个测试文件、66 个用例通过；Archive / Inbox / Albums 回归 12 个测试文件、125 个用例通过；Node 20 下 TypeScript 与 Vite production build 通过。Vite 保留既有主 chunk 超过 500 kB 警告；范围 diff 无空白错误，仅提示 Windows 下 LF 转 CRLF。
+
+## 追加决策：Web MVP 开放注册与上线边界
+
+- 首发继续采用 Web MVP + Supabase，不引入桌面壳、新后端、任务队列或新依赖。
+- 注册入口保持开放。新注册账号必须默认为普通 `user`，不能自行修改 `profiles.role`，管理员只能由数据库侧人工授予。
+- 开放注册不扩大资料库权限：资料库新增、编辑、删除、导入、提交、匹配、回填和批量处理入口仅管理员可见，service guard 与 Supabase RLS / RPC 必须同时拒绝非管理员调用。
+- 匿名用户和普通用户可按既有策略读取明确 public 的 Archive 等正式资料；普通用户只在 Practice 和 Songs / 曲目范围维护自己的私有数据。
+- 产品主线聚焦 Practice、Archive 和 Toolbox。当前导航变更仍仅限屏蔽艺人列表，艺人列表暂不开发；没有继续屏蔽其他模块，也没有恢复 Inbox 主导航。
+- CAPTCHA、自定义 SMTP 和关闭注册不作为首发阻塞项；邮箱确认、登录、退出和找回密码链路仍需在上线前完成冒烟验证。若实际出现垃圾注册或邮件额度问题，再启用对应防护。
+- 上线前 P0 门槛是三角色权限验收、Auth 冒烟、生产构建、部署环境变量与 Supabase 重定向配置核对，以及生产只读/私有数据隔离验证。
+- 本轮仅更新计划与权限文档，没有修改业务代码、Supabase、migration、依赖或锁文件，没有执行真实导入、测试、构建或部署。
+
+当前工作区：
+
+- 分支为 `main`，相对 `origin/main` ahead 2。
+- 既有专辑正规化设计文档修改与 `.playwright-cli` 未跟踪文件保持不动，不纳入本轮文档修改。
