@@ -3,6 +3,8 @@ import type { PdfLineSegment, TabStaffSystem } from './toolbox.types';
 const HORIZONTAL_TOLERANCE = 1;
 const HIGH_LENGTH_TOLERANCE_RATIO = 0.05;
 const MEDIUM_LENGTH_TOLERANCE_RATIO = 0.2;
+const MINIMUM_PAGE_SPAN_RATIO = 0.15;
+const MINIMUM_ROW_COVERAGE_RATIO = 0.8;
 const STRING_GAP_TOLERANCE = 1;
 
 function getLength(segment: PdfLineSegment): number {
@@ -23,10 +25,16 @@ interface VectorRow {
   x1: number;
   x2: number;
   y: number;
+  coverageRatio: number;
 }
 
 function mergeHorizontalSegments(segments: PdfLineSegment[]): VectorRow[] {
-  const rows: Array<VectorRow & { count: number }> = [];
+  const rows: Array<{
+    page: number;
+    y: number;
+    count: number;
+    intervals: Array<[number, number]>;
+  }> = [];
 
   segments
     .filter((segment) => Math.abs(segment.y2 - segment.y1) <= HORIZONTAL_TOLERANCE)
@@ -35,28 +43,60 @@ function mergeHorizontalSegments(segments: PdfLineSegment[]): VectorRow[] {
     .forEach((segment) => {
       const y = (segment.y1 + segment.y2) / 2;
       const row = rows.find((candidate) => Math.abs(candidate.y - y) <= HORIZONTAL_TOLERANCE);
+      const interval: [number, number] = [
+        Math.min(segment.x1, segment.x2),
+        Math.max(segment.x1, segment.x2),
+      ];
       if (row) {
         row.y = (row.y * row.count + y) / (row.count + 1);
         row.count += 1;
-        row.x1 = Math.min(row.x1, segment.x1, segment.x2);
-        row.x2 = Math.max(row.x2, segment.x1, segment.x2);
+        row.intervals.push(interval);
         return;
       }
 
       rows.push({
         count: 1,
         page: segment.page,
-        x1: Math.min(segment.x1, segment.x2),
-        x2: Math.max(segment.x1, segment.x2),
         y,
+        intervals: [interval],
       });
     });
 
-  return rows.map(({ count: _count, ...row }) => row);
+  return rows.map((row) => {
+    const intervals = [...row.intervals].sort((left, right) => left[0] - right[0]);
+    const mergedIntervals: Array<[number, number]> = [];
+    intervals.forEach((interval) => {
+      const previous = mergedIntervals[mergedIntervals.length - 1];
+      if (previous && interval[0] <= previous[1]) {
+        previous[1] = Math.max(previous[1], interval[1]);
+        return;
+      }
+      mergedIntervals.push([...interval]);
+    });
+
+    const x1 = intervals[0][0];
+    const x2 = Math.max(...intervals.map((interval) => interval[1]));
+    const coveredLength = mergedIntervals.reduce(
+      (total, interval) => total + interval[1] - interval[0],
+      0,
+    );
+    return {
+      page: row.page,
+      x1,
+      x2,
+      y: row.y,
+      coverageRatio: coveredLength / (x2 - x1),
+    };
+  });
 }
 
 function findPageSystems(segments: PdfLineSegment[]): TabStaffSystem[] {
-  const horizontalRows = mergeHorizontalSegments(segments);
+  const mergedRows = mergeHorizontalSegments(segments);
+  const maximumSpan = Math.max(...mergedRows.map((row) => row.x2 - row.x1));
+  const horizontalRows = mergedRows.filter((row) =>
+    row.coverageRatio >= MINIMUM_ROW_COVERAGE_RATIO &&
+    row.x2 - row.x1 >= maximumSpan * MINIMUM_PAGE_SPAN_RATIO,
+  );
   const systems: TabStaffSystem[] = [];
 
   for (let index = 0; index <= horizontalRows.length - 6; index += 1) {

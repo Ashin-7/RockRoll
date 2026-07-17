@@ -55,4 +55,30 @@ describe('findTabStaffSystems', () => {
       expect.objectContaining({ x1: 50, x2: 250, confidence: 'medium' }),
     ]);
   });
+
+  it('ignores short horizontal notation artifacts between string rows', () => {
+    const segments = [
+      segment(100),
+      segment(105, 110, 115),
+      segment(110),
+      segment(115, 80, 90),
+      segment(120),
+      segment(130),
+      segment(140),
+      segment(150),
+    ];
+
+    expect(findTabStaffSystems(segments)).toEqual([
+      expect.objectContaining({ stringYs: [100, 110, 120, 130, 140, 150], confidence: 'high' }),
+    ]);
+  });
+
+  it('rejects coincidental rows with sparse horizontal coverage', () => {
+    const segments = [100, 110, 120, 130, 140, 150].flatMap((y) => [
+      segment(y, 50, 70),
+      segment(y, 230, 250),
+    ]);
+
+    expect(findTabStaffSystems(segments)).toEqual([]);
+  });
 });

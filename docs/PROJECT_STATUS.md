@@ -808,4 +808,13 @@ git diff --check -- src/features/toolbox src/i18n/messages.ts docs/PROJECT_STATU
 
 结果：Toolbox 10 个测试文件、119 个用例通过；TypeScript build 与 Vite production build 通过。Vite 仍提示既有 `index` chunk 超过 500 kB；`git diff --check` 通过。
 
-已知轻微问题：英文单数摘要仍显示 `1 measures checked`，属于 grammar minor，不影响识别或导出。
+英文单数摘要问题已在后续增量中修正为 `1 measure checked`。
+
+## 追加完成：Toolbox 真实电子谱几何兼容验证
+
+- 英文单数摘要已修正为 `1 measure checked`。
+- TAB 谱线检测新增行覆盖率与本页相对宽度过滤，可跳过符号产生的短横线和低覆盖误候选。
+- 五线谱/TAB 配对允许支持样例使用的 6.6 个弦距间隔，同时继续拒绝超过 7 个弦距的候选。
+- 本地只读验证 `C:\Users\Ashin\Downloads\endless rain.pdf`：4 页、8 个高置信度 TAB 系统、3 个可靠配对、18 个小节进入节奏校验；当前全部安全回退，未猜测节奏。
+- Toolbox 10 个测试文件、134 个用例通过；TypeScript 与 Vite production build 通过，仅保留既有 chunk size 警告。
+- PDF 未复制、未上传、未提交；未修改 Supabase，未生成 `.gp`。

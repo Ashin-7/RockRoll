@@ -35,6 +35,22 @@ describe('findPairedStaffSystems', () => {
     ]);
   });
 
+  it('ignores short horizontal notation artifacts between standard staff rows', () => {
+    const lines = [
+      segment(160),
+      segment(162, 1, 110, 115),
+      segment(165),
+      segment(168, 1, 80, 90),
+      segment(170),
+      segment(175),
+      segment(180),
+    ];
+
+    expect(findPairedStaffSystems(lines, [tabSystem()])).toEqual([
+      expect.objectContaining({ standardLineYs: [160, 165, 170, 175, 180] }),
+    ]);
+  });
+
   it('rejects groups containing four or six standard staff rows', () => {
     expect(findPairedStaffSystems([160, 165, 170, 175].map((y) => segment(y)), [tabSystem()])).toEqual([]);
     expect(findPairedStaffSystems([155, 160, 165, 170, 175, 180].map((y) => segment(y)), [tabSystem()])).toEqual([]);
@@ -42,7 +58,7 @@ describe('findPairedStaffSystems', () => {
 
   it('rejects a TAB system beyond the relative vertical separation limit', () => {
     const distantTabSystem = tabSystem({
-      stringYs: [49, 59, 69, 79, 89, 99],
+      stringYs: [39, 49, 59, 69, 79, 89],
     });
 
     expect(findPairedStaffSystems([160, 165, 170, 175, 180].map((y) => segment(y)), [distantTabSystem])).toEqual([]);
@@ -115,10 +131,18 @@ describe('findPairedStaffSystems', () => {
   });
 
   it('accepts a TAB system exactly at the maximum vertical separation', () => {
-    const boundaryTabSystem = tabSystem({ stringYs: [50, 60, 70, 80, 90, 100] });
+    const boundaryTabSystem = tabSystem({ stringYs: [40, 50, 60, 70, 80, 90] });
 
     expect(findPairedStaffSystems([160, 165, 170, 175, 180].map((y) => segment(y)), [boundaryTabSystem])).toEqual([
       expect.objectContaining({ tabSystem: boundaryTabSystem }),
+    ]);
+  });
+
+  it('accepts the 6.6-gap separation used by the supported electronic score layout', () => {
+    const supportedTabSystem = tabSystem({ stringYs: [44, 54, 64, 74, 84, 94] });
+
+    expect(findPairedStaffSystems([160, 165, 170, 175, 180].map((y) => segment(y)), [supportedTabSystem])).toEqual([
+      expect.objectContaining({ tabSystem: supportedTabSystem }),
     ]);
   });
 

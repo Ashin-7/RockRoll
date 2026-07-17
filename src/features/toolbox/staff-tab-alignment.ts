@@ -5,8 +5,9 @@ const HORIZONTAL_SEGMENT_GAP_TOLERANCE = 3;
 const STAFF_GAP_TOLERANCE = 1;
 const HIGH_LENGTH_TOLERANCE_RATIO = 0.05;
 const MEDIUM_LENGTH_TOLERANCE_RATIO = 0.2;
+const MINIMUM_PAGE_SPAN_RATIO = 0.15;
 const MINIMUM_OVERLAP_RATIO = 0.8;
-const MAXIMUM_VERTICAL_GAP_MULTIPLIER = 6;
+const MAXIMUM_VERTICAL_GAP_MULTIPLIER = 7;
 
 interface HorizontalRow {
   page: number;
@@ -126,7 +127,18 @@ function continuesStaffSpacing(
 }
 
 function findFiveLineSystems(lineSegments: PdfLineSegment[]): StandardStaffSystem[] {
-  const rowRegions = groupRowsByHorizontalRegion(mergeHorizontalSegments(lineSegments));
+  const mergedRows = mergeHorizontalSegments(lineSegments);
+  const maximumSpanByPage = new Map<number, number>();
+  mergedRows.forEach((row) => {
+    maximumSpanByPage.set(
+      row.page,
+      Math.max(maximumSpanByPage.get(row.page) ?? 0, row.x2 - row.x1),
+    );
+  });
+  const reliableRows = mergedRows.filter((row) =>
+    row.x2 - row.x1 >= (maximumSpanByPage.get(row.page) ?? 0) * MINIMUM_PAGE_SPAN_RATIO,
+  );
+  const rowRegions = groupRowsByHorizontalRegion(reliableRows);
   const systems: StandardStaffSystem[] = [];
 
   rowRegions.forEach((rows) => {

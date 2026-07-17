@@ -128,7 +128,7 @@ describe('ToolboxPage', () => {
     await user.upload(input, new File(['pdf'], 'endless rain.pdf', { type: 'application/pdf' }));
     await user.click(screen.getByRole('button', { name: 'Analyze locally' }));
 
-    expect(await screen.findByText('1 measures checked \u00b7 1 ready \u00b7 0 fallback')).toBeInTheDocument();
+    expect(await screen.findByText('1 measure checked \u00b7 1 ready \u00b7 0 fallback')).toBeInTheDocument();
     expect(screen.queryByText('Fallback measures will be exported as rest placeholders.')).not.toBeInTheDocument();
   });
 
@@ -149,7 +149,7 @@ describe('ToolboxPage', () => {
     await user.upload(input, new File(['pdf'], 'endless rain.pdf', { type: 'application/pdf' }));
     await user.click(screen.getByRole('button', { name: 'Analyze locally' }));
 
-    expect(await screen.findByText('1 measures checked \u00b7 0 ready \u00b7 1 fallback')).toBeInTheDocument();
+    expect(await screen.findByText('1 measure checked \u00b7 0 ready \u00b7 1 fallback')).toBeInTheDocument();
     expect(screen.getByText('Fallback measures will be exported as rest placeholders.')).toBeInTheDocument();
   });
 

@@ -126,7 +126,9 @@ export function ToolboxPage({
               <section className="toolbox-rhythm" aria-labelledby="toolbox-rhythm-title">
                 <h3 id="toolbox-rhythm-title">{t('toolbox.rhythmTitle')}</h3>
                 <p className="toolbox-rhythm__summary">
-                  {t('toolbox.rhythmChecked').replace('{count}', String(rhythmCheckedCount))}
+                  {t(rhythmCheckedCount === 1
+                    ? 'toolbox.rhythmCheckedOne'
+                    : 'toolbox.rhythmChecked').replace('{count}', String(rhythmCheckedCount))}
                   {' · '}
                   {t('toolbox.rhythmReady').replace('{count}', String(rhythmReadyCount))}
                   {' · '}

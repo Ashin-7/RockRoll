@@ -288,4 +288,6 @@ npm run build
 - manual editing / 手动编辑；
 - `.gp` 直接生成。
 
-轻微待办：英文单数摘要 `1 measures checked` 的 grammar minor，可在后续文案整理时改为单数，不阻塞 Toolbox MVP。
+英文单数摘要已修正为 `1 measure checked`。
+
+真实样例只读验证结果：`endless rain.pdf` 可定位 8 个高置信度 TAB 系统、3 个可靠五线谱/TAB 配对，并对 18 个小节执行安全节奏校验；当前样例的符头、符干和附着路径拓扑仍不能唯一匹配，因此 18 个小节全部回退为休止占位。下一步如继续，应针对该样例单独设计符号拓扑兼容，不得通过 TAB 横向间距猜测时值。
