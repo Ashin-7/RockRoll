@@ -85,6 +85,13 @@ const mixedRhythmAnalysis: TabScoreAnalysis = {
   warnings: ['Measure 2 has no uniquely paired TAB event.'],
 };
 
+const singleRhythmAnalysis: TabScoreAnalysis = {
+  ...mixedRhythmAnalysis,
+  measureNumbers: [1],
+  rhythmMeasures: [mixedRhythmAnalysis.rhythmMeasures[0]],
+  warnings: [],
+};
+
 describe('ToolboxPage', () => {
   it('renders the browser-local PDF tab workflow shell', () => {
     renderWithI18n(<ToolboxPage />);
@@ -156,6 +163,26 @@ describe('ToolboxPage', () => {
     expect(screen.getByText('Measure 2 has no uniquely paired TAB event.')).toBeInTheDocument();
     expect(screen.getByText('Fallback measures export as whole-measure rest placeholders.')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Download MusicXML' })).toBeEnabled();
+  });
+
+  it('uses the singular checked-measure label for one rhythm measure', async () => {
+    const user = userEvent.setup();
+
+    renderWithI18n(
+      <ToolboxPage
+        readPdfSnapshot={vi.fn().mockResolvedValue(snapshot)}
+        analyzeTabScore={vi.fn().mockReturnValue(singleRhythmAnalysis)}
+      />,
+    );
+
+    await user.upload(
+      screen.getByLabelText(/Guitar tab PDF/),
+      new File(['pdf'], 'endless rain.pdf', { type: 'application/pdf' }),
+    );
+    await user.click(screen.getByRole('button', { name: 'Analyze locally' }));
+
+    expect(await screen.findByText('1 checked measure')).toBeInTheDocument();
+    expect(screen.queryByText('1 checked measures')).not.toBeInTheDocument();
   });
 
   it('shows a local analysis error and lets the user retry with another file', async () => {

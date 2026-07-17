@@ -1234,3 +1234,58 @@ Review plan 专辑封面、来源点评、年代与风格明细已完成，Archi
 ```
 
 建议开启新对话，并粘贴以上提示词继续。
+
+## 当前有效交接（2026-07-17，Toolbox 几何兼容移植完成后）
+
+本轮完成：
+
+- 只读审计确认旧 `codex/toolbox-explicit-rhythm` 不能整体合并，并发现其未提交的真实样例兼容增量。
+- 从当前 `main` 创建 `codex/toolbox-geometry-compat`，按 TDD 最小移植短横线过滤、稀疏覆盖拒绝、6.6 TAB 弦距配对边界和英文单数摘要。
+- 当前节奏架构、MusicXML、安全整小节回退、Archive / Inbox、导入与权限语义均未改变。
+- 没有读取真实 PDF，没有修改 Supabase，没有运行 `npm install`。
+
+修改文件：
+
+- `src/features/toolbox/tab-staff-geometry.ts`
+- `src/features/toolbox/tab-staff-geometry.test.ts`
+- `src/features/toolbox/staff-tab-alignment.ts`
+- `src/features/toolbox/staff-tab-alignment.test.ts`
+- `src/features/toolbox/ToolboxPage.tsx`
+- `src/features/toolbox/ToolboxPage.test.tsx`
+- `src/i18n/messages.ts`
+- `docs/superpowers/plans/2026-07-17-toolbox-geometry-compat.md`
+- 三份状态 / 交接文档
+
+验证：
+
+- RED：5 个新增用例全部因缺少对应行为而失败。
+- GREEN：定向 3 个测试文件、20 个用例通过。
+- 回归：Toolbox 11 个测试文件、100 个用例通过。
+- `npm run build` 通过，仅保留既有 chunk size 警告。
+- 限定范围 `git diff --check` 通过，仅提示 Windows LF / CRLF 转换。
+
+未完成事项：
+
+- 提交、合并并推送 `codex/toolbox-geometry-compat`。
+- 旧 `codex/toolbox-explicit-rhythm` 工作树和分支继续保留；完成推送后必须由用户明确确认，才能执行删除。
+
+下一轮提示词：
+
+```text
+继续 RockRoll 项目开发。
+请只读取：
+- AGENTS.md
+- docs/PROJECT_STATUS.md
+- docs/NEXT_TASKS.md
+- docs/SESSION_HANDOFF.md
+- docs/PERMISSIONS.md
+- 当前任务相关的最小目录
+
+Toolbox 几何兼容最小移植已完成：短横线过滤、稀疏覆盖拒绝、6.6 TAB 弦距边界和英文单数摘要。
+先确认 codex/toolbox-geometry-compat 已合并推送；旧 codex/toolbox-explicit-rhythm 工作树未经明确确认不得删除。
+之后继续 Web MVP 上线 P0 的 Auth 冒烟与三角色权限验收。
+不要读取真实 PDF，不运行 npm install，不重复真实导入，不恢复 Inbox 主导航，不改变一键导入或 match_existing 语义。
+完成后中文总结。
+```
+
+建议开启新对话，并粘贴以上提示词继续。

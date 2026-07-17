@@ -1171,3 +1171,26 @@ git diff --check -- supabase/migrations src/features/archive src/features/inbox 
 
 - 分支为 `main`，相对 `origin/main` ahead 2。
 - 既有专辑正规化设计文档修改与 `.playwright-cli` 未跟踪文件保持不动，不纳入本轮文档修改。
+
+## 追加完成：Toolbox 谱线几何兼容最小移植
+
+- 从当前 `main` 新建 `codex/toolbox-geometry-compat` 工作树分支，没有整体合并旧 `codex/toolbox-explicit-rhythm`。
+- TAB 六线谱候选新增横向区间覆盖率与本页相对跨度过滤：覆盖率低于 80% 或跨度低于本页最大跨度 15% 的行不参与六线谱判定。
+- 标准五线谱候选同样过滤相对过短的横线，避免谱内记号把五条正式谱线拆散。
+- 五线谱/TAB 配对距离同时保留现有 `12 * averageStaffGap` 边界，并加入 `7 * averageStringGap` 兼容边界，覆盖已确认的 6.6 TAB 弦距布局。
+- Toolbox 节奏摘要在数量为 1 时使用英文单数 `1 checked measure`；复数与中文文案保持现有语义。
+- 全部新增行为先通过失败测试确认 RED，再完成最小实现；没有移植旧节奏识别器。
+- 未读取、复制或上传真实 PDF，未生成 `.gp`，未修改 Supabase、Archive、Inbox、导入流程、依赖或锁文件，未运行 `npm install`。
+
+验证：
+
+```powershell
+node node_modules/vitest/vitest.mjs --run src/features/toolbox/ToolboxPage.test.tsx src/features/toolbox/tab-staff-geometry.test.ts src/features/toolbox/staff-tab-alignment.test.ts
+node node_modules/vitest/vitest.mjs --run src/features/toolbox
+npm run build
+git diff --check -- src/features/toolbox src/i18n/messages.ts docs/superpowers/plans/2026-07-17-toolbox-geometry-compat.md
+```
+
+结果：RED 阶段 5 个新增用例全部按预期失败；GREEN 阶段定向 3 个文件、20 个用例通过；完整 Toolbox 11 个文件、100 个用例通过；TypeScript 与 Vite production build 通过。构建仅保留既有主 chunk 超过 500 kB 警告。
+
+剩余事项：旧 `codex/toolbox-explicit-rhythm` 工作树仍包含未提交历史成果，必须等本分支合并并推送后再由用户明确确认是否删除。

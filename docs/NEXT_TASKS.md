@@ -699,3 +699,27 @@ npm run build
 - 当前 P0 验收涉及的最小 feature / 配置文件
 
 不要扫描整个仓库，不运行 `npm install`，不重复真实导入，不恢复 Inbox 主导航，不改变一键导入或 `match_existing` 语义。开始部署、远端写入或角色探针前，先明确本轮授权范围。
+
+## 当前任务索引（2026-07-17，Toolbox 几何兼容移植完成后）
+
+- 已在当前 Toolbox 架构中补齐短横线伪影过滤、稀疏 TAB 行覆盖拒绝、6.6 TAB 弦距配对边界和英文单数摘要。
+- 没有整体合并旧 `codex/toolbox-explicit-rhythm`，也没有移植其 `rhythm-symbols` 实现。
+- 新增行为完成 RED / GREEN 验证；完整 Toolbox 为 11 个测试文件、100 个用例通过，生产构建通过。
+- 旧 Toolbox 工作树和分支仍保留，删除属于后续独立清理操作，必须再次得到用户明确确认。
+
+下一步建议：
+
+1. 合并并推送 `codex/toolbox-geometry-compat`。
+2. 推送后只读确认 `main`、新分支和旧工作树状态，再由用户决定是否删除旧工作树 / 旧分支。
+3. 清理完成后返回 Web MVP 上线 P0：Auth 冒烟与 anon / 普通用户 / admin 三角色权限验收。
+
+推荐下一轮只读取：
+
+- `AGENTS.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/NEXT_TASKS.md`
+- `docs/SESSION_HANDOFF.md`
+- `docs/PERMISSIONS.md`
+- 仅在复核 Toolbox 时读取 `src/features/toolbox` 与 `src/i18n/messages.ts`
+
+不要读取真实 PDF，不运行 `npm install`，不重复真实导入，不恢复 Inbox 主导航，不改变一键导入或 `match_existing` 语义。

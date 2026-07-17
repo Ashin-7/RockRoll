@@ -4,8 +4,10 @@ const HORIZONTAL_TOLERANCE = 1;
 const MEDIUM_LENGTH_TOLERANCE_RATIO = 0.2;
 const HIGH_LENGTH_TOLERANCE_RATIO = 0.05;
 const GAP_TOLERANCE_RATIO = 0.2;
+const MINIMUM_PAGE_SPAN_RATIO = 0.15;
 const MINIMUM_HORIZONTAL_OVERLAP_RATIO = 0.8;
 const MAXIMUM_VERTICAL_STAFF_GAPS = 12;
+const MAXIMUM_VERTICAL_TAB_GAPS = 7;
 
 interface StaffRow {
   x1: number;
@@ -93,7 +95,12 @@ function continuesStaff(
 }
 
 function findStandardStaffSystems(segments: PdfLineSegment[], tabSystems: TabStaffSystem[]): StandardStaffSystem[] {
-  const rows = mergeHorizontalSegments(segments).filter((row) => !isTabRow(row, tabSystems));
+  const mergedRows = mergeHorizontalSegments(segments);
+  const maximumSpan = Math.max(0, ...mergedRows.map((row) => row.x2 - row.x1));
+  const rows = mergedRows.filter((row) =>
+    row.x2 - row.x1 >= maximumSpan * MINIMUM_PAGE_SPAN_RATIO
+    && !isTabRow(row, tabSystems),
+  );
   const systems: StandardStaffSystem[] = [];
 
   for (let index = 0; index <= rows.length - 5; index += 1) {
@@ -148,12 +155,16 @@ function pairStandardStaff(
       tabSystem,
       distance: Math.min(...tabSystem.stringYs) - bottomLineY,
     }))
-    .filter(({ tabSystem, distance }) =>
-      distance > 0
-      && distance <= standardSystem.averageGap * MAXIMUM_VERTICAL_STAFF_GAPS
-      && getOverlapRatio(standardSystem.x1, standardSystem.x2, tabSystem.x1, tabSystem.x2)
-        >= MINIMUM_HORIZONTAL_OVERLAP_RATIO,
-    )
+    .filter(({ tabSystem, distance }) => {
+      const maximumDistance = Math.max(
+        standardSystem.averageGap * MAXIMUM_VERTICAL_STAFF_GAPS,
+        tabSystem.averageStringGap * MAXIMUM_VERTICAL_TAB_GAPS,
+      );
+      return distance > 0
+        && distance <= maximumDistance
+        && getOverlapRatio(standardSystem.x1, standardSystem.x2, tabSystem.x1, tabSystem.x2)
+          >= MINIMUM_HORIZONTAL_OVERLAP_RATIO;
+    })
     .sort((left, right) => left.distance - right.distance);
 
   if (candidates.length === 0) {

@@ -73,4 +73,26 @@ describe('findPairedStaffSystems', () => {
 
     expect(findPairedStaffSystems([40, 45, 50, 55, 60].map((y) => line(y)), [first, second])).toEqual([]);
   });
+
+  it('ignores short horizontal notation artifacts between standard staff rows', () => {
+    const segments = [
+      line(40),
+      line(42, 110, 115),
+      line(45),
+      line(48, 80, 90),
+      line(50),
+      line(55),
+      line(60),
+    ];
+
+    expect(findPairedStaffSystems(segments, [tabSystem()])).toEqual([
+      expect.objectContaining({ standardLineYs: [40, 45, 50, 55, 60] }),
+    ]);
+  });
+
+  it('accepts the supported 6.6 TAB-gap separation', () => {
+    const tab = tabSystem([126, 136, 146, 156, 166, 176]);
+
+    expect(findPairedStaffSystems([40, 45, 50, 55, 60].map((y) => line(y)), [tab])).toHaveLength(1);
+  });
 });

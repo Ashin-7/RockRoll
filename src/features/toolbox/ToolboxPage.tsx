@@ -130,7 +130,10 @@ export function ToolboxPage({
                 <section className="toolbox-rhythm" aria-labelledby="toolbox-rhythm-title">
                   <h3 id="toolbox-rhythm-title">{t('toolbox.rhythmTitle')}</h3>
                   <ul className="toolbox-rhythm__summary" aria-label={t('toolbox.rhythmTitle')}>
-                    <li>{rhythmMeasures.length} {t('toolbox.rhythmChecked')}</li>
+                    <li>
+                      {rhythmMeasures.length}{' '}
+                      {t(rhythmMeasures.length === 1 ? 'toolbox.rhythmCheckedOne' : 'toolbox.rhythmChecked')}
+                    </li>
                     <li>{recognizedMeasureCount} {t('toolbox.rhythmRecognized')}</li>
                     <li>{fallbackMeasureCount} {t('toolbox.rhythmFallback')}</li>
                   </ul>
