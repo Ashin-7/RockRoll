@@ -15,7 +15,7 @@ describe('AppShell', () => {
     expect(screen.getByRole('navigation', { name: 'Primary' })).toBeInTheDocument();
     expect(screen.getByText('Backstage')).toBeInTheDocument();
     expect(screen.getByText('Songs')).toBeInTheDocument();
-    expect(screen.getByText('Artists')).toBeInTheDocument();
+    expect(within(screen.getByRole('navigation', { name: 'Primary' })).queryByRole('link', { name: 'Artists' })).toBeNull();
     expect(screen.getByText('Archive')).toBeInTheDocument();
     expect(within(screen.getByRole('navigation', { name: 'Primary' })).queryByRole('link', { name: 'Inbox' })).toBeNull();
     expect(screen.getByText('Library')).toBeInTheDocument();

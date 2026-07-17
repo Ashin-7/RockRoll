@@ -5,7 +5,6 @@ export type AppRoute =
   | 'songDetail'
   | 'albums'
   | 'albumDetail'
-  | 'artists'
   | 'artistDetail'
   | 'practice'
   | 'archive'
@@ -19,7 +18,6 @@ const routes: Record<string, AppRoute> = {
   '#backstage': 'backstage',
   '#songs': 'songs',
   '#albums': 'albums',
-  '#artists': 'artists',
   '#practice': 'practice',
   '#archive': 'archive',
   '#inbox': 'inbox',

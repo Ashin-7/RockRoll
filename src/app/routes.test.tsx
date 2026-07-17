@@ -9,7 +9,6 @@ describe('getRouteForHash', () => {
   it('resolves known routes', () => {
     expect(getRouteForHash('#songs')).toBe('songs');
     expect(getRouteForHash('#song/song-1')).toBe('songDetail');
-    expect(getRouteForHash('#artists')).toBe('artists');
     expect(getRouteForHash('#artist/artist-1')).toBe('artistDetail');
     expect(getRouteForHash('#albums')).toBe('albums');
     expect(getRouteForHash('#album/album-1')).toBe('albumDetail');
@@ -20,6 +19,11 @@ describe('getRouteForHash', () => {
     expect(getRouteForHash('#library')).toBe('library');
     expect(getRouteForHash('#toolbox')).toBe('toolbox');
     expect(getRouteForHash('#auth')).toBe('auth');
+  });
+
+  it('blocks the artist list route while preserving artist detail', () => {
+    expect(getRouteForHash('#artists')).toBe('backstage');
+    expect(getRouteForHash('#artist/artist-1')).toBe('artistDetail');
   });
 
   it('reads song ids from song detail hashes', () => {
