@@ -1,0 +1,254 @@
+{
+  "ok": true,
+  "status": 200,
+  "requestCount": 1,
+  "requested": [
+    {
+      "url": "https://www.anontraveler.com/api/rank/ranks/all/0",
+      "accept": "application/json"
+    }
+  ],
+  "summary": {
+    "data": {
+      "pages": {
+        "total": 82,
+        "pageNow": 1,
+        "perPage": 10
+      },
+      "ranks": {
+        "type": "array",
+        "length": 10,
+        "first": {
+          "_id": "string",
+          "title": "string",
+          "desc": "string",
+          "type": "object",
+          "primary_img": "string",
+          "ts_updated": "number",
+          "styles": "Array(2)",
+          "user_created": "object"
+        }
+      }
+    },
+    "rstno": 1
+  },
+  "arrays": [
+    {
+      "path": "$.data.ranks",
+      "length": 10,
+      "firstKeys": [
+        "_id",
+        "title",
+        "desc",
+        "type",
+        "primary_img",
+        "ts_updated",
+        "styles",
+        "user_created"
+      ]
+    },
+    {
+      "path": "$.data.ranks[0].styles",
+      "length": 2,
+      "firstKeys": [
+        "_id",
+        "name_orig",
+        "type",
+        "name_link",
+        "name",
+        "name_alt"
+      ]
+    },
+    {
+      "path": "$.data.ranks[1].styles",
+      "length": 4,
+      "firstKeys": [
+        "_id",
+        "name",
+        "name_orig",
+        "type",
+        "name_link"
+      ]
+    },
+    {
+      "path": "$.data.ranks[2].styles",
+      "length": 3,
+      "firstKeys": [
+        "_id",
+        "name",
+        "name_orig",
+        "type",
+        "name_link"
+      ]
+    }
+  ],
+  "likelyListPath": "$.data.ranks",
+  "samples": [
+    {
+      "_id": "644bca772bf0db963b0b5642",
+      "title": "中国通俗音乐",
+      "desc": "中国的各种音乐",
+      "type": {
+        "index": 2,
+        "name": "专辑榜"
+      },
+      "primary_img": "https://img.zcool.cn/community/017d045aaba379a80120be14e12488.jpg@3000w_1l_2o_100sh.jpg",
+      "ts_updated": 1782906848,
+      "styles": [
+        {
+          "_id": "5ad98377ef84303c60bb85e6",
+          "name_orig": "Chinese Pop / Rock",
+          "type": 2,
+          "name_link": "chinese-pop-rock-603",
+          "name": "华语流行(普通话/国语)",
+          "name_alt": ""
+        },
+        {
+          "_id": "5ec39b11be46935d1972b013",
+          "name_orig": "Chinese Rock",
+          "type": 3,
+          "name_link": "chinese-rock-20",
+          "name": "中国摇滚",
+          "name_alt": ""
+        }
+      ],
+      "user_created": {
+        "_id": "5b03e10aaf7540e1f2cb18ed",
+        "name": "郭佳"
+      }
+    },
+    {
+      "_id": "69259dcf5a353131fe005487",
+      "title": "日本音乐",
+      "desc": "涵盖日本流行、实验、摇滚等各种内容",
+      "type": {
+        "index": 2,
+        "name": "专辑榜"
+      },
+      "primary_img": "http://anontraveler.oss-cn-shanghai.aliyuncs.com/uploads//%E7%94%9F%E6%88%90%E6%97%A5%E6%9C%AC%E9%9F%B3%E4%B9%90%E6%B5%B7%E6%8A%A5.jpg",
+      "ts_updated": 1764147595,
+      "styles": [
+        {
+          "_id": "5ad59f723ff5422ae69adc38",
+          "name": "流行/摇滚",
+          "name_orig": "Pop/Rock",
+          "type": 1,
+          "name_link": "pop-rock-1"
+        },
+        {
+          "_id": "5ad98377ef84303c60bb8595",
+          "name_orig": "Japanese Rock",
+          "type": 3,
+          "name_link": "japanese-rock-527",
+          "name": "日本摇滚",
+          "name_alt": "J-Rock"
+        },
+        {
+          "_id": "5ae895c2b6c3cb2715d37b66",
+          "type": 3,
+          "name_orig": "Japanese Traditions",
+          "name": "日本传统",
+          "name_link": "japanese-traditions-908"
+        },
+        {
+          "_id": "5ae92bf1b6c3cb56bb92efda",
+          "type": 4,
+          "name_orig": "japanese grindcore",
+          "name_link": "japanese-grindcore-932",
+          "name": "日本碾核",
+          "name_alt": ""
+        }
+      ],
+      "user_created": {
+        "_id": "5b03e10aaf7540e1f2cb18ed",
+        "name": "郭佳"
+      }
+    },
+    {
+      "_id": "5e7435a911ee096f78146ba3",
+      "title": "荒岛余生",
+      "desc": "大家说喜爱一张唱片到一定程度，喜欢说这是我的荒岛唱片。一起看看你的荒岛唱片是什么？",
+      "type": {
+        "index": 2,
+        "name": "专辑榜"
+      },
+      "primary_img": "https://anontraveler.oss-cn-shanghai.aliyuncs.com/ranks/steven-lasry-Vg69JN6Rq58-unsplash.jpg",
+      "ts_updated": 1759358243,
+      "styles": [
+        {
+          "_id": "5ae2c589b6c3cb2561167c52",
+          "name": "拉丁音乐",
+          "name_orig": "Latin music",
+          "type": 1,
+          "name_link": "latin-music-760"
+        },
+        {
+          "_id": "5ad8c1a03ff5422ae69b8d38",
+          "name_orig": "Hard Rock / Heavy Metal",
+          "name": "硬摇滚 / 重金属",
+          "type": 2,
+          "name_link": "hard-rock-heavy-metal-471"
+        },
+        {
+          "_id": "5ad6dab23ff5422ae69b5796",
+          "name_orig": "Folk/Country/World",
+          "type": 1,
+          "name": "民谣/乡村/世界",
+          "name_link": "folk-country-world-460"
+        }
+      ],
+      "user_created": {
+        "_id": "5b03e10aaf7540e1f2cb18ed",
+        "name": "郭佳"
+      }
+    },
+    {
+      "_id": "602bca04a31e9b5a5e0426e3",
+      "title": "史上最佳泛重型专辑",
+      "desc": "泛重型，所以硬摇、金属核、Djent也无妨放进来。",
+      "type": {
+        "index": 2,
+        "name": "专辑榜"
+      },
+      "primary_img": "https://www.udiscovermusic.com/wp-content/uploads/2018/03/FACEBOOK-best-metal-debut-albums.jpg",
+      "ts_updated": 1754368206,
+      "styles": [
+        {
+          "_id": "5ad8c1a03ff5422ae69b8d38",
+          "name_orig": "Hard Rock / Heavy Metal",
+          "name": "硬摇滚 / 重金属",
+          "type": 2,
+          "name_link": "hard-rock-heavy-metal-471"
+        }
+      ],
+      "user_created": {
+        "_id": "5b03e10aaf7540e1f2cb18ed",
+        "name": "郭佳"
+      }
+    },
+    {
+      "_id": "687a7a28e503793556076e64",
+      "title": "土法炼钢",
+      "desc": "收录各种带着土法炼钢味的作品",
+      "type": {
+        "index": 2,
+        "name": "专辑榜"
+      },
+      "primary_img": "http://anontraveler.oss-cn-shanghai.aliyuncs.com/uploads//%E5%9C%9F%E6%B3%95%E7%82%BC%E9%92%A2%E5%AE%A3%E4%BC%A0%E5%9B%BE.jpg",
+      "ts_updated": 1753003604,
+      "styles": [
+        {
+          "_id": "5ad59f723ff5422ae69adc38",
+          "name": "流行/摇滚",
+          "name_orig": "Pop/Rock",
+          "type": 1,
+          "name_link": "pop-rock-1"
+        }
+      ],
+      "user_created": {
+        "_id": "5b03e10aaf7540e1f2cb18ed",
+        "name": "郭佳"
+      }
+    }
+  ]
+}

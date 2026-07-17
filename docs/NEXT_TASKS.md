@@ -1,0 +1,585 @@
+﻿# RockRoll 下一步任务
+
+更新时间：2026-07-07
+
+## 当前状态
+
+本轮已经完成多项导入与资料库相关改动，并补上了重复导入时榜单评语不会回填到专辑列表的问题。
+
+追加更新：Inbox / 收件箱不再作为当前用户主导入入口，主导航已隐藏 Inbox；`#inbox` 深链保留为停用提示页。当前导入主入口统一为 `Archive / 档案 -> 新增集合 -> URL 预览导入`。Inbox 底层 service 仍保留，继续供 Archive 导入流程复用。后续不要优先增强 Inbox 页面 UI。
+
+已完成或已推进的范围：
+
+- Inbox 新增删除导入草稿能力，删除草稿时通过外键级联删除候选索引和 Review plan。
+- Archive 集合列表修正来源展示：来源名称正常显示，存在 `sourceUrl` 时提供短链接。
+- Archive 集合描述增加行数限制，避免长文本撑开列表。
+- Albums 服务对大量 id 的 `.in()` 查询增加分块，缓解 `/albums` 的 `Bad Request`。
+- Albums 已开始改为先加载榜单分类 / 集合标题，再按选中标题加载集合专辑。
+- Albums 集合详情分页已从前端展示分页改为服务端请求分页：首屏只拉当前页 25 条 `archive_items`、对应 album rows 和 external metadata，同时用 Supabase count 保留总数显示。
+- Albums 集合详情的大量 album / external metadata 分块查询已改为受限并发，并且两类查询并行启动，减少 496 条集合加载时的串行等待。
+- Albums 曲风筛选已覆盖完整集合：曲风选项来自集合级 `availableStyles`，筛选后按完整集合 metadata 计算命中项，再只加载当前页详情。
+- Inbox 正式提交导入时，如果 `archive_item` 已经导入过，会用新 Review plan 中的非空评语回填 `archive_items.note`，避免预览集合有评语、专辑列表仍显示“暂无笔记”。
+- Anontraveler 预览修正档案条目 external id 生成：同一张专辑出现在不同榜单时，专辑实体可复用，但榜单条目会按 `versionId + position + albumExternalId` 保持独立，避免跨榜单被误去重。
+- 针对 `https://www.anontraveler.com/rank/version/5e9fb16311ee091e615c2a7f` 复核真实 API：预览 496 个条目无缺失；修正为即使来源 item 有 `_id`，`archive_item` external id 也必须带榜单命名空间，避免来源复用 item id 时入库阶段继续去重。
+- 修复重复导入同一集合时触发 `archive_items_collection_id_entity_type_entity_id_key` 的问题：当新版 source id 没命中 external source，但同集合里已存在同一 album 的 archive item，会复用旧条目、回填 note，并补写新的 external source 映射。
+- 修复大榜单提交只写入前 1000 条 Review plan 的问题：`commitPublicImportReviewPlan` 现在分页读取全部 `import_review_items`，避免 496 专辑榜单因 artist/album/review item 总数超过 1000 而只提交约 80 条 archive item。
+- 已用只读查询复核 `5e9fb16311ee091e615c2a7f` 当前真实库状态：Anontraveler preview 为 496 个 album archive item；当前数据库目标集合已有 496 条 album `archive_items`、496 条 archive item external source 映射和 496 条集合内 album external source 映射。此前 80 条只是历史部分写入状态。
+- Inbox 导入流程仍有待优化：步骤偏繁琐，生成计划后正式推送和导入数量需要继续排查。
+- Inbox 页面已进一步简化为预览后一键完整导入：页面不再暴露草稿、候选索引和 Review plan，内部仍复用保存候选、生成计划、正式提交三步链路。
+- Inbox 大批量导入已做服务层分块优化：候选保存、Review plan upsert、external source `.in()` 预取、import job 删除都按 200 条分块，降低 PostgREST `Bad Request` 和大响应等待风险。
+- 针对分块后响应变慢的问题，候选保存、Review plan upsert 和 external source 分块预取已改为最多 3 路受限并发；保留 200 条分块上限，避免再次触发大请求。
+- Review plan 生成阶段不再回传全部明细；一键导入页面只需要 plannedCount，正式提交阶段仍分页读取全部 Review plan。
+- Archive 新增集合入口已改为支持 Anontraveler URL 预览导入：预览后展示数量与 3 条样例，允许导入前自定义标题和说明，再复用 Inbox 保存候选、生成 Review plan、正式提交的链路完整导入。
+- Archive URL 导入预览样例已补充封面、年代、专辑类型和曲风，减少导入前需要跳转到专辑页核对的成本。
+- Archive 仍保留手动新增 / 编辑集合能力作为备用入口；URL 导入按钮仍仅管理员可见。
+- Archive 档案集合索引已调整为默认折叠的可展开卡片；展开后再显示说明、来源链接、打开集合、编辑和删除操作，避免集合较多或说明较长时首屏被表格撑开。
+- Inbox 与 Archive 导入成功后都会展示导入摘要：preview 档案条目数、保存候选数、Review plan 确认项数和提交结果数，方便定位数量不一致发生在哪个阶段。
+- Inbox 主导航入口已隐藏；访问 `#inbox` 会显示停用提示，并指向 Archive 新增集合进行 URL 导入。
+- Archive 新增集合是当前用户主导入入口，Inbox service 仅作为旧入口底层能力 / 内部导入能力保留。
+- 本次没有抓取 `https://www.anontraveler.com/rank`，没有批量导入所有榜单，没有新增依赖或复杂后台队列。
+- 已新增 Anontraveler 榜单目录扫描的最小纯能力：解析 mock 目录 HTML、生成目录索引项、按 `versionId` 合并去重、只允许扫描 `/rank` 目录入口。
+- 目录扫描当前只发现榜单索引，不导入榜单条目，不调用 candidates / Review plan / commit，不落库。
+- Archive 新增集合 URL 导入区域已接入 Anontraveler 榜单目录选择入口；选择目录项只会填充现有 URL 输入框，不会自动预览、自动导入或落库。
+- 已执行一次真实目录页验证：`https://www.anontraveler.com/rank` 请求成功且仅请求目录页 1 次，但当前 parser 解析数量为 0；下一步需要捕获真实 HTML 结构并最小修正 parser。
+- 已确认真实目录数据源为 `https://www.anontraveler.com/api/rank/ranks/all/0`；Archive 目录扫描现改为只请求该 API 一次，并把 `data.ranks` 映射为可选择榜单 URL。
+- Archive 目录扫描已支持分页加载：初始加载 `/all/0`，点击“加载更多榜单”后逐页请求 `/all/1`、`/all/2`，按 `versionId` 去重并根据 `data.pages.total` 判断是否还有更多。
+
+## 验证状态
+
+本轮新增验证：
+
+```powershell
+npm test -- --run src/features/inbox/inbox.service.test.ts
+npm test -- --run src/features/inbox/anontraveler.service.test.ts
+npm test -- --run src/features/inbox
+npm run build
+```
+
+结果：Inbox service 21 个用例通过；Anontraveler service 7 个用例通过；Inbox 6 个测试文件、49 个用例通过；生产构建通过。Vite 仍有既有 chunk size 警告。
+
+补充验证：
+
+```powershell
+npm test -- --run src/features/albums
+npm test -- --run src/features/inbox
+npm test -- --run src/features/archive
+npm run build
+git diff --check -- src/features/albums src/features/inbox src/features/archive src/i18n/messages.ts docs/PROJECT_STATUS.md docs/NEXT_TASKS.md docs/SESSION_HANDOFF.md
+```
+
+结果：Albums 3 个测试文件、26 个用例通过；Inbox 5 个测试文件、36 个用例通过；Archive 3 个测试文件、20 个用例通过；生产构建通过。Vite 仍有既有 chunk size 警告；`git diff --check` 通过，仅提示 Windows 下 LF/CRLF 换行转换。
+
+本轮补充验证：
+
+```powershell
+npm test -- --run src/features/inbox/inbox.service.test.ts
+npm test -- --run src/features/inbox
+npm test -- --run src/features/albums
+npm test -- --run src/features/archive
+npm run build
+git diff --check -- src/features/inbox src/features/albums src/features/archive src/i18n/messages.ts docs/PROJECT_STATUS.md docs/NEXT_TASKS.md docs/SESSION_HANDOFF.md
+```
+
+结果：Inbox service 24 个用例通过；Inbox 5 个测试文件、39 个用例通过；Albums 3 个测试文件、26 个用例通过；Archive 3 个测试文件、20 个用例通过；生产构建通过。Vite 仍有既有 chunk size 警告；`git diff --check` 通过，仅提示 Windows 下 LF/CRLF 换行转换。
+
+验证中发现 Albums 懒加载后集合标题同时出现在下拉选项和页面标题中，导致测试文本查询歧义；已将断言改为查询集合标题 heading，未修改产品逻辑。
+
+本轮 Archive URL 导入补充验证：
+
+```powershell
+npm test -- --run src/features/archive/ArchivePage.test.tsx
+npm test -- --run src/features/archive
+npm test -- --run src/features/inbox
+npm test -- --run src/features/albums
+npm run build
+git diff --check -- src/features/archive src/features/inbox src/features/albums src/i18n/messages.ts docs/PROJECT_STATUS.md docs/NEXT_TASKS.md docs/SESSION_HANDOFF.md
+```
+
+结果：ArchivePage 6 个用例通过；Archive 3 个测试文件、21 个用例通过；Inbox 5 个测试文件、39 个用例通过；Albums 3 个测试文件、31 个用例通过；生产构建通过。Vite 仍提示既有 chunk size 警告；`git diff --check` 通过，仅提示 Windows 下 LF/CRLF 换行转换。
+
+本轮共享导入结果摘要补充验证：
+
+```powershell
+npm test -- --run src/features/inbox/InboxPage.test.tsx
+npm test -- --run src/features/archive/ArchivePage.test.tsx
+npm test -- --run src/features/inbox
+npm test -- --run src/features/archive
+```
+
+结果：InboxPage 5 个用例通过；ArchivePage 6 个用例通过；Inbox 5 个测试文件、39 个用例通过；Archive 3 个测试文件、21 个用例通过。
+
+本轮 Archive 集合索引卡片化补充验证：
+
+```powershell
+npm test -- --run src/features/archive/ArchivePage.test.tsx
+npm test -- --run src/features/archive
+npm test -- --run src/features/archive src/features/inbox src/features/albums
+npm run build
+git diff --check -- src/features/archive src/features/inbox src/features/albums src/i18n/messages.ts docs/PROJECT_STATUS.md docs/NEXT_TASKS.md docs/SESSION_HANDOFF.md
+```
+
+结果：ArchivePage 6 个用例通过；Archive 3 个测试文件、21 个用例通过；Archive / Inbox / Albums 合计 11 个测试文件、91 个用例通过；生产构建通过。`git diff --check` 通过，仅提示 Windows 下 LF/CRLF 换行转换。浏览器截图检查因本机 Playwright 浏览器二进制缺失未完成，未执行 `npx playwright install`。
+
+本轮 Albums 集合与曲风筛选控件补充验证：
+
+```powershell
+$env:HOME=(Resolve-Path .\.tmp).Path; $env:USERPROFILE=(Resolve-Path .\.tmp).Path; $env:TEMP=(Resolve-Path .\.tmp).Path; $env:TMP=(Resolve-Path .\.tmp).Path; node .\node_modules\vitest\vitest.mjs --run src/features/albums/AlbumListPage.test.tsx
+$env:HOME=(Resolve-Path .\.tmp).Path; $env:USERPROFILE=(Resolve-Path .\.tmp).Path; $env:TEMP=(Resolve-Path .\.tmp).Path; $env:TMP=(Resolve-Path .\.tmp).Path; node .\node_modules\vitest\vitest.mjs --run src/features/albums
+$env:HOME=(Resolve-Path .\.tmp).Path; $env:USERPROFILE=(Resolve-Path .\.tmp).Path; $env:TEMP=(Resolve-Path .\.tmp).Path; $env:TMP=(Resolve-Path .\.tmp).Path; node .\node_modules\typescript\bin\tsc -b; if ($LASTEXITCODE -eq 0) { node .\node_modules\vite\bin\vite.js build }
+git diff --check -- src/features/albums/AlbumListPage.tsx src/features/albums/AlbumListPage.css src/features/albums/AlbumListPage.test.tsx docs/PROJECT_STATUS.md docs/NEXT_TASKS.md docs/SESSION_HANDOFF.md
+```
+
+结果：AlbumListPage 14 个用例通过；Albums 3 个测试文件、33 个用例通过；生产构建通过。Vite 仍提示既有 chunk size 警告；`git diff --check` 通过，仅提示 Windows 下 LF/CRLF 换行转换。当前受限沙箱下直接运行 `npm test` 会因 Node 访问 `C:\Users\Ashin` 被拒绝，本轮改用工作区 `.tmp` 作为 HOME / TEMP 并直接调用本地 `node_modules` 命令。
+
+仍需补充验证：
+
+- Archive 目录选择的桌面 / 窄屏浏览器截图仍需补做；本轮已启动 Vite 并确认本地页面 200，但 Playwright 浏览器二进制缺失，未执行 `npx playwright install`。
+- 真实 Supabase 环境中，`5e9fb16311ee091e615c2a7f` 已只读验证为 496 条正式 `archive_items`，无需继续按 80 条历史状态补齐。
+- 真实 Supabase 环境中，建议选择另一个未导入或可安全重复导入的榜单，继续验证 Archive URL 导入入口的自定义标题 / 说明、重复导入 note 回填、`Bad Request` 是否消失，以及数量摘要是否清晰。
+- 对已经生成过旧 archive item 的集合，重新提交导入计划时应不再报 `archive_items_collection_id_entity_type_entity_id_key`，并会补齐新的 external source 映射。
+- Albums 集合标题懒加载、服务端分页、分块并发、全集合曲风筛选、集合搜索 / 本地排序、曲风搜索已通过 `src/features/albums` 自动化测试；仍建议在浏览器里做一次桌面 / 窄屏视觉检查，重点看按钮列表高度、滚动和窄屏布局。
+
+## 当前最高优先级
+
+最新状态：权限矩阵和落地盘点已完成。`docs/PERMISSIONS.md` 是权限矩阵，`docs/PERMISSIONS_AUDIT.md` 是当前 UI、service、RLS 缺口清单。下一步不要重新盘点，直接按小步落地权限收口：先 UI 可见性，再 Archive / Albums service admin guard，最后 RLS migration。
+
+追加完成：权限落地 P0 已完成代码侧收口。Archive / Albums 的非 admin 写入口已隐藏，Archive / Albums service 写函数已补 admin guard，Inbox import_* 读取函数已补 admin guard，并新增 admin-only public library 写入 migration。下一步优先做真实 Supabase migration apply 后的权限验证，或进入 Anontraveler 目录扫描的真实浏览器检查。
+
+追加验证：Archive 页面已通过 Vite 临时服务确认 `/#archive` HTTP 200；由于当前会话没有 Browser 插件且项目未安装 `playwright` 包，目录扫描真实点击 / 截图验证仍待有浏览器工具时补做。
+
+追加完成：Archive 目录扫描已完成 Playwright 真实浏览器验证。桌面和窄屏截图已保存到 `output/playwright/`；扫描第一页、加载更多、选择榜单只填 URL 均通过，未自动预览、未自动导入、未请求榜单详情页。
+
+权限矩阵、权限落地盘点和权限落地 P0 已完成。不要重新盘点或重复做 UI/service/RLS 收口；下一步只保留真实 Supabase apply migration 后的权限验证。
+
+真实权限验证顺序建议：先 apply admin-only public library 写入 migration，再用普通用户验证 Archive / Albums / import_* 写入被拒绝，最后用 admin 验证资料库维护和导入仍可用。
+
+Archive 目录扫描已支持逐页加载目录 API，并且代码层面已收束为“选择榜单后只填 URL，不自动预览”。ArchivePage 自动化测试和 Playwright 真实浏览器验证已覆盖扫描第一页、加载更多、去重、选择后只填 URL，以及不触发 preview / candidates / Review plan / commit。Inbox 页面 UI 暂不作为优先增强对象。
+
+推荐命令：
+
+```powershell
+npm test -- --run src/features/albums
+npm test -- --run src/features/inbox
+npm test -- --run src/features/archive
+npm run build
+```
+
+预期处理：
+
+- 如果 Albums 测试失败，优先修复懒加载引入的回归。
+- 如果 Inbox 或 Archive 测试失败，只修复与本轮改动直接相关的问题。
+- 如果构建失败，先处理 TypeScript 或 Vite 编译错误，不做无关重构。
+
+## 下一个功能任务：验证共享导入与结果状态
+
+当前本地可自动化部分已完成：导入成功摘要已覆盖 preview / saved / planned / committed 四段数量，`createImportReviewPlan` 现在额外返回按实体类型拆分的 `plannedCounts`，Inbox 与 Archive 成功摘要会展示计划明细。Albums 首屏服务端分页、翻页和完整集合曲风筛选已有测试覆盖。
+
+目标：在真实 Supabase 环境验证 Inbox 与 Archive 两个入口的一键导入是否都能补齐大榜单，并确认分块优化后不再出现导入后 `Bad Request`。
+
+建议排查顺序：
+
+1. 对比匿名旅行者 preview 数量、保存到 `import_candidates` 的数量、Review plan 数量、正式写入 public rows 的数量。
+2. 特别区分“专辑实体数量”和“榜单条目数量”：同一专辑可复用，但不同榜单里的条目必须分别进入 `archive_items`。
+3. 判断 Review plan 数量增加是否来自 `artist`、`album`、`archive_collection`、`archive_item` 等不同实体类型的合计。
+4. 确认重复点击生成计划是否会重复创建、更新或遗漏条目。
+5. 检查生成计划后正式 push 到档案袋是否真的写入 `archive_collections` / `archive_items`，以及是否因权限、RLS 或外部来源映射冲突失败。
+6. 使用 Archive URL 导入入口验证自定义标题 / 说明是否进入 `archive_collections`，同时不影响 external source 去重身份。
+7. 记录导入摘要里的 preview / saved / planned / committed 数量，判断真实环境数量不一致发生在哪个阶段。
+8. 如果真实环境仍出现部分失败，再补数据库级导入任务状态和失败恢复，减少重复点击和阶段不清的问题。
+9. 如果真实环境仍慢，下一步考虑把正式提交迁移为数据库 RPC 或后台任务；当前 3 路并发只优化分块保存/预取阶段，不能消除前端逐条多表提交的网络往返。
+
+本地覆盖状态：
+
+- 已覆盖：一键导入内部保存候选、生成 Review plan、正式提交的摘要口径。
+- 已覆盖：Review plan 数量按实体类型可解释。
+- 已覆盖：重复生成计划使用 `user_id,source_name,source_id,entity_type` upsert，不产生重复不可控数据。
+- 已覆盖：commit 成功后档案集合和条目可被 archive service 读取。
+- 已覆盖：`/albums` 首屏集合详情只请求当前页 25 条数据，翻页时再请求下一页。
+- 已覆盖：`/albums` 曲风筛选对完整集合生效，翻页时保留当前曲风。
+
+## 后续功能队列
+
+最新完成：P0 / P1 的本地代码与自动化测试项已完成。权限落地代码侧已完成；共享导入数量摘要和 planned 明细已完成；Albums 分页与完整集合曲风筛选已覆盖。
+
+真实 Supabase 权限验证已完成：admin-only public library 写入 migration 已应用到 remote，RLS 探针确认普通 user 写入被拒绝、admin 写入可用且无测试数据残留。真实大榜单 `5e9fb16311ee091e615c2a7f` 已只读验证为 496 条正式 `archive_items`；下一步用另一个榜单验证跨榜单幂等、重复导入 note 回填和 `Bad Request` 是否消失。
+
+0. Anontraveler 全榜单导入三阶段设计：先做榜单目录扫描，只保存榜单索引；再稳定单榜单导入数量口径；最后做围绕 Archive 新增集合入口的批量队列导入，支持失败记录、失败重试和重复导入幂等。
+   - 已完成第一阶段的最小代码基础：目录 HTML 解析、目录项字段、状态枚举、`versionId` 去重合并和单页扫描函数。下一步不要直接批量导入，应先决定目录索引是暂存前端状态还是新增正式表。
+   - Archive 新增集合 URL 导入区域已接入最小选择 UI；当前仅扫描目录、展示 title / itemCount / status，并把用户选择的 `sourceUrl` 填入现有输入框。
+   - 真实目录页验证结果：请求成功、请求次数 1、未访问详情页，但解析数量为 0；需要先观察真实 HTML / hydration 数据结构，再修 parser。
+   - 已修正目录扫描数据源：改用 `/api/rank/ranks/all/0` 的 `data.ranks`，当前只加载第一页 10 条，不自动翻页、不访问详情页。
+   - 已支持用户点击“加载更多榜单”后逐页加载更多目录页；仍不自动访问详情页、不预览、不导入。
+1. `match_existing` 最小手动匹配 UI 已完成。
+   - 位于 `/archive`，仅管理员可见；只允许 artist / album Review item 匹配已有 public 实体。
+   - 保持 Archive 一键导入主流程，Inbox 主入口仍停用。
+   - 当前最小交互使用已有 public 实体 ID；如后续需要按名称搜索目标，应单独设计查询范围、分页和权限，不在当前 MVP 中扩展。
+2. 数据库级正式导入任务状态追踪和失败恢复，避免重复点击或部分失败后不清楚状态。
+3. Review plan 明细展示专辑封面 / 点评 / 年代 / 风格，便于导入前检查。
+4. 专辑封面与曲风正规化，例如 `albums.cover_url` 和 `album_styles` / `album_genres`。
+5. 历史错绑作者数据修正方案：重新导入或单独 migration / SQL 修正。
+6. AI 候选笔记补全评估，不进入当前 MVP 主线。
+   - 触发场景：`/albums` 中 album / archive item 没有来源评语、条目备注或用户笔记时，可提供“生成候选笔记”入口。
+   - 推荐形态：只生成草稿候选，用户必须查看、编辑并确认后才写入正式笔记字段。
+   - 数据边界：优先使用已公开的专辑标题、艺人名、年份、曲风、榜单上下文和来源 URL；禁止发送用户私密笔记、账号信息、token、cookie 或 service role key。
+   - 写入边界：AI 不自动覆盖 `archive_items.note`、`albums.notes` 或用户已有笔记；必须保留来源评语回填作为优先数据路径。
+   - 权限边界：匿名用户不能触发写入；如后续允许生成，应先确认管理员 / 登录用户权限、额度控制、失败状态和审计记录。
+   - 实现前置：先完成真实导入数量验证、重复导入 note 回填、导入状态追踪；再单独设计 AI provider、环境变量、RLS 和测试策略。
+   - 风险：AI 可能生成事实错误或风格化过度内容，必须作为“待确认候选”而不是可信音乐资料。
+
+## 推荐下一轮只读取
+
+- `docs/PERMISSIONS_AUDIT.md`
+
+- `AGENTS.md`
+- `docs/PERMISSIONS.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/NEXT_TASKS.md`
+- `docs/SESSION_HANDOFF.md`
+- `src/features/albums`
+- `src/features/inbox`
+- `src/features/archive`
+- 如被权限或 schema 阻塞，再读取最小必要的 `supabase/migrations`
+
+## 不要做
+
+- 不要扫描整个仓库。
+- 不要运行 `npm install`。
+- 不要做架构重构。
+- 不要引入新的 UI 框架。
+- 不要自建完整后端。
+- 不要做批量抓取、转码、队列、后台 worker。
+- 不要优先增强 Inbox 页面 UI。
+- 不要把所有 Anontraveler 榜单一次性导入。
+- 不要使用 service role key。
+- 不要绕过 RLS。
+- 不要让普通用户或匿名用户执行导入写入。
+- 不要在 Practice 和 Songs / 曲目之外新增普通用户可操作的 CRUD，除非先明确权限矩阵并得到确认。
+
+## 当前优先任务：完成 PDF 六线谱工具箱 MVP
+
+已完成：
+1. `#toolbox` 路由、导航、响应式页面壳和双语文案。
+2. 纯 PDF 文件校验与电子六线谱结构分析核心。
+
+下一步只执行：
+1. 按 `docs/superpowers/plans/2026-07-14-toolbox-pdf-tab-musicxml.md` 的 Task 3 接入 `pdfjs-dist@4.10.38` 动态适配器。
+2. 完成 Task 4 的 MusicXML 4.0 安全骨架生成。
+3. 完成 Task 5 的分析摘要、警告和本地下载流程。
+4. 用 `C:\Users\Ashin\Downloads\endless rain.pdf` 做只读验证，不复制进仓库、不上传。
+
+本轮不要进入品位/节奏几何识别；先保证真实 PDF 快照和合法 MusicXML 骨架纵向链路可用。
+
+## PDF 六线谱工具箱：阶段 1 已完成
+
+- 已完成 Task 3：`pdfjs-dist@4.10.38` 动态本地 PDF 适配器、20 页限制、文本/矢量/图片快照归一化和资源释放。
+- 已完成 Task 4：安全 MusicXML 4.0 骨架和 XML 解析验证；只输出 `.musicxml`，不生成 `.gp`。
+- 已完成 Task 5：本地分析、摘要、警告、下载、失败恢复和 object URL 释放流程。
+- 已完成 Task 6：`endless rain.pdf` 只读验证通过，得到 4 页、92 BPM、连续小节 1-18；原文件未进入仓库。
+
+下一个建议任务（需单独设计后再开始）：仅针对清晰电子六线谱的字符串/品位几何定位。继续禁止节奏时值、连音、技巧符号、扫描件、专有 `.gp` 生成和任何上传/数据库改动。
+
+## PDF 六线谱工具箱：字符串 / 品位几何定位已完成
+
+- 已新增纯几何定位：六条近似等距字符串基线、`0` 至 `24` 品位、连续小节区间、`high` / `medium` 置信度和拒绝诊断。
+- 已在分析摘要与页面中显示定位数量；MusicXML 不消费这些候选，仍保持安全休止骨架。
+- 已覆盖可靠六弦系统、双位数品位、超范围数字、弦间歧义和小节边界候选。
+
+下一步必须重新单独设计，不直接实现：如何把已定位的同一小节内候选按时间顺序建模。该任务仍禁止自动推断节奏时值、技巧符号、扫描件支持、上传、Supabase 改动和 `.gp` 生成。
+
+## PDF 六线谱工具箱：小节内候选事件列已完成
+
+- 已完成同页同小节候选的横向事件列分组、从左到右排序与同弦冲突诊断。
+- `TabScoreAnalysis` 与页面会显示事件列数量；事件列仍只是几何顺序，不代表节奏、时值、音高、和弦或 MusicXML 音符。
+- MusicXML 继续只输出安全休止骨架；未改动上传、PDF 适配器、Supabase 或依赖。
+
+该旧建议已由后文“真实电子谱符号拓扑兼容设计”替代：首版不增加人工时值编辑器，而是只读取五线谱明确符号；仍禁止从横向距离猜测时值，并继续禁止扫描件、技巧识别、自动 `.gp` 生成、上传与数据库改动。
+
+## Toolbox：矢量六线谱基线定位已完成
+
+- PDF.js 操作列表中的水平矢量线段已用于识别六线谱系统；能合并同一基线的断续片段。
+- `endless rain.pdf` 本地浏览器验证已定位 3 个系统、5 个字符串 / 品位候选、5 个事件列；不完整基线会降为中等置信度并提示复核。
+- 不要把几何事件列自动转换成节奏、时值、音符或技巧，也不要生成 `.gp`。
+
+该建议已被后文“真实电子谱符号拓扑兼容设计”替代：首版不提供人工时值编辑器，改为只读取五线谱中明确存在的路径拓扑或可靠音乐字体字形；无法确认时整小节回退。
+
+推荐只读取：
+
+- `AGENTS.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/NEXT_TASKS.md`
+- `docs/SESSION_HANDOFF.md`
+- `docs/superpowers/specs/2026-07-14-toolbox-pdf-tab-musicxml-design.md`
+- `docs/superpowers/plans/2026-07-14-toolbox-pdf-tab-musicxml.md`
+- `src/features/toolbox`
+- `src/i18n/messages.ts`
+- `package.json`
+
+## Toolbox：真实电子谱符号拓扑兼容设计已完成
+
+已完成设计：
+- 采用矢量路径与可靠音乐字体字形双通道。
+- 先规范化为系统内图元，再按拓扑关系识别符头、符干、共享连梁、符尾、附点和休止符。
+- 明确支持复合子路径、跨绘制操作组合、倾斜 / 局部连梁、多符头共享符干和字形 / 路径冲突回退。
+- 明确禁止根据 TAB 横向间距推断节奏；横坐标只用于归组、排序、小节归属和唯一配对。
+- 任一事件不可靠或整小节容量不合法时，整个小节继续输出安全休止占位。
+
+下一轮按 `docs/superpowers/plans/2026-07-14-toolbox-explicit-rhythm-symbols.md` 从 Task 1 开始实施，先完成复合绘制形状提取，不要直接进入 MusicXML 或页面。
+
+推荐下一轮只读取：
+- `AGENTS.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/NEXT_TASKS.md`
+- `docs/SESSION_HANDOFF.md`
+- `docs/superpowers/specs/2026-07-14-toolbox-pdf-tab-musicxml-design.md`
+- `docs/superpowers/plans/2026-07-14-toolbox-explicit-rhythm-symbols.md`
+- `src/features/toolbox`
+
+下一轮约束：
+- 不读取、复制或上传真实 PDF。
+- 不修改 Supabase、依赖或项目架构。
+- 不运行 `npm install`。
+- 不根据 TAB 横向间距推断节奏。
+- 不生成 `.gp`。
+- 先写失败测试，再实现 Task 1；只运行 Toolbox 定向测试。
+
+## Toolbox：明确节奏拓扑 Task 1-2 已完成
+
+已完成：
+1. Task 1：复合绘制形状提取，保留图形状态、复合子路径、绘制方式、填充规则、线宽、变换后坐标和边界；现有 `lineSegments` 行为保持不变。
+2. Task 2：保守音乐字体证据，只允许精确 SMuFL PUA 映射与精确字体族白名单产生可靠语义；未知 PUA 保留为 unknown，普通文本不进入音乐证据。
+
+定向验证：`pdf.service.test.ts` 与 `tab-analyzer.test.ts` 共 12 个用例通过。
+
+下一步只执行：
+1. 按 `docs/superpowers/plans/2026-07-14-toolbox-explicit-rhythm-symbols.md` 的 Task 3，先写失败测试，再实现五线谱与 TAB 系统唯一配对。
+2. 只使用人工线段夹具，不读取真实 PDF。
+3. 继续禁止根据 TAB 横向间距、相邻事件间距或小节宽度推断节奏。
+
+推荐下一轮只读取：
+- `AGENTS.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/NEXT_TASKS.md`
+- `docs/SESSION_HANDOFF.md`
+- `docs/superpowers/specs/2026-07-14-toolbox-pdf-tab-musicxml-design.md`
+- `docs/superpowers/plans/2026-07-14-toolbox-explicit-rhythm-symbols.md`
+- `src/features/toolbox`
+
+下一轮仍不修改 Supabase、依赖或项目架构，不运行 `npm install`，不生成 `.gp`，只运行 Toolbox 定向测试。
+
+## Toolbox：明确节奏拓扑 Task 8 已完成
+
+已完成：
+1. `TabScoreAnalysis` 已附加逐小节 `rhythmMeasures`，并保持缺少新可选快照字段时的向后兼容。
+2. `tab-analyzer` 已按“配对系统 -> 规范化图元 -> 拓扑事件 -> 整小节结果”的依赖顺序完成编排。
+3. 路径单通道、可靠字形单通道、双通道一致、双通道冲突、无配对系统和旧快照均有分析器测试。
+4. 无可靠配对或无强节奏证据时保留安全休止骨架；有强证据但个别小节失败时保留逐小节简短原因。
+5. 横坐标没有参与时值推断；全部测试只使用人工证据，没有读取真实 PDF。
+
+定向验证：计划指定的 8 个纯分析文件共 78 个用例通过；完整 `src/features/toolbox` 共 11 个测试文件、88 个用例通过。
+
+下一步只执行：
+1. 按 `docs/superpowers/plans/2026-07-14-toolbox-explicit-rhythm-symbols.md` 的 Task 9，先写失败测试，再让 MusicXML 只消费完整合法的 `recognized` 小节。
+2. 任一 TAB 事件查找失败时必须让整个小节回退为既有休止占位；不得部分写入真实音符后补休止。
+3. 保持 MusicXML 转义、标准调弦、文件名与下载行为不变；本轮先不修改页面 UI。
+4. 不读取真实 PDF，不修改 Supabase、依赖或项目架构，不运行 `npm install`，不生成 `.gp`。
+
+推荐下一轮只读取：
+- `AGENTS.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/NEXT_TASKS.md`
+- `docs/SESSION_HANDOFF.md`
+- `docs/superpowers/specs/2026-07-14-toolbox-pdf-tab-musicxml-design.md`
+- `docs/superpowers/plans/2026-07-14-toolbox-explicit-rhythm-symbols.md`
+- `src/features/toolbox`
+
+下一轮只运行 Toolbox 定向测试，不运行完整仓库测试或构建。
+
+## Toolbox：明确节奏拓扑 Task 7 已完成
+
+已完成：
+1. 新增稳定的小节节奏输出契约和纯 `buildMeasureRhythmResults` 模块。
+2. 非休止事件只有在同页容差内候选全部属于同一小节时，才与唯一最近的 TAB 事件列配对；跨小节候选、重复用列、漏列、并列最近或超出容差都会整小节回退。
+3. 一个 TAB 列可保留多个弦 / 品位；明确休止事件的 `tabEventOrder` 固定为 `null`。
+4. 使用三十二分音符整数单位严格校验全至十六分时值及一个附点，并覆盖精确、容量不足、容量超出、6/8 与不支持容量。
+5. 中等置信度、缺失事件、配对歧义或容量不等时不保留部分候选，返回空事件的整小节回退。
+6. 时值完全沿用 Task 6 的明确拓扑 / 可靠字形结果；横向容差只选择 TAB 列和辅助小节归属。
+7. 全部测试使用人工节奏与 TAB 事件夹具，没有读取真实 PDF。
+
+定向验证：Task 7 与事件列共 2 个测试文件、16 个用例通过；完整 `src/features/toolbox` 共 11 个测试文件、82 个用例通过。
+
+下一步只执行：
+1. 按 `docs/superpowers/plans/2026-07-14-toolbox-explicit-rhythm-symbols.md` 的 Task 8，先写分析器失败测试，再按既定依赖顺序接入五线谱 / TAB 配对、图元规范化、拓扑识别和小节结果。
+2. 无可靠配对系统、无强节奏证据或任一小节回退时，保留既有安全休止骨架和简短诊断；不要提前修改 MusicXML 序列化或页面 UI。
+3. 继续保证横坐标只用于归组、排序、小节归属和 TAB 列唯一配对，绝不决定时值。
+4. 不读取真实 PDF，不修改 Supabase、依赖或项目架构，不运行 `npm install`，不生成 `.gp`。
+
+推荐下一轮只读取：
+- `AGENTS.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/NEXT_TASKS.md`
+- `docs/SESSION_HANDOFF.md`
+- `docs/superpowers/specs/2026-07-14-toolbox-pdf-tab-musicxml-design.md`
+- `docs/superpowers/plans/2026-07-14-toolbox-explicit-rhythm-symbols.md`
+- `src/features/toolbox`
+
+下一轮只运行 Toolbox 定向测试，不运行完整仓库测试或构建。
+
+## Toolbox：明确节奏拓扑 Task 6 已完成
+
+已完成：
+1. 路径强拓扑与可靠字形语义一致时融合为唯一事件并保留来源；冲突时不选边。
+2. 可靠字形支持全至十六分休止；仅有包围框相似的路径休止保持诊断，不伪装成强证据。
+3. 一个附点只有在右侧、垂直兼容并满足事件侧 / 候选点侧双向唯一时才附着。
+4. 两枚候选点、断音点歧义、完整字形缺少可靠附点锚点、未知字形、不支持结构和重叠声部会降级或拒绝。
+5. 横坐标只服务局部符号关系和排序，没有根据 TAB 或相邻事件间距推断节奏。
+6. 全部测试使用人工图元与字形夹具，没有读取真实 PDF。
+
+定向验证：`src/features/toolbox` 共 10 个测试文件、68 个用例通过。
+
+下一步只执行：
+1. 按 `docs/superpowers/plans/2026-07-14-toolbox-explicit-rhythm-symbols.md` 的 Task 7，先写失败测试，再新增整小节节奏结果模块。
+2. 非休止节奏事件只允许与同页同小节的唯一 TAB 事件列配对；横向容差只选择列，绝不决定时值。
+3. 使用三十二分音符整数单位严格校验小节容量；任一事件为 `medium`、配对歧义或容量不等时整小节回退。
+4. 不在 Task 7 提前接入分析器、MusicXML 或页面状态。
+
+推荐下一轮只读取：
+- `AGENTS.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/NEXT_TASKS.md`
+- `docs/SESSION_HANDOFF.md`
+- `docs/superpowers/specs/2026-07-14-toolbox-pdf-tab-musicxml-design.md`
+- `docs/superpowers/plans/2026-07-14-toolbox-explicit-rhythm-symbols.md`
+- `src/features/toolbox`
+
+下一轮仍不修改 Supabase、依赖或项目架构，不运行 `npm install`，不生成 `.gp`，只运行 Toolbox 定向测试。
+
+## Toolbox：明确节奏拓扑 Task 5 已完成
+
+已完成：
+1. 新增 `RhythmDuration` 与纯 `recognizeRhythmTopology` 结果契约。
+2. 在同页同系统内建立连接、相交、包含、对齐和从属关系，先解析符头 / 符干，再解析梁组和符尾。
+3. 支持路径与可靠字形全 / 二分 / 四分音符、共享符干、共享倾斜梁、两层梁、局部次梁，以及路径 / 字形单双符尾。
+4. 每根符干只计算自身明确相接的梁层或符尾；无关近邻不会改变时值。
+5. 横坐标只用于事件排序，没有使用 TAB 横向间距、事件间距或小节宽度推断时值。
+6. 全部测试只使用人工规范化图元和配对系统夹具，没有读取真实 PDF。
+
+定向验证：`rhythm-topology.test.ts` 与 `notation-primitives.test.ts` 共 2 个测试文件、21 个用例通过。
+
+下一步只执行：
+1. 按 `docs/superpowers/plans/2026-07-14-toolbox-explicit-rhythm-symbols.md` 的 Task 6，先写失败测试，再实现路径 / 字形强证据冲突融合、可靠休止符和一个附点的局部唯一附着。
+2. 未知字形、两枚候选点、断音点歧义和不支持结构只能产生中等置信度或诊断，不得直接确定可导出时值。
+3. 继续禁止使用 TAB 横向间距、相邻事件间距或小节宽度推断节奏。
+4. 不在 Task 6 提前实现整小节容量、MusicXML 或页面集成。
+
+推荐下一轮只读取：
+- `AGENTS.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/NEXT_TASKS.md`
+- `docs/SESSION_HANDOFF.md`
+- `docs/superpowers/specs/2026-07-14-toolbox-pdf-tab-musicxml-design.md`
+- `docs/superpowers/plans/2026-07-14-toolbox-explicit-rhythm-symbols.md`
+- `src/features/toolbox`
+
+下一轮仍不修改 Supabase、依赖或项目架构，不运行 `npm install`，不生成 `.gp`，只运行 Toolbox 定向测试。
+
+## Toolbox：明确节奏拓扑 Task 3 已完成
+
+已完成：
+1. 新增五线谱与 TAB 系统配对契约和纯几何模块。
+2. 只接受恰好五条、近水平、近等长且等距的五线谱；拒绝四线、六线和不均匀间距。
+3. 只配对同页下方、横向重叠至少 80%、垂直距离受五线谱间距约束且最近候选唯一的 TAB 系统。
+4. 全部测试只使用人工线段夹具，没有读取真实 PDF，也没有从 TAB 横向间距推断节奏。
+
+定向验证：`staff-tab-alignment.test.ts` 与 `tab-staff-geometry.test.ts` 共 11 个用例通过。
+
+下一步只执行：
+1. 按 `docs/superpowers/plans/2026-07-14-toolbox-explicit-rhythm-symbols.md` 的 Task 4，先写失败测试，再实现系统内证据规范化图元。
+2. 只使用人工路径、字形和配对系统夹具，不读取真实 PDF。
+3. 保留源坐标供 TAB 配对使用；不得通过 TAB 横向间距、相邻事件间距或小节宽度推断节奏。
+
+推荐下一轮只读取：
+- `AGENTS.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/NEXT_TASKS.md`
+- `docs/SESSION_HANDOFF.md`
+- `docs/superpowers/specs/2026-07-14-toolbox-pdf-tab-musicxml-design.md`
+- `docs/superpowers/plans/2026-07-14-toolbox-explicit-rhythm-symbols.md`
+- `src/features/toolbox`
+
+下一轮仍不修改 Supabase、依赖或项目架构，不运行 `npm install`，不生成 `.gp`，只运行 Toolbox 定向测试。
+
+## 当前 Toolbox 任务索引（2026-07-17）
+
+- 明确节奏拓扑 Task 1-8 已完成；以本文“Toolbox：明确节奏拓扑 Task 8 已完成”章节为当前状态。
+- 下一个任务是 Task 9：先写失败测试，再让 MusicXML 只消费完整合法的 `recognized` 小节；任一 TAB 事件查找失败时整小节回退。
+- Task 9 不修改页面 UI，不读取真实 PDF，不修改 Supabase，不运行 `npm install`，不生成 `.gp`，只运行 Toolbox 定向测试。
+
+## Toolbox：明确节奏拓扑 Task 9 已完成
+
+已完成：
+1. MusicXML 使用 `divisions = 8`，支持全、二分、四分、八分、十六分时值与一个附点。
+2. 完整合法的 `recognized` 小节会输出显式音符 / 休止、标准调弦 pitch、string / fret technical notation；同一 TAB 列的额外位置使用 `<chord/>`。
+3. 任一非休止事件无法唯一解析 TAB 列、TAB 列没有有效品位、事件不再高置信、小节容量不匹配或附点数量非法时，整小节回退为既有 measure rest，不做部分写入。
+4. 分析阶段与运行时回退的小节编号会出现在 MusicXML credit；既有 XML 转义、调弦、文件名和下载调用保持不变。
+5. 全部测试使用人工分析结果，没有读取真实 PDF；本轮未修改页面 UI、Supabase、依赖或锁文件，未运行 `npm install`，未生成 `.gp`。
+
+定向验证：MusicXML 1 个测试文件、6 个用例通过；最终 Toolbox 定向套件共 9 个测试文件、86 个用例通过。
+
+下一步只执行：
+1. 按 `docs/superpowers/plans/2026-07-14-toolbox-explicit-rhythm-symbols.md` 的 Task 10，先写页面失败测试，再显示已检查、recognized 和 fallback 小节数量及逐小节简短状态。
+2. 页面必须明确提示 fallback 小节会导出为休止占位；保持既有下载按钮条件，不增加编辑、播放、动画或新 UI 框架。
+3. 不重新修改 Task 9 的 MusicXML 语义，不读取真实 PDF，不修改 Supabase、依赖或项目架构，不运行 `npm install`，不生成 `.gp`。
+
+推荐下一轮只读取：
+- `AGENTS.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/NEXT_TASKS.md`
+- `docs/SESSION_HANDOFF.md`
+- `docs/superpowers/specs/2026-07-14-toolbox-pdf-tab-musicxml-design.md`
+- `docs/superpowers/plans/2026-07-14-toolbox-explicit-rhythm-symbols.md`
+- `src/features/toolbox`
+- `src/i18n/messages.ts`
+
+下一轮只运行 Toolbox 定向测试，不运行完整仓库测试或构建。
+
+## 当前 Toolbox 任务索引（2026-07-17，Task 9 后）
+
+- 明确节奏拓扑 Task 1-9 已完成；以本文“Toolbox：明确节奏拓扑 Task 9 已完成”章节为当前状态。
+- 下一个任务是 Task 10：页面显示逐小节识别 / 回退统计、状态和混合导出提示。
+- Task 10 不读取真实 PDF，不修改 Supabase，不运行 `npm install`，不生成 `.gp`，只运行 Toolbox 定向测试。
+
+## Toolbox：明确节奏拓扑 Task 10-11 已完成
+
+已完成：
+1. 页面显示已检查、`recognized`、`fallback` 小节数量、逐小节文字状态和简短回退原因。
+2. 存在 fallback 小节时明确提示 MusicXML 会使用整小节休止占位；下载按钮启用条件保持不变。
+3. 中英文文案同步，未新增编辑、播放、动画或 UI 框架，未改变 Task 9 MusicXML 语义。
+4. 最终构建修复了 `notation-primitives.ts` 的既有 TypeScript 曲线命令类型收窄问题，没有改变曲线采样运行时行为。
+5. 明确节奏拓扑计划 Task 1-11 全部完成；Toolbox 定向测试 11 个文件、95 个用例通过，生产构建通过。
+6. 全部自动化验证只使用人工夹具，没有读取、复制或上传真实 PDF；未修改 Supabase、依赖或锁文件，未运行 `npm install`，未生成 `.gp`。
+
+当前结论：
+- 计划定义的 Toolbox MVP / 明确节奏拓扑阶段已经开发完成。
+- 它不是通用完整转谱器：连音组、延音线、跨小节连梁、装饰音、多声部、技巧、扫描件、播放、人工编辑和直接 `.gp` 仍明确不支持。
+- 真实电子谱兼容性和 Guitar Pro 8 打开结果尚未做端到端验收，不能仅凭人工夹具宣称所有真实 PDF 均可转换。
+
+下一步建议：
+1. 如继续 Toolbox，先由用户明确授权一次浏览器本地只读真实 PDF 验收，并手工确认导出的 MusicXML 可由 Guitar Pro 8 打开；不得复制、上传或提交 PDF。
+2. 验收若发现具体兼容问题，先补人工最小失败夹具，再修复，不扩大到当前不支持符号。
+3. 如不进行真实文件验收，停止扩展 Toolbox，返回 Archive / Import 主线。
+
+推荐下一轮只读取：
+- `AGENTS.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/NEXT_TASKS.md`
+- `docs/SESSION_HANDOFF.md`
+- `docs/superpowers/specs/2026-07-14-toolbox-pdf-tab-musicxml-design.md`
+- `src/features/toolbox`
+- `src/i18n/messages.ts`
+
+不要扫描整个仓库，不运行 `npm install`，不做架构重构。未经用户明确授权，不读取真实 PDF 或进行 Guitar Pro 8 手工验收。
+
+## 当前 Toolbox 任务索引（2026-07-17，Task 11 后）
+
+- 明确节奏拓扑 Task 1-11 已完成；以本文“Toolbox：明确节奏拓扑 Task 10-11 已完成”章节为当前状态。
+- 下一步是可选的真实文件端到端验收，不是继续自动扩功能；如不验收则回到 Archive / Import 主线。

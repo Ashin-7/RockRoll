@@ -1,31 +1,67 @@
-import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { describe, expect, it, vi } from 'vitest';
+import { renderWithI18n } from '../../test/render';
 import { SongListPage } from './SongListPage';
 import { SongSummary } from './song.types';
 
+const realSongs: SongSummary[] = [
+  {
+    id: 'song-1',
+    title: 'Little Wing',
+    artistName: 'Unknown artist',
+    status: 'learning',
+    difficulty: 4,
+  },
+];
+
 describe('SongListPage', () => {
-  it('renders songs and empty state', () => {
-    const songs: SongSummary[] = [
-      {
-        id: 'song-1',
-        title: 'Little Wing',
-        artistName: 'Jimi Hendrix',
-        status: 'learning',
-        difficulty: 4,
-      },
-    ];
+  it('loads and renders songs from the provided loader', async () => {
+    renderWithI18n(<SongListPage onLoadSongs={vi.fn().mockResolvedValue(realSongs)} />);
 
-    render(<SongListPage songs={songs} />);
-
-    expect(screen.getByText('Songs')).toBeInTheDocument();
-    expect(screen.getByText('Little Wing')).toBeInTheDocument();
-    expect(screen.getByText('Jimi Hendrix')).toBeInTheDocument();
-    expect(screen.getByText('learning')).toBeInTheDocument();
+    expect(screen.getByText('Loading songs...')).toBeInTheDocument();
+    expect(await screen.findByText('Little Wing')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Little Wing' })).toHaveAttribute('href', '#song/song-1');
+    expect(screen.getByText('Unknown artist')).toBeInTheDocument();
+    expect(screen.getAllByText('Learning')).toHaveLength(2);
   });
 
-  it('renders empty state when no songs exist', () => {
-    render(<SongListPage songs={[]} />);
+  it('renders empty state when no real songs exist', async () => {
+    renderWithI18n(<SongListPage onLoadSongs={vi.fn().mockResolvedValue([])} />);
 
-    expect(screen.getByText('No songs in the archive yet.')).toBeInTheDocument();
+    expect(await screen.findByText('No songs in the archive yet.')).toBeInTheDocument();
+  });
+
+  it('renders an error state when songs cannot load', async () => {
+    renderWithI18n(<SongListPage onLoadSongs={vi.fn().mockRejectedValue(new Error('network failed'))} />);
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('network failed');
+  });
+
+  it('creates a song and refreshes the list', async () => {
+    const loadSongs = vi.fn().mockResolvedValueOnce([]).mockResolvedValueOnce(realSongs);
+    const createSong = vi.fn().mockResolvedValue(undefined);
+    const user = userEvent.setup();
+
+    renderWithI18n(<SongListPage onCreateSong={createSong} onLoadSongs={loadSongs} />);
+
+    await user.type(await screen.findByLabelText('Title'), 'Little Wing');
+    await user.selectOptions(screen.getByLabelText('Status'), 'learning');
+    await user.selectOptions(screen.getByLabelText('Difficulty'), '4');
+    await user.click(screen.getByRole('button', { name: 'Add song' }));
+
+    expect(createSong).toHaveBeenCalledWith({ title: 'Little Wing', status: 'learning', difficulty: 4 });
+    await waitFor(() => expect(loadSongs).toHaveBeenCalledTimes(2));
+    expect(await screen.findByText('Song added.')).toBeInTheDocument();
+    expect(screen.getByText('Little Wing')).toBeInTheDocument();
+  });
+
+  it('renders Chinese add-song messages', () => {
+    window.localStorage.setItem('rockroll.locale', 'zh-CN');
+
+    renderWithI18n(<SongListPage songs={[]} />);
+
+    expect(screen.getByRole('heading', { name: '新增曲目' })).toBeInTheDocument();
+    expect(screen.getByLabelText('标题')).toBeInTheDocument();
   });
 });

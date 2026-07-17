@@ -22,6 +22,71 @@
   text-transform: uppercase;
 }
 
+.app-shell__brand small {
+  display: block;
+  margin-top: 0.15rem;
+  color: var(--color-paper-muted);
+  font-size: 0.62rem;
+  letter-spacing: 0.18em;
+}
+
+.app-shell__language {
+  width: 100%;
+  margin-top: var(--space-4);
+}
+
+.app-shell__account {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: var(--space-3);
+  color: var(--color-paper-muted);
+  font-size: 0.9rem;
+  gap: var(--space-3);
+}
+
+.app-shell__account-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--color-paper);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app-shell__account-actions {
+  flex: 0 0 auto;
+}
+
+.app-shell__account-actions a,
+.app-shell__account-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2rem;
+  border: 1px solid rgba(242, 169, 59, 0.32);
+  border-radius: 999px;
+  background: rgba(242, 169, 59, 0.08);
+  color: var(--color-paper);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: var(--space-1) var(--space-3);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.app-shell__account-actions a:hover,
+.app-shell__account-actions a:focus-visible,
+.app-shell__account-actions button:hover,
+.app-shell__account-actions button:focus-visible {
+  border-color: var(--color-amber);
+  background: rgba(242, 169, 59, 0.18);
+  color: var(--color-paper);
+  outline: none;
+}
+
 .app-shell__rec {
   width: 0.75rem;
   height: 0.75rem;
@@ -49,6 +114,12 @@
   border-color: var(--color-amber);
   color: var(--color-paper);
   outline: none;
+}
+
+.app-shell__nav a.is-active {
+  border-color: var(--color-amber);
+  background: rgba(242, 169, 59, 0.14);
+  color: var(--color-paper);
 }
 
 .app-shell__main {

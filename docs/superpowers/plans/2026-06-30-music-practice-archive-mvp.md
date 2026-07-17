@@ -26,7 +26,7 @@ This plan assumes the recommended modern stack after approval. Do not run `nvm`,
 Planned files after MVP implementation:
 
 ```text
-D:\Code\RcokRoll
+D:\Code\RockRoll
 鈹溾攢 .env.example
 鈹溾攢 .gitignore
 鈹溾攢 README.md
@@ -114,23 +114,23 @@ Core tables:
 ## Task 1: Confirm Runtime And Scaffold App
 
 **Files:**
-- Create: `D:\Code\RcokRoll\.gitignore`
-- Create: `D:\Code\RcokRoll\.env.example`
-- Create: `D:\Code\RcokRoll\README.md`
-- Create: `D:\Code\RcokRoll\package.json`
-- Create: `D:\Code\RcokRoll\tsconfig.json`
-- Create: `D:\Code\RcokRoll\vite.config.ts`
-- Create: `D:\Code\RcokRoll\index.html`
-- Create: `D:\Code\RcokRoll\src\main.tsx`
-- Create: `D:\Code\RcokRoll\src\App.tsx`
-- Create: `D:\Code\RcokRoll\src\test\setup.ts`
+- Create: `D:\Code\RockRoll\.gitignore`
+- Create: `D:\Code\RockRoll\.env.example`
+- Create: `D:\Code\RockRoll\README.md`
+- Create: `D:\Code\RockRoll\package.json`
+- Create: `D:\Code\RockRoll\tsconfig.json`
+- Create: `D:\Code\RockRoll\vite.config.ts`
+- Create: `D:\Code\RockRoll\index.html`
+- Create: `D:\Code\RockRoll\src\main.tsx`
+- Create: `D:\Code\RockRoll\src\App.tsx`
+- Create: `D:\Code\RockRoll\src\test\setup.ts`
 
 - [ ] **Step 1: Get explicit runtime approval**
 
 Ask the user:
 
 ```text
-This MVP needs a modern Web/PWA toolchain. May I use Node.js 20 LTS or newer for D:\Code\RcokRoll? I will not change legacy projects or use newer Node inside unrelated D:\Code projects.
+This MVP needs a modern Web/PWA toolchain. May I use Node.js 20 LTS or newer for D:\Code\RockRoll? I will not change legacy projects or use newer Node inside unrelated D:\Code projects.
 ```
 
 Expected: User explicitly approves newer Node for this repository.
@@ -156,16 +156,16 @@ npm version compatible with the active Node runtime
 Run from `D:\Code`:
 
 ```powershell
-npm create vite@latest RcokRoll -- --template react-ts
+npm create vite@latest RockRoll -- --template react-ts
 ```
 
-If `D:\Code\RcokRoll` already exists, use Vite only if it can scaffold into the existing empty working tree without deleting `docs`. If the command refuses, create the files manually instead of removing the repository.
+If `D:\Code\RockRoll` already exists, use Vite only if it can scaffold into the existing empty working tree without deleting `docs`. If the command refuses, create the files manually instead of removing the repository.
 
 Expected: `package.json`, `index.html`, `src`, and TypeScript config files exist while `docs` remains intact.
 
 - [ ] **Step 4: Install dependencies**
 
-Run from `D:\Code\RcokRoll`:
+Run from `D:\Code\RockRoll`:
 
 ```powershell
 npm install
@@ -207,7 +207,7 @@ Thumbs.db
 Write:
 
 ```markdown
-# RcokRoll
+# RockRoll
 
 Private cloud-first music archive and practice tracking app.
 
@@ -276,11 +276,11 @@ git commit -m "chore: scaffold music archive web app"
 ## Task 2: Add Supabase Schema And Client
 
 **Files:**
-- Create: `D:\Code\RcokRoll\supabase\migrations\0001_initial_schema.sql`
-- Create: `D:\Code\RcokRoll\supabase\seed.sql`
-- Create: `D:\Code\RcokRoll\src\config\env.ts`
-- Create: `D:\Code\RcokRoll\src\lib\supabase.ts`
-- Test: `D:\Code\RcokRoll\src\config\env.test.ts`
+- Create: `D:\Code\RockRoll\supabase\migrations\0001_initial_schema.sql`
+- Create: `D:\Code\RockRoll\supabase\seed.sql`
+- Create: `D:\Code\RockRoll\src\config\env.ts`
+- Create: `D:\Code\RockRoll\src\lib\supabase.ts`
+- Test: `D:\Code\RockRoll\src\config\env.test.ts`
 
 - [ ] **Step 1: Write env test**
 
@@ -627,13 +627,13 @@ git commit -m "feat: add supabase schema and client"
 ## Task 3: Add Design System And App Shell
 
 **Files:**
-- Create: `D:\Code\RcokRoll\src\styles\tokens.css`
-- Create: `D:\Code\RcokRoll\src\styles\global.css`
-- Create: `D:\Code\RcokRoll\src\app\shell\AppShell.tsx`
-- Create: `D:\Code\RcokRoll\src\app\shell\AppShell.css`
-- Modify: `D:\Code\RcokRoll\src\main.tsx`
-- Modify: `D:\Code\RcokRoll\src\App.tsx`
-- Test: `D:\Code\RcokRoll\src\app\shell\AppShell.test.tsx`
+- Create: `D:\Code\RockRoll\src\styles\tokens.css`
+- Create: `D:\Code\RockRoll\src\styles\global.css`
+- Create: `D:\Code\RockRoll\src\app\shell\AppShell.tsx`
+- Create: `D:\Code\RockRoll\src\app\shell\AppShell.css`
+- Modify: `D:\Code\RockRoll\src\main.tsx`
+- Modify: `D:\Code\RockRoll\src\App.tsx`
+- Test: `D:\Code\RockRoll\src\app\shell\AppShell.test.tsx`
 
 - [ ] **Step 1: Write shell test**
 
@@ -652,7 +652,7 @@ describe('AppShell', () => {
       </AppShell>,
     );
 
-    expect(screen.getByText('RcokRoll')).toBeInTheDocument();
+    expect(screen.getByText('RockRoll')).toBeInTheDocument();
     expect(screen.getByRole('navigation', { name: 'Primary' })).toBeInTheDocument();
     expect(screen.getByText('Backstage')).toBeInTheDocument();
     expect(screen.getByText('Songs')).toBeInTheDocument();
@@ -753,7 +753,7 @@ export function AppShell({ children }: AppShellProps) {
       <aside className="app-shell__sidebar">
         <div className="app-shell__brand">
           <span className="app-shell__rec" aria-hidden="true" />
-          <span>RcokRoll</span>
+          <span>RockRoll</span>
         </div>
         <nav aria-label="Primary" className="app-shell__nav">
           {navItems.map((item) => (
@@ -906,10 +906,10 @@ git commit -m "feat: add backstage app shell"
 ## Task 4: Add Auth Page And Session Boundary
 
 **Files:**
-- Create: `D:\Code\RcokRoll\src\features\auth\AuthPage.tsx`
-- Create: `D:\Code\RcokRoll\src\features\auth\auth.service.ts`
-- Test: `D:\Code\RcokRoll\src\features\auth\AuthPage.test.tsx`
-- Modify: `D:\Code\RcokRoll\src\App.tsx`
+- Create: `D:\Code\RockRoll\src\features\auth\AuthPage.tsx`
+- Create: `D:\Code\RockRoll\src\features\auth\auth.service.ts`
+- Test: `D:\Code\RockRoll\src\features\auth\AuthPage.test.tsx`
+- Modify: `D:\Code\RockRoll\src\App.tsx`
 
 - [ ] **Step 1: Write auth page test**
 
@@ -1083,11 +1083,11 @@ git commit -m "feat: add email magic link auth"
 ## Task 5: Add Song Library
 
 **Files:**
-- Create: `D:\Code\RcokRoll\src\features\songs\song.types.ts`
-- Create: `D:\Code\RcokRoll\src\features\songs\songs.service.ts`
-- Create: `D:\Code\RcokRoll\src\features\songs\SongListPage.tsx`
-- Create: `D:\Code\RcokRoll\src\features\songs\SongDetailPage.tsx`
-- Test: `D:\Code\RcokRoll\src\features\songs\SongListPage.test.tsx`
+- Create: `D:\Code\RockRoll\src\features\songs\song.types.ts`
+- Create: `D:\Code\RockRoll\src\features\songs\songs.service.ts`
+- Create: `D:\Code\RockRoll\src\features\songs\SongListPage.tsx`
+- Create: `D:\Code\RockRoll\src\features\songs\SongDetailPage.tsx`
+- Test: `D:\Code\RockRoll\src\features\songs\SongListPage.test.tsx`
 
 - [ ] **Step 1: Write song list test**
 
@@ -1259,10 +1259,10 @@ git commit -m "feat: add song library foundation"
 ## Task 6: Add Practice Session Form
 
 **Files:**
-- Create: `D:\Code\RcokRoll\src\features\practice\practice.types.ts`
-- Create: `D:\Code\RcokRoll\src\features\practice\practice.service.ts`
-- Create: `D:\Code\RcokRoll\src\features\practice\PracticeSessionForm.tsx`
-- Test: `D:\Code\RcokRoll\src\features\practice\PracticeSessionForm.test.tsx`
+- Create: `D:\Code\RockRoll\src\features\practice\practice.types.ts`
+- Create: `D:\Code\RockRoll\src\features\practice\practice.service.ts`
+- Create: `D:\Code\RockRoll\src\features\practice\PracticeSessionForm.tsx`
+- Test: `D:\Code\RockRoll\src\features\practice\PracticeSessionForm.test.tsx`
 
 - [ ] **Step 1: Write practice form test**
 
@@ -1421,18 +1421,18 @@ git commit -m "feat: add practice session form"
 ## Task 7: Add Archive, Library, And Inbox Foundations
 
 **Files:**
-- Create: `D:\Code\RcokRoll\src\features\archive\archive.types.ts`
-- Create: `D:\Code\RcokRoll\src\features\archive\archive.service.ts`
-- Create: `D:\Code\RcokRoll\src\features\archive\ArchivePage.tsx`
-- Create: `D:\Code\RcokRoll\src\features\library\media.types.ts`
-- Create: `D:\Code\RcokRoll\src\features\library\media.service.ts`
-- Create: `D:\Code\RcokRoll\src\features\library\LibraryPage.tsx`
-- Create: `D:\Code\RcokRoll\src\features\inbox\inbox.types.ts`
-- Create: `D:\Code\RcokRoll\src\features\inbox\inbox.service.ts`
-- Create: `D:\Code\RcokRoll\src\features\inbox\InboxPage.tsx`
-- Test: `D:\Code\RcokRoll\src\features\archive\ArchivePage.test.tsx`
-- Test: `D:\Code\RcokRoll\src\features\library\LibraryPage.test.tsx`
-- Test: `D:\Code\RcokRoll\src\features\inbox\InboxPage.test.tsx`
+- Create: `D:\Code\RockRoll\src\features\archive\archive.types.ts`
+- Create: `D:\Code\RockRoll\src\features\archive\archive.service.ts`
+- Create: `D:\Code\RockRoll\src\features\archive\ArchivePage.tsx`
+- Create: `D:\Code\RockRoll\src\features\library\media.types.ts`
+- Create: `D:\Code\RockRoll\src\features\library\media.service.ts`
+- Create: `D:\Code\RockRoll\src\features\library\LibraryPage.tsx`
+- Create: `D:\Code\RockRoll\src\features\inbox\inbox.types.ts`
+- Create: `D:\Code\RockRoll\src\features\inbox\inbox.service.ts`
+- Create: `D:\Code\RockRoll\src\features\inbox\InboxPage.tsx`
+- Test: `D:\Code\RockRoll\src\features\archive\ArchivePage.test.tsx`
+- Test: `D:\Code\RockRoll\src\features\library\LibraryPage.test.tsx`
+- Test: `D:\Code\RockRoll\src\features\inbox\InboxPage.test.tsx`
 
 - [ ] **Step 1: Write page tests**
 
@@ -1697,10 +1697,10 @@ git commit -m "feat: add archive library and inbox foundations"
 ## Task 8: Add Backstage Dashboard And Hash Routing
 
 **Files:**
-- Create: `D:\Code\RcokRoll\src\features\backstage\BackstagePage.tsx`
-- Create: `D:\Code\RcokRoll\src\app\routes.tsx`
-- Test: `D:\Code\RcokRoll\src\app\routes.test.tsx`
-- Modify: `D:\Code\RcokRoll\src\App.tsx`
+- Create: `D:\Code\RockRoll\src\features\backstage\BackstagePage.tsx`
+- Create: `D:\Code\RockRoll\src\app\routes.tsx`
+- Test: `D:\Code\RockRoll\src\app\routes.test.tsx`
+- Modify: `D:\Code\RockRoll\src\App.tsx`
 
 - [ ] **Step 1: Write routing test**
 
@@ -1842,8 +1842,8 @@ git commit -m "feat: add backstage dashboard routing"
 ## Task 9: Add MusicBrainz Import Service Boundary
 
 **Files:**
-- Create: `D:\Code\RcokRoll\src\features\inbox\musicbrainz.service.ts`
-- Test: `D:\Code\RcokRoll\src\features\inbox\musicbrainz.service.test.ts`
+- Create: `D:\Code\RockRoll\src\features\inbox\musicbrainz.service.ts`
+- Test: `D:\Code\RockRoll\src\features\inbox\musicbrainz.service.test.ts`
 
 - [ ] **Step 1: Write MusicBrainz mapper test**
 
@@ -1941,7 +1941,7 @@ git commit -m "feat: add musicbrainz import mapper"
 ## Task 10: Final MVP Verification
 
 **Files:**
-- Modify: `D:\Code\RcokRoll\README.md`
+- Modify: `D:\Code\RockRoll\README.md`
 
 - [ ] **Step 1: Update README with verification commands**
 
