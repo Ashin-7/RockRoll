@@ -268,3 +268,318 @@ npm run build
 4. 用 `C:\Users\Ashin\Downloads\endless rain.pdf` 做只读验证，不复制进仓库、不上传。
 
 本轮不要进入品位/节奏几何识别；先保证真实 PDF 快照和合法 MusicXML 骨架纵向链路可用。
+
+## PDF 六线谱工具箱：阶段 1 已完成
+
+- 已完成 Task 3：`pdfjs-dist@4.10.38` 动态本地 PDF 适配器、20 页限制、文本/矢量/图片快照归一化和资源释放。
+- 已完成 Task 4：安全 MusicXML 4.0 骨架和 XML 解析验证；只输出 `.musicxml`，不生成 `.gp`。
+- 已完成 Task 5：本地分析、摘要、警告、下载、失败恢复和 object URL 释放流程。
+- 已完成 Task 6：`endless rain.pdf` 只读验证通过，得到 4 页、92 BPM、连续小节 1-18；原文件未进入仓库。
+
+下一个建议任务（需单独设计后再开始）：仅针对清晰电子六线谱的字符串/品位几何定位。继续禁止节奏时值、连音、技巧符号、扫描件、专有 `.gp` 生成和任何上传/数据库改动。
+
+## PDF 六线谱工具箱：字符串 / 品位几何定位已完成
+
+- 已新增纯几何定位：六条近似等距字符串基线、`0` 至 `24` 品位、连续小节区间、`high` / `medium` 置信度和拒绝诊断。
+- 已在分析摘要与页面中显示定位数量；MusicXML 不消费这些候选，仍保持安全休止骨架。
+- 已覆盖可靠六弦系统、双位数品位、超范围数字、弦间歧义和小节边界候选。
+
+下一步必须重新单独设计，不直接实现：如何把已定位的同一小节内候选按时间顺序建模。该任务仍禁止自动推断节奏时值、技巧符号、扫描件支持、上传、Supabase 改动和 `.gp` 生成。
+
+## PDF 六线谱工具箱：小节内候选事件列已完成
+
+- 已完成同页同小节候选的横向事件列分组、从左到右排序与同弦冲突诊断。
+- `TabScoreAnalysis` 与页面会显示事件列数量；事件列仍只是几何顺序，不代表节奏、时值、音高、和弦或 MusicXML 音符。
+- MusicXML 继续只输出安全休止骨架；未改动上传、PDF 适配器、Supabase 或依赖。
+
+该旧建议已由后文“真实电子谱符号拓扑兼容设计”替代：首版不增加人工时值编辑器，而是只读取五线谱明确符号；仍禁止从横向距离猜测时值，并继续禁止扫描件、技巧识别、自动 `.gp` 生成、上传与数据库改动。
+
+## Toolbox：矢量六线谱基线定位已完成
+
+- PDF.js 操作列表中的水平矢量线段已用于识别六线谱系统；能合并同一基线的断续片段。
+- `endless rain.pdf` 本地浏览器验证已定位 3 个系统、5 个字符串 / 品位候选、5 个事件列；不完整基线会降为中等置信度并提示复核。
+- 不要把几何事件列自动转换成节奏、时值、音符或技巧，也不要生成 `.gp`。
+
+该建议已被后文“真实电子谱符号拓扑兼容设计”替代：首版不提供人工时值编辑器，改为只读取五线谱中明确存在的路径拓扑或可靠音乐字体字形；无法确认时整小节回退。
+
+推荐只读取：
+
+- `AGENTS.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/NEXT_TASKS.md`
+- `docs/SESSION_HANDOFF.md`
+- `docs/superpowers/specs/2026-07-14-toolbox-pdf-tab-musicxml-design.md`
+- `docs/superpowers/plans/2026-07-14-toolbox-pdf-tab-musicxml.md`
+- `src/features/toolbox`
+- `src/i18n/messages.ts`
+- `package.json`
+
+## Toolbox：真实电子谱符号拓扑兼容设计已完成
+
+已完成设计：
+- 采用矢量路径与可靠音乐字体字形双通道。
+- 先规范化为系统内图元，再按拓扑关系识别符头、符干、共享连梁、符尾、附点和休止符。
+- 明确支持复合子路径、跨绘制操作组合、倾斜 / 局部连梁、多符头共享符干和字形 / 路径冲突回退。
+- 明确禁止根据 TAB 横向间距推断节奏；横坐标只用于归组、排序、小节归属和唯一配对。
+- 任一事件不可靠或整小节容量不合法时，整个小节继续输出安全休止占位。
+
+下一轮按 `docs/superpowers/plans/2026-07-14-toolbox-explicit-rhythm-symbols.md` 从 Task 1 开始实施，先完成复合绘制形状提取，不要直接进入 MusicXML 或页面。
+
+推荐下一轮只读取：
+- `AGENTS.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/NEXT_TASKS.md`
+- `docs/SESSION_HANDOFF.md`
+- `docs/superpowers/specs/2026-07-14-toolbox-pdf-tab-musicxml-design.md`
+- `docs/superpowers/plans/2026-07-14-toolbox-explicit-rhythm-symbols.md`
+- `src/features/toolbox`
+
+下一轮约束：
+- 不读取、复制或上传真实 PDF。
+- 不修改 Supabase、依赖或项目架构。
+- 不运行 `npm install`。
+- 不根据 TAB 横向间距推断节奏。
+- 不生成 `.gp`。
+- 先写失败测试，再实现 Task 1；只运行 Toolbox 定向测试。
+
+## Toolbox：明确节奏拓扑 Task 1-2 已完成
+
+已完成：
+1. Task 1：复合绘制形状提取，保留图形状态、复合子路径、绘制方式、填充规则、线宽、变换后坐标和边界；现有 `lineSegments` 行为保持不变。
+2. Task 2：保守音乐字体证据，只允许精确 SMuFL PUA 映射与精确字体族白名单产生可靠语义；未知 PUA 保留为 unknown，普通文本不进入音乐证据。
+
+定向验证：`pdf.service.test.ts` 与 `tab-analyzer.test.ts` 共 12 个用例通过。
+
+下一步只执行：
+1. 按 `docs/superpowers/plans/2026-07-14-toolbox-explicit-rhythm-symbols.md` 的 Task 3，先写失败测试，再实现五线谱与 TAB 系统唯一配对。
+2. 只使用人工线段夹具，不读取真实 PDF。
+3. 继续禁止根据 TAB 横向间距、相邻事件间距或小节宽度推断节奏。
+
+推荐下一轮只读取：
+- `AGENTS.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/NEXT_TASKS.md`
+- `docs/SESSION_HANDOFF.md`
+- `docs/superpowers/specs/2026-07-14-toolbox-pdf-tab-musicxml-design.md`
+- `docs/superpowers/plans/2026-07-14-toolbox-explicit-rhythm-symbols.md`
+- `src/features/toolbox`
+
+下一轮仍不修改 Supabase、依赖或项目架构，不运行 `npm install`，不生成 `.gp`，只运行 Toolbox 定向测试。
+
+## Toolbox：明确节奏拓扑 Task 8 已完成
+
+已完成：
+1. `TabScoreAnalysis` 已附加逐小节 `rhythmMeasures`，并保持缺少新可选快照字段时的向后兼容。
+2. `tab-analyzer` 已按“配对系统 -> 规范化图元 -> 拓扑事件 -> 整小节结果”的依赖顺序完成编排。
+3. 路径单通道、可靠字形单通道、双通道一致、双通道冲突、无配对系统和旧快照均有分析器测试。
+4. 无可靠配对或无强节奏证据时保留安全休止骨架；有强证据但个别小节失败时保留逐小节简短原因。
+5. 横坐标没有参与时值推断；全部测试只使用人工证据，没有读取真实 PDF。
+
+定向验证：计划指定的 8 个纯分析文件共 78 个用例通过；完整 `src/features/toolbox` 共 11 个测试文件、88 个用例通过。
+
+下一步只执行：
+1. 按 `docs/superpowers/plans/2026-07-14-toolbox-explicit-rhythm-symbols.md` 的 Task 9，先写失败测试，再让 MusicXML 只消费完整合法的 `recognized` 小节。
+2. 任一 TAB 事件查找失败时必须让整个小节回退为既有休止占位；不得部分写入真实音符后补休止。
+3. 保持 MusicXML 转义、标准调弦、文件名与下载行为不变；本轮先不修改页面 UI。
+4. 不读取真实 PDF，不修改 Supabase、依赖或项目架构，不运行 `npm install`，不生成 `.gp`。
+
+推荐下一轮只读取：
+- `AGENTS.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/NEXT_TASKS.md`
+- `docs/SESSION_HANDOFF.md`
+- `docs/superpowers/specs/2026-07-14-toolbox-pdf-tab-musicxml-design.md`
+- `docs/superpowers/plans/2026-07-14-toolbox-explicit-rhythm-symbols.md`
+- `src/features/toolbox`
+
+下一轮只运行 Toolbox 定向测试，不运行完整仓库测试或构建。
+
+## Toolbox：明确节奏拓扑 Task 7 已完成
+
+已完成：
+1. 新增稳定的小节节奏输出契约和纯 `buildMeasureRhythmResults` 模块。
+2. 非休止事件只有在同页容差内候选全部属于同一小节时，才与唯一最近的 TAB 事件列配对；跨小节候选、重复用列、漏列、并列最近或超出容差都会整小节回退。
+3. 一个 TAB 列可保留多个弦 / 品位；明确休止事件的 `tabEventOrder` 固定为 `null`。
+4. 使用三十二分音符整数单位严格校验全至十六分时值及一个附点，并覆盖精确、容量不足、容量超出、6/8 与不支持容量。
+5. 中等置信度、缺失事件、配对歧义或容量不等时不保留部分候选，返回空事件的整小节回退。
+6. 时值完全沿用 Task 6 的明确拓扑 / 可靠字形结果；横向容差只选择 TAB 列和辅助小节归属。
+7. 全部测试使用人工节奏与 TAB 事件夹具，没有读取真实 PDF。
+
+定向验证：Task 7 与事件列共 2 个测试文件、16 个用例通过；完整 `src/features/toolbox` 共 11 个测试文件、82 个用例通过。
+
+下一步只执行：
+1. 按 `docs/superpowers/plans/2026-07-14-toolbox-explicit-rhythm-symbols.md` 的 Task 8，先写分析器失败测试，再按既定依赖顺序接入五线谱 / TAB 配对、图元规范化、拓扑识别和小节结果。
+2. 无可靠配对系统、无强节奏证据或任一小节回退时，保留既有安全休止骨架和简短诊断；不要提前修改 MusicXML 序列化或页面 UI。
+3. 继续保证横坐标只用于归组、排序、小节归属和 TAB 列唯一配对，绝不决定时值。
+4. 不读取真实 PDF，不修改 Supabase、依赖或项目架构，不运行 `npm install`，不生成 `.gp`。
+
+推荐下一轮只读取：
+- `AGENTS.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/NEXT_TASKS.md`
+- `docs/SESSION_HANDOFF.md`
+- `docs/superpowers/specs/2026-07-14-toolbox-pdf-tab-musicxml-design.md`
+- `docs/superpowers/plans/2026-07-14-toolbox-explicit-rhythm-symbols.md`
+- `src/features/toolbox`
+
+下一轮只运行 Toolbox 定向测试，不运行完整仓库测试或构建。
+
+## Toolbox：明确节奏拓扑 Task 6 已完成
+
+已完成：
+1. 路径强拓扑与可靠字形语义一致时融合为唯一事件并保留来源；冲突时不选边。
+2. 可靠字形支持全至十六分休止；仅有包围框相似的路径休止保持诊断，不伪装成强证据。
+3. 一个附点只有在右侧、垂直兼容并满足事件侧 / 候选点侧双向唯一时才附着。
+4. 两枚候选点、断音点歧义、完整字形缺少可靠附点锚点、未知字形、不支持结构和重叠声部会降级或拒绝。
+5. 横坐标只服务局部符号关系和排序，没有根据 TAB 或相邻事件间距推断节奏。
+6. 全部测试使用人工图元与字形夹具，没有读取真实 PDF。
+
+定向验证：`src/features/toolbox` 共 10 个测试文件、68 个用例通过。
+
+下一步只执行：
+1. 按 `docs/superpowers/plans/2026-07-14-toolbox-explicit-rhythm-symbols.md` 的 Task 7，先写失败测试，再新增整小节节奏结果模块。
+2. 非休止节奏事件只允许与同页同小节的唯一 TAB 事件列配对；横向容差只选择列，绝不决定时值。
+3. 使用三十二分音符整数单位严格校验小节容量；任一事件为 `medium`、配对歧义或容量不等时整小节回退。
+4. 不在 Task 7 提前接入分析器、MusicXML 或页面状态。
+
+推荐下一轮只读取：
+- `AGENTS.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/NEXT_TASKS.md`
+- `docs/SESSION_HANDOFF.md`
+- `docs/superpowers/specs/2026-07-14-toolbox-pdf-tab-musicxml-design.md`
+- `docs/superpowers/plans/2026-07-14-toolbox-explicit-rhythm-symbols.md`
+- `src/features/toolbox`
+
+下一轮仍不修改 Supabase、依赖或项目架构，不运行 `npm install`，不生成 `.gp`，只运行 Toolbox 定向测试。
+
+## Toolbox：明确节奏拓扑 Task 5 已完成
+
+已完成：
+1. 新增 `RhythmDuration` 与纯 `recognizeRhythmTopology` 结果契约。
+2. 在同页同系统内建立连接、相交、包含、对齐和从属关系，先解析符头 / 符干，再解析梁组和符尾。
+3. 支持路径与可靠字形全 / 二分 / 四分音符、共享符干、共享倾斜梁、两层梁、局部次梁，以及路径 / 字形单双符尾。
+4. 每根符干只计算自身明确相接的梁层或符尾；无关近邻不会改变时值。
+5. 横坐标只用于事件排序，没有使用 TAB 横向间距、事件间距或小节宽度推断时值。
+6. 全部测试只使用人工规范化图元和配对系统夹具，没有读取真实 PDF。
+
+定向验证：`rhythm-topology.test.ts` 与 `notation-primitives.test.ts` 共 2 个测试文件、21 个用例通过。
+
+下一步只执行：
+1. 按 `docs/superpowers/plans/2026-07-14-toolbox-explicit-rhythm-symbols.md` 的 Task 6，先写失败测试，再实现路径 / 字形强证据冲突融合、可靠休止符和一个附点的局部唯一附着。
+2. 未知字形、两枚候选点、断音点歧义和不支持结构只能产生中等置信度或诊断，不得直接确定可导出时值。
+3. 继续禁止使用 TAB 横向间距、相邻事件间距或小节宽度推断节奏。
+4. 不在 Task 6 提前实现整小节容量、MusicXML 或页面集成。
+
+推荐下一轮只读取：
+- `AGENTS.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/NEXT_TASKS.md`
+- `docs/SESSION_HANDOFF.md`
+- `docs/superpowers/specs/2026-07-14-toolbox-pdf-tab-musicxml-design.md`
+- `docs/superpowers/plans/2026-07-14-toolbox-explicit-rhythm-symbols.md`
+- `src/features/toolbox`
+
+下一轮仍不修改 Supabase、依赖或项目架构，不运行 `npm install`，不生成 `.gp`，只运行 Toolbox 定向测试。
+
+## Toolbox：明确节奏拓扑 Task 3 已完成
+
+已完成：
+1. 新增五线谱与 TAB 系统配对契约和纯几何模块。
+2. 只接受恰好五条、近水平、近等长且等距的五线谱；拒绝四线、六线和不均匀间距。
+3. 只配对同页下方、横向重叠至少 80%、垂直距离受五线谱间距约束且最近候选唯一的 TAB 系统。
+4. 全部测试只使用人工线段夹具，没有读取真实 PDF，也没有从 TAB 横向间距推断节奏。
+
+定向验证：`staff-tab-alignment.test.ts` 与 `tab-staff-geometry.test.ts` 共 11 个用例通过。
+
+下一步只执行：
+1. 按 `docs/superpowers/plans/2026-07-14-toolbox-explicit-rhythm-symbols.md` 的 Task 4，先写失败测试，再实现系统内证据规范化图元。
+2. 只使用人工路径、字形和配对系统夹具，不读取真实 PDF。
+3. 保留源坐标供 TAB 配对使用；不得通过 TAB 横向间距、相邻事件间距或小节宽度推断节奏。
+
+推荐下一轮只读取：
+- `AGENTS.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/NEXT_TASKS.md`
+- `docs/SESSION_HANDOFF.md`
+- `docs/superpowers/specs/2026-07-14-toolbox-pdf-tab-musicxml-design.md`
+- `docs/superpowers/plans/2026-07-14-toolbox-explicit-rhythm-symbols.md`
+- `src/features/toolbox`
+
+下一轮仍不修改 Supabase、依赖或项目架构，不运行 `npm install`，不生成 `.gp`，只运行 Toolbox 定向测试。
+
+## 当前 Toolbox 任务索引（2026-07-17）
+
+- 明确节奏拓扑 Task 1-8 已完成；以本文“Toolbox：明确节奏拓扑 Task 8 已完成”章节为当前状态。
+- 下一个任务是 Task 9：先写失败测试，再让 MusicXML 只消费完整合法的 `recognized` 小节；任一 TAB 事件查找失败时整小节回退。
+- Task 9 不修改页面 UI，不读取真实 PDF，不修改 Supabase，不运行 `npm install`，不生成 `.gp`，只运行 Toolbox 定向测试。
+
+## Toolbox：明确节奏拓扑 Task 9 已完成
+
+已完成：
+1. MusicXML 使用 `divisions = 8`，支持全、二分、四分、八分、十六分时值与一个附点。
+2. 完整合法的 `recognized` 小节会输出显式音符 / 休止、标准调弦 pitch、string / fret technical notation；同一 TAB 列的额外位置使用 `<chord/>`。
+3. 任一非休止事件无法唯一解析 TAB 列、TAB 列没有有效品位、事件不再高置信、小节容量不匹配或附点数量非法时，整小节回退为既有 measure rest，不做部分写入。
+4. 分析阶段与运行时回退的小节编号会出现在 MusicXML credit；既有 XML 转义、调弦、文件名和下载调用保持不变。
+5. 全部测试使用人工分析结果，没有读取真实 PDF；本轮未修改页面 UI、Supabase、依赖或锁文件，未运行 `npm install`，未生成 `.gp`。
+
+定向验证：MusicXML 1 个测试文件、6 个用例通过；最终 Toolbox 定向套件共 9 个测试文件、86 个用例通过。
+
+下一步只执行：
+1. 按 `docs/superpowers/plans/2026-07-14-toolbox-explicit-rhythm-symbols.md` 的 Task 10，先写页面失败测试，再显示已检查、recognized 和 fallback 小节数量及逐小节简短状态。
+2. 页面必须明确提示 fallback 小节会导出为休止占位；保持既有下载按钮条件，不增加编辑、播放、动画或新 UI 框架。
+3. 不重新修改 Task 9 的 MusicXML 语义，不读取真实 PDF，不修改 Supabase、依赖或项目架构，不运行 `npm install`，不生成 `.gp`。
+
+推荐下一轮只读取：
+- `AGENTS.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/NEXT_TASKS.md`
+- `docs/SESSION_HANDOFF.md`
+- `docs/superpowers/specs/2026-07-14-toolbox-pdf-tab-musicxml-design.md`
+- `docs/superpowers/plans/2026-07-14-toolbox-explicit-rhythm-symbols.md`
+- `src/features/toolbox`
+- `src/i18n/messages.ts`
+
+下一轮只运行 Toolbox 定向测试，不运行完整仓库测试或构建。
+
+## 当前 Toolbox 任务索引（2026-07-17，Task 9 后）
+
+- 明确节奏拓扑 Task 1-9 已完成；以本文“Toolbox：明确节奏拓扑 Task 9 已完成”章节为当前状态。
+- 下一个任务是 Task 10：页面显示逐小节识别 / 回退统计、状态和混合导出提示。
+- Task 10 不读取真实 PDF，不修改 Supabase，不运行 `npm install`，不生成 `.gp`，只运行 Toolbox 定向测试。
+
+## Toolbox：明确节奏拓扑 Task 10-11 已完成
+
+已完成：
+1. 页面显示已检查、`recognized`、`fallback` 小节数量、逐小节文字状态和简短回退原因。
+2. 存在 fallback 小节时明确提示 MusicXML 会使用整小节休止占位；下载按钮启用条件保持不变。
+3. 中英文文案同步，未新增编辑、播放、动画或 UI 框架，未改变 Task 9 MusicXML 语义。
+4. 最终构建修复了 `notation-primitives.ts` 的既有 TypeScript 曲线命令类型收窄问题，没有改变曲线采样运行时行为。
+5. 明确节奏拓扑计划 Task 1-11 全部完成；Toolbox 定向测试 11 个文件、95 个用例通过，生产构建通过。
+6. 全部自动化验证只使用人工夹具，没有读取、复制或上传真实 PDF；未修改 Supabase、依赖或锁文件，未运行 `npm install`，未生成 `.gp`。
+
+当前结论：
+- 计划定义的 Toolbox MVP / 明确节奏拓扑阶段已经开发完成。
+- 它不是通用完整转谱器：连音组、延音线、跨小节连梁、装饰音、多声部、技巧、扫描件、播放、人工编辑和直接 `.gp` 仍明确不支持。
+- 真实电子谱兼容性和 Guitar Pro 8 打开结果尚未做端到端验收，不能仅凭人工夹具宣称所有真实 PDF 均可转换。
+
+下一步建议：
+1. 如继续 Toolbox，先由用户明确授权一次浏览器本地只读真实 PDF 验收，并手工确认导出的 MusicXML 可由 Guitar Pro 8 打开；不得复制、上传或提交 PDF。
+2. 验收若发现具体兼容问题，先补人工最小失败夹具，再修复，不扩大到当前不支持符号。
+3. 如不进行真实文件验收，停止扩展 Toolbox，返回 Archive / Import 主线。
+
+推荐下一轮只读取：
+- `AGENTS.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/NEXT_TASKS.md`
+- `docs/SESSION_HANDOFF.md`
+- `docs/superpowers/specs/2026-07-14-toolbox-pdf-tab-musicxml-design.md`
+- `src/features/toolbox`
+- `src/i18n/messages.ts`
+
+不要扫描整个仓库，不运行 `npm install`，不做架构重构。未经用户明确授权，不读取真实 PDF 或进行 Guitar Pro 8 手工验收。
+
+## 当前 Toolbox 任务索引（2026-07-17，Task 11 后）
+
+- 明确节奏拓扑 Task 1-11 已完成；以本文“Toolbox：明确节奏拓扑 Task 10-11 已完成”章节为当前状态。
+- 下一步是可选的真实文件端到端验收，不是继续自动扩功能；如不验收则回到 Archive / Import 主线。

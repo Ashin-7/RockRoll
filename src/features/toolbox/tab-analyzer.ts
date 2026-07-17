@@ -1,6 +1,24 @@
+import { locateTabFrets } from './tab-geometry';
+import { groupTabFretEvents } from './tab-events';
+import { findTabStaffSystems } from './tab-staff-geometry';
+import { findPairedStaffSystems } from './staff-tab-alignment';
+import { normalizeNotationEvidence } from './notation-primitives';
+import { recognizeRhythmTopology } from './rhythm-topology';
+import { buildMeasureRhythmResults } from './rhythm-measures';
 import { PdfDocumentSnapshot, PdfTextItem, TabScoreAnalysis } from './toolbox.types';
 
 const MAX_PDF_BYTES = 20 * 1024 * 1024;
+const MAX_RHYTHM_DIAGNOSTICS = 5;
+
+function appendRhythmDiagnostics(warnings: string[], diagnostics: string[]): void {
+  const uniqueDiagnostics = [...new Set(diagnostics)];
+  warnings.push(...uniqueDiagnostics.slice(0, MAX_RHYTHM_DIAGNOSTICS));
+
+  const omittedCount = uniqueDiagnostics.length - MAX_RHYTHM_DIAGNOSTICS;
+  if (omittedCount > 0) {
+    warnings.push(`Omitted ${omittedCount} additional rhythm diagnostics.`);
+  }
+}
 
 function normalizeText(value: string): string {
   return value.replace(/[\u0000-\u001f]+/g, ' ').replace(/\s+/g, ' ').trim();
@@ -31,7 +49,7 @@ function findTempo(textItems: PdfTextItem[]): number | null {
 function findMeasureNumbers(textItems: PdfTextItem[]): number[] {
   const candidates = textItems
     .filter((item) => /^\d{1,3}$/.test(item.text.trim()) && Math.abs(item.fontSize - 8) <= 0.05)
-    .sort((left, right) => left.page - right.page || left.y - right.y || left.x - right.x)
+    .sort((left, right) => left.page - right.page || right.y - left.y || left.x - right.x)
     .map((item) => Number(item.text));
 
   let longest: number[] = [];
@@ -76,6 +94,23 @@ export function analyzeTabScore(snapshot: PdfDocumentSnapshot): TabScoreAnalysis
 
   const tempo = findTempo(snapshot.textItems);
   const timeSignature = snapshot.timeSignature ?? { beats: 4, beatType: 4 };
+  const tabStaffSystems = findTabStaffSystems(snapshot.lineSegments ?? []);
+  const geometry = locateTabFrets(snapshot.textItems, measureNumbers, tabStaffSystems);
+  const fretEvents = groupTabFretEvents(geometry.positions);
+  const pairedSystems = findPairedStaffSystems(snapshot.lineSegments ?? [], tabStaffSystems);
+  const primitives = normalizeNotationEvidence({
+    shapes: snapshot.vectorShapes ?? [],
+    glyphs: snapshot.musicGlyphs ?? [],
+    pairedSystems,
+  });
+  const topology = recognizeRhythmTopology(primitives.primitives, pairedSystems);
+  const rhythmMeasures = buildMeasureRhythmResults({
+    events: topology.events,
+    tabEvents: fretEvents.events,
+    measureNumbers,
+    beats: timeSignature.beats,
+    beatType: timeSignature.beatType,
+  });
   const warnings: string[] = [];
 
   if (!snapshot.timeSignature) {
@@ -84,7 +119,25 @@ export function analyzeTabScore(snapshot: PdfDocumentSnapshot): TabScoreAnalysis
   if (tempo === null) {
     warnings.push('Tempo was not detected; 120 BPM will be used.');
   }
-  warnings.push('Note recognition is not available yet; exported measures will contain rests.');
+  warnings.push(...geometry.warnings);
+  warnings.push(...fretEvents.warnings);
+  const rhythmDiagnostics = [...primitives.warnings, ...topology.warnings];
+  if (pairedSystems.length > 0 && topology.events.length > 0) {
+    rhythmMeasures.forEach((measure) => {
+      if (measure.status === 'fallback' && measure.warning !== null) {
+        rhythmDiagnostics.push(measure.warning);
+      }
+    });
+  }
+  appendRhythmDiagnostics(warnings, rhythmDiagnostics);
+
+  const hasRecognizedMeasure = rhythmMeasures.some((measure) => measure.status === 'recognized');
+  if (pairedSystems.length === 0 || !hasRecognizedMeasure) {
+    warnings.push('Note recognition is not available yet; exported measures will contain rests.');
+  }
+  if (geometry.positions.length > 0 && topology.events.length === 0) {
+    warnings.push('Rhythm and technique recognition are not available yet.');
+  }
 
   return {
     fileName: snapshot.fileName,
@@ -95,6 +148,10 @@ export function analyzeTabScore(snapshot: PdfDocumentSnapshot): TabScoreAnalysis
     beatType: timeSignature.beatType,
     measureNumbers,
     vectorDrawingCount: snapshot.vectorDrawingCount,
+    tabStaffSystems,
+    fretPositions: geometry.positions,
+    fretEvents: fretEvents.events,
+    rhythmMeasures,
     warnings,
   };
 }

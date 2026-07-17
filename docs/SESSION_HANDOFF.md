@@ -417,6 +417,280 @@ P0 / P1 的本地代码与自动化测试项已完成。不要重新做权限 UI
 
 建议开启新对话，并粘贴以上提示词继续。
 
+## 追加交接：Toolbox 明确节奏拓扑 Task 10-11
+
+本轮完成：
+- 页面新增节奏检查摘要，显示已检查、`recognized`、`fallback` 数量，以及逐小节状态和简短回退原因。
+- fallback 小节明确提示会导出为整小节休止占位；已有下载按钮条件保持不变。
+- 中英文状态文案已补齐；未增加编辑、播放、动画或新 UI 框架，未重新修改 Task 9 的 MusicXML 语义。
+- 生产构建发现 `notation-primitives.ts` 对曲线命令的既有 TypeScript 收窄失败；以明确 `curve` 类型守卫修复，现有曲线行为测试保持通过。
+- 明确节奏拓扑实施计划 Task 1-11 已全部完成。时值只来自明确拓扑或可靠音乐字形，任何小节不能完整安全确认时整体回退。
+- 没有读取、复制或上传真实 PDF，没有修改 Supabase、依赖或锁文件，没有运行 `npm install`，没有生成 `.gp`。
+
+本轮修改文件：
+- `src/features/toolbox/ToolboxPage.tsx`
+- `src/features/toolbox/ToolboxPage.css`
+- `src/features/toolbox/ToolboxPage.test.tsx`
+- `src/features/toolbox/notation-primitives.ts`
+- `src/i18n/messages.ts`
+- `docs/PROJECT_STATUS.md`
+- `docs/NEXT_TASKS.md`
+- `docs/SESSION_HANDOFF.md`
+
+验证：
+```powershell
+$env:HOME=(Resolve-Path .\.tmp).Path; $env:USERPROFILE=$env:HOME; $env:TEMP=$env:HOME; $env:TMP=$env:HOME; C:\Users\Ashin\AppData\Local\nvm\v20.20.2\node.exe .\node_modules\vitest\vitest.mjs --run src/features/toolbox
+$node20Directory = 'C:\Users\Ashin\AppData\Local\nvm\v20.20.2'; $env:PATH="$node20Directory;$env:PATH"; npm run build
+git diff --check -- src/features/toolbox src/i18n/messages.ts docs/PROJECT_STATUS.md docs/NEXT_TASKS.md docs/SESSION_HANDOFF.md docs/superpowers/specs/2026-07-14-toolbox-pdf-tab-musicxml-design.md docs/superpowers/plans/2026-07-14-toolbox-explicit-rhythm-symbols.md
+```
+
+结果：Toolbox 11 个测试文件、95 个用例通过；Node 20 下 TypeScript / Vite 构建通过。首次构建命令因 PATH 中默认 Node 8.17.0 在启动 TypeScript 前失败，确认根因后只在构建进程内将 Node 20.20.2 置于 PATH 首位。最终构建保留既有主应用 chunk 超过 500 kB 警告；范围 diff 无空白错误，仅有 LF 转 CRLF 提示。
+
+当前风险与边界：
+- 自动化结果全部来自人工证据夹具；尚未用真实 PDF 和 Guitar Pro 8 验证端到端兼容性。
+- 连音组、延音线、跨小节连梁、装饰音、多声部重叠、演奏技巧、扫描件、播放、人工时值编辑和直接 `.gp` 输出仍明确不支持。
+- 这些限制属于已确认的 MVP 产品边界；计划内 Task 1-11 没有未完成实现。
+
+下一轮建议：
+- 如用户要继续验证 Toolbox，必须先明确允许浏览器本地只读指定真实 PDF，并由用户配合确认 Guitar Pro 8 打开结果；不得复制、上传或提交 PDF。
+- 若没有真实文件验收授权，停止扩展 Toolbox，返回 Archive / Import 主线。
+
+下一轮提示词：
+
+```text
+继续 RockRoll 项目开发。
+请只读取：
+- AGENTS.md
+- docs/PROJECT_STATUS.md
+- docs/NEXT_TASKS.md
+- docs/SESSION_HANDOFF.md
+- 当前任务相关目录
+
+Toolbox 明确节奏拓扑 Task 1-11 已完成。
+如继续 Toolbox，请先确认是否允许浏览器本地只读真实 PDF 和 Guitar Pro 8 手工验收；未经允许不要读取、复制或上传真实 PDF。
+否则继续 docs/NEXT_TASKS.md 中的 Archive / Import 主线任务。
+不要扫描整个仓库。
+不要运行 npm install。
+不要做架构重构。
+完成后中文总结。
+```
+
+建议开启新对话，并粘贴以上提示词继续。
+
+## 追加交接：Toolbox 明确节奏拓扑 Task 9
+
+本轮完成：
+- MusicXML 已从纯休止骨架升级为混合安全导出：只消费完整合法的 `recognized` 小节，其余小节继续输出既有 measure rest。
+- `divisions = 8`，全 / 二分 / 四分 / 八分 / 十六分与一个附点均有精确 duration / type；显式休止不会查找 TAB 列。
+- 非休止事件按页码、小节号和 `tabEventOrder` 唯一解析高置信 TAB 列，并输出标准调弦 pitch、string / fret technical notation；同列额外位置使用 `<chord/>`。
+- 任一 TAB 引用缺失、重复、空列、非法品位、置信度失效或容量不完整时，整个小节回退，不会先写局部真实音符再补休止。
+- 运行时会拒绝 `dots` 不是 0 / 1 的事件；测试也覆盖容量不足、重复 TAB 匹配和低置信位置的整小节原子回退。
+- 分析阶段 fallback 与运行时 lookup 回退的小节编号都会加入 MusicXML credit。
+- 没有修改页面 UI，没有读取、复制或上传真实 PDF，没有修改 Supabase、依赖或锁文件，没有运行 `npm install`，没有生成 `.gp`。
+
+修改文件：
+- `src/features/toolbox/toolbox.types.ts`
+- `src/features/toolbox/tab-analyzer.ts`
+- `src/features/toolbox/tab-analyzer.test.ts`
+- `src/features/toolbox/musicxml.service.ts`
+- `src/features/toolbox/musicxml.service.test.ts`
+- `docs/PROJECT_STATUS.md`
+- `docs/NEXT_TASKS.md`
+- `docs/SESSION_HANDOFF.md`
+
+验证：
+```powershell
+$env:HOME=(Resolve-Path .\.tmp).Path; $env:USERPROFILE=$env:HOME; $env:TEMP=$env:HOME; $env:TMP=$env:HOME; C:\Users\Ashin\AppData\Local\nvm\v20.20.2\node.exe .\node_modules\vitest\vitest.mjs --run src/features/toolbox/musicxml.service.test.ts
+$env:HOME=(Resolve-Path .\.tmp).Path; $env:USERPROFILE=$env:HOME; $env:TEMP=$env:HOME; $env:TMP=$env:HOME; C:\Users\Ashin\AppData\Local\nvm\v20.20.2\node.exe .\node_modules\vitest\vitest.mjs --run src/features/toolbox/tab-analyzer.test.ts src/features/toolbox/tab-events.test.ts src/features/toolbox/tab-geometry.test.ts src/features/toolbox/tab-staff-geometry.test.ts src/features/toolbox/staff-tab-alignment.test.ts src/features/toolbox/notation-primitives.test.ts src/features/toolbox/rhythm-topology.test.ts src/features/toolbox/rhythm-measures.test.ts src/features/toolbox/musicxml.service.test.ts
+```
+
+结果：MusicXML 1 个测试文件、6 个用例通过；最终 Toolbox 定向套件 9 个测试文件、86 个用例通过，退出码均为 0。未运行完整仓库测试、构建或真实 PDF 验证。
+
+风险：
+- 真实音符导出仍只由人工分析结果夹具验证，没有读取真实 PDF，也没有在 Guitar Pro 8 中手工打开验证。
+- 页面尚未展示逐小节 recognized / fallback 状态或混合导出说明；Task 10 尚未开始。
+
+未完成事项：
+- Task 10：页面显示节奏检查统计、逐小节状态和 fallback 休止占位提示。
+- Task 11：最终 Toolbox 定向验证、构建和交接；是否允许真实 PDF / Guitar Pro 8 手工验证需由用户另行确认。
+
+下一轮提示词：
+
+```text
+继续 RockRoll Toolbox 开发。
+只读取：
+- AGENTS.md
+- docs/PROJECT_STATUS.md
+- docs/NEXT_TASKS.md
+- docs/SESSION_HANDOFF.md
+- docs/superpowers/specs/2026-07-14-toolbox-pdf-tab-musicxml-design.md
+- docs/superpowers/plans/2026-07-14-toolbox-explicit-rhythm-symbols.md
+- src/features/toolbox
+- src/i18n/messages.ts
+
+按明确节奏拓扑计划继续 Task 10，先写页面失败测试，再显示已检查、recognized、fallback 小节数量、逐小节状态和 fallback 休止占位提示。
+保持既有下载按钮条件，不增加编辑、播放、动画或新 UI 框架；不要重新修改 Task 9 的 MusicXML 语义。
+不要读取、复制或上传真实 PDF，不修改 Supabase，不运行 npm install，不生成 .gp。
+只运行 Toolbox 定向测试，完成后中文总结。
+```
+
+建议开启新对话，并粘贴以上提示词继续。
+
+## 追加交接：Toolbox 明确节奏拓扑 Task 8
+
+本轮完成：
+- `TabScoreAnalysis` 新增 `rhythmMeasures`，分析器会为每个已识别小节编号输出 `recognized` 或 `fallback`。
+- `tab-analyzer` 已按配对系统、规范化图元、拓扑识别、整小节验证的依赖顺序完成接入。
+- 路径与可靠字形可以分别独立识别；双通道一致时融合，强证据冲突时不选边并回退。
+- 缺少新快照可选字段、找不到可靠五线谱 / TAB 配对或没有强节奏证据时，继续保留既有安全休止骨架。
+- 只有已有强事件但某个小节失败时，才追加该小节的简短原因，避免把候选误当作可导出结果。
+- 横坐标只用于归组、排序、小节归属和 TAB 列唯一配对，没有决定时值。
+- 没有读取、复制或上传真实 PDF，没有修改 MusicXML、页面 UI、Supabase、依赖或锁文件，没有运行 `npm install`，没有生成 `.gp`。
+
+修改文件：
+- `src/features/toolbox/toolbox.types.ts`
+- `src/features/toolbox/tab-analyzer.ts`
+- `src/features/toolbox/tab-analyzer.test.ts`
+- `docs/PROJECT_STATUS.md`
+- `docs/NEXT_TASKS.md`
+- `docs/SESSION_HANDOFF.md`
+
+验证：
+```powershell
+$env:HOME=(Resolve-Path .\.tmp).Path; $env:USERPROFILE=$env:HOME; $env:TEMP=$env:HOME; $env:TMP=$env:HOME; C:\Users\Ashin\AppData\Local\nvm\v20.20.2\node.exe .\node_modules\vitest\vitest.mjs --run src/features/toolbox/tab-analyzer.test.ts src/features/toolbox/tab-events.test.ts src/features/toolbox/tab-geometry.test.ts src/features/toolbox/tab-staff-geometry.test.ts src/features/toolbox/staff-tab-alignment.test.ts src/features/toolbox/notation-primitives.test.ts src/features/toolbox/rhythm-topology.test.ts src/features/toolbox/rhythm-measures.test.ts
+$env:HOME=(Resolve-Path .\.tmp).Path; $env:USERPROFILE=$env:HOME; $env:TEMP=$env:HOME; $env:TMP=$env:HOME; C:\Users\Ashin\AppData\Local\nvm\v20.20.2\node.exe .\node_modules\vitest\vitest.mjs --run src/features/toolbox
+```
+
+结果：8 个纯分析测试文件、78 个用例通过；完整 Toolbox 11 个测试文件、88 个用例通过，退出码均为 0。未运行完整仓库测试、构建或真实 PDF 验证。
+
+风险：
+- `musicxml.service.ts` 尚未消费 `rhythmMeasures`，因此当前下载结果仍是安全休止骨架。
+- 页面尚未显示逐小节识别 / 回退状态；Task 10 仍未开始。
+- 当前端到端分析链只由人工证据夹具验证，未做真实 PDF 兼容验证。
+
+未完成事项：
+- Task 9：只把完整合法的 recognized 小节序列化为 MusicXML，任一 lookup 失败时整小节回退。
+- Task 10：页面显示识别 / 回退统计和原因。
+- Task 11：最终 Toolbox 定向验证、构建和交接。
+
+下一轮提示词：
+
+```text
+继续 RockRoll Toolbox 开发。
+只读取：
+- AGENTS.md
+- docs/PROJECT_STATUS.md
+- docs/NEXT_TASKS.md
+- docs/SESSION_HANDOFF.md
+- docs/superpowers/specs/2026-07-14-toolbox-pdf-tab-musicxml-design.md
+- docs/superpowers/plans/2026-07-14-toolbox-explicit-rhythm-symbols.md
+- src/features/toolbox
+
+按明确节奏拓扑计划继续 Task 9，先写失败测试，再让 MusicXML 只序列化完整合法的 recognized 小节；任一 TAB 事件查找失败时整小节回退为既有休止占位。
+本轮不要修改页面 UI，不读取真实 PDF，不修改 Supabase，不运行 npm install，不生成 .gp。
+只运行 Toolbox 定向测试，完成后中文总结。
+```
+
+建议开启新对话，并粘贴以上提示词继续。
+
+## 追加交接：Toolbox 明确节奏拓扑 Task 3
+
+本轮完成：
+- 新增 `PairedStaffSystem` 与 `findPairedStaffSystems`，识别恰好五条的五线谱并与下方唯一最近 TAB 系统配对。
+- 覆盖四线 / 六线拒绝、间距不均、跨页、横向重叠不足 80%、垂直距离过大和最近候选并列等拒绝条件。
+- 配对只使用系统上下关系、五线谱间距和横向覆盖；没有使用 TAB 事件横向间距推断节奏。
+- 没有读取、复制或上传真实 PDF，没有修改 Supabase、依赖或锁文件，没有运行 `npm install`，没有生成 `.gp`。
+
+修改文件：
+- `src/features/toolbox/toolbox.types.ts`
+- `src/features/toolbox/staff-tab-alignment.ts`
+- `src/features/toolbox/staff-tab-alignment.test.ts`
+- `docs/PROJECT_STATUS.md`
+- `docs/NEXT_TASKS.md`
+- `docs/SESSION_HANDOFF.md`
+
+验证：
+```powershell
+$env:HOME=(Resolve-Path .\.tmp).Path; $env:USERPROFILE=$env:HOME; $env:TEMP=$env:HOME; $env:TMP=$env:HOME; C:\Users\Ashin\AppData\Local\nvm\v20.20.2\node.exe .\node_modules\vitest\vitest.mjs --run src/features/toolbox/staff-tab-alignment.test.ts src/features/toolbox/tab-staff-geometry.test.ts
+```
+
+结果：2 个测试文件、11 个用例通过。未运行完整测试或构建。
+
+未完成事项：
+- 明确节奏计划 Task 4：把配对系统内的路径与字形证据规范化为局部图元。
+- Task 5 及后续拓扑识别、整小节验证、MusicXML 和页面集成均未开始。
+
+下一轮提示词：
+
+```text
+继续 RockRoll Toolbox 开发。
+只读取：
+- AGENTS.md
+- docs/PROJECT_STATUS.md
+- docs/NEXT_TASKS.md
+- docs/SESSION_HANDOFF.md
+- docs/superpowers/specs/2026-07-14-toolbox-pdf-tab-musicxml-design.md
+- docs/superpowers/plans/2026-07-14-toolbox-explicit-rhythm-symbols.md
+- src/features/toolbox
+
+按明确节奏拓扑计划继续 Task 4，先写失败测试并实现系统内证据规范化图元。
+不得根据 TAB 横向间距推断节奏。
+不要读取、复制或上传真实 PDF。
+不修改 Supabase，不运行 npm install，不生成 .gp。
+只运行 Toolbox 定向测试，完成后中文总结。
+```
+
+建议开启新对话，并粘贴以上提示词继续。
+
+## 追加交接：Toolbox 明确节奏拓扑 Task 1-2
+
+本轮完成：
+- `PdfDocumentSnapshot.vectorShapes` 已保留 PDF.js 复合绘制形状，覆盖多子路径、连续建路、曲线、矩形、闭合、fill / eoFill / stroke / fillStroke、线宽、save / restore、`endPath` 和资源释放。
+- `PdfDocumentSnapshot.musicGlyphs` 已加入保守音乐字体证据；精确字体族白名单和精确 SMuFL PUA 映射共同决定 reliable，其他 PUA 为 unknown，普通文本不产生证据。
+- 现有六线谱 `lineSegments` 与普通标题、速度、小节分析保持兼容。
+- 没有读取、复制或上传真实 PDF，没有使用 TAB 横向间距推断节奏，没有修改 Supabase 或依赖，没有生成 `.gp`。
+
+修改文件：
+- `src/features/toolbox/toolbox.types.ts`
+- `src/features/toolbox/pdf.service.ts`
+- `src/features/toolbox/pdf.service.test.ts`
+- `docs/PROJECT_STATUS.md`
+- `docs/NEXT_TASKS.md`
+- `docs/SESSION_HANDOFF.md`
+
+验证：
+```powershell
+$env:HOME=(Resolve-Path .\.tmp).Path; $env:USERPROFILE=$env:HOME; $env:TEMP=$env:HOME; $env:TMP=$env:HOME; C:\Users\Ashin\AppData\Local\nvm\v20.20.2\node.exe .\node_modules\vitest\vitest.mjs --run src/features/toolbox/pdf.service.test.ts src/features/toolbox/tab-analyzer.test.ts
+```
+
+结果：2 个测试文件、12 个用例通过。未运行完整测试或构建。
+
+未完成事项：
+- 明确节奏计划 Task 3：五线谱与 TAB 系统配对。
+- Task 4 及后续规范化图元、拓扑识别、整小节验证、MusicXML 和页面集成均未开始。
+
+下一轮提示词：
+
+```text
+继续 RockRoll Toolbox 开发。
+只读取：
+- AGENTS.md
+- docs/PROJECT_STATUS.md
+- docs/NEXT_TASKS.md
+- docs/SESSION_HANDOFF.md
+- docs/superpowers/specs/2026-07-14-toolbox-pdf-tab-musicxml-design.md
+- docs/superpowers/plans/2026-07-14-toolbox-explicit-rhythm-symbols.md
+- src/features/toolbox
+
+按明确节奏拓扑计划继续 Task 3，先写失败测试并实现五线谱与 TAB 系统唯一配对。
+不得根据 TAB 横向间距推断节奏。
+不要读取、复制或上传真实 PDF。
+不修改 Supabase，不运行 npm install，不生成 .gp。
+只运行 Toolbox 定向测试，完成后中文总结。
+```
+
+建议开启新对话，并粘贴以上提示词继续。
+
 ## 追加交接：新榜单导入正常与 `match_existing` service 基础
 
 - 用户已确认新的真实榜单导入正常；当前不需要因历史部分失败提前建设数据库级失败恢复、后台队列或 worker。
@@ -445,3 +719,344 @@ P0 / P1 的本地代码与自动化测试项已完成。不要重新做权限 UI
 - 尚未修改 `package.json` / lockfile，尚未安装 PDF.js，尚未生成 MusicXML。
 - 下一轮只读取：`AGENTS.md`、三个状态文档、上述设计/计划、`src/features/toolbox`、`src/app/routes.tsx`、`src/app/shell/AppShell.tsx`、`src/App.tsx`、`src/i18n/messages.ts`、`package.json`。
 - 下一步从计划 Task 3 开始：安装锁定的 `pdfjs-dist@4.10.38`，先写失败测试，再实现动态 PDF 快照适配器。
+
+## 追加交接：PDF 六线谱工具箱 Task 3-6 已完成
+
+- `pdfjs-dist@4.10.38` 已加入 `package.json` 与 lockfile；`pdf.service.ts` 动态加载 PDF.js，在浏览器本地读取并释放文档，不上传或保存 PDF。
+- `musicxml.service.ts` 只导出安全的 MusicXML 4.0 骨架：标准六弦调弦、TAB 谱表、拍号/速度、正确的小节数与休止符占位。不会生成 `.gp`，也不会声称已识别音符。
+- Toolbox 页面已可选择 PDF、本地分析、查看摘要/警告、下载 MusicXML，并覆盖错误恢复和 object URL 释放。
+- 真实只读样本 `C:\Users\Ashin\Downloads\endless rain.pdf` 验证：4 页、6307 个非图片绘图操作、0 图片对象、标题 `endless rain`、92 BPM、小节 1-18；拍号未以文本形式出现，所以安全回退至 4/4 并显示警告。XML 解析器验证通过，Guitar Pro 8 手工打开验证尚未执行。
+- 本轮文件：`package.json`、`package-lock.json`、`src/features/toolbox/*`（新增 PDF/MusicXML service 及测试，更新页面/分析器）、`src/i18n/messages.ts`、三个状态文档。
+- 验证：`npm test -- --run src/features/toolbox src/app/routes.test.tsx src/app/shell/AppShell.test.tsx src/App.test.tsx`，7 文件 27 用例通过；`npm run build` 通过；`git diff --check` 通过。Vite 仍有既有主包超过 500 kB 警告。
+
+下一轮只读取：`AGENTS.md`、`docs/PROJECT_STATUS.md`、`docs/NEXT_TASKS.md`、`docs/SESSION_HANDOFF.md`、Toolbox 设计/计划、`src/features/toolbox`、`src/i18n/messages.ts`、`package.json`。如继续功能，先单独设计“字符串/品位几何定位”，不要开始节奏、技巧或 `.gp` 生成。
+
+## 追加交接：Toolbox 字符串 / 品位几何定位
+
+- 已新增 `src/features/toolbox/tab-geometry.ts` 与测试：从已归一化的 `PdfTextItem` 坐标中识别六条近似等距的字符串基线，并输出 `TabFretPosition`。
+- 结果仅包含页码、小节号、弦序、品位、坐标与 `high` / `medium` 置信度；品位范围限定为 `0` 至 `24`。
+- 跨弦歧义、超范围数字和小节边界候选会保留诊断信息，不会伪装为高置信度结果。
+- `tab-analyzer` 只将候选加入摘要，`ToolboxPage` 只显示数量；`musicxml.service.ts` 未改动，依旧输出休止骨架，未识别节奏、技巧或 `.gp`。
+- 本轮验证：Node 20.20.2 下 Toolbox 5 个测试文件、17 个用例通过；`tsc -b` 与 Vite production build 通过。Vite 仍有既有 >500 kB chunk 警告。
+- 未读取、复制或上传 `endless rain.pdf`；没有 Supabase、依赖或 PDF 适配器改动。
+- 如继续，先只设计“候选在小节内的时序模型”；不得直接进入节奏时值、技巧符号、扫描件或 `.gp` 生成。
+
+## 追加交接：Toolbox 小节内候选事件列
+
+- 已新增 `src/features/toolbox/tab-events.ts` 与测试：只将同页同小节的 `TabFretPosition` 按横向位置分组为从左到右的 `TabFretEvent`。
+- 每列包含原始候选、代表 `x` 坐标、顺序和置信度；不会把列解释为节奏、时值、音高或和弦。
+- 同一事件列内同一弦出现不同品位时，事件降为 `medium`，保留所有候选并输出诊断警告。
+- `tab-analyzer` 已附加 `fretEvents`，页面只增加数量展示；MusicXML 仍忽略事件列并导出整小节休止骨架。
+- 本轮验证：Node 20.20.2 下 Toolbox 6 个测试文件、19 个用例通过；`tsc -b` 与 Vite production build 通过。Vite 仍有既有 >500 kB chunk 警告。
+- 本轮没有读取、复制或上传 `endless rain.pdf`，没有 Supabase、依赖、PDF 适配器、节奏识别、技巧识别或 `.gp` 改动。
+- 该旧建议已由后文“真实电子谱符号拓扑兼容设计”替代：首版不增加人工时值编辑器，只读取五线谱明确符号；仍禁止从横向事件列自动推断时值。
+
+## 追加交接：Toolbox 矢量六线谱基线定位
+
+- 已在 `pdf.service.ts` 从 PDF.js operator list 提取变换后的水平路径线段；所有处理仍在浏览器本地，PDF 不上传、不持久化。
+- 新增 `tab-staff-geometry.ts`：逐页合并断续水平线段，以六条近似等距的基线定位 `TabStaffSystem`；其中一条较短时可保留为 `medium`，避免数字切断线条导致整组丢失。
+- `tab-geometry.ts` 会优先采用匹配的矢量系统定位稀疏品位文本；中等系统产生独立复核警告，不再误称为小节边界问题。
+- `TabScoreAnalysis` 与 Toolbox 页面已显示六线谱系统数量；`musicxml.service.ts` 未改，仍输出安全的整小节休止骨架。
+- 本地浏览器只读验证 `C:\Users\Ashin\Downloads\endless rain.pdf`：4 页、18 小节、92 BPM、3 个系统、5 个位置、5 个事件列；未上传或复制 PDF，未下载 MusicXML。
+- 定向验证：Node 20.20.2 下 `src/features/toolbox` 7 个测试文件、26 个用例通过；浏览器本地流程通过。未执行全仓构建，以遵守用户限定读取范围。
+
+该交接建议已被下方“真实电子谱符号拓扑兼容设计”替代：首版不提供人工时值编辑器，只识别五线谱明确符号；仍不得根据横坐标猜测节奏，也不做技巧识别、扫描件、Supabase 改动、PDF 上传或直接 `.gp` 生成。
+
+## 追加交接：Toolbox 真实电子谱符号拓扑兼容设计
+
+本轮完成：
+- 修订 Toolbox 阶段 5 设计，将节奏识别从固定矢量外形模板升级为“矢量路径拓扑 + 可靠音乐字体字形”双通道。
+- 设计统一的规范化图元与系统内拓扑关系，兼容复合子路径、多个绘制操作组成一个符号、共享 / 倾斜连梁、局部次梁、多符头共享符干和多种空心符头表达。
+- 定义强拓扑、强字形和弱证据等级；未知字形不能决定时值，字形与路径冲突时整小节回退。
+- 定义横坐标用途边界：只允许归组、排序、小节归属和 TAB 列唯一配对，禁止用 TAB 间距推断节奏。
+- 重写明确节奏实施计划，拆为复合绘制形状、音乐字体证据、五线谱 / TAB 配对、规范化图元、节奏拓扑、整小节验证、分析集成、MusicXML、页面状态和交接 11 个任务。
+
+修改文件：
+- `docs/superpowers/specs/2026-07-14-toolbox-pdf-tab-musicxml-design.md`
+- `docs/superpowers/plans/2026-07-14-toolbox-explicit-rhythm-symbols.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/NEXT_TASKS.md`
+- `docs/SESSION_HANDOFF.md`
+
+未修改：
+- `src/features/toolbox`
+- Supabase、RLS、migration、依赖和锁文件
+- 真实 PDF 与 MusicXML / `.gp` 输出
+
+验证：
+- 本轮仅修改设计、计划和状态文档，因此未运行测试或构建。
+- 后续实施从计划 Task 1 开始，先以人工 PDF.js operator 夹具验证复合绘制形状，不读取真实 PDF。
+
+下一轮提示词：
+
+```text
+继续 RockRoll Toolbox 开发。
+只读取：
+- AGENTS.md
+- docs/PROJECT_STATUS.md
+- docs/NEXT_TASKS.md
+- docs/SESSION_HANDOFF.md
+- docs/superpowers/specs/2026-07-14-toolbox-pdf-tab-musicxml-design.md
+- docs/superpowers/plans/2026-07-14-toolbox-explicit-rhythm-symbols.md
+- src/features/toolbox
+
+按明确节奏拓扑计划从 Task 1 开始，先写失败测试并实现复合绘制形状提取。
+不得根据 TAB 横向间距推断节奏。
+不要读取、复制或上传真实 PDF。
+不修改 Supabase，不运行 npm install，不生成 .gp。
+只运行 Toolbox 定向测试，完成后中文总结。
+```
+
+建议开启新对话，并粘贴以上提示词继续。
+
+## 追加交接：Toolbox 明确节奏拓扑 Task 4
+
+本轮完成：
+- 新增 `notation-primitives.ts`，将配对五线谱系统内的路径与字形证据转换为 contour、segment、可靠 glyph 和 unknown glyph。
+- 复合路径按空间连通关系分组；嵌套轮廓保留 containment / hole 候选，Bézier 接触使用按谱线间距缩放的自适应几何容差。
+- 开放线性 `stroke` / `fill-stroke` 规范化为 segment，未知线宽保持 `uncertain`。
+- 图元必须完整且唯一归属同页一个配对五线谱系统；跨 TAB 区域、跨系统或归属歧义时拒绝。
+- 输出 bounds 保持源坐标；没有根据 TAB 横向间距推断节奏，没有开始音符时值识别。
+- 没有读取、复制或上传真实 PDF，没有修改 Supabase、依赖或锁文件，没有运行 `npm install`，没有生成 `.gp`。
+
+修改文件：
+- `src/features/toolbox/notation-primitives.ts`
+- `src/features/toolbox/notation-primitives.test.ts`
+- `docs/PROJECT_STATUS.md`
+- `docs/NEXT_TASKS.md`
+- `docs/SESSION_HANDOFF.md`
+
+验证：
+```powershell
+$env:HOME=(Resolve-Path .\.tmp).Path; $env:USERPROFILE=$env:HOME; $env:TEMP=$env:HOME; $env:TMP=$env:HOME; C:\Users\Ashin\AppData\Local\nvm\v20.20.2\node.exe .\node_modules\vitest\vitest.mjs --run src/features/toolbox/notation-primitives.test.ts
+```
+
+结果：1 个测试文件、11 个用例通过，退出码 0。未运行完整测试或构建。
+
+风险：
+- `notation-primitives.ts` 当前 566 行，超过项目建议规模；本轮保持 Task 4 文件边界，没有为拆分而新增抽象。
+- 当前只使用人工路径、字形和配对系统夹具验证，未做真实 PDF 验证。
+- 系统归属和曲线接触采用保守容差；不确定证据会被拒绝或降级，不会直接成为可导出节奏。
+
+未完成事项：
+- Task 5：符头、符干、共享 / 倾斜连梁、局部次梁和单 / 双符尾的关系优先拓扑。
+- Task 6 及后续休止符 / 附点、整小节验证、分析集成、MusicXML 和页面状态均未开始。
+
+下一轮提示词：
+
+```text
+继续 RockRoll Toolbox 开发。
+只读取：
+- AGENTS.md
+- docs/PROJECT_STATUS.md
+- docs/NEXT_TASKS.md
+- docs/SESSION_HANDOFF.md
+- docs/superpowers/specs/2026-07-14-toolbox-pdf-tab-musicxml-design.md
+- docs/superpowers/plans/2026-07-14-toolbox-explicit-rhythm-symbols.md
+- src/features/toolbox
+
+按明确节奏拓扑计划继续 Task 5，先写失败测试并实现符头、符干、连梁和符尾的关系优先拓扑。
+时值只能来自明确拓扑关系或可靠音乐字形，不得根据 TAB 横向间距推断节奏。
+不要读取、复制或上传真实 PDF。
+不修改 Supabase，不运行 npm install，不生成 .gp。
+只运行 Toolbox 定向测试，完成后中文总结。
+```
+
+建议开启新对话，并粘贴以上提示词继续。
+
+## 追加交接：Toolbox 明确节奏拓扑 Task 5
+
+本轮完成：
+- 新增 `RhythmDuration`、`RhythmTopologyEvent`、`RhythmTopologyResult` 与 `recognizeRhythmTopology`。
+- 同页同系统内先建立 `touches`、`intersects`、`contains`、`aligned-with`、`incident-to` 关系，再解析符头、符干、梁组和符尾。
+- 路径证据支持孔洞、嵌套轮廓、闭合描边轮廓、实心符头、共享符干、共享倾斜梁、两层梁和局部次梁。
+- 可靠音乐字形可直接提供全 / 二分 / 四分 / 八分 / 十六分音符语义；可靠字形或路径符尾仍必须与符干端部明确相接。
+- 每根符干独立计算实际连接的梁层 / 符尾；附近但不连接的梁不会改变时值。
+- 横坐标只用于事件排序；没有使用 TAB 横向间距、相邻事件间距、平均间距或小节宽度推断节奏。
+- 没有读取、复制或上传真实 PDF，没有修改 Supabase、依赖或锁文件，没有运行 `npm install`，没有生成 `.gp`。
+
+修改文件：
+- `src/features/toolbox/toolbox.types.ts`
+- `src/features/toolbox/rhythm-topology.ts`
+- `src/features/toolbox/rhythm-topology.test.ts`
+- `docs/PROJECT_STATUS.md`
+- `docs/NEXT_TASKS.md`
+- `docs/SESSION_HANDOFF.md`
+
+验证：
+```powershell
+$env:HOME=(Resolve-Path .\.tmp).Path; $env:USERPROFILE=$env:HOME; $env:TEMP=$env:HOME; $env:TMP=$env:HOME; C:\Users\Ashin\AppData\Local\nvm\v20.20.2\node.exe .\node_modules\vitest\vitest.mjs --run src/features/toolbox/rhythm-topology.test.ts src/features/toolbox/notation-primitives.test.ts
+```
+
+结果：2 个测试文件、21 个用例通过，退出码 0。未运行完整测试或构建。
+
+风险：
+- `rhythm-topology.ts` 当前 579 行，超过项目建议规模；本轮保持 Task 5 单模块边界，没有提前拆分抽象。
+- 当前只使用人工图元和配对系统夹具验证，未做真实 PDF 验证。
+- Task 6 的路径 / 字形冲突融合、休止符、附点和不支持结构诊断尚未实现；当前结果还没有接入整小节或 MusicXML。
+
+未完成事项：
+- Task 6：双通道冲突融合、全至十六分休止符和一个附点的唯一局部附着。
+- Task 7 及后续整小节容量、分析集成、MusicXML 和页面状态均未开始。
+
+下一轮提示词：
+
+```text
+继续 RockRoll Toolbox 开发。
+只读取：
+- AGENTS.md
+- docs/PROJECT_STATUS.md
+- docs/NEXT_TASKS.md
+- docs/SESSION_HANDOFF.md
+- docs/superpowers/specs/2026-07-14-toolbox-pdf-tab-musicxml-design.md
+- docs/superpowers/plans/2026-07-14-toolbox-explicit-rhythm-symbols.md
+- src/features/toolbox
+
+按明确节奏拓扑计划继续 Task 6，先写失败测试，再实现路径 / 字形强证据冲突融合、可靠休止符和一个附点的唯一局部附着。
+时值只能来自明确拓扑关系或可靠音乐字形，不得根据 TAB 横向间距推断节奏。
+不要读取、复制或上传真实 PDF。
+不修改 Supabase，不运行 npm install，不生成 .gp。
+只运行 Toolbox 定向测试，完成后中文总结。
+```
+
+建议开启新对话，并粘贴以上提示词继续。
+
+## 追加交接：Toolbox 明确节奏拓扑 Task 6
+
+本轮完成：
+- 同一局部事件的路径强拓扑与可靠音乐字形语义一致时融合为一个事件，并保留双方来源 ID；时值或音符 / 休止类型冲突时不选边、不输出事件。
+- 可靠音乐字形支持全、二分、四分、八分和十六分休止；未知字形不能决定时值。
+- 仅有闭合、填充和包围框尺寸的路径休止无法证明真实轮廓拓扑，因此保持诊断，不提升为高置信休止。
+- 一个可靠附点只在事件右侧、垂直兼容、事件侧候选唯一且候选点侧事件唯一时附着；两枚候选、断音点歧义或完整字形缺少可靠附点锚点时降为 `medium`。
+- 同一局部横坐标的多声部无论纵向距离多远都会拒绝；装饰音尺寸、疑似延音线和未消费路径保持诊断。
+- 横坐标只用于五线谱系统内局部融合、事件排序和附点右侧关系，没有使用 TAB 横向间距、相邻事件间距、平均间距或小节宽度推断节奏。
+- 没有读取、复制或上传真实 PDF，没有修改 Supabase、依赖或锁文件，没有运行 `npm install`，没有生成 `.gp`。
+
+修改文件：
+- `src/features/toolbox/rhythm-topology.ts`
+- `src/features/toolbox/rhythm-topology.test.ts`
+- `docs/PROJECT_STATUS.md`
+- `docs/NEXT_TASKS.md`
+- `docs/SESSION_HANDOFF.md`
+
+验证：
+```powershell
+$env:HOME=(Resolve-Path .\.tmp).Path; $env:USERPROFILE=$env:HOME; $env:TEMP=$env:HOME; $env:TMP=$env:HOME; C:\Users\Ashin\AppData\Local\nvm\v20.20.2\node.exe .\node_modules\vitest\vitest.mjs --run src/features/toolbox
+```
+
+结果：10 个测试文件、68 个用例通过，退出码 0。未运行完整仓库测试、构建或真实 PDF 验证。
+
+风险：
+- `rhythm-topology.ts` 当前 962 行，超过项目建议规模；Task 7 应新建独立小节模块，不继续扩张拓扑模块。
+- 路径休止只有在后续图元契约能保留可验证轮廓结构签名后才能安全支持；当前回退优先于包围框猜测。
+- 当前结果仍未接入整小节容量、TAB 唯一配对、分析器或 MusicXML。
+
+未完成事项：
+- Task 7：把高 / 中置信拓扑事件与 TAB 事件列唯一配对，并严格校验整小节容量。
+- Task 8 及后续分析集成、MusicXML 和页面状态均未开始。
+
+下一轮提示词：
+
+```text
+继续 RockRoll Toolbox 开发。
+只读取：
+- AGENTS.md
+- docs/PROJECT_STATUS.md
+- docs/NEXT_TASKS.md
+- docs/SESSION_HANDOFF.md
+- docs/superpowers/specs/2026-07-14-toolbox-pdf-tab-musicxml-design.md
+- docs/superpowers/plans/2026-07-14-toolbox-explicit-rhythm-symbols.md
+- src/features/toolbox
+
+按明确节奏拓扑计划继续 Task 7，先写失败测试，再实现节奏事件与 TAB 事件列唯一配对、三十二分音符整数容量校验和整小节回退。
+时值只能来自 Task 6 已确认的明确拓扑关系或可靠音乐字形；横向容差只能选择 TAB 列，不得决定时值。
+不要读取、复制或上传真实 PDF。
+不修改 Supabase，不运行 npm install，不生成 .gp。
+只运行 Toolbox 定向测试，完成后中文总结。
+```
+
+建议开启新对话，并粘贴以上提示词继续。
+
+## 追加交接：Toolbox 明确节奏拓扑 Task 7
+
+本轮完成：
+- 新增 `RecognizedRhythmEvent` / `MeasureRhythmResult` 稳定契约和独立 `rhythm-measures.ts`，没有继续扩张 Task 6 的拓扑模块。
+- 非休止事件只有在同页容差内候选全部属于同一请求小节时，才选择其中唯一最近的 TAB 列；跨小节候选、同列重复使用、TAB 漏列、并列最近或无法定位都会使整个小节回退。
+- 一个 TAB 事件列可保留多个弦 / 品位；明确休止事件不绑定 TAB 列，输出 `tabEventOrder: null`。
+- 三十二分音符整数容量为：全 32、二分 16、四分 8、八分 4、十六分 2；一个附点增加基础时值的一半。容量无法整数表示、总量不足或超出都会回退。
+- 只有高置信节奏 / TAB 事件、非休止事件与 TAB 列一一配对、没有漏列且容量精确的小节可以输出 `recognized`；回退小节清空候选事件。
+- 时值和附点直接复制 Task 6 结果；横坐标只用于选列和辅助小节归属，没有根据 TAB 间距、相邻事件间距、平均间距或小节宽度推断时值。
+- 没有读取、复制或上传真实 PDF，没有修改 Supabase、依赖或锁文件，没有运行 `npm install`，没有生成 `.gp`。
+
+修改文件：
+- `src/features/toolbox/toolbox.types.ts`
+- `src/features/toolbox/rhythm-measures.ts`
+- `src/features/toolbox/rhythm-measures.test.ts`
+- `docs/PROJECT_STATUS.md`
+- `docs/NEXT_TASKS.md`
+- `docs/SESSION_HANDOFF.md`
+
+验证：
+```powershell
+$env:HOME=(Resolve-Path .\.tmp).Path; $env:USERPROFILE=$env:HOME; $env:TEMP=$env:HOME; $env:TMP=$env:HOME; C:\Users\Ashin\AppData\Local\nvm\v20.20.2\node.exe .\node_modules\vitest\vitest.mjs --run src/features/toolbox/rhythm-measures.test.ts src/features/toolbox/tab-events.test.ts
+$env:HOME=(Resolve-Path .\.tmp).Path; $env:USERPROFILE=$env:HOME; $env:TEMP=$env:HOME; $env:TMP=$env:HOME; C:\Users\Ashin\AppData\Local\nvm\v20.20.2\node.exe .\node_modules\vitest\vitest.mjs --run src/features/toolbox
+```
+
+结果：2 个定向测试文件、16 个用例通过；完整 Toolbox 11 个测试文件、82 个用例通过，退出码均为 0。未运行完整仓库测试、构建或真实 PDF 验证。
+
+风险：
+- 当前输入契约没有小节线边界或配对系统几何；休止事件只有在同页仅有一个请求小节时才保留，否则整小节回退。
+- `rhythm-measures.ts` 当前 372 行，超过项目建议规模；职责仍集中于小节归属、TAB 配对和容量验证，Task 8 不应继续向该文件加入分析器编排。
+- 当前结果尚未接入分析器、MusicXML 或页面状态。
+
+未完成事项：
+- Task 8：把配对系统、规范化图元、拓扑事件和 Task 7 小节结果按依赖顺序接入 `tab-analyzer`，并保留安全骨架回退。
+- Task 9-11：MusicXML、页面状态与最终定向验证仍未开始。
+
+下一轮提示词：
+
+```text
+继续 RockRoll Toolbox 开发。
+只读取：
+- AGENTS.md
+- docs/PROJECT_STATUS.md
+- docs/NEXT_TASKS.md
+- docs/SESSION_HANDOFF.md
+- docs/superpowers/specs/2026-07-14-toolbox-pdf-tab-musicxml-design.md
+- docs/superpowers/plans/2026-07-14-toolbox-explicit-rhythm-symbols.md
+- src/features/toolbox
+
+按明确节奏拓扑计划继续 Task 8，先写失败测试，再把配对系统、规范化图元、拓扑识别和整小节结果按依赖顺序接入 tab-analyzer。
+无可靠配对系统、无强节奏证据或任一小节失败时保留既有安全休止骨架和简短诊断；本轮不要修改 MusicXML 或页面 UI。
+时值只能来自 Task 6 的明确拓扑关系或可靠音乐字形；横向坐标只能用于归组、排序、小节归属和 TAB 列唯一配对，不得决定时值。
+不要读取、复制或上传真实 PDF。
+不修改 Supabase，不运行 npm install，不生成 .gp。
+只运行 Toolbox 定向测试，完成后中文总结。
+```
+
+建议开启新对话，并粘贴以上提示词继续。
+
+## 当前交接索引（2026-07-17，Task 11 后）
+
+- 当前有效交接为本文“追加交接：Toolbox 明确节奏拓扑 Task 10-11”章节；计划 Task 1-11 已完成。
+- 下一步是可选的真实 PDF / Guitar Pro 8 端到端验收；未经用户明确授权不得读取真实 PDF。若不验收，则返回 Archive / Import 主线。
+
+```text
+继续 RockRoll 项目开发。
+请只读取：
+- AGENTS.md
+- docs/PROJECT_STATUS.md
+- docs/NEXT_TASKS.md
+- docs/SESSION_HANDOFF.md
+- 当前任务相关目录
+
+Toolbox 明确节奏拓扑 Task 1-11 已完成。
+如继续 Toolbox，请先确认是否允许浏览器本地只读真实 PDF 和 Guitar Pro 8 手工验收；未经允许不要读取、复制或上传真实 PDF。
+否则继续 docs/NEXT_TASKS.md 中的 Archive / Import 主线任务。
+不要扫描整个仓库。
+不要运行 npm install。
+不要做架构重构。
+完成后中文总结。
+```
+
+建议开启新对话，并粘贴以上提示词继续。
