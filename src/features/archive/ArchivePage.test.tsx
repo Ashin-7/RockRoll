@@ -252,6 +252,38 @@ describe('ArchivePage', () => {
     expect(await screen.findByText('Artist one is set to match an existing artist.')).toBeInTheDocument();
   });
 
+  it('renders album source metadata in the admin review plan details', async () => {
+    const user = userEvent.setup();
+    const albumReviewItem: ImportReviewItemSummary = {
+      ...reviewItems[1],
+      metadata: {
+        artistName: 'Artist one',
+        releaseYear: 2001,
+        coverUrl: 'https://img.example.test/review-album-one.jpg',
+        styles: ['Rock', 'Psychedelic'],
+        note: 'Review source note.',
+      },
+    };
+
+    renderWithI18n(
+      <ArchivePage
+        onLoadCollections={async () => []}
+        onLoadImportRole={async () => 'admin'}
+        onLoadImportReviewItems={async () => [albumReviewItem]}
+      />,
+    );
+
+    await user.click(await screen.findByRole('button', { name: 'Load manual matches' }));
+
+    expect(await screen.findByRole('img', { name: 'Album one cover' })).toHaveAttribute(
+      'src',
+      'https://img.example.test/review-album-one.jpg',
+    );
+    expect(screen.getByText('Review source note.')).toBeInTheDocument();
+    expect(screen.getByText('2001')).toBeInTheDocument();
+    expect(screen.getByText('Rock, Psychedelic')).toBeInTheDocument();
+  });
+
   it('creates an archive collection and refreshes the list', async () => {
     const user = userEvent.setup();
     const loadCollections = vi.fn().mockResolvedValueOnce([]).mockResolvedValueOnce(collections);

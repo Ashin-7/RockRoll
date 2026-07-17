@@ -1096,3 +1096,62 @@ git diff --check -- src/features/toolbox src/i18n/messages.ts docs/PROJECT_STATU
 结果：Toolbox 11 个测试文件、95 个用例通过；TypeScript 与 Vite 生产构建通过。构建保留既有的主应用 chunk 超过 500 kB 警告；范围 diff 无空白错误，仅有工作区 LF 转 CRLF 提示。
 
 剩余边界：尚未用真实 PDF / Guitar Pro 8 做端到端验收；仍按设计不支持连音组、延音线、跨小节连梁、装饰音、多声部重叠、演奏技巧、扫描件、播放、人工时值编辑和直接 `.gp` 输出。这些是当前产品边界，不是 Task 1-11 的遗漏。
+
+## 追加状态：真实导入当前无明显问题
+
+- 用户确认现有 Archive / Import 导入流程在当前实际测试中没有发现明显问题；该结论来自用户手工测试，本轮没有再次执行真实 Supabase 写入，也没有补造精确的 `preview` / `saved` / `planned` / `committed` 数字。
+- 真实导入数量与失败恢复不再作为当前阻塞项。除非后续再次出现 `Bad Request`、数量不一致、备注未回填、重复写入或部分提交，否则暂不新增数据库级任务状态、RPC、后台 worker 或队列系统。
+- Archive / Import 后续推荐进入既有队列中的 Review plan 明细可读性：在不改变一键导入提交时机和权限模型的前提下，为管理员展示专辑封面、点评、年代与风格，便于提交前检查。
+- Toolbox 明确节奏拓扑 Task 1-11 仍为已完成；真实 PDF / Guitar Pro 8 验收保持可选，未经明确授权不读取真实 PDF。
+- 当前分支为 `main`，跟踪 `origin/main`。工作区原有 `.playwright-cli` 未跟踪文件保持不动。
+
+本轮仅更新状态文档，没有修改业务代码、Supabase、依赖或锁文件，因此未运行测试或构建。
+
+## 追加完成：Archive Review plan 专辑来源明细
+
+- `/archive` 现有管理员 Review plan / 手动匹配区域已补充专辑封面、来源点评、发行年份与风格展示；无封面时沿用现有占位文案。
+- `listImportReviewItems` 继续使用原有查询，只把 `review_payload.metadata` 中已有的 `coverUrl`、`note`、`releaseYear`、`styles` 和艺人名映射到页面摘要，没有新增请求或数据库字段。
+- Review plan 区域仍只对管理员可见，service 的 admin guard 保持不变；现有 artist / album 手动匹配范围与 `match_existing` 语义未改变。
+- Archive 仍是一键导入主入口；没有恢复 Inbox 主导航，没有改变生成 Review plan 后立即提交的既有时机。
+- 没有执行真实导入，没有修改 Supabase、migration、RLS、RPC、worker、任务状态、批量队列、依赖或锁文件。
+- 先新增页面与 service 失败测试，分别确认页面缺少专辑明细、映射层丢弃 metadata，再完成最小实现。
+
+当前状态：
+- 分支：`main`；限定范围内保留已有未提交文档改动，并叠加本轮代码、测试和文案修改。
+- `docs/PERMISSIONS.md` 权限矩阵未变化，无需修改。
+
+验证：
+```powershell
+$env:HOME=(Resolve-Path .\.tmp).Path; $env:USERPROFILE=$env:HOME; $env:TEMP=$env:HOME; $env:TMP=$env:HOME; C:\Users\Ashin\AppData\Local\nvm\v20.20.2\node.exe .\node_modules\vitest\vitest.mjs --run src/features/archive/ArchivePage.test.tsx src/features/inbox/inbox.service.test.ts
+$env:HOME=(Resolve-Path .\.tmp).Path; $env:USERPROFILE=$env:HOME; $env:TEMP=$env:HOME; $env:TMP=$env:HOME; C:\Users\Ashin\AppData\Local\nvm\v20.20.2\node.exe .\node_modules\vitest\vitest.mjs --run src/features/archive src/features/inbox
+git diff --check -- src/features/archive src/features/inbox src/i18n/messages.ts
+```
+
+结果：首轮 GREEN 为 2 个测试文件、43 个用例通过；Archive / Inbox 定向回归为 8 个测试文件、83 个用例通过；范围 diff 无空白错误，仅有工作区 LF 转 CRLF 提示。未运行完整仓库测试、构建或真实导入。
+
+风险：Review plan 仍沿用现有手动加载与 artist / album 过滤，一次读取当前管理员可见的全部 Review item；本轮没有新增分页、搜索或提交前暂停步骤。
+
+## 追加完成：专辑封面与曲风正式字段化
+
+- 新增 CLI 生成的 additive migration：`supabase/migrations/20260717064514_add_album_cover_and_styles.sql`，仅增加 `albums.cover_url text` 与 `albums.styles text[] not null default '{}'::text[]`。
+- 新导入专辑在原有单次 album insert 中写入清洗后的正式字段：封面去除首尾空格并把空值写为 `null`；曲风去除首尾空格、过滤空值并按首次出现顺序做区分大小写的精确去重。
+- `external_sources.raw_payload` 继续保存来源原文；手动 `match_existing` 和已有 external source 自动复用均不更新目标专辑正式字段。
+- Albums 集合卡片、完整集合曲风选项与筛选采用正式字段优先、raw payload 回退；正式曲风按 200 条分块、最多 3 路并发读取。
+- Archive 集合详情按 200 条分块读取正式专辑封面与曲风，禁止逐条 N+1；发行年份和来源点评继续沿用 raw payload。
+- `albums` 新列继承现有 public-read 与 admin-only write grants/RLS，没有新增 policy、grant、RPC、trigger、索引或回填任务，`docs/PERMISSIONS.md` 无需修改。
+- Archive 主入口、Inbox 停用导航、一键导入提交时机、Review plan、导入数量口径和 artist / album `match_existing` 语义均未改变。
+- 未执行真实导入、历史数据回填、远端 migration apply、角色探针或 `npm install`。
+
+当前状态：
+- 分支：`codex/album-cover-styles-normalization`，普通检出目录；分支保留开始本任务前已有的 Review plan 明细相关未提交修改。
+- migration 只存在于本地。远端应用前不能先部署依赖新列的前端代码；远端 apply 与 anon / user / admin 角色探针需要用户另行明确授权。
+
+验证：
+```powershell
+$env:HOME=(Resolve-Path .\.tmp).Path; $env:USERPROFILE=$env:HOME; $env:TEMP=$env:HOME; $env:TMP=$env:HOME; C:\Users\Ashin\AppData\Local\nvm\v20.20.2\node.exe .\node_modules\vitest\vitest.mjs --run src/features/inbox/album-metadata.test.ts src/features/inbox/inbox.service.test.ts src/features/albums/albums.service.test.ts src/features/archive/archive.service.test.ts
+$env:HOME=(Resolve-Path .\.tmp).Path; $env:USERPROFILE=$env:HOME; $env:TEMP=$env:HOME; $env:TMP=$env:HOME; C:\Users\Ashin\AppData\Local\nvm\v20.20.2\node.exe .\node_modules\vitest\vitest.mjs --run src/features/archive src/features/inbox src/features/albums
+$node20Directory = 'C:\Users\Ashin\AppData\Local\nvm\v20.20.2'; $env:PATH="$node20Directory;$env:PATH"; C:\Users\Ashin\AppData\Local\nvm\v20.20.2\npm.cmd run build
+git diff --check -- supabase/migrations src/features/archive src/features/inbox src/features/albums docs/PROJECT_STATUS.md docs/NEXT_TASKS.md docs/SESSION_HANDOFF.md docs/superpowers/specs/2026-07-17-album-cover-styles-normalization-design.md docs/superpowers/plans/2026-07-17-album-cover-styles-normalization.md
+```
+
+结果：核心 4 个测试文件、66 个用例通过；Archive / Inbox / Albums 回归 12 个测试文件、125 个用例通过；Node 20 下 TypeScript 与 Vite production build 通过。Vite 保留既有主 chunk 超过 500 kB 警告；范围 diff 无空白错误，仅提示 Windows 下 LF 转 CRLF。

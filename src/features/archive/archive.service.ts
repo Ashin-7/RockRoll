@@ -36,6 +36,12 @@ interface ExternalSourceRow {
   raw_payload: unknown;
 }
 
+interface AlbumFormalMetadataRow {
+  id: string;
+  cover_url: string | null;
+  styles: string[];
+}
+
 interface DemoArchiveItem extends ArchiveItemSummary {
   collectionId: string;
 }
@@ -45,6 +51,7 @@ interface ProfileRoleRow {
 }
 
 const entityTypes: ArchiveEntityType[] = ['artist', 'album', 'song'];
+const supabaseInFilterChunkSize = 200;
 const demoSessionStorageKey = 'rockroll.demoSession';
 const demoCollectionsStorageKey = 'rockroll.demoArchiveCollections';
 const demoItemsStorageKey = 'rockroll.demoArchiveItems';
@@ -114,6 +121,65 @@ function mapAlbumMetadataRows(rows: ExternalSourceRow[]): Map<string, NonNullabl
       ];
     }),
   );
+}
+
+function chunkArray<T>(items: T[], chunkSize: number): T[][] {
+  const chunks: T[][] = [];
+  for (let index = 0; index < items.length; index += chunkSize) {
+    chunks.push(items.slice(index, index + chunkSize));
+  }
+  return chunks;
+}
+
+async function loadFormalAlbumMetadataRows(
+  supabase: ReturnType<typeof getSupabase>,
+  albumIds: string[],
+): Promise<AlbumFormalMetadataRow[]> {
+  const rows: AlbumFormalMetadataRow[] = [];
+
+  for (const albumIdChunk of chunkArray(albumIds, supabaseInFilterChunkSize)) {
+    const { data, error } = await supabase
+      .from('albums')
+      .select('id,cover_url,styles')
+      .in('id', albumIdChunk);
+    if (error) {
+      throw new Error(error.message);
+    }
+    rows.push(...((data ?? []) as AlbumFormalMetadataRow[]));
+  }
+
+  return rows;
+}
+
+async function loadExternalAlbumMetadataRows(
+  supabase: ReturnType<typeof getSupabase>,
+  albumIds: string[],
+): Promise<ExternalSourceRow[]> {
+  const { data, error } = await supabase
+    .from('external_sources')
+    .select('entity_id,raw_payload')
+    .eq('entity_type', 'album')
+    .in('entity_id', albumIds);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return (data ?? []) as ExternalSourceRow[];
+}
+
+function mergeAlbumMetadata(
+  formal: AlbumFormalMetadataRow | undefined,
+  source: NonNullable<ArchiveItemSummary['albumMetadata']> | undefined,
+): NonNullable<ArchiveItemSummary['albumMetadata']> {
+  const formalStyles = readStringArray(formal?.styles);
+
+  return {
+    coverUrl: formal?.cover_url?.trim() || source?.coverUrl || '',
+    releaseYear: source?.releaseYear ?? null,
+    styles: formalStyles.length > 0 ? formalStyles : source?.styles ?? [],
+    note: source?.note ?? '',
+  };
 }
 
 function isMissingSupabaseEnvError(error: unknown): boolean {
@@ -388,17 +454,20 @@ export async function getArchiveCollectionById(collectionId: string): Promise<Ar
   let albumMetadataByEntityId = new Map<string, NonNullable<ArchiveItemSummary['albumMetadata']>>();
 
   if (albumEntityIds.length > 0) {
-    const { data: externalSourceData, error: externalSourceError } = await supabase
-      .from('external_sources')
-      .select('entity_id,raw_payload')
-      .eq('entity_type', 'album')
-      .in('entity_id', albumEntityIds);
-
-    if (externalSourceError) {
-      throw new Error(externalSourceError.message);
-    }
-
-    albumMetadataByEntityId = mapAlbumMetadataRows((externalSourceData ?? []) as ExternalSourceRow[]);
+    const [formalAlbumRows, externalSourceRows] = await Promise.all([
+      loadFormalAlbumMetadataRows(supabase, albumEntityIds),
+      loadExternalAlbumMetadataRows(supabase, albumEntityIds),
+    ]);
+    const formalByAlbumId = new Map(formalAlbumRows.map((row) => [row.id, row]));
+    const sourceByAlbumId = mapAlbumMetadataRows(externalSourceRows);
+    albumMetadataByEntityId = new Map(
+      albumEntityIds
+        .filter((albumId) => formalByAlbumId.has(albumId) || sourceByAlbumId.has(albumId))
+        .map((albumId) => [
+          albumId,
+          mergeAlbumMetadata(formalByAlbumId.get(albumId), sourceByAlbumId.get(albumId)),
+        ]),
+    );
   }
 
   return {

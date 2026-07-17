@@ -704,6 +704,56 @@ describe('inbox.service', () => {
     expect(selectMock).not.toHaveBeenCalled();
   });
 
+  it('maps album source metadata when listing import review items', async () => {
+    selectMock.mockResolvedValue({
+      data: [
+        {
+          id: 'review-album-1',
+          entity_type: 'album',
+          display_title: 'Album one',
+          source_name: 'anontraveler',
+          source_id: 'album-1',
+          planned_action: 'create',
+          target_entity_id: null,
+          skip_reason: '',
+          error_message: null,
+          review_payload: {
+            metadata: {
+              artistName: 'Artist one',
+              releaseYear: 2001,
+              coverUrl: 'https://img.example.test/review-album-one.jpg',
+              styles: ['Rock', 'Psychedelic'],
+              note: 'Review source note.',
+            },
+          },
+        },
+      ],
+      error: null,
+    });
+    const { listImportReviewItems } = await import('./inbox.service');
+
+    await expect(listImportReviewItems()).resolves.toEqual([
+      {
+        id: 'review-album-1',
+        entityType: 'album',
+        displayTitle: 'Album one',
+        sourceName: 'anontraveler',
+        sourceId: 'album-1',
+        plannedAction: 'create',
+        targetEntityId: null,
+        skipReason: '',
+        errorMessage: null,
+        metadata: {
+          artistName: 'Artist one',
+          releaseYear: 2001,
+          coverUrl: 'https://img.example.test/review-album-one.jpg',
+          styles: ['Rock', 'Psychedelic'],
+          note: 'Review source note.',
+        },
+      },
+    ]);
+  });
+
   it('commits create review items into public formal library records as an admin', async () => {
     selectMock.mockResolvedValue({
       data: [
@@ -737,6 +787,8 @@ describe('inbox.service', () => {
             metadata: {
               artistName: 'The Beatles',
               releaseYear: 1963,
+              coverUrl: '  https://img.example.test/please-please-me.jpg  ',
+              styles: [' Beat music ', '', 'Beat music', 'Rock'],
               albumType: 'studio album',
               note: 'Beat music marker.',
             },
@@ -806,6 +858,8 @@ describe('inbox.service', () => {
       artist_id: 'artist-created-1',
       title: 'Please Please Me',
       release_year: 1963,
+      cover_url: 'https://img.example.test/please-please-me.jpg',
+      styles: ['Beat music', 'Rock'],
       album_type: 'album',
       notes: 'Beat music marker.',
       visibility: 'public',
@@ -840,6 +894,48 @@ describe('inbox.service', () => {
     );
     expect(jobDeleteMock).toHaveBeenCalledWith();
     expect(jobDeleteInMock).toHaveBeenCalledWith('id', ['job-1']);
+  });
+
+  it('keeps existing album formal metadata unchanged when committing a manual match', async () => {
+    selectMock.mockResolvedValue({
+      data: [
+        {
+          id: 'review-album-1',
+          import_job_id: 'job-1',
+          entity_type: 'album',
+          display_title: 'Please Please Me',
+          source_name: 'anontraveler',
+          source_id: 'album-1',
+          source_url: 'https://www.anontraveler.com/rank/version/version-1',
+          planned_action: 'match_existing',
+          target_entity_id: 'album-existing-1',
+          skip_reason: '',
+          error_message: null,
+          review_payload: {
+            metadata: {
+              coverUrl: 'https://img.example.test/incoming.jpg',
+              styles: ['Incoming style'],
+            },
+          },
+        },
+      ],
+      error: null,
+    });
+    const { commitPublicImportReviewPlan } = await import('./inbox.service');
+
+    await expect(commitPublicImportReviewPlan()).resolves.toEqual({
+      createdCount: 0,
+      matchedCount: 1,
+      skippedCount: 0,
+    });
+
+    expect(formalInsertMock).not.toHaveBeenCalledWith(expect.objectContaining({ title: 'Please Please Me' }));
+    expect(formalUpdateMock).not.toHaveBeenCalledWith(
+      expect.objectContaining({ cover_url: expect.anything() }),
+    );
+    expect(formalUpdateMock).not.toHaveBeenCalledWith(
+      expect.objectContaining({ styles: expect.anything() }),
+    );
   });
 
   it('commits albums with their own imported artist instead of the first artist in the plan', async () => {
@@ -1107,6 +1203,12 @@ describe('inbox.service', () => {
 
     expect(formalUpdateMock).toHaveBeenCalledWith({ note: 'Imported comment.' });
     expect(formalUpdateEqMock).toHaveBeenCalledWith('id', 'archive-item-existing-1');
+    expect(formalUpdateMock).not.toHaveBeenCalledWith(
+      expect.objectContaining({ cover_url: expect.anything() }),
+    );
+    expect(formalUpdateMock).not.toHaveBeenCalledWith(
+      expect.objectContaining({ styles: expect.anything() }),
+    );
     expect(formalInsertMock).not.toHaveBeenCalledWith(expect.objectContaining({ external_id: 'item-1' }));
   });
 

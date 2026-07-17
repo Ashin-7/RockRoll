@@ -374,6 +374,69 @@
   padding: 0.75rem;
 }
 
+.archive-manual-match__header {
+  align-items: flex-start;
+  display: flex;
+  gap: 0.75rem;
+}
+
+.archive-manual-match__header > div:last-child {
+  min-width: 0;
+}
+
+.archive-manual-match__cover {
+  align-items: center;
+  aspect-ratio: 1;
+  background: var(--color-surface-subtle, #f4f4f4);
+  border: 1px solid var(--color-border, #d7d7d7);
+  border-radius: 6px;
+  display: flex;
+  flex: 0 0 4rem;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.archive-manual-match__cover img {
+  height: 100%;
+  object-fit: cover;
+  width: 100%;
+}
+
+.archive-manual-match__cover span {
+  color: var(--color-muted, #666);
+  font-size: 0.7rem;
+  padding: 0.25rem;
+  text-align: center;
+}
+
+.archive-manual-match__metadata {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  margin: 0;
+}
+
+.archive-manual-match__metadata div {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.archive-manual-match__metadata dt {
+  color: var(--color-muted, #666);
+  font-weight: 700;
+}
+
+.archive-manual-match__metadata dd,
+.archive-manual-match__note p {
+  margin: 0;
+}
+
+.archive-manual-match__album-details,
+.archive-manual-match__note {
+  display: grid;
+  gap: 0.35rem;
+}
+
 .archive-rank-directory {
   border-top: 1px solid var(--color-border, #d7d7d7);
   padding-top: 1rem;

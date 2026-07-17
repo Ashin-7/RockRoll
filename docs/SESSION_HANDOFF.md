@@ -1060,3 +1060,140 @@ Toolbox 明确节奏拓扑 Task 1-11 已完成。
 ```
 
 建议开启新对话，并粘贴以上提示词继续。
+
+## 当前交接索引（2026-07-17，导入验证反馈后）
+
+本轮完成：
+- 用户确认现有 Archive / Import 实际测试暂无明显问题；真实导入不再是当前阻塞项。
+- 没有再次写入 Supabase，也没有把用户手工结论伪装成自动化测试或精确阶段计数。
+- 下一项推荐功能收束为 Review plan 明细可读性：管理员提交前查看专辑封面、来源点评、年代与风格。
+- 数据库级任务状态、RPC、worker 与批量队列保持延后；只有真实失败再次出现时才恢复导入诊断。
+- Toolbox Task 1-11 仍已完成；真实 PDF / Guitar Pro 8 验收保持可选且需要另行授权。
+
+修改文件：
+- `docs/PROJECT_STATUS.md`
+- `docs/NEXT_TASKS.md`
+- `docs/SESSION_HANDOFF.md`
+
+验证：
+- 本轮仅修改状态文档，未运行代码测试或构建。
+- 当前分支为 `main`，跟踪 `origin/main`；原有 `.playwright-cli` 未跟踪文件未修改。
+
+下一轮提示词：
+
+```text
+继续 RockRoll 项目开发。
+请只读取：
+- AGENTS.md
+- docs/PROJECT_STATUS.md
+- docs/NEXT_TASKS.md
+- docs/SESSION_HANDOFF.md
+- docs/PERMISSIONS.md
+- src/features/archive
+- src/features/inbox
+- src/i18n/messages.ts
+
+现有 Archive / Import 实际测试暂无明显问题，不要重复执行真实导入，也不要新增数据库任务状态、RPC、worker 或批量队列。
+继续 Review plan 明细展示任务：保持 Archive 为主入口和 admin-only 权限，先写页面失败测试，再最小展示专辑封面、来源点评、年代与风格。
+不要恢复 Inbox 主导航，不改变一键导入提交时机或 match_existing 语义，不扫描整个仓库，不运行 npm install，不引入新 UI 框架。
+只运行 Archive / Inbox 定向测试，完成后中文总结。
+```
+
+建议开启新对话，并粘贴以上提示词继续。
+
+## 当前有效交接（2026-07-17，Review plan 明细完成后）
+
+- `/archive` 管理员 Review plan 已展示专辑封面、来源点评、发行年份与风格；复用现有 `review_payload.metadata`，没有新增查询或写入。
+- Archive 主入口、Inbox 停用导航、一键导入提交时机、artist / album `match_existing` 和 admin-only 权限均未改变。
+- 修改：`ArchivePage.tsx/.css/.test.tsx`、`inbox.types.ts`、`inbox.service.ts/.test.ts`、`messages.ts` 及三份状态 / 交接文档。
+- 验证命令：Node 20 下 `vitest --run src/features/archive src/features/inbox`，以及限定范围 `git diff --check`。
+- Archive / Inbox 定向测试为 8 个文件、83 个用例通过；未执行真实导入、完整测试或构建。
+- 风险：Review plan 仍一次读取管理员的全部 Review item，并沿用 artist / album 过滤；未新增分页或搜索。
+- 下一轮不要重复本任务。若继续专辑封面与曲风正规化，先确认最小 schema、migration、兼容性与 admin-only 权限影响；未确认前不修改 Supabase。
+
+```text
+继续 RockRoll 项目开发。
+请只读取：
+- AGENTS.md
+- docs/PROJECT_STATUS.md
+- docs/NEXT_TASKS.md
+- docs/SESSION_HANDOFF.md
+- docs/PERMISSIONS.md
+- src/features/archive
+- src/features/inbox
+- src/i18n/messages.ts
+
+Review plan 专辑封面、来源点评、年代与风格明细已完成，Archive / Inbox 定向测试 83 个用例通过。
+不要重复真实导入，不恢复 Inbox 主导航，不改变一键导入提交时机或 match_existing 语义，不新增数据库任务状态、RPC、worker 或批量队列。
+如继续专辑封面与曲风正规化，先明确最小 schema、migration、兼容性与 admin-only 权限影响；未确认前不要修改 Supabase。
+不要扫描整个仓库，不运行 npm install，不引入新 UI 框架。
+完成后中文总结。
+```
+
+建议开启新对话，并粘贴以上提示词继续。
+
+## 当前有效交接（2026-07-17，专辑封面与曲风正式字段化完成后）
+
+本轮完成：
+- 通过 Supabase CLI 生成 `supabase/migrations/20260717064514_add_album_cover_and_styles.sql`，只增加 `albums.cover_url` 和 `albums.styles`；未应用远端。
+- 新导入专辑在现有单次 insert 中写正式封面与曲风，同时保留 external source raw payload。
+- Albums 与 Archive 使用正式字段优先、raw payload 回退；Albums 完整集合曲风读取保持 200 条分块和最多 3 路并发，Archive 正式元数据按 200 条分块且无 N+1。
+- 手动 `match_existing` 与已有来源自动复用不会更新目标专辑正式字段。
+- public-read/admin-only write 权限沿用现有 Albums grants/RLS；没有新增 policy，`docs/PERMISSIONS.md` 未修改。
+- 没有真实导入、历史回填、远端 apply、角色探针、Inbox 主导航恢复、依赖安装或语义扩张。
+
+本任务新增 / 修改：
+- `supabase/migrations/20260717064514_add_album_cover_and_styles.sql`
+- `src/features/inbox/album-metadata.ts`
+- `src/features/inbox/album-metadata.test.ts`
+- `src/features/inbox/inbox.service.ts`
+- `src/features/inbox/inbox.service.test.ts`
+- `src/features/albums/albums.service.ts`
+- `src/features/albums/albums.service.test.ts`
+- `src/features/archive/archive.service.ts`
+- `src/features/archive/archive.service.test.ts`
+- `docs/superpowers/specs/2026-07-17-album-cover-styles-normalization-design.md`
+- `docs/superpowers/plans/2026-07-17-album-cover-styles-normalization.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/NEXT_TASKS.md`
+- `docs/SESSION_HANDOFF.md`
+
+分支与既有修改：
+- 当前分支为 `codex/album-cover-styles-normalization`，普通检出目录。
+- 建立分支时已存在 Review plan 明细任务留下的 `ArchivePage.tsx/.css/.test.tsx`、`inbox.types.ts`、`messages.ts` 与状态文档修改；本任务保留且未回退这些改动。
+
+验证：
+- 核心 service / normalizer：4 个测试文件、66 个用例通过。
+- Archive / Inbox / Albums 回归：12 个测试文件、125 个用例通过。
+- Node 20 下 `tsc -b && vite build` 通过；Vite 仍有既有主 chunk 超过 500 kB 警告。
+- migration 内容、既有 Albums grants/RLS 与限定范围 `git diff --check` 已静态核对；无空白错误，仅有 LF 转 CRLF 提示。
+- 默认 Node 8 无法解析当前 TypeScript CLI；验证时仅临时把既有 Node 20 目录置于当前进程 PATH，没有修改系统环境或安装依赖。
+
+风险与下一步：
+- 远端 migration 尚未应用，因此不能先部署依赖新列的代码。
+- 远端 apply、anon / 普通用户 / admin 角色探针必须由用户另行明确授权；不得使用 service role 绕过 RLS。
+- 不自动回填旧专辑，不重复真实导入；旧数据继续依赖 raw payload 回退。
+
+下一轮提示词：
+
+```text
+继续 RockRoll 项目开发。
+请只读取：
+- AGENTS.md
+- docs/PROJECT_STATUS.md
+- docs/NEXT_TASKS.md
+- docs/SESSION_HANDOFF.md
+- docs/PERMISSIONS.md
+- supabase/migrations/20260717064514_add_album_cover_and_styles.sql
+- src/features/archive/archive.service.ts
+- src/features/albums/albums.service.ts
+- src/features/inbox/album-metadata.ts
+- src/features/inbox/inbox.service.ts
+
+专辑封面与曲风正式字段化代码已完成，本地 migration 尚未应用远端。
+不要重复真实导入，不自动回填旧专辑，不恢复 Inbox 主导航，不改变一键导入或 match_existing 语义，不运行 npm install。
+如需应用远端 migration 或执行 anon / 普通用户 / admin 角色探针，必须先得到我的明确授权；未授权时只做只读审查。
+完成后中文总结。
+```
+
+建议开启新对话，并粘贴以上提示词继续。

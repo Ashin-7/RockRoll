@@ -39,6 +39,7 @@ export interface ImportReviewItemSummary {
   targetEntityId: string | null;
   skipReason: string;
   errorMessage: string | null;
+  metadata?: ImportCandidateMetadata;
 }
 
 export interface MatchImportReviewItemInput {

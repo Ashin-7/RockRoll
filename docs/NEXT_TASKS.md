@@ -583,3 +583,74 @@ npm run build
 
 - 明确节奏拓扑 Task 1-11 已完成；以本文“Toolbox：明确节奏拓扑 Task 10-11 已完成”章节为当前状态。
 - 下一步是可选的真实文件端到端验收，不是继续自动扩功能；如不验收则回到 Archive / Import 主线。
+
+## 当前任务索引（2026-07-17，导入验证反馈后）
+
+- 用户确认现有 Archive / Import 实际测试暂无明显问题。停止重复执行真实导入验证，也不要仅为预防性需求新增数据库级任务状态、RPC、worker 或批量队列。
+- 若后续重新出现 `Bad Request`、阶段数量不一致、备注未回填、重复数据或部分提交，再恢复导入诊断，并记录 `preview`、`saved`、`planned`、计划类型明细与 `committed`。
+- 下一项推荐功能：Review plan 明细展示专辑封面、来源点评、年代与风格，方便管理员在正式提交前检查。
+- 实施时保持 `Archive / 档案 -> 新增集合` 为主入口，不恢复 Inbox 主导航，不改变既有一键导入提交时机、`match_existing` 语义或 admin-only 权限模型。
+- 先写页面失败测试，再做最小 UI；优先复用现有 Review plan 数据与组件。除非现有数据契约确实缺字段，否则不修改 Supabase、migration 或 RLS。
+
+推荐下一轮只读取：
+- `AGENTS.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/NEXT_TASKS.md`
+- `docs/SESSION_HANDOFF.md`
+- `docs/PERMISSIONS.md`
+- `src/features/archive`
+- `src/features/inbox`
+- `src/i18n/messages.ts`
+
+下一轮不要扫描整个仓库，不运行 `npm install`，不引入新 UI 框架，只运行 Archive / Inbox 定向测试。
+
+## 当前任务索引（2026-07-17，Review plan 明细完成后）
+
+- 已完成 Review plan 专辑来源明细：管理员在 `/archive` 手动加载现有计划后，可查看专辑封面、来源点评、发行年份与风格。
+- 明细复用 `import_review_items.review_payload.metadata`，没有新增数据库字段、查询链路、任务状态、RPC、worker 或批量队列。
+- Archive 主入口、Inbox 停用导航、一键导入提交时机、artist / album `match_existing` 语义和 admin-only 权限均保持不变。
+- Archive / Inbox 定向测试共 8 个文件、83 个用例通过；未运行完整仓库测试、构建或真实导入。
+
+下一步建议：
+1. 不要重新执行真实导入，也不要自动恢复数据库级任务状态 / RPC / worker 设计；只有真实失败再次出现时才恢复诊断。
+2. 如继续 Archive / Import，可单独确认是否进入既有队列的“专辑封面与曲风正规化”。该任务涉及 schema / migration，开始前必须重新明确最小数据模型、兼容性和权限影响；默认不修改数据库。
+3. 如暂不做数据正规化，可停在当前稳定点，不追加 Review plan 分页、搜索或新提交步骤。
+
+推荐下一轮只读取：
+- `AGENTS.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/NEXT_TASKS.md`
+- `docs/SESSION_HANDOFF.md`
+- `docs/PERMISSIONS.md`
+- `src/features/archive`
+- `src/features/inbox`
+- `src/i18n/messages.ts`
+
+不要扫描整个仓库，不运行 `npm install`，不恢复 Inbox 主导航，不改变一键导入或 `match_existing` 语义。若未明确确认封面 / 曲风正规化的数据模型，不修改 Supabase。
+
+## 当前任务索引（2026-07-17，专辑封面与曲风正式字段化完成后）
+
+- 已新增本地 additive migration：`albums.cover_url text` 与 `albums.styles text[] not null default '{}'::text[]`；没有回填旧数据，也没有应用远端。
+- 新建专辑写正式字段；Albums 与 Archive 正式字段优先、raw payload 回退；旧专辑无需重复导入。
+- 手动 `match_existing`、external source 自动复用、一键导入提交时机、Review plan、数量口径、Inbox 导航与 admin-only 权限保持不变。
+- Archive / Inbox / Albums 回归 12 个测试文件、125 个用例通过；Node 20 下生产构建通过。
+
+下一步建议：
+1. 若用户明确授权远端变更，先只审查并应用 `20260717064514_add_album_cover_and_styles.sql`，再执行 anon / 普通用户 / admin 最小角色探针；不得打印密钥或使用 service role 绕过 RLS。
+2. 远端 migration 未应用前，不部署依赖新列的代码。
+3. 不自动回填旧专辑，不重复真实导入；如未来需要回填，单独设计 admin-only、幂等任务。
+4. 不建立曲风字典、别名、翻译或 `album_styles` 关系表，除非出现明确查询需求。
+
+推荐下一轮只读取：
+- `AGENTS.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/NEXT_TASKS.md`
+- `docs/SESSION_HANDOFF.md`
+- `docs/PERMISSIONS.md`
+- `supabase/migrations/20260717064514_add_album_cover_and_styles.sql`
+- `src/features/archive/archive.service.ts`
+- `src/features/albums/albums.service.ts`
+- `src/features/inbox/album-metadata.ts`
+- `src/features/inbox/inbox.service.ts`
+
+不要扫描整个仓库，不运行 `npm install`，不执行真实导入、自动回填或远端 migration；远端 apply 与角色探针必须先取得用户明确授权。

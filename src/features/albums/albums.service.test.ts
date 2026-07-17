@@ -98,7 +98,9 @@ describe('albums.service', () => {
       },
     ]);
     expect(fromMock).toHaveBeenCalledWith('albums');
-    expect(selectMock).toHaveBeenCalledWith('id,title,release_year,album_type,notes,artists(name)');
+    expect(selectMock).toHaveBeenCalledWith(
+      'id,title,release_year,album_type,notes,cover_url,styles,artists(name)',
+    );
     expect(orderMock).toHaveBeenCalledWith('updated_at', { ascending: false });
   });
 
@@ -169,12 +171,29 @@ describe('albums.service', () => {
           release_year: 1967,
           album_type: 'album',
           notes: 'Second studio album.',
+          cover_url: null,
+          styles: [],
           artists: { name: 'Jimi Hendrix' },
         },
       ],
       error: null,
     });
-    const externalInMock = vi.fn().mockResolvedValue({ data: [], error: null });
+    const externalInMock = vi.fn().mockResolvedValue({
+      data: [
+        {
+          entity_id: 'album-1',
+          raw_payload: {
+            metadata: {
+              coverUrl: 'https://img.example.test/axis-fallback.jpg',
+              styles: ['Psychedelic rock', 'Blues rock'],
+              artistName: 'The Jimi Hendrix Experience',
+              note: 'Raw review note.',
+            },
+          },
+        },
+      ],
+      error: null,
+    });
     const externalEqMock = vi.fn(() => ({ in: externalInMock }));
     const itemEntityEqMock = vi.fn(() => ({ order: itemOrderMock }));
     const itemEqMock = vi.fn(() => ({ eq: itemEntityEqMock }));
@@ -202,8 +221,11 @@ describe('albums.service', () => {
           expect.objectContaining({
             id: 'album-1',
             title: 'Axis: Bold as Love',
+            artistName: 'The Jimi Hendrix Experience',
             rank: 7,
-            reviewNote: 'Archive item note.',
+            coverUrl: 'https://img.example.test/axis-fallback.jpg',
+            styles: ['Psychedelic rock', 'Blues rock'],
+            reviewNote: 'Raw review note.',
           }),
         ],
       }),
@@ -325,11 +347,24 @@ describe('albums.service', () => {
           release_year: 1971,
           album_type: 'album',
           notes: '',
+          cover_url: null,
+          styles: ['Formal folk'],
           artists: { name: 'Joni Mitchell' },
         },
       ],
       error: null,
     });
+    const albumStyleInMock = vi.fn().mockResolvedValue({
+      data: [
+        { id: 'album-rock', styles: ['Rock'] },
+        { id: 'album-folk-1', styles: ['Formal folk'] },
+        { id: 'album-folk-2', styles: [] },
+      ],
+      error: null,
+    });
+    const albumSelectMock = vi.fn((columns: string) => ({
+      in: columns === 'id,styles' ? albumStyleInMock : albumInMock,
+    }));
     const externalInMock = vi.fn().mockResolvedValue({
       data: [
         { entity_id: 'album-rock', raw_payload: { metadata: { styles: ['Rock'] } } },
@@ -347,7 +382,7 @@ describe('albums.service', () => {
         return { delete: deleteMock, insert: insertMock, select: itemSelectMock, update: updateMock };
       }
       if (tableName === 'albums') {
-        return { delete: deleteMock, insert: insertMock, select: vi.fn(() => ({ in: albumInMock })), update: updateMock };
+        return { delete: deleteMock, insert: insertMock, select: albumSelectMock, update: updateMock };
       }
       if (tableName === 'external_sources') {
         return { delete: deleteMock, insert: insertMock, select: vi.fn(() => ({ eq: externalEqMock })), update: updateMock };
@@ -356,14 +391,15 @@ describe('albums.service', () => {
     });
     const { getAlbumCollectionById } = await import('./albums.service');
 
-    await expect(getAlbumCollectionById('collection-1', { pageIndex: 0, pageSize: 1, style: 'Folk' })).resolves.toEqual(
+    await expect(getAlbumCollectionById('collection-1', { pageIndex: 0, pageSize: 1, style: 'Formal folk' })).resolves.toEqual(
       expect.objectContaining({
-        totalAlbumCount: 2,
-        availableStyles: ['Folk', 'Rock', 'Singer-songwriter'],
+        totalAlbumCount: 1,
+        availableStyles: ['Folk', 'Formal folk', 'Rock', 'Singer-songwriter'],
         albums: [
           expect.objectContaining({
             id: 'album-folk-1',
             rank: 2,
+            styles: ['Formal folk'],
             reviewNote: 'Imported folk note.',
           }),
         ],
@@ -371,8 +407,87 @@ describe('albums.service', () => {
     );
 
     expect(pageRangeMock).not.toHaveBeenCalled();
+    expect(albumSelectMock).toHaveBeenCalledWith('id,styles');
+    expect(albumStyleInMock).toHaveBeenCalledWith('id', ['album-rock', 'album-folk-1', 'album-folk-2']);
     expect(albumInMock).toHaveBeenCalledWith('id', ['album-folk-1']);
     expect(externalInMock).toHaveBeenCalledWith('entity_id', ['album-rock', 'album-folk-1', 'album-folk-2']);
+  });
+
+  it('loads full collection formal styles in 200-row chunks with at most three requests in flight', async () => {
+    const collectionEqMock = vi.fn().mockResolvedValue({
+      data: [
+        {
+          id: 'collection-1',
+          title: 'Large import guide',
+          source: 'anontraveler',
+          source_url: 'https://example.test/rank/version/large',
+          description: 'Large import.',
+        },
+      ],
+      error: null,
+    });
+    const allItemRows = Array.from({ length: 601 }, (_, index) => ({
+      collection_id: 'collection-1',
+      entity_id: `album-${index + 1}`,
+      position: index + 1,
+      note: '',
+    }));
+    const allItemsOrderMock = vi.fn().mockResolvedValue({ data: allItemRows, error: null });
+    const pageRangeMock = vi.fn().mockResolvedValue({ data: [], count: 601, error: null });
+    const pageOrderMock = vi.fn(() => ({ range: pageRangeMock }));
+    const itemSelectMock = vi
+      .fn()
+      .mockReturnValueOnce({ eq: vi.fn(() => ({ eq: vi.fn(() => ({ order: allItemsOrderMock })) })) })
+      .mockReturnValueOnce({ eq: vi.fn(() => ({ eq: vi.fn(() => ({ order: pageOrderMock })) })) });
+    const albumStyleRequests = Array.from(
+      { length: 4 },
+      () => createTrackedDeferred<{ data: []; error: null }>(),
+    );
+    const albumStyleInMock = vi.fn(
+      (_column: string, _values: string[]) => albumStyleRequests[albumStyleInMock.mock.calls.length - 1].promise,
+    );
+    const albumInMock = vi.fn().mockResolvedValue({ data: [], error: null });
+    const albumSelectMock = vi.fn((columns: string) => ({
+      in: columns === 'id,styles' ? albumStyleInMock : albumInMock,
+    }));
+    const externalInMock = vi.fn().mockResolvedValue({ data: [], error: null });
+    const externalEqMock = vi.fn(() => ({ in: externalInMock }));
+    fromMock.mockImplementation((tableName?: string) => {
+      if (tableName === 'archive_collections') {
+        return { delete: deleteMock, insert: insertMock, select: vi.fn(() => ({ eq: collectionEqMock })), update: updateMock };
+      }
+      if (tableName === 'archive_items') {
+        return { delete: deleteMock, insert: insertMock, select: itemSelectMock, update: updateMock };
+      }
+      if (tableName === 'albums') {
+        return { delete: deleteMock, insert: insertMock, select: albumSelectMock, update: updateMock };
+      }
+      if (tableName === 'external_sources') {
+        return { delete: deleteMock, insert: insertMock, select: vi.fn(() => ({ eq: externalEqMock })), update: updateMock };
+      }
+      return { delete: deleteMock, insert: insertMock, select: selectMock, update: updateMock };
+    });
+    const { getAlbumCollectionById } = await import('./albums.service');
+
+    const resultPromise = getAlbumCollectionById('collection-1', { pageIndex: 0, pageSize: 25 });
+    await flushMicrotasks();
+
+    expect(albumStyleInMock).toHaveBeenCalledTimes(3);
+    expect(albumStyleInMock.mock.calls[0][1]).toHaveLength(200);
+    expect(albumStyleInMock.mock.calls[1][1]).toHaveLength(200);
+    expect(albumStyleInMock.mock.calls[2][1]).toHaveLength(200);
+    albumStyleRequests[0].resolve({ data: [], error: null });
+    await flushMicrotasks();
+
+    expect(albumStyleInMock).toHaveBeenCalledTimes(4);
+    expect(albumStyleInMock.mock.calls[3][1]).toHaveLength(1);
+    albumStyleRequests.slice(1).forEach((request) => request.resolve({ data: [], error: null }));
+
+    await expect(resultPromise).resolves.toEqual(
+      expect.objectContaining({ id: 'collection-1', totalAlbumCount: 601, albums: [] }),
+    );
+    expect(externalInMock).toHaveBeenCalledTimes(4);
+    expect(externalInMock.mock.calls.map((call) => call[1].length)).toEqual([200, 200, 200, 1]);
   });
 
   it('lists albums grouped by public import collection with imported metadata', async () => {
@@ -408,6 +523,8 @@ describe('albums.service', () => {
           release_year: 1967,
           album_type: 'album',
           notes: 'Second studio album.',
+          cover_url: 'https://formal.example.test/axis.jpg',
+          styles: ['Formal psychedelic rock'],
           artists: { name: 'Jimi Hendrix' },
         },
       ],
@@ -466,7 +583,7 @@ describe('albums.service', () => {
         sourceUrl: 'https://example.test/rank/version/1',
         description: 'Albums to explore.',
         totalAlbumCount: 1,
-        availableStyles: ['Blues rock', 'Psychedelic rock'],
+        availableStyles: ['Formal psychedelic rock'],
         albums: [
           {
             id: 'album-1',
@@ -476,8 +593,8 @@ describe('albums.service', () => {
             albumType: 'album',
             notes: 'Second studio album.',
             rank: 7,
-            coverUrl: 'https://img.example.test/axis.jpg',
-            styles: ['Psychedelic rock', 'Blues rock'],
+            coverUrl: 'https://formal.example.test/axis.jpg',
+            styles: ['Formal psychedelic rock'],
             reviewNote: 'Essential guitar record.',
           },
         ],
@@ -821,7 +938,9 @@ describe('albums.service', () => {
       notes: 'Second studio album.',
     });
     expect(fromMock).toHaveBeenCalledWith('albums');
-    expect(selectMock).toHaveBeenCalledWith('id,title,release_year,album_type,notes,artists(name)');
+    expect(selectMock).toHaveBeenCalledWith(
+      'id,title,release_year,album_type,notes,cover_url,styles,artists(name)',
+    );
     expect(eqMock).toHaveBeenCalledWith('id', 'album-1');
     expect(maybeSingleMock).toHaveBeenCalledWith();
   });

@@ -1,4 +1,5 @@
 import { getSupabase } from '../../lib/supabase';
+import { normalizeAlbumFields } from './album-metadata';
 import {
   CommitImportReviewPlanResult,
   ImportCandidateSummary,
@@ -103,13 +104,7 @@ interface ImportReviewPayload {
   albumExternalId?: string;
   position?: number | null;
   note?: string;
-  metadata?: {
-    artistName?: string;
-    releaseYear?: number | null;
-    albumType?: string;
-    note?: string;
-    sourceRank?: number | null;
-  };
+  metadata?: ImportCandidateSummary['metadata'];
 }
 
 interface ProfileRoleRow {
@@ -237,6 +232,7 @@ function mapReviewItem(row: ImportReviewItemRow): ImportReviewItemSummary {
     targetEntityId: row.target_entity_id,
     skipReason: row.skip_reason,
     errorMessage: row.error_message,
+    metadata: row.review_payload?.metadata,
   };
 }
 
@@ -860,11 +856,14 @@ export async function commitPublicImportReviewPlan(): Promise<CommitImportReview
       .map(async (item) => {
         const payload = item.review_payload ?? {};
         const artistId = artistIdsByName.get(normalizeArtistName(payload.metadata?.artistName)) ?? null;
+        const albumFields = normalizeAlbumFields(payload.metadata);
         const entityId = await insertPublicEntity('albums', {
           user_id: userId,
           artist_id: artistId,
           title: item.display_title,
           release_year: payload.metadata?.releaseYear ?? null,
+          cover_url: albumFields.coverUrl,
+          styles: albumFields.styles,
           album_type: normalizeAlbumType(payload.metadata?.albumType),
           notes: payload.metadata?.note ?? '',
           visibility: 'public',

@@ -17,7 +17,14 @@ interface AlbumRow {
   release_year: number | null;
   album_type: string;
   notes: string;
+  cover_url: string | null;
+  styles: string[];
   artists: { name: string } | Array<{ name: string }> | null;
+}
+
+interface AlbumStyleRow {
+  id: string;
+  styles: string[];
 }
 
 interface ArchiveCollectionRow {
@@ -52,6 +59,7 @@ interface ProfileRoleRow {
 }
 
 const albumTypes: AlbumType[] = ['album', 'ep', 'live', 'compilation'];
+const albumSelectColumns = 'id,title,release_year,album_type,notes,cover_url,styles,artists(name)';
 const supabaseInFilterChunkSize = 200;
 const supabaseBatchConcurrency = 3;
 const demoSessionStorageKey = 'rockroll.demoSession';
@@ -125,12 +133,13 @@ function mapExternalMetadataRows(rows: ExternalSourceRow[]): Map<string, AlbumEx
   );
 }
 
-function collectAvailableStyles(rows: ExternalSourceRow[]): string[] {
-  return Array.from(
-    new Set(
-      Array.from(mapExternalMetadataRows(rows).values()).flatMap((metadata) => metadata.styles),
-    ),
-  ).sort((left, right) => left.localeCompare(right));
+function resolveAlbumCoverUrl(album: AlbumRow, metadata?: AlbumExternalMetadata): string {
+  return album.cover_url?.trim() || metadata?.coverUrl || '';
+}
+
+function resolveAlbumStyles(formalStyles: unknown, fallbackStyles: string[] = []): string[] {
+  const styles = readStringArray(formalStyles);
+  return styles.length > 0 ? styles : fallbackStyles;
 }
 
 function chunkArray<T>(items: T[], chunkSize: number): T[][] {
@@ -257,7 +266,7 @@ async function loadAlbumRowsByIds(supabase: ReturnType<typeof getSupabase>, albu
   await runWithConcurrency(chunkArray(albumIds, supabaseInFilterChunkSize), supabaseBatchConcurrency, async (albumIdChunk) => {
     const { data, error } = await supabase
       .from('albums')
-      .select('id,title,release_year,album_type,notes,artists(name)')
+      .select(albumSelectColumns)
       .in('id', albumIdChunk);
 
     if (error) {
@@ -268,6 +277,27 @@ async function loadAlbumRowsByIds(supabase: ReturnType<typeof getSupabase>, albu
   });
 
   return albumRows;
+}
+
+async function loadAlbumStyleRowsByIds(
+  supabase: ReturnType<typeof getSupabase>,
+  albumIds: string[],
+): Promise<AlbumStyleRow[]> {
+  const rows: AlbumStyleRow[] = [];
+
+  await runWithConcurrency(
+    chunkArray(albumIds, supabaseInFilterChunkSize),
+    supabaseBatchConcurrency,
+    async (albumIdChunk) => {
+      const { data, error } = await supabase.from('albums').select('id,styles').in('id', albumIdChunk);
+      if (error) {
+        throw new Error(error.message);
+      }
+      rows.push(...((data ?? []) as AlbumStyleRow[]));
+    },
+  );
+
+  return rows;
 }
 
 async function loadExternalSourceRowsByAlbumIds(
@@ -291,6 +321,26 @@ async function loadExternalSourceRowsByAlbumIds(
   });
 
   return externalSourceRows;
+}
+
+function mapResolvedStylesByAlbumId(
+  albumRows: AlbumStyleRow[],
+  externalSourceRows: ExternalSourceRow[],
+): Map<string, string[]> {
+  const externalMetadata = mapExternalMetadataRows(externalSourceRows);
+
+  return new Map(
+    albumRows.map((album) => [
+      album.id,
+      resolveAlbumStyles(album.styles, externalMetadata.get(album.id)?.styles),
+    ]),
+  );
+}
+
+function collectResolvedStyles(stylesByAlbumId: Map<string, string[]>): string[] {
+  return Array.from(new Set(Array.from(stylesByAlbumId.values()).flat())).sort((left, right) =>
+    left.localeCompare(right),
+  );
 }
 
 async function loadCollectionAlbumItems(
@@ -331,15 +381,15 @@ async function buildAlbumCollections(
     loadAlbumRowsByIds(supabase, albumIds),
     externalSourceRows ? Promise.resolve(externalSourceRows) : loadExternalSourceRowsByAlbumIds(supabase, albumIds),
   ]);
-  const albumsById = new Map(albumRows.map((album) => [album.id, mapAlbumRow(album)]));
+  const albumsById = new Map(albumRows.map((album) => [album.id, album]));
   const metadataByAlbumId = mapExternalMetadataRows(resolvedExternalSourceRows);
-  const availableStyles = collectAvailableStyles(resolvedExternalSourceRows);
   const itemsByCollectionId = items.reduce<Record<string, AlbumCollectionAlbumSummary[]>>((groupedItems, item) => {
-    const album = albumsById.get(item.entity_id);
-    if (!album) {
+    const albumRow = albumsById.get(item.entity_id);
+    if (!albumRow) {
       return groupedItems;
     }
 
+    const album = mapAlbumRow(albumRow);
     const metadata = metadataByAlbumId.get(item.entity_id);
     return {
       ...groupedItems,
@@ -349,13 +399,16 @@ async function buildAlbumCollections(
           ...album,
           artistName: metadata?.artistName || album.artistName,
           rank: item.position,
-          coverUrl: metadata?.coverUrl ?? '',
-          styles: metadata?.styles ?? [],
+          coverUrl: resolveAlbumCoverUrl(albumRow, metadata),
+          styles: resolveAlbumStyles(albumRow.styles, metadata?.styles),
           reviewNote: metadata?.reviewNote || item.note || album.notes,
         },
       ],
     };
   }, {});
+  const availableStyles = Array.from(
+    new Set(Object.values(itemsByCollectionId).flatMap((albums) => albums.flatMap((album) => album.styles))),
+  ).sort((left, right) => left.localeCompare(right));
 
   return collections.map((collection) => ({
     ...mapCollectionRow(collection),
@@ -433,6 +486,7 @@ export async function getAlbumCollectionById(
   const selectedStyle = page?.style?.trim() ?? '';
   let fullCollectionItems: ArchiveItemRow[] | null = null;
   let fullExternalSourceRows: ExternalSourceRow[] | undefined;
+  let resolvedStylesByAlbumId: Map<string, string[]> | undefined;
   let availableStyles: string[] | undefined;
   let itemRows: ArchiveItemRow[];
   let totalAlbumCount: number;
@@ -440,14 +494,18 @@ export async function getAlbumCollectionById(
   if (page) {
     fullCollectionItems = await loadCollectionAlbumItems(supabase, collectionId);
     const fullAlbumIds = Array.from(new Set(fullCollectionItems.map((item) => item.entity_id)));
-    fullExternalSourceRows = await loadExternalSourceRowsByAlbumIds(supabase, fullAlbumIds);
-    availableStyles = collectAvailableStyles(fullExternalSourceRows);
+    const [fullAlbumStyleRows, resolvedExternalSourceRows] = await Promise.all([
+      loadAlbumStyleRowsByIds(supabase, fullAlbumIds),
+      loadExternalSourceRowsByAlbumIds(supabase, fullAlbumIds),
+    ]);
+    fullExternalSourceRows = resolvedExternalSourceRows;
+    resolvedStylesByAlbumId = mapResolvedStylesByAlbumId(fullAlbumStyleRows, fullExternalSourceRows);
+    availableStyles = collectResolvedStyles(resolvedStylesByAlbumId);
   }
 
   if (page && selectedStyle) {
-    const metadataByAlbumId = mapExternalMetadataRows(fullExternalSourceRows ?? []);
     const filteredItems = (fullCollectionItems ?? []).filter((item) =>
-      metadataByAlbumId.get(item.entity_id)?.styles.includes(selectedStyle),
+      resolvedStylesByAlbumId?.get(item.entity_id)?.includes(selectedStyle),
     );
     itemRows = filteredItems.slice(from, to + 1);
     totalAlbumCount = filteredItems.length;
@@ -492,7 +550,7 @@ export async function listAlbums(): Promise<AlbumSummary[]> {
 
   const { data, error } = await supabase
     .from('albums')
-    .select('id,title,release_year,album_type,notes,artists(name)')
+    .select(albumSelectColumns)
     .order('updated_at', { ascending: false });
 
   if (error) {
@@ -665,7 +723,7 @@ export async function getAlbumById(albumId: string): Promise<AlbumDetail | null>
 
   const { data, error } = await supabase
     .from('albums')
-    .select('id,title,release_year,album_type,notes,artists(name)')
+    .select(albumSelectColumns)
     .eq('id', albumId)
     .maybeSingle();
 

@@ -678,49 +678,93 @@ export function ArchivePage({
           ) : null}
 
           {canManageArchive ? (
-            <section className="archive-manual-match" aria-label="Manual matching">
+            <section className="archive-manual-match" aria-label={t('archive.reviewPlanTitle')}>
               <div className="archive-form-heading">
-                <p className="archive-form-mode">Import / review</p>
-                <h3>Manual matching</h3>
+                <p className="archive-form-mode">{t('archive.reviewPlanKicker')}</p>
+                <h3>{t('archive.reviewPlanTitle')}</h3>
               </div>
-              <p>Match an artist or album review item to a known public entity. Archive items stay out of this flow.</p>
+              <p>{t('archive.reviewPlanDescription')}</p>
               <Button type="button" onClick={handleLoadManualMatches} disabled={isMatchListLoading || matchingReviewItemId !== null}>
-                {isMatchListLoading ? 'Loading manual matches...' : 'Load manual matches'}
+                {isMatchListLoading ? t('archive.reviewPlanLoading') : t('archive.reviewPlanLoad')}
               </Button>
               {matchError ? <p role="alert">{matchError}</p> : null}
               {matchMessage ? <p role="status">{matchMessage}</p> : null}
               {matchReviewItems.length > 0 ? (
                 <div className="archive-manual-match__list">
-                  {matchReviewItems.map((reviewItem) => (
-                    <article className="archive-manual-match__item" key={reviewItem.id}>
-                      <div>
-                        <strong>{reviewItem.displayTitle}</strong>
-                        <p>{reviewItem.entityType} · {reviewItem.plannedAction}</p>
-                      </div>
-                      {reviewItem.plannedAction === 'match_existing' && reviewItem.targetEntityId ? (
-                        <p>Matched to {reviewItem.targetEntityId}</p>
-                      ) : (
-                        <>
-                          <Field label={`Existing public ${reviewItem.entityType} ID for ${reviewItem.displayTitle}`}>
-                            <input
-                              value={matchTargetIds[reviewItem.id] ?? ''}
-                              onChange={(event) => setMatchTargetIds((targetIds) => ({
-                                ...targetIds,
-                                [reviewItem.id]: event.target.value,
-                              }))}
-                            />
-                          </Field>
-                          <Button
-                            type="button"
-                            onClick={() => handleMatchExisting(reviewItem)}
-                            disabled={matchingReviewItemId !== null}
-                          >
-                            {matchingReviewItemId === reviewItem.id ? 'Matching...' : `Match ${reviewItem.displayTitle}`}
-                          </Button>
-                        </>
-                      )}
-                    </article>
-                  ))}
+                  {matchReviewItems.map((reviewItem) => {
+                    const albumMetadata = reviewItem.entityType === 'album' ? reviewItem.metadata : undefined;
+
+                    return (
+                      <article className="archive-manual-match__item" key={reviewItem.id}>
+                        <div className="archive-manual-match__header">
+                          {reviewItem.entityType === 'album' ? (
+                            <div className="archive-manual-match__cover">
+                              {albumMetadata?.coverUrl ? (
+                                <img
+                                  src={albumMetadata.coverUrl}
+                                  alt={formatMessage(t('archive.reviewPlanCoverAlt'), { title: reviewItem.displayTitle })}
+                                  loading="lazy"
+                                />
+                              ) : (
+                                <span>{t('archive.urlImportNoCover')}</span>
+                              )}
+                            </div>
+                          ) : null}
+                          <div>
+                            <strong>{reviewItem.displayTitle}</strong>
+                            {albumMetadata?.artistName ? <p>{albumMetadata.artistName}</p> : null}
+                            <p>{reviewItem.entityType} · {reviewItem.plannedAction}</p>
+                          </div>
+                        </div>
+                        {albumMetadata ? (
+                          <div className="archive-manual-match__album-details">
+                            <dl className="archive-manual-match__metadata">
+                              {typeof albumMetadata.releaseYear === 'number' ? (
+                                <div>
+                                  <dt>{t('archive.reviewPlanReleaseYear')}</dt>
+                                  <dd>{albumMetadata.releaseYear}</dd>
+                                </div>
+                              ) : null}
+                              {albumMetadata.styles?.length ? (
+                                <div>
+                                  <dt>{t('archive.reviewPlanStyles')}</dt>
+                                  <dd>{albumMetadata.styles.join(', ')}</dd>
+                                </div>
+                              ) : null}
+                            </dl>
+                            {albumMetadata.note ? (
+                              <div className="archive-manual-match__note">
+                                <strong>{t('archive.reviewPlanSourceNote')}</strong>
+                                <p>{albumMetadata.note}</p>
+                              </div>
+                            ) : null}
+                          </div>
+                        ) : null}
+                        {reviewItem.plannedAction === 'match_existing' && reviewItem.targetEntityId ? (
+                          <p>Matched to {reviewItem.targetEntityId}</p>
+                        ) : (
+                          <>
+                            <Field label={`Existing public ${reviewItem.entityType} ID for ${reviewItem.displayTitle}`}>
+                              <input
+                                value={matchTargetIds[reviewItem.id] ?? ''}
+                                onChange={(event) => setMatchTargetIds((targetIds) => ({
+                                  ...targetIds,
+                                  [reviewItem.id]: event.target.value,
+                                }))}
+                              />
+                            </Field>
+                            <Button
+                              type="button"
+                              onClick={() => handleMatchExisting(reviewItem)}
+                              disabled={matchingReviewItemId !== null}
+                            >
+                              {matchingReviewItemId === reviewItem.id ? 'Matching...' : `Match ${reviewItem.displayTitle}`}
+                            </Button>
+                          </>
+                        )}
+                      </article>
+                    );
+                  })}
                 </div>
               ) : null}
             </section>
