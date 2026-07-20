@@ -5,7 +5,7 @@ interface PanelProps {
   children: ReactNode;
   className?: string;
   variant?: 'panel' | 'card' | 'hero';
-  as?: 'div' | 'section' | 'article' | 'aside';
+  as?: 'div' | 'section' | 'article' | 'aside' | 'header';
   'aria-label'?: string;
 }
 

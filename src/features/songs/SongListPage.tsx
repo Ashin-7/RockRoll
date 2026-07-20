@@ -3,6 +3,7 @@ import { useI18n } from '../../i18n/I18nProvider';
 import { MessageKey } from '../../i18n/messages';
 import { CreateSongInput, SongStatus, SongSummary } from './song.types';
 import { createSong, listSongs } from './songs.service';
+import { Panel, StatCard } from '../../components/ui';
 import './SongListPage.css';
 
 interface SongListPageProps {
@@ -110,16 +111,19 @@ export function SongListPage({ songs, onCreateSong = createSong, onLoadSongs = l
 
   return (
     <section className="songs-page">
-      <div className="songs-hero">
+      <Panel variant="hero" as="header" className="songs-hero">
         <div>
           <p className="eyebrow">{t('songs.eyebrow')}</p>
           <h1>{t('songs.title')}</h1>
         </div>
-        <div className="songs-hero__summary">
-          <strong>{displaySongs.length}</strong>
-          <span>{t('songs.currentRotation')}</span>
-        </div>
-      </div>
+        <StatCard
+          align="right"
+          label=""
+          value={displaySongs.length}
+          detail={t('songs.currentRotation')}
+          className="songs-hero__summary"
+        />
+      </Panel>
 
       <form className="songs-add-form" onSubmit={handleCreateSong}>
         <h2>{t('songs.addTitle')}</h2>
