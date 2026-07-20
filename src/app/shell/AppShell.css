@@ -5,8 +5,8 @@
 }
 
 .app-shell__sidebar {
-  border-right: 1px solid rgba(167, 162, 154, 0.18);
-  background: rgba(17, 16, 15, 0.78);
+  border-right: 1px solid var(--color-border);
+  background: var(--color-bg-panel);
   padding: var(--space-6);
 }
 
@@ -64,9 +64,9 @@
   align-items: center;
   justify-content: center;
   min-height: 2rem;
-  border: 1px solid rgba(242, 169, 59, 0.32);
+  border: 1px solid var(--color-border-strong);
   border-radius: 999px;
-  background: rgba(242, 169, 59, 0.08);
+  background: var(--color-accent-soft);
   color: var(--color-paper);
   cursor: pointer;
   font: inherit;
@@ -82,7 +82,7 @@
 .app-shell__account-actions button:hover,
 .app-shell__account-actions button:focus-visible {
   border-color: var(--color-amber);
-  background: rgba(242, 169, 59, 0.18);
+  background: var(--color-accent-soft);
   color: var(--color-paper);
   outline: none;
 }
@@ -92,7 +92,7 @@
   height: 0.75rem;
   border-radius: 999px;
   background: var(--color-wine);
-  box-shadow: 0 0 20px rgba(242, 169, 59, 0.75);
+  box-shadow: 0 0 20px var(--color-accent-glow);
 }
 
 .app-shell__nav {
@@ -102,7 +102,7 @@
 }
 
 .app-shell__nav a {
-  border: 1px solid rgba(167, 162, 154, 0.18);
+  border: 1px solid var(--color-border);
   border-radius: 999px;
   padding: var(--space-3) var(--space-4);
   color: var(--color-paper-muted);
@@ -118,7 +118,7 @@
 
 .app-shell__nav a.is-active {
   border-color: var(--color-amber);
-  background: rgba(242, 169, 59, 0.14);
+  background: var(--color-accent-soft);
   color: var(--color-paper);
 }
 
@@ -133,7 +133,7 @@
 
   .app-shell__sidebar {
     border-right: 0;
-    border-bottom: 1px solid rgba(167, 162, 154, 0.18);
+    border-bottom: 1px solid var(--color-border);
   }
 
   .app-shell__nav {
