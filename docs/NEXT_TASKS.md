@@ -873,3 +873,30 @@ npm run build
 - 当前准备迁移的单个 feature 页面及测试
 
 不要扫描整个仓库，不引入 UI 框架，不恢复 Inbox 主导航，不改变导入或权限语义。
+
+## 当前任务索引（2026-07-20，UI 第 2 期首个页面切片后）
+
+已完成：
+
+- `Panel`、`SectionHeading`、`StatCard` 的最小 DOM / 可访问性合约测试。
+- `@testing-library/dom` 直接依赖与 lockfile 无关漂移清理。
+- Songs hero 的共享样式归属收口。
+- Album Detail hero 的 `Panel` / `SectionHeading` 迁移与结构回归。
+
+下一步只执行：
+
+1. 按 `docs/UI_REFACTOR_PLAN.md` 继续第 2 期，每次迁移一个页面。
+2. 下一页优先处理 `ArchiveDetailPage` 的 hero / panel 重复样式；先补结构失败测试，再迁移共享原语，不改变 Archive 权限或导入行为。
+3. 为该页面运行定向测试、production build，并在可用数据条件下补桌面与窄屏视觉冒烟。
+
+推荐下一轮只读取：
+
+- `AGENTS.md`
+- `docs/UI_REFACTOR_PLAN.md`
+- 三份状态 / 交接文档
+- `src/components/ui`
+- `src/features/archive/ArchiveDetailPage.tsx`
+- `src/features/archive/ArchiveDetailPage.css`
+- `src/features/archive/ArchiveDetailPage.test.tsx`
+
+不要运行 `npm install`，不要修改 Supabase、Auth、导入、Inbox 导航、一键导入或 `match_existing`，不要开发艺人列表。

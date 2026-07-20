@@ -1531,3 +1531,38 @@ UI 分支已 rebase 到包含完整 Auth P0 的本地 main。
 ```
 
 建议开启新对话，并粘贴以上提示词继续。
+
+## 当前有效交接（2026-07-20，UI 第 2 期首个页面切片后）
+
+本轮完成：
+
+- UI 分支依赖清单恢复到 `main` 基线，清除直接 `@testing-library/dom` 与 lockfile 间接版本漂移；没有安装依赖。
+- 共享显示原语新增 3 个表征测试。
+- Songs hero 完成重复表面 CSS 去除。
+- Album Detail hero 按 TDD 迁移到 `Panel` / `SectionHeading`；新增结构测试先红后绿，业务动作未改。
+- 定向测试与生产构建通过；本地 `/#songs` 在 `1280x720` 视觉冒烟通过。Album 无本地数据、浏览器无法切换实际 viewport，未声称完成对应视觉验收。
+- 没有触碰 Supabase、真实 Auth、真实导入、Inbox 导航、一键导入、`match_existing` 或艺人列表。
+
+下一轮提示词：
+
+```text
+继续 RockRoll UI 重构。
+请在 E:\Code\RcokRoll-ui-tokens 的 ui/tokens-rebuild 分支工作。
+只读取：
+- AGENTS.md
+- docs/UI_REFACTOR_PLAN.md
+- docs/PROJECT_STATUS.md
+- docs/NEXT_TASKS.md
+- docs/SESSION_HANDOFF.md
+- src/components/ui
+- src/features/archive/ArchiveDetailPage.tsx
+- src/features/archive/ArchiveDetailPage.css
+- src/features/archive/ArchiveDetailPage.test.tsx
+
+UI 第 2 期首个切片已完成：原语测试、依赖漂移清理、Songs hero CSS 收口、Album Detail hero 原语迁移。
+下一步按 TDD 只迁移 Archive Detail hero / panel 重复样式，不改变 Archive 权限或导入行为。
+不要运行 npm install，不修改 Supabase、Auth、Inbox 导航、一键导入或 match_existing，不开发艺人列表。
+完成后中文总结。
+```
+
+建议开启新对话，并粘贴以上提示词继续。

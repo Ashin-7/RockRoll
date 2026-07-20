@@ -1290,3 +1290,12 @@ npm run build
 ```
 
 rebase 前结果：4 个测试文件、19 个用例通过；生产构建通过。rebase 后组合回归为 7 个测试文件、67 个用例通过；生产构建再次通过，仅保留既有 chunk size 警告。
+
+## 追加完成：UI 第 2 期首个页面切片（2026-07-20）
+
+- 已移除 UI 分支误加的 `@testing-library/dom` 直接依赖，并把 `package.json`、`package-lock.json` 恢复到 `main` 的依赖基线；未运行 `npm install`。
+- 为 `Panel`、`SectionHeading`、`StatCard` 增加语义元素、标题层级、可访问名称、变体和对齐方式的表征测试。
+- Songs hero 已删除由 `Panel` / `StatCard` 统一提供的重复边框、背景、圆角、阴影、内边距和文字样式，保留页面布局与窄屏左对齐规则。
+- Album Detail hero 已按 TDD 迁移到 `Panel as="header" variant="hero"` 与 `SectionHeading as="h1"`，编辑、删除、角色可见性和路由行为未改变。
+- 本地浏览器在 `1280x720` 检查 `/#songs`：共享 hero 无双重表面、计数卡右对齐、无重叠。因本地没有 Supabase 配置/Album 数据且当前浏览器不能调整实际 viewport，Album 与窄屏未做伪造的视觉结论，分别由结构测试、构建和既有响应式 CSS 覆盖。
+- 未修改 Supabase、Auth、导入、Inbox 导航、一键导入、`match_existing` 或艺人列表。
