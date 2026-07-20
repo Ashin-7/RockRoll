@@ -1249,3 +1249,25 @@ git diff --check -- src/features/auth src/lib/supabase.ts src/lib/supabase.test.
 ```
 
 结果：Auth 与 Supabase 客户端 3 个测试文件、43 个用例通过；TypeScript 与 Vite production build 通过，仅保留既有主 chunk 超过 500 kB 警告；本地浏览器确认忘记密码页进入/返回正常、匿名登录入口不存在、控制台无错误。
+
+## 追加完成：Web MVP P0 真实 Auth 与角色页面验收（2026-07-20）
+
+- 只读核对 Supabase Auth：当前 Site URL 与 Redirect allow list 仅包含 `http://localhost:5173` 及其通配地址；预览和生产 `/#auth` 尚未配置，远端配置未修改。
+- 使用普通测试账号 `1757182755@qq.com` 完成真实注册/自动确认、密码登录、退出、恢复邮件、PKCE 回链、设置新密码、再次登录与最终退出；账号按约定保留，没有记录密码、token 或 cookie。
+- 修复 Auth 登录后缺少 `profiles` 行：注册获得 session、密码登录及恢复当前 session 时，均幂等插入默认 `role = 'user'`；冲突时不更新，不能覆盖或提升已有管理员角色。
+- 远端只读复核普通账号 profile 唯一且为 `user`，`is_public_library_admin = false`；管理员账号 `15779799065@163.com` profile 为 `admin`，管理员判断为 true。
+- 普通用户浏览器确认 Archive 14 个公开集合可读，新增、编辑、删除、URL 导入、目录扫描、Review plan 与 Match existing 均不可见；Practice / Songs 私有列表为空且登录用户表单可见。
+- 管理员浏览器确认 Archive 管理表单、集合编辑/删除、URL 预览、目录扫描和 Review plan 入口可见；未点击任何导入、提交或匹配按钮。
+- 发现管理员退出后同页会暂留旧权限 UI，刷新后才消失。现使用 Auth 用户 ID 作为当前页面 React key，身份变化时重新挂载页面并清除旧角色/表单状态；已新增 App 回归测试。
+- 没有执行真实榜单导入、远端配置修改、schema / migration / RLS 变更、Inbox 导航恢复、艺人列表开发或 `npm install`。
+
+验证：
+
+```powershell
+$env:PATH='C:\Users\Ashin\AppData\Local\nvm\v20.20.2;' + $env:PATH; npm test -- --run src/App.test.tsx src/features/auth src/features/practice src/features/archive src/features/toolbox src/lib/supabase.test.ts
+$env:PATH='C:\Users\Ashin\AppData\Local\nvm\v20.20.2;' + $env:PATH; npm run build
+```
+
+结果：22 个测试文件、205 个用例通过；TypeScript 与 Vite production build 通过，仅保留既有 chunk size 警告。
+
+剩余 P0：预览/生产 URL 确定后补 Supabase Redirect URLs 并执行预览部署冒烟；另需单独确认 Guest 是否应隐藏 Songs / Practice 新增表单（当前 RLS 会拒绝未登录写入，但 UI 仍显示）。

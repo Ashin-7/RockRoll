@@ -815,3 +815,32 @@ npm run build
 - 角色页面冒烟涉及的最小 Archive / Practice / Songs 文件
 
 不要运行 `npm install`，不要重复真实导入，不恢复 Inbox 主导航，不改变一键导入或 `match_existing`，不开发艺人列表，不读取真实 PDF。远端 Auth 配置、真实邮件、测试账号或部署发生外部状态变化前，必须先确认范围与清理方式。
+
+## 当前任务索引（2026-07-20，P0 真实 Auth 与角色页面验收后）
+
+已完成：
+
+- Supabase Redirect URLs 已只读核对；当前只有 localhost，远端未修改。
+- 普通测试账号 `1757182755@qq.com` 的真实注册、登录、退出、找回密码与 PKCE 恢复闭环通过，账号保留并已退出。
+- 普通账号 profile 自动初始化为 `user`，不能覆盖管理员；普通账号与 `15779799065@163.com` 管理员身份均已远端只读确认。
+- Guest、普通用户、管理员的 Archive 页面入口验收完成；未执行真实导入或任何管理员写操作。
+- 已修复管理员退出后旧权限控件暂留的问题；Auth 身份变化会重新挂载当前页面。
+- App / Auth / Practice / Archive / Toolbox / Supabase 定向回归 22 个文件、205 个用例通过，production build 通过。
+
+### P0：下一步只执行
+
+1. **确认部署地址**：取得预览与生产站点的准确 origin，拟定对应 `/#auth` Redirect URLs；修改 Supabase 远端配置前再次确认。
+2. **预览部署冒烟**：验证注册/登录/恢复回链、Practice 与 Songs 私有隔离、Archive public read、管理员入口和非管理员越权拒绝；不执行真实榜单导入。
+3. **Guest 表单决策**：确认未登录时 Songs / Practice 新增表单是否应隐藏。当前数据库权限安全，但 UI 仍展示表单；如处理，先补页面失败测试再做最小可见性调整。
+
+推荐下一轮只读取：
+
+- `AGENTS.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/NEXT_TASKS.md`
+- `docs/SESSION_HANDOFF.md`
+- `docs/PERMISSIONS.md`
+- `src/features/auth`
+- 预览部署或 Guest 表单验收涉及的最小文件
+
+不要运行 `npm install`，不要重复真实 Auth 或真实导入，不恢复 Inbox 主导航，不改变一键导入或 `match_existing`，不开发艺人列表，不读取真实 PDF。远端 Redirect URLs 或部署发生变化前必须先确认准确地址和影响范围。

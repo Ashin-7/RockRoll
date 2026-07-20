@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { AppShell } from './app/shell/AppShell';
 import { getAlbumIdForHash, getArchiveIdForHash, getArtistIdForHash, getRouteForHash, getSongIdForHash } from './app/routes';
 import { ArchiveDetailPage } from './features/archive/ArchiveDetailPage';
@@ -99,7 +99,7 @@ export default function App() {
       isSignedIn={Boolean(authSession)}
       onSignOut={handleSignOut}
     >
-      {page}
+      <Fragment key={authSession?.user.id ?? 'anonymous'}>{page}</Fragment>
     </AppShell>
   );
 }

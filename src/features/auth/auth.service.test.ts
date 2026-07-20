@@ -8,6 +8,7 @@ const queryBuilderMock = {
   maybeSingle: vi.fn(),
   select: vi.fn(),
   single: vi.fn(),
+  upsert: vi.fn(),
   update: vi.fn(),
 };
 const authMock = {
@@ -41,6 +42,7 @@ describe('auth.service', () => {
       data: { id: 'practice-1', user_id: 'user-1', focus_area: 'selected' },
       error: null,
     });
+    queryBuilderMock.upsert.mockResolvedValue({ data: null, error: null });
     queryBuilderMock.update.mockReturnValue(queryBuilderMock);
     getSupabaseMock.mockReturnValue({
       auth: authMock,
@@ -49,11 +51,15 @@ describe('auth.service', () => {
   });
 
   it('returns the current session', async () => {
-    const session = { user: { email: 'player@example.com' } };
+    const session = { user: { id: 'user-1', email: 'player@example.com' } };
     authMock.getSession.mockResolvedValue({ data: { session }, error: null });
     const { getCurrentSession } = await import('./auth.service');
 
     await expect(getCurrentSession()).resolves.toEqual(session);
+    expect(queryBuilderMock.upsert).toHaveBeenCalledWith(
+      { id: 'user-1', role: 'user' },
+      { ignoreDuplicates: true, onConflict: 'id' },
+    );
   });
 
   it('throws when reading the current session fails', async () => {
@@ -84,6 +90,10 @@ describe('auth.service', () => {
         emailRedirectTo: window.location.origin,
       },
     });
+    expect(queryBuilderMock.upsert).toHaveBeenCalledWith(
+      { id: 'user-1', role: 'user' },
+      { ignoreDuplicates: true, onConflict: 'id' },
+    );
   });
 
   it('returns null when password sign up requires email confirmation', async () => {
@@ -154,7 +164,10 @@ describe('auth.service', () => {
   });
 
   it('signs in with email and password through Supabase auth', async () => {
-    authMock.signInWithPassword.mockResolvedValue({ error: null });
+    authMock.signInWithPassword.mockResolvedValue({
+      data: { session: { user: { id: 'user-1', email: 'player@example.com' } } },
+      error: null,
+    });
     const { signInWithPassword } = await import('./auth.service');
 
     await expect(signInWithPassword('player@example.com', 'secret123')).resolves.toBeUndefined();
@@ -162,6 +175,24 @@ describe('auth.service', () => {
       email: 'player@example.com',
       password: 'secret123',
     });
+    expect(queryBuilderMock.upsert).toHaveBeenCalledWith(
+      { id: 'user-1', role: 'user' },
+      { ignoreDuplicates: true, onConflict: 'id' },
+    );
+  });
+
+  it('does not expose profile policy details when initialization fails', async () => {
+    authMock.getSession.mockResolvedValue({
+      data: { session: { user: { id: 'user-1', email: 'player@example.com' } } },
+      error: null,
+    });
+    queryBuilderMock.upsert.mockResolvedValue({
+      data: null,
+      error: { message: 'new row violates row-level security policy for table profiles' },
+    });
+    const { getCurrentSession } = await import('./auth.service');
+
+    await expect(getCurrentSession()).rejects.toThrow('Unable to initialize the user profile.');
   });
 
   it('throws when password sign in fails', async () => {

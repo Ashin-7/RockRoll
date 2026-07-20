@@ -53,6 +53,25 @@ function createMissingSupabaseEnvError(error: unknown): Error {
   return new Error(getMissingSupabaseEnvMessage(error));
 }
 
+async function ensureUserProfile(
+  supabase: ReturnType<typeof getSupabase>,
+  session: AuthSession | null,
+): Promise<void> {
+  const userId = session?.user.id;
+
+  if (!userId || userId === demoSession.user.id) {
+    return;
+  }
+
+  const { error } = await supabase
+    .from('profiles')
+    .upsert({ id: userId, role: 'user' }, { onConflict: 'id', ignoreDuplicates: true });
+
+  if (error) {
+    throw new Error('Unable to initialize the user profile.');
+  }
+}
+
 export async function signInWithEmail(email: string): Promise<void> {
   const supabase = getSupabase();
   const { error } = await supabase.auth.signInWithOtp({
@@ -81,12 +100,14 @@ export async function signUpWithPassword(email: string, password: string): Promi
     throw new Error(error.message);
   }
 
+  await ensureUserProfile(supabase, data.session);
+
   return data.session;
 }
 
 export async function signInWithPassword(email: string, password: string): Promise<void> {
   const supabase = getSupabase();
-  const { error } = await supabase.auth.signInWithPassword({
+  const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
   });
@@ -94,6 +115,8 @@ export async function signInWithPassword(email: string, password: string): Promi
   if (error) {
     throw new Error(error.message);
   }
+
+  await ensureUserProfile(supabase, data.session);
 }
 
 export async function resendSignupConfirmation(email: string): Promise<void> {
@@ -164,6 +187,8 @@ export async function getCurrentSession(): Promise<AuthSession | null> {
   if (error) {
     throw new Error(error.message);
   }
+
+  await ensureUserProfile(supabase, data.session);
 
   return data.session;
 }

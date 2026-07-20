@@ -1437,3 +1437,51 @@ Auth 找回密码最小闭环已完成：发送恢复邮件、PKCE 回链、PASS
 ```
 
 建议开启新对话，并粘贴以上提示词继续。
+
+## 当前有效交接（2026-07-20，P0 真实 Auth 与角色页面验收后）
+
+本轮完成：
+
+- Supabase Auth 配置只读核对完成：localhost 回链已允许，预览/生产 `/#auth` 尚未配置；远端配置未修改。
+- 普通账号 `1757182755@qq.com` 真实 Auth 全链路通过并已退出；账号按约定保留，无业务数据、密码、token 或 cookie 留档。
+- Auth service 新增幂等 profile 初始化，新账号/会话默认建立 `role = 'user'`，冲突不更新，管理员角色不会被覆盖。
+- 普通账号远端确认为非管理员；真实管理员 `15779799065@163.com` 远端确认为管理员。
+- Archive 的 Guest、普通用户、管理员页面权限入口均完成浏览器验收；管理员写入/导入/匹配按钮只观察未点击，没有重复真实导入。
+- 修复管理员退出后旧权限 UI 暂留：`App` 以 Auth 用户 ID 为当前页面 key，会话身份改变时重新挂载并清除旧页面状态。
+- 定向回归 22 个测试文件、205 个用例通过；production build 通过，仅有既有 chunk size 警告。
+
+本轮代码修改：
+
+- `src/features/auth/auth.service.ts`
+- `src/features/auth/auth.service.test.ts`
+- `src/App.tsx`
+- `src/App.test.tsx`
+- 三份状态 / 交接文档
+
+未完成事项：
+
+1. 预览与生产 origin 尚未确定，因此 Supabase Redirect URLs 仍缺对应 `/#auth`；修改远端配置前必须确认准确地址。
+2. 预览部署及其 Auth / 权限冒烟尚未执行。
+3. Guest 当前仍能看到 Songs / Practice 新增表单；RLS 会拒绝未登录写入，但是否隐藏入口需单独确认。
+
+下一轮提示词：
+
+```text
+继续 RockRoll Web MVP 上线 P0。
+请只读取：
+- AGENTS.md
+- docs/PROJECT_STATUS.md
+- docs/NEXT_TASKS.md
+- docs/SESSION_HANDOFF.md
+- docs/PERMISSIONS.md
+- src/features/auth
+- 当前预览部署或 Guest 表单任务必需的最小文件
+
+真实 Auth 与三角色页面验收已完成；普通测试账号 1757182755@qq.com 已退出并保留，管理员账号 15779799065@163.com 已只读确认。
+Auth profile 幂等初始化与退出后旧权限 UI 清理已修复，定向 205 个用例和 production build 通过。
+下一步先确认预览/生产准确 origin，再决定是否修改 Supabase Redirect URLs 并执行预览部署冒烟；任何远端配置变化前先说明并确认。
+不要重复真实 Auth 或真实导入，不运行 npm install，不恢复 Inbox 主导航，不改变一键导入或 match_existing，不开发艺人列表，不读取真实 PDF。
+完成后中文总结。
+```
+
+建议开启新对话，并粘贴以上提示词继续。
