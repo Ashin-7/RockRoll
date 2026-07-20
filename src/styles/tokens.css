@@ -1,20 +1,134 @@
+/* ============================================================
+   RockRoll Design Tokens
+   分层：原始色板 → 语义层 → 间距/圆角/阴影/字体/断点
+   页面与组件只应使用语义层，不应直接引用原始色板。
+   旧令牌名保留为别名，确保渐进迁移期间不破坏现有样式。
+   ============================================================ */
+
 :root {
-  --color-coal: #11100f;
-  --color-smoke: #22201f;
-  --color-ash: #3a3633;
-  --color-paper: #f3ead8;
-  --color-paper-muted: #cdbf9f;
-  --color-wine: #7b1e2b;
-  --color-amber: #f2a93b;
-  --color-silver: #a7a29a;
-  --font-display: "Arial Narrow", "Roboto Condensed", sans-serif;
-  --font-body: Inter, "Segoe UI", Arial, sans-serif;
+  /* --- 原始色板（palette layer，仅在此文件出现 hex/rgba） --- */
+  --c-coal-900: #11100f;
+  --c-coal-800: #22201f;
+  --c-coal-700: #3a3633;
+  --c-wine-600: #7b1e2b;
+  --c-wine-700: #3b1118;
+  --c-amber-400: #f2a93b;
+  --c-paper-50: #f3ead8;
+  --c-paper-300: #cdbf9f;
+  --c-paper-400: #a7a29a;
+  --c-danger-500: #d44a3a;
+  --c-success-500: #6ba368;
+
+  /* --- 语义层（semantic layer，页面/组件应只用这层） --- */
+  --color-bg: var(--c-coal-900);
+  --color-bg-panel: rgba(17, 16, 15, 0.72);
+  --color-bg-panel-elevated: rgba(34, 32, 31, 0.9);
+  --color-bg-panel-deep: rgba(17, 16, 15, 0.56);
+  --color-bg-input: rgba(17, 16, 15, 0.68);
+
+  --color-border: rgba(167, 162, 154, 0.18);
+  --color-border-subtle: rgba(167, 162, 154, 0.14);
+  --color-border-strong: rgba(242, 169, 59, 0.32);
+  --color-border-accent: rgba(242, 169, 59, 0.24);
+
+  --color-fg: var(--c-paper-50);
+  --color-fg-muted: var(--c-paper-300);
+  --color-fg-subtle: var(--c-paper-400);
+
+  --color-accent: var(--c-amber-400);
+  --color-accent-soft: rgba(242, 169, 59, 0.14);
+  --color-accent-glow: rgba(242, 169, 59, 0.75);
+  --color-accent-selection: rgba(242, 169, 59, 0.35);
+  --color-accent-radial: rgba(242, 169, 59, 0.16);
+
+  --color-wine-radial: rgba(123, 30, 43, 0.22);
+  --color-wine-soft: rgba(123, 30, 43, 0.18);
+
+  --color-danger: var(--c-danger-500);
+  --color-success: var(--c-success-500);
+
+  /* --- 间距 12 档 --- */
   --space-1: 0.25rem;
   --space-2: 0.5rem;
   --space-3: 0.75rem;
   --space-4: 1rem;
+  --space-5: 1.25rem;
   --space-6: 1.5rem;
-  --space-8: 2rem;
-  --radius-panel: 1.25rem;
+  --space-7: 2rem;
+  --space-8: 2.5rem;
+  --space-10: 3rem;
+  --space-12: 4rem;
+  --space-16: 6rem;
+  --space-20: 8rem;
+
+  /* --- 圆角 5 档 --- */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1.25rem;
+  --radius-2xl: 1.75rem;
+  --radius-pill: 999px;
+
+  /* --- 阴影 3 档 --- */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.18);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.28);
   --shadow-stage: 0 24px 80px rgba(0, 0, 0, 0.4);
+
+  /* --- 字体 --- */
+  --font-display: "Arial Narrow", "Roboto Condensed", sans-serif;
+  --font-body: Inter, "Segoe UI", Arial, sans-serif;
+  --font-mono: ui-monospace, "JetBrains Mono", "SFMono-Regular", monospace;
+
+  /* --- 断点（仅作文档约束，@media 中统一引用这些数值） --- */
+  --bp-sm: 760px;
+  --bp-md: 900px;
+  --bp-lg: 1080px;
+  --bp-xl: 1280px;
+
+  /* ============================================================
+   * 旧令牌别名（向后兼容，迁移完成后可删除）
+   * ============================================================ */
+  --color-coal: var(--c-coal-900);
+  --color-smoke: var(--c-coal-800);
+  --color-ash: var(--c-coal-700);
+  --color-paper: var(--c-paper-50);
+  --color-paper-muted: var(--c-paper-300);
+  --color-wine: var(--c-wine-600);
+  --color-amber: var(--c-amber-400);
+  --color-silver: var(--c-paper-400);
+  --radius-panel: var(--radius-xl);
+}
+
+/* ============================================================
+ * 亮色主题占位（第 4 期启用，此处仅声明覆盖块）
+ * 通过 <html data-theme="light"> 激活
+ * ============================================================ */
+[data-theme="light"] {
+  --color-bg: #f3ead8;
+  --color-bg-panel: rgba(255, 252, 244, 0.92);
+  --color-bg-panel-elevated: rgba(255, 255, 255, 0.96);
+  --color-bg-panel-deep: rgba(243, 234, 216, 0.78);
+  --color-bg-input: rgba(255, 255, 255, 0.88);
+
+  --color-border: rgba(123, 30, 43, 0.18);
+  --color-border-subtle: rgba(123, 30, 43, 0.12);
+  --color-border-strong: rgba(123, 30, 43, 0.32);
+  --color-border-accent: rgba(123, 30, 43, 0.24);
+
+  --color-fg: #1a1816;
+  --color-fg-muted: #4a4540;
+  --color-fg-subtle: #6b6660;
+
+  --color-accent: var(--c-wine-600);
+  --color-accent-soft: rgba(123, 30, 43, 0.1);
+  --color-accent-glow: rgba(123, 30, 43, 0.5);
+  --color-accent-selection: rgba(123, 30, 43, 0.22);
+  --color-accent-radial: rgba(123, 30, 43, 0.08);
+
+  --color-wine-radial: rgba(242, 169, 59, 0.18);
+  --color-wine-soft: rgba(242, 169, 59, 0.16);
+
+  --shadow-sm: 0 2px 8px rgba(60, 40, 20, 0.1);
+  --shadow-md: 0 8px 24px rgba(60, 40, 20, 0.14);
+  --shadow-stage: 0 24px 80px rgba(60, 40, 20, 0.18);
 }
