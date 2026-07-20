@@ -8,11 +8,11 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  color: var(--color-paper);
+  color: var(--color-fg);
   background:
-    radial-gradient(circle at 20% 0%, rgba(242, 169, 59, 0.16), transparent 32rem),
-    radial-gradient(circle at 80% 20%, rgba(123, 30, 43, 0.22), transparent 28rem),
-    var(--color-coal);
+    radial-gradient(circle at 20% 0%, var(--color-accent-radial), transparent 32rem),
+    radial-gradient(circle at 80% 20%, var(--color-wine-radial), transparent 28rem),
+    var(--color-bg);
   font-family: var(--font-body);
 }
 
@@ -25,33 +25,61 @@ input,
 textarea,
 select {
   font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  margin: 0;
 }
 
-button {
-  border: 1px solid rgba(242, 169, 59, 0.4);
-  border-radius: 999px;
-  background: linear-gradient(135deg, var(--color-wine), #3b1118);
-  color: var(--color-paper);
+.ui-button {
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-pill);
+  background: linear-gradient(135deg, var(--c-wine-600), var(--c-wine-700));
+  color: var(--color-fg);
   cursor: pointer;
   font-weight: 700;
   padding: 0.8rem 1.1rem;
 }
 
-input,
-textarea,
-select {
+.ui-input,
+.ui-textarea,
+.ui-select {
   width: 100%;
-  border: 1px solid rgba(167, 162, 154, 0.22);
-  border-radius: 0.85rem;
-  background: rgba(17, 16, 15, 0.68);
-  color: var(--color-paper);
+  border: 1px solid var(--color-border-accent);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-input);
+  color: var(--color-fg);
   padding: 0.8rem 0.95rem;
+}
+
+/* Fallback for global bare inputs used in untransitioned components */
+input:not([type="checkbox"]):not([type="radio"]):not(.ui-input):not(.ui-searchable-dropdown input),
+textarea:not(.ui-textarea),
+select:not(.ui-select) {
+  width: 100%;
+  border: 1px solid var(--color-border-accent);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-input);
+  color: var(--color-fg);
+  padding: 0.8rem 0.95rem;
+}
+
+button:not(.ui-button):not([class*="__language"]):not([class*="__account"]) {
+  /* Temporary shim to keep bare buttons styled until replaced by ui-button */
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-pill);
+  background: linear-gradient(135deg, var(--c-wine-600), var(--c-wine-700));
+  color: var(--color-fg);
+  cursor: pointer;
+  font-weight: 700;
+  padding: 0.8rem 1.1rem;
 }
 
 label {
   display: block;
   margin: var(--space-4) 0 var(--space-2);
-  color: var(--color-paper-muted);
+  color: var(--color-fg-muted);
   font-size: 0.82rem;
 }
 
@@ -60,7 +88,7 @@ a {
 }
 
 .eyebrow {
-  color: var(--color-amber);
+  color: var(--color-accent);
   font-family: var(--font-display);
   font-size: 0.78rem;
   font-weight: 800;
@@ -69,5 +97,5 @@ a {
 }
 
 ::selection {
-  background: rgba(242, 169, 59, 0.35);
+  background: var(--color-accent-selection);
 }
