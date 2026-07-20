@@ -1,6 +1,6 @@
 ﻿# RockRoll 下一步任务
 
-更新时间：2026-07-07
+更新时间：2026-07-20
 
 ## 当前状态
 
@@ -723,3 +723,34 @@ npm run build
 - 仅在复核 Toolbox 时读取 `src/features/toolbox` 与 `src/i18n/messages.ts`
 
 不要读取真实 PDF，不运行 `npm install`，不重复真实导入，不恢复 Inbox 主导航，不改变一键导入或 `match_existing` 语义。
+
+## 当前任务索引（2026-07-20，上线收尾预检后）
+
+已完成：
+
+- Toolbox 几何兼容已合并并推送，远程只保留默认分支 `main`。
+- 旧 Toolbox 增量已保存为本地提交 `abd8218`，工作树继续保留。
+- `.playwright-cli/` 已加入忽略规则，`dist/` 未被跟踪；工作区只剩本轮待提交文档与 `.gitignore` 修改。
+- 上线相关 29 个测试文件、284 个用例通过，生产构建通过。
+- 已只读确认专辑正式字段、Albums RLS / policy、运行环境目标和公开 Auth 设置。
+
+### P0：下一步只执行
+
+1. **Migration history 对齐决策**：远端为 `20260717073327_add_album_cover_and_styles`，本地为 `20260717064514_add_album_cover_and_styles.sql`，SQL 完全一致。推荐只重命名本地 migration 文件以匹配远端；开始前说明稳定区影响并取得确认，不重复执行 DDL。
+2. **Auth 策略决策**：当前开放注册且 `email_autoconfirm = true`。确认 Web MVP 是接受注册后自动确认，还是关闭自动确认并验收邮件确认链路。
+3. **真实 Auth 冒烟**：按确认策略验证注册、登录、退出、找回密码和重定向 URL；不得记录真实密码、token 或 cookie。
+4. **三角色权限探针**：验证 anon public read、普通用户私有 Practice / Songs 隔离和资料库写入拒绝、admin 现有维护入口；探针数据必须可识别、最小化并清理，不执行真实榜单导入。
+5. **预览部署冒烟**：完成以上 P0 后再部署预览环境；不改变 Inbox、导入提交时机或 `match_existing` 语义。
+
+推荐下一轮只读取：
+
+- `AGENTS.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/NEXT_TASKS.md`
+- `docs/SESSION_HANDOFF.md`
+- `docs/PERMISSIONS.md`
+- `supabase/migrations/20260717064514_add_album_cover_and_styles.sql`
+- `src/features/auth`
+- 三角色探针涉及的最小 Practice / Songs / Archive service 与测试文件
+
+不要运行 `npm install`，不要重复真实导入，不恢复 Inbox 主导航，不开发艺人列表，不读取真实 PDF。远端 Auth 配置、测试账号、角色探针、migration 文件或部署发生变化前，先明确具体影响范围。

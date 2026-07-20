@@ -1,6 +1,6 @@
 ﻿# RockRoll 项目状态
 
-更新时间：2026-07-07
+更新时间：2026-07-20
 
 ## 当前阶段
 
@@ -1194,3 +1194,22 @@ git diff --check -- src/features/toolbox src/i18n/messages.ts docs/superpowers/p
 结果：RED 阶段 5 个新增用例全部按预期失败；GREEN 阶段定向 3 个文件、20 个用例通过；完整 Toolbox 11 个文件、100 个用例通过；TypeScript 与 Vite production build 通过。构建仅保留既有主 chunk 超过 500 kB 警告。
 
 剩余事项：旧 `codex/toolbox-explicit-rhythm` 工作树仍包含未提交历史成果，必须等本分支合并并推送后再由用户明确确认是否删除。
+
+## 追加完成：Web MVP 上线收尾预检（2026-07-20）
+
+- `codex/toolbox-geometry-compat` 已合并并推送到 `main`；GitHub 默认分支已改为 `main`，远程旧 `feature/mvp-foundation` 已删除。
+- 旧 `codex/toolbox-explicit-rhythm` 的 10 个未提交文件已保存为本地提交 `abd8218`；该分支与工作树继续保留，未合并、未推送、未删除。
+- `.playwright-cli/` 已加入 `.gitignore`；`dist/` 没有被 Git 跟踪。专辑正规化设计文档的工作树哈希与索引哈希一致，确认只是伪修改后恢复干净，没有制造无内容提交。
+- 仓库内字面路径 `%SystemDrive%/` 仅包含 2 个搜狗输入法误写缓存文件（约 22.3 MB），现有 `.gitignore` 已忽略；本机安全策略拒绝删除命令，目录仍保留但不影响 Git。
+- 使用既有 Node 20 运行 Auth、Practice、Archive、Toolbox、Albums、Inbox 定向回归：29 个测试文件、284 个用例通过。
+- `tsc -b && vite build` 通过；仅保留既有主 chunk 超过 500 kB 警告。没有运行 `npm install`、完整仓库测试、真实导入或真实 PDF 验收。
+- Supabase linked 项目状态为 `ACTIVE_HEALTHY`；运行环境 URL 与 linked 项目一致，前端 anon key 已配置，未发现前端或本地 service role key。
+- 远端已存在 `albums.cover_url text` 与 `albums.styles text[] not null default '{}'::text[]`，Albums RLS 已启用，public read 与 admin-only insert / update / delete policy 保持生效。
+- 远端 migration history 为 `20260717073327_add_album_cover_and_styles`，仓库文件为 `20260717064514_add_album_cover_and_styles.sql`；两者 SQL 内容完全一致，但版本号不一致。上线前不得直接 `db push`，需先确认是否将本地文件名对齐远端版本。
+- Supabase Auth 当前保持开放注册、邮箱 provider 启用、匿名登录关闭，但 `email_autoconfirm = true`；因此当前不会发生邮箱确认流程。是否保持自动确认或改为邮箱确认，需要在真实 Auth 冒烟前由用户确认。
+
+当前上线 P0 阻塞项：
+
+1. 确认 migration history 对齐方案；未确认前不修改 `supabase/`、不 apply migration。
+2. 确认注册采用自动确认还是邮箱确认；未确认前不修改远端 Auth 配置。
+3. 随后执行真实注册 / 登录 / 退出 / 找回密码和 anon / 普通用户 / admin 三角色权限探针；这些操作会创建测试账号或短暂写入测试数据，执行前需再次明确范围。

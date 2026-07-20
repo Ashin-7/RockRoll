@@ -1,6 +1,6 @@
 ﻿# RockRoll 会话交接
 
-更新时间：2026-07-07
+更新时间：2026-07-20
 
 ## 本轮完成内容
 
@@ -1285,6 +1285,54 @@ Toolbox 几何兼容最小移植已完成：短横线过滤、稀疏覆盖拒绝
 先确认 codex/toolbox-geometry-compat 已合并推送；旧 codex/toolbox-explicit-rhythm 工作树未经明确确认不得删除。
 之后继续 Web MVP 上线 P0 的 Auth 冒烟与三角色权限验收。
 不要读取真实 PDF，不运行 npm install，不重复真实导入，不恢复 Inbox 主导航，不改变一键导入或 match_existing 语义。
+完成后中文总结。
+```
+
+建议开启新对话，并粘贴以上提示词继续。
+
+## 当前有效交接（2026-07-20，Web MVP 上线收尾预检后）
+
+本轮完成：
+
+- 清理 Git 状态：新增 `.playwright-cli/` 忽略规则，确认 `dist/` 未跟踪，确认专辑设计文档没有内容差异。
+- `%SystemDrive%/` 下只有 2 个误写搜狗缓存文件，已被忽略；删除被本机安全策略拒绝，磁盘目录仍保留。
+- Node 20 下 Auth、Practice、Archive、Toolbox、Albums、Inbox 共 29 个测试文件、284 个用例通过；生产构建通过，仅有既有 chunk size 警告。
+- Supabase 只读核对确认专辑正式列与 Albums RLS / admin-only 写策略已经在远端生效；没有执行 migration、DDL、角色探针或真实导入。
+- 发现 migration history 版本不一致：远端 `20260717073327`、本地 `20260717064514`，名称和 SQL 完全相同。未修改 `supabase/`。
+- 公开 Auth 设置显示注册开放、邮箱 provider 启用、匿名登录关闭、邮箱自动确认开启。未创建测试账号，未修改远端 Auth 配置。
+- GitHub 默认分支和远程分支清理已完成；本轮开始时 `main` 对齐 `origin/main`，创建收尾提交后将暂时领先 1 个提交，是否推送待用户确认。旧 `codex/toolbox-explicit-rhythm` 成果已提交为 `abd8218`，仍仅保存在本地。
+
+本轮修改：
+
+- `.gitignore`
+- `docs/PROJECT_STATUS.md`
+- `docs/NEXT_TASKS.md`
+- `docs/SESSION_HANDOFF.md`
+
+未完成事项：
+
+1. 由用户确认是否把本地专辑 migration 文件重命名为远端版本号；不得重复 apply SQL。
+2. 由用户确认开放注册采用自动确认还是邮箱确认。
+3. 确认后再执行真实 Auth 冒烟、三角色权限探针和预览部署；这些步骤会产生外部状态，需先说明账号、数据与清理范围。
+
+下一轮提示词：
+
+```text
+继续 RockRoll Web MVP 上线 P0。
+请只读取：
+- AGENTS.md
+- docs/PROJECT_STATUS.md
+- docs/NEXT_TASKS.md
+- docs/SESSION_HANDOFF.md
+- docs/PERMISSIONS.md
+- supabase/migrations/20260717064514_add_album_cover_and_styles.sql
+- src/features/auth
+- 当前权限探针涉及的最小 feature / service / test 文件
+
+上线收尾预检已通过：29 个测试文件、284 个用例及生产构建通过。
+远端专辑 migration 版本为 20260717073327，本地为 20260717064514，SQL 完全一致；未确认前不要修改 migration history 或重复 apply。
+Auth 当前开放注册且邮箱自动确认开启；先确认是否保持自动确认，再执行真实注册、登录、退出、找回密码和三角色权限探针。
+不要运行 npm install，不重复真实导入，不恢复 Inbox 主导航，不改变一键导入或 match_existing，不开发艺人列表，不读取真实 PDF。
 完成后中文总结。
 ```
 
