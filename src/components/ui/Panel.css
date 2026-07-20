@@ -1,0 +1,26 @@
+.ui-panel {
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-panel);
+}
+
+.ui-panel--card {
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+}
+
+.ui-panel--panel {
+  border-radius: var(--radius-2xl);
+  padding: clamp(2rem, 5vw, 4.5rem);
+  box-shadow: var(--shadow-md);
+}
+
+.ui-panel--hero {
+  border-radius: var(--radius-2xl);
+  background:
+    linear-gradient(135deg, var(--color-bg-panel-elevated), var(--color-bg-panel)),
+    repeating-linear-gradient(120deg, var(--color-fg-subtle) 0 1px, transparent 1px 10px);
+  box-shadow: var(--shadow-stage);
+  padding: clamp(1.5rem, 4vw, 3.5rem);
+  position: relative;
+  overflow: hidden;
+}

@@ -1,0 +1,33 @@
+.ui-stat-card {
+  border: 1px solid var(--color-border-accent);
+  border-radius: var(--radius-xl);
+  background: var(--color-bg-panel-deep);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.ui-stat-card--left { text-align: left; }
+.ui-stat-card--center { text-align: center; }
+.ui-stat-card--right { text-align: right; }
+
+.ui-stat-card__label {
+  margin: 0;
+  color: var(--color-fg-muted);
+  font-size: 0.86rem;
+}
+
+.ui-stat-card__value {
+  display: block;
+  margin: var(--space-1) 0;
+  font-family: var(--font-display);
+  font-size: 2.6rem;
+  line-height: 1;
+  color: var(--color-fg);
+}
+
+.ui-stat-card__detail {
+  color: var(--color-fg-muted);
+  font-size: 0.86rem;
+}
