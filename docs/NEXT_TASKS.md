@@ -844,3 +844,32 @@ npm run build
 - 预览部署或 Guest 表单验收涉及的最小文件
 
 不要运行 `npm install`，不要重复真实 Auth 或真实导入，不恢复 Inbox 主导航，不改变一键导入或 `match_existing`，不开发艺人列表，不读取真实 PDF。远端 Redirect URLs 或部署发生变化前必须先确认准确地址和影响范围。
+
+## 当前任务索引（2026-07-20，UI 重构分支整理后）
+
+已完成：
+
+- `ui/tokens-rebuild` 已 rebase 到本地最新 `main`，包含完整 Auth P0 基线且无冲突。
+- 第 1 期设计令牌重建已完成。
+- 第 2 期已新增 `Panel`、`SectionHeading`、`StatCard`，并迁移 Songs hero、AlbumDetail 与 ArchiveDetail 的部分重复 UI。
+- UI 方案文档只保留在 UI 分支的正式提交中；两边未提交成果均已独立保存。
+
+下一步只执行：
+
+1. 为 `Panel`、`SectionHeading`、`StatCard` 补最小行为/渲染测试，确认 `as`、heading level 与结构约束。
+2. 继续第 2 期时每次只迁移一个页面；优先完成当前 AlbumDetail / ArchiveDetail 的 Button 样式核对，再选择下一个 hero/panel 重复最明显的页面。
+3. 在 UI 分支合并前单独审查 `@testing-library/dom` 直接声明与 lockfile 漂移，避免把无关 Vite/Vitest 间接版本升级带入 `main`。
+4. 继续使用 Node 20 做 UI 定向测试和 production build；不运行 `npm install`。
+
+推荐下一轮只读取：
+
+- `AGENTS.md`
+- `docs/UI_REFACTOR_PLAN.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/NEXT_TASKS.md`
+- `docs/SESSION_HANDOFF.md`
+- `src/styles`
+- `src/components/ui`
+- 当前准备迁移的单个 feature 页面及测试
+
+不要扫描整个仓库，不引入 UI 框架，不恢复 Inbox 主导航，不改变导入或权限语义。

@@ -1485,3 +1485,49 @@ Auth profile 幂等初始化与退出后旧权限 UI 清理已修复，定向 20
 ```
 
 建议开启新对话，并粘贴以上提示词继续。
+
+## 当前有效交接（2026-07-20，UI 重构分支整理后）
+
+本轮完成：
+
+- 确认 UI 工作位于 `E:\Code\RcokRoll-ui-tokens` 的 `ui/tokens-rebuild`，不是 `main` 上的未跟踪文档草稿。
+- 保存 `main` 的 Auth/profile 与身份切换修复为 `c5207ad`。
+- 保存 UI worktree 的 AlbumDetail / ArchiveDetail Button 迁移，并将 UI 分支无冲突 rebase 到 `c5207ad`。
+- 第 1 期令牌重建已完成；第 2 期已有 `Panel`、`SectionHeading`、`StatCard` 和首批页面迁移。
+- 清理 `main` 中与 UI 分支完全相同的未跟踪 `docs/UI_REFACTOR_PLAN.md` 副本。
+- 旧 `codex/toolbox-explicit-rhythm` 与 `codex/toolbox-geometry-compat` worktree未删除、未修改。
+
+分支状态：
+
+- `main`：本地最新为 `c5207ad`，跟踪 `origin/main`。
+- `ui/tokens-rebuild`：已基于 `c5207ad` 重放 UI 提交，尚无远端 upstream。
+- UI 分支含一个待合并前审查项：`@testing-library/dom` 被增加为直接 devDependency，同时 lockfile 出现 Vite/Vitest 间接版本漂移。
+
+验证：
+
+- rebase 前 UI 定向测试 4 个文件、19 个用例通过。
+- rebase 后 Auth + UI 组合回归 7 个测试文件、67 个用例通过。
+- rebase 前后 production build 均通过，仅有既有 chunk size 警告；三份状态 / 交接文档的 `git diff --check` 通过。
+
+下一轮提示词：
+
+```text
+继续 RockRoll UI 重构。
+请在 E:\Code\RcokRoll-ui-tokens 的 ui/tokens-rebuild 分支工作。
+只读取：
+- AGENTS.md
+- docs/UI_REFACTOR_PLAN.md
+- docs/PROJECT_STATUS.md
+- docs/NEXT_TASKS.md
+- docs/SESSION_HANDOFF.md
+- src/styles
+- src/components/ui
+- 当前迁移的单个 feature 页面及测试
+
+UI 分支已 rebase 到包含完整 Auth P0 的本地 main。
+先补 Panel / SectionHeading / StatCard 最小测试，并审查 @testing-library/dom 与 lockfile 漂移；之后每次只迁移一个页面。
+不要扫描整个仓库，不运行 npm install，不引入 UI 框架，不修改 Supabase、导入、Inbox 导航或 match_existing。
+完成后中文总结。
+```
+
+建议开启新对话，并粘贴以上提示词继续。

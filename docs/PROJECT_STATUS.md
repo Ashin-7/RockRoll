@@ -1271,3 +1271,22 @@ $env:PATH='C:\Users\Ashin\AppData\Local\nvm\v20.20.2;' + $env:PATH; npm run buil
 结果：22 个测试文件、205 个用例通过；TypeScript 与 Vite production build 通过，仅保留既有 chunk size 警告。
 
 剩余 P0：预览/生产 URL 确定后补 Supabase Redirect URLs 并执行预览部署冒烟；另需单独确认 Guest 是否应隐藏 Songs / Practice 新增表单（当前 RLS 会拒绝未登录写入，但 UI 仍显示）。
+
+## 追加状态：UI 重构分支整理与阶段交接（2026-07-20）
+
+- UI 重构在独立 worktree `E:\Code\RcokRoll-ui-tokens`、分支 `ui/tokens-rebuild` 中继续，不与上线 P0 的 `main` 工作目录混写。
+- 分支已 rebase 到本地最新 `main` 提交 `c5207ad`，已包含密码恢复、profile 幂等初始化及 Auth 身份变化后页面状态清理；rebase 无冲突。
+- 第 1 期设计令牌重建已完成：扩展语义令牌、把全局 button/input 降为 reset、替换 feature 与 AppShell 的硬编码颜色，并修正 Practice History 遗留色值。
+- 第 2 期已开始：新增 `Panel`、`SectionHeading`、`StatCard`，Songs hero 已迁移；AlbumDetail 与 ArchiveDetail 的操作按钮已迁移到既有 `Button` 原语。
+- `docs/UI_REFACTOR_PLAN.md` 已正式保存在 UI 分支；`main` 工作目录中的同哈希未跟踪副本已清理，避免后续合并被阻塞。
+- UI 分支当前没有远端 upstream；旧 Toolbox worktree 与分支保持不动。
+- 本轮没有运行 `npm install`，没有修改 Supabase、导入流程、Inbox 导航、一键导入或 `match_existing`。
+
+阶段验证：
+
+```powershell
+npm test -- --run src/components/ui/ui.test.tsx src/features/songs/SongListPage.test.tsx src/features/albums/AlbumDetailPage.test.tsx src/features/archive/ArchiveDetailPage.test.tsx
+npm run build
+```
+
+rebase 前结果：4 个测试文件、19 个用例通过；生产构建通过。rebase 后组合回归为 7 个测试文件、67 个用例通过；生产构建再次通过，仅保留既有 chunk size 警告。
