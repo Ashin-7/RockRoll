@@ -4,6 +4,7 @@ import { getCurrentUserImportRole } from '../inbox/inbox.service';
 import { ImportUserRole } from '../inbox/inbox.types';
 import { addArchiveItem, deleteArchiveItem, getArchiveCollectionById, updateArchiveItem } from './archive.service';
 import { ArchiveCollectionDetail, ArchiveItemSummary, CreateArchiveItemInput, UpdateArchiveItemInput } from './archive.types';
+import { Button } from '../../components/ui';
 import './ArchiveDetailPage.css';
 
 interface ArchiveDetailPageProps {
@@ -216,20 +217,20 @@ export function ArchiveDetailPage({
               <div className="archive-detail-pagination" aria-label={t('archiveDetail.itemPaginationLabel')}>
                 <p>{itemRangeText}</p>
                 <div>
-                  <button
+                  <Button
                     type="button"
                     onClick={() => setItemPageIndex((current) => Math.max(0, current - 1))}
                     disabled={safeItemPageIndex === 0}
                   >
                     {t('archiveDetail.previousPage')}
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
                     onClick={() => setItemPageIndex((current) => Math.min(itemPageCount - 1, current + 1))}
                     disabled={safeItemPageIndex >= itemPageCount - 1}
                   >
                     {t('archiveDetail.nextPage')}
-                  </button>
+                  </Button>
                 </div>
               </div>
               <div className="archive-detail-item-grid" aria-label={t('archiveDetail.itemsTitle')}>
@@ -267,12 +268,12 @@ export function ArchiveDetailPage({
                       </div>
                       {canManageArchive ? (
                         <div className="archive-detail-row-actions">
-                          <button type="button" onClick={() => handleEditItem(item)}>
+                          <Button type="button" onClick={() => handleEditItem(item)}>
                             {t('archiveDetail.editAction')}
-                          </button>
-                          <button type="button" onClick={() => handleDeleteItem(item.id)}>
+                          </Button>
+                          <Button type="button" onClick={() => handleDeleteItem(item.id)}>
                             {t('archiveDetail.deleteAction')}
-                          </button>
+                          </Button>
                         </div>
                       ) : null}
                     </article>
@@ -330,13 +331,13 @@ export function ArchiveDetailPage({
               </label>
             </fieldset>
             <div className="archive-detail-form-actions">
-              <button type="submit">
+              <Button variant="primary" type="submit">
                 {editingItem ? t('archiveDetail.updateAlbumItemSubmit') : t('archiveDetail.addAlbumItemSubmit')}
-              </button>
+              </Button>
               {editingItem ? (
-                <button type="button" onClick={handleCancelEdit}>
+                <Button variant="ghost" type="button" onClick={handleCancelEdit}>
                   {t('archiveDetail.cancelEdit')}
-                </button>
+                </Button>
               ) : null}
             </div>
           </form>

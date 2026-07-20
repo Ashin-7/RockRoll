@@ -4,6 +4,7 @@ import { getCurrentUserImportRole } from '../inbox/inbox.service';
 import { ImportUserRole } from '../inbox/inbox.types';
 import { AlbumDetail, AlbumType, UpdateAlbumInput } from './album.types';
 import { deleteAlbum, getAlbumById, updateAlbum } from './albums.service';
+import { Button } from '../../components/ui';
 import './AlbumDetailPage.css';
 
 interface AlbumDetailPageProps {
@@ -184,12 +185,12 @@ export function AlbumDetailPage({
               <span>{t(albumTypeMessageKeys[album.albumType])}</span>
               {canManageAlbum ? (
                 <>
-                  <button aria-label="Edit album" onClick={() => startEditing(album)} type="button">
+                  <Button aria-label="Edit album" onClick={() => startEditing(album)} type="button">
                     {t('albumDetail.edit')}
-                  </button>
-                  <button aria-label="Delete album" disabled={isDeleting} onClick={handleDeleteAlbum} type="button">
+                  </Button>
+                  <Button variant="ghost" aria-label="Delete album" disabled={isDeleting} onClick={handleDeleteAlbum} type="button">
                     {t('albumDetail.delete')}
-                  </button>
+                  </Button>
                 </>
               ) : null}
             </div>
@@ -257,9 +258,9 @@ export function AlbumDetailPage({
 
               <div className="album-detail-edit-form__actions">
                 <span>{t('albumDetail.unsavedHint')}</span>
-                <button disabled={isSaving} type="submit">
+                <Button variant="primary" disabled={isSaving} type="submit">
                   {isSaving ? t('albumDetail.saving') : t('albumDetail.saveAlbum')}
-                </button>
+                </Button>
               </div>
             </form>
           ) : null}
