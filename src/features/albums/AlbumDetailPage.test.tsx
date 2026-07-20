@@ -16,10 +16,14 @@ const album: AlbumDetail = {
 
 describe('AlbumDetailPage', () => {
   it('loads and renders an album detail in the dossier pattern', async () => {
-    renderWithI18n(<AlbumDetailPage albumId="album-1" onLoadAlbum={vi.fn().mockResolvedValue(album)} />);
+    const { container } = renderWithI18n(
+      <AlbumDetailPage albumId="album-1" onLoadAlbum={vi.fn().mockResolvedValue(album)} />,
+    );
 
     expect(screen.getByText('Loading album detail...')).toBeInTheDocument();
     expect(await screen.findByText('Axis: Bold as Love')).toBeInTheDocument();
+    expect(container.querySelector('header.album-detail-hero.ui-panel--hero')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: 'Axis: Bold as Love' })).toBeInTheDocument();
     expect(screen.getAllByText('Jimi Hendrix').length).toBeGreaterThan(0);
     expect(screen.getByText('1967')).toBeInTheDocument();
     expect(screen.getByText('Second studio album.')).toBeInTheDocument();

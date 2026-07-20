@@ -14,13 +14,10 @@
   align-items: flex-end;
   justify-content: space-between;
   gap: var(--space-6);
-  border: 1px solid var(--color-border);
-  border-radius: calc(var(--radius-panel) * 1.4);
-  background:
-    linear-gradient(135deg, var(--color-bg-panel-elevated), var(--color-bg-panel-elevated)),
-    repeating-linear-gradient(120deg, var(--color-fg-subtle) 0 1px, transparent 1px 10px);
-  box-shadow: var(--shadow-stage);
-  padding: clamp(1.5rem, 4vw, 3.5rem);
+}
+
+.album-detail-hero__heading {
+  margin-bottom: 0;
 }
 
 .album-detail-hero h1 {

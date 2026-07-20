@@ -1,10 +1,10 @@
 import { FormEvent, useEffect, useState } from 'react';
+import { Button, Panel, SectionHeading } from '../../components/ui';
 import { useI18n } from '../../i18n/I18nProvider';
 import { getCurrentUserImportRole } from '../inbox/inbox.service';
 import { ImportUserRole } from '../inbox/inbox.types';
 import { AlbumDetail, AlbumType, UpdateAlbumInput } from './album.types';
 import { deleteAlbum, getAlbumById, updateAlbum } from './albums.service';
-import { Button } from '../../components/ui';
 import './AlbumDetailPage.css';
 
 interface AlbumDetailPageProps {
@@ -175,10 +175,14 @@ export function AlbumDetailPage({
 
       {!isLoading && !error && album ? (
         <>
-          <div className="album-detail-hero">
+          <Panel as="header" className="album-detail-hero" variant="hero">
             <div>
-              <p className="eyebrow">{t('albumDetail.eyebrow')}</p>
-              <h1>{album.title}</h1>
+              <SectionHeading
+                as="h1"
+                className="album-detail-hero__heading"
+                eyebrow={t('albumDetail.eyebrow')}
+                title={album.title}
+              />
               <p>{album.artistName || t('albums.unknown')}</p>
             </div>
             <div className="album-detail-hero__actions">
@@ -188,13 +192,19 @@ export function AlbumDetailPage({
                   <Button aria-label="Edit album" onClick={() => startEditing(album)} type="button">
                     {t('albumDetail.edit')}
                   </Button>
-                  <Button variant="ghost" aria-label="Delete album" disabled={isDeleting} onClick={handleDeleteAlbum} type="button">
+                  <Button
+                    aria-label="Delete album"
+                    disabled={isDeleting}
+                    onClick={handleDeleteAlbum}
+                    type="button"
+                    variant="ghost"
+                  >
                     {t('albumDetail.delete')}
                   </Button>
                 </>
               ) : null}
             </div>
-          </div>
+          </Panel>
 
           {canManageAlbum && isEditing ? (
             <form className="album-detail-edit-form" onSubmit={handleUpdateAlbum}>
