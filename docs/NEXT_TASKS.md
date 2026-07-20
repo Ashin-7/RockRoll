@@ -636,7 +636,7 @@ npm run build
 - Archive / Inbox / Albums 回归 12 个测试文件、125 个用例通过；Node 20 下生产构建通过。
 
 下一步建议：
-1. 若用户明确授权远端变更，先只审查并应用 `20260717064514_add_album_cover_and_styles.sql`，再执行 anon / 普通用户 / admin 最小角色探针；不得打印密钥或使用 service role 绕过 RLS。
+1. 若用户明确授权远端变更，先只审查并应用 `20260717073327_add_album_cover_and_styles.sql`，再执行 anon / 普通用户 / admin 最小角色探针；不得打印密钥或使用 service role 绕过 RLS。
 2. 远端 migration 未应用前，不部署依赖新列的代码。
 3. 不自动回填旧专辑，不重复真实导入；如未来需要回填，单独设计 admin-only、幂等任务。
 4. 不建立曲风字典、别名、翻译或 `album_styles` 关系表，除非出现明确查询需求。
@@ -647,7 +647,7 @@ npm run build
 - `docs/NEXT_TASKS.md`
 - `docs/SESSION_HANDOFF.md`
 - `docs/PERMISSIONS.md`
-- `supabase/migrations/20260717064514_add_album_cover_and_styles.sql`
+- `supabase/migrations/20260717073327_add_album_cover_and_styles.sql`
 - `src/features/archive/archive.service.ts`
 - `src/features/albums/albums.service.ts`
 - `src/features/inbox/album-metadata.ts`
@@ -736,7 +736,7 @@ npm run build
 
 ### P0：下一步只执行
 
-1. **Migration history 对齐决策**：远端为 `20260717073327_add_album_cover_and_styles`，本地为 `20260717064514_add_album_cover_and_styles.sql`，SQL 完全一致。推荐只重命名本地 migration 文件以匹配远端；开始前说明稳定区影响并取得确认，不重复执行 DDL。
+1. **Migration history 对齐决策**：已把本地文件纯重命名为 `20260717073327_add_album_cover_and_styles.sql` 以匹配远端；SQL 与哈希未变，没有重复执行 DDL。
 2. **Auth 策略决策**：当前开放注册且 `email_autoconfirm = true`。确认 Web MVP 是接受注册后自动确认，还是关闭自动确认并验收邮件确认链路。
 3. **真实 Auth 冒烟**：按确认策略验证注册、登录、退出、找回密码和重定向 URL；不得记录真实密码、token 或 cookie。
 4. **三角色权限探针**：验证 anon public read、普通用户私有 Practice / Songs 隔离和资料库写入拒绝、admin 现有维护入口；探针数据必须可识别、最小化并清理，不执行真实榜单导入。
@@ -749,8 +749,40 @@ npm run build
 - `docs/NEXT_TASKS.md`
 - `docs/SESSION_HANDOFF.md`
 - `docs/PERMISSIONS.md`
-- `supabase/migrations/20260717064514_add_album_cover_and_styles.sql`
+- `supabase/migrations/20260717073327_add_album_cover_and_styles.sql`
 - `src/features/auth`
 - 三角色探针涉及的最小 Practice / Songs / Archive service 与测试文件
 
 不要运行 `npm install`，不要重复真实导入，不恢复 Inbox 主导航，不开发艺人列表，不读取真实 PDF。远端 Auth 配置、测试账号、角色探针、migration 文件或部署发生变化前，先明确具体影响范围。
+
+## 当前任务索引（2026-07-20，migration / RLS / 匿名页面验收后）
+
+已完成：
+
+- 本地专辑 migration 已纯重命名为远端版本号 `20260717073327`；SQL 与哈希未变，没有执行远端 DDL、repair 或 push。
+- Supabase anon / 普通用户 / admin 的 8 项事务内 RLS 探针全部通过，rollback 后没有测试数据残留。
+- Guest 浏览器确认 Archive 可公开读取 14 个既有榜单；没有触发预览、目录扫描或真实导入。
+- 已修复 Archive 管理区的 UI 可见性：anonymous / user 均看不到新增、URL 预览导入、目录扫描、编辑、删除、Review plan 与 Match existing；admin 行为和既有导入语义不变。
+- `docs/PERMISSIONS.md` 已把 URL 预览导入与目录扫描明确收紧为 admin-only；Archive 3 个测试文件、31 个用例和 production build 通过。
+- Auth 保持开放注册与邮箱自动确认，远端配置未变。
+
+### P0：下一步只执行
+
+1. **实现找回密码最小闭环**：推荐包含未登录页发送重置邮件，以及恢复链接建立 session 后设置新密码；不引入新依赖，不修改 Supabase schema / RLS。
+2. **清理无效测试入口**：评估移除或仅在明确 demo 配置下显示“Anonymous test login”，因为远端已禁用匿名登录；不得改变正常注册和密码登录。
+3. **真实 Auth 冒烟**：使用用户确认的测试邮箱验证注册、自动确认、密码登录、退出、找回密码与重定向；不得记录密码、token 或 cookie，测试账号残留需先约定。
+4. **普通用户 / admin 页面冒烟**：补齐已登录角色的页面可见性验证；不执行真实榜单导入。
+5. **最小回归与构建**：Auth / Practice / Archive / Toolbox 定向测试与 production build 通过后，再进入预览部署。
+
+推荐下一轮只读取：
+
+- `AGENTS.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/NEXT_TASKS.md`
+- `docs/SESSION_HANDOFF.md`
+- `docs/PERMISSIONS.md`
+- `src/features/auth`
+- `src/features/archive/ArchivePage.tsx`
+- `src/features/archive/ArchivePage.test.tsx`
+
+不要运行 `npm install`，不要重复真实导入，不恢复 Inbox 主导航，不改变一键导入或 `match_existing`，不开发艺人列表，不读取真实 PDF。找回密码行为和真实测试邮箱需确认后再继续。

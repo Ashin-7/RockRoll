@@ -1135,7 +1135,7 @@ Review plan 专辑封面、来源点评、年代与风格明细已完成，Archi
 ## 当前有效交接（2026-07-17，专辑封面与曲风正式字段化完成后）
 
 本轮完成：
-- 通过 Supabase CLI 生成 `supabase/migrations/20260717064514_add_album_cover_and_styles.sql`，只增加 `albums.cover_url` 和 `albums.styles`；未应用远端。
+- 通过 Supabase CLI 生成 `supabase/migrations/20260717073327_add_album_cover_and_styles.sql`，只增加 `albums.cover_url` 和 `albums.styles`；未应用远端。
 - 新导入专辑在现有单次 insert 中写正式封面与曲风，同时保留 external source raw payload。
 - Albums 与 Archive 使用正式字段优先、raw payload 回退；Albums 完整集合曲风读取保持 200 条分块和最多 3 路并发，Archive 正式元数据按 200 条分块且无 N+1。
 - 手动 `match_existing` 与已有来源自动复用不会更新目标专辑正式字段。
@@ -1143,7 +1143,7 @@ Review plan 专辑封面、来源点评、年代与风格明细已完成，Archi
 - 没有真实导入、历史回填、远端 apply、角色探针、Inbox 主导航恢复、依赖安装或语义扩张。
 
 本任务新增 / 修改：
-- `supabase/migrations/20260717064514_add_album_cover_and_styles.sql`
+- `supabase/migrations/20260717073327_add_album_cover_and_styles.sql`
 - `src/features/inbox/album-metadata.ts`
 - `src/features/inbox/album-metadata.test.ts`
 - `src/features/inbox/inbox.service.ts`
@@ -1184,7 +1184,7 @@ Review plan 专辑封面、来源点评、年代与风格明细已完成，Archi
 - docs/NEXT_TASKS.md
 - docs/SESSION_HANDOFF.md
 - docs/PERMISSIONS.md
-- supabase/migrations/20260717064514_add_album_cover_and_styles.sql
+- supabase/migrations/20260717073327_add_album_cover_and_styles.sql
 - src/features/archive/archive.service.ts
 - src/features/albums/albums.service.ts
 - src/features/inbox/album-metadata.ts
@@ -1298,7 +1298,7 @@ Toolbox 几何兼容最小移植已完成：短横线过滤、稀疏覆盖拒绝
 - `%SystemDrive%/` 下只有 2 个误写搜狗缓存文件，已被忽略；删除被本机安全策略拒绝，磁盘目录仍保留。
 - Node 20 下 Auth、Practice、Archive、Toolbox、Albums、Inbox 共 29 个测试文件、284 个用例通过；生产构建通过，仅有既有 chunk size 警告。
 - Supabase 只读核对确认专辑正式列与 Albums RLS / admin-only 写策略已经在远端生效；没有执行 migration、DDL、角色探针或真实导入。
-- 发现 migration history 版本不一致：远端 `20260717073327`、本地 `20260717064514`，名称和 SQL 完全相同。未修改 `supabase/`。
+- 已确认 migration history 曾存在版本不一致：远端 `20260717073327`、本地原为 `20260717064514`，名称和 SQL 完全相同；后续已纯重命名本地文件完成对齐。
 - 公开 Auth 设置显示注册开放、邮箱 provider 启用、匿名登录关闭、邮箱自动确认开启。未创建测试账号，未修改远端 Auth 配置。
 - GitHub 默认分支和远程分支清理已完成；本轮开始时 `main` 对齐 `origin/main`，创建收尾提交后将暂时领先 1 个提交，是否推送待用户确认。旧 `codex/toolbox-explicit-rhythm` 成果已提交为 `abd8218`，仍仅保存在本地。
 
@@ -1325,13 +1325,62 @@ Toolbox 几何兼容最小移植已完成：短横线过滤、稀疏覆盖拒绝
 - docs/NEXT_TASKS.md
 - docs/SESSION_HANDOFF.md
 - docs/PERMISSIONS.md
-- supabase/migrations/20260717064514_add_album_cover_and_styles.sql
+- supabase/migrations/20260717073327_add_album_cover_and_styles.sql
 - src/features/auth
 - 当前权限探针涉及的最小 feature / service / test 文件
 
 上线收尾预检已通过：29 个测试文件、284 个用例及生产构建通过。
-远端专辑 migration 版本为 20260717073327，本地为 20260717064514，SQL 完全一致；未确认前不要修改 migration history 或重复 apply。
+远端与本地专辑 migration 版本现均为 20260717073327，SQL 完全一致；不要重复 apply、repair 或执行远端 DDL。
 Auth 当前开放注册且邮箱自动确认开启；先确认是否保持自动确认，再执行真实注册、登录、退出、找回密码和三角色权限探针。
+不要运行 npm install，不重复真实导入，不恢复 Inbox 主导航，不改变一键导入或 match_existing，不开发艺人列表，不读取真实 PDF。
+完成后中文总结。
+```
+
+建议开启新对话，并粘贴以上提示词继续。
+
+## 当前有效交接（2026-07-20，P0 migration / RLS / 匿名页面验收后）
+
+本轮完成：
+
+- 本地 `20260717064514_add_album_cover_and_styles.sql` 已纯重命名为 `20260717073327_add_album_cover_and_styles.sql`，SQL 与 SHA-256 未变；未修改远端 migration history，未执行 DDL、repair 或 push。
+- linked Supabase 的 8 项 anon / user / admin RLS 探针全部通过；所有临时 profile 角色变化和探针数据位于同一事务并已 rollback，独立复核无残留。
+- Guest 浏览器确认 Archive 公开读取 14 个已导入榜单正常；没有扫描目录、预览或提交任何导入。
+- 修复 `ArchivePage` 管理区可见性：anonymous / user 现在看不到新增集合、URL 预览、目录扫描、编辑、删除、Review plan 与 Match existing；admin 路径、一键导入和 `match_existing` 语义未变。
+- `docs/PERMISSIONS.md` 已同步 URL 预览导入与目录扫描的 admin-only 边界。
+- Archive 3 个测试文件、31 个用例通过；production build 通过，仅保留既有 chunk size 警告；没有运行 `npm install`。
+- Auth 保持开放注册、邮箱 provider、自动确认与禁用匿名登录，远端配置未变。代码审查与页面冒烟确认当前没有找回密码入口，仍显示无效的“Anonymous test login”。
+
+本轮修改：
+
+- `supabase/migrations/20260717073327_add_album_cover_and_styles.sql`（由旧时间戳纯重命名）
+- `src/features/archive/ArchivePage.tsx`
+- `src/features/archive/ArchivePage.test.tsx`
+- `docs/PERMISSIONS.md`
+- 三份状态 / 交接文档
+
+未完成事项：
+
+1. 确认并实现 Auth 找回密码最小闭环：发送重置邮件 + 恢复链接建立 session 后设置新密码。
+2. 确认是否移除“Anonymous test login”或仅在明确 demo 配置下显示。
+3. 用户提供或确认可用测试邮箱及测试账号残留清理方式后，再做真实注册 / 登录 / 退出 / 找回密码冒烟；不得记录密码、token 或 cookie。
+4. 补普通用户与 admin 的浏览器页面可见性冒烟，再运行 Auth / Practice / Archive / Toolbox 定向回归与生产构建。
+
+下一轮提示词：
+
+```text
+继续 RockRoll Web MVP 上线 P0。
+请只读取：
+- AGENTS.md
+- docs/PROJECT_STATUS.md
+- docs/NEXT_TASKS.md
+- docs/SESSION_HANDOFF.md
+- docs/PERMISSIONS.md
+- src/features/auth
+- src/features/archive/ArchivePage.tsx
+- src/features/archive/ArchivePage.test.tsx
+
+Migration 名称已与远端 20260717073327 对齐，没有执行远端 SQL；三角色 RLS 探针 8/8 通过且无残留；Guest Archive 可读取 14 个榜单，管理入口已经全部隐藏。
+下一步先确认 Auth 找回密码完整闭环和无效匿名测试登录入口的处理，再按 TDD 实现。真实邮件冒烟前必须确认测试邮箱与账号清理方式。
 不要运行 npm install，不重复真实导入，不恢复 Inbox 主导航，不改变一键导入或 match_existing，不开发艺人列表，不读取真实 PDF。
 完成后中文总结。
 ```

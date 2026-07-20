@@ -515,7 +515,8 @@ export function ArchivePage({
           ) : null}
         </section>
 
-        <div className="archive-form">
+        {canManageArchive ? (
+          <div className="archive-form">
           <div className="archive-form-heading">
             <p className="archive-form-mode">{editingCollectionId ? t('archive.editMode') : t('archive.formMode')}</p>
             <h2>{editingCollectionId ? t('archive.editCollectionTitle') : t('archive.addCollectionTitle')}</h2>
@@ -771,7 +772,8 @@ export function ArchivePage({
           ) : null}
           {message ? <p role="status">{message}</p> : null}
           {importSummary ? <p>{importSummary}</p> : null}
-        </div>
+          </div>
+        ) : null}
       </div>
     </section>
   );

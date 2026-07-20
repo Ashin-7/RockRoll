@@ -170,7 +170,7 @@ describe('ArchivePage', () => {
     expect(screen.getByText('Artists')).toBeInTheDocument();
     expect(screen.getByText('Albums')).toBeInTheDocument();
     expect(screen.getByText('Genres')).toBeInTheDocument();
-    expect(screen.getByText('Collection / create')).toBeInTheDocument();
+    expect(await screen.findByText('Collection / create')).toBeInTheDocument();
     expect(await screen.findByText('Identity')).toBeInTheDocument();
     expect(screen.getByText('Source profile')).toBeInTheDocument();
   });
@@ -205,16 +205,21 @@ describe('ArchivePage', () => {
     expect(screen.getByRole('button', { name: 'Delete Classic rock guide' })).toBeInTheDocument();
   });
 
-  it('hides archive collection write actions for non-admin users', async () => {
+  it.each(['anonymous', 'user'] as const)('hides archive management actions for %s users', async (role) => {
     renderWithI18n(
-      <ArchivePage onLoadCollections={async () => collections} onLoadImportRole={async () => 'user'} />,
+      <ArchivePage onLoadCollections={async () => collections} onLoadImportRole={async () => role} />,
     );
 
     expect(await screen.findByText('Classic rock guide')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Open collection' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Edit Classic rock guide' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Delete Classic rock guide' })).not.toBeInTheDocument();
+    expect(screen.queryByText('Collection / create')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Anontraveler rank URL')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Preview collection' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Scan Anontraveler directory' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Add collection' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Load manual matches' })).not.toBeInTheDocument();
   });
 
   it('lets admins match artist and album review items without changing the URL import flow', async () => {
@@ -410,6 +415,7 @@ describe('ArchivePage', () => {
     renderWithI18n(
       <ArchivePage
         onLoadCollections={vi.fn().mockResolvedValue([])}
+        onLoadImportRole={async () => 'admin'}
         onScanAnontravelerRankDirectoryPage={scanRankDirectoryPage}
         onPreviewAnontraveler={previewAnontraveler}
         onSaveCandidatesDraft={saveCandidatesDraft}
@@ -459,6 +465,7 @@ describe('ArchivePage', () => {
     renderWithI18n(
       <ArchivePage
         onLoadCollections={vi.fn().mockResolvedValue([])}
+        onLoadImportRole={async () => 'admin'}
         onScanAnontravelerRankDirectoryPage={scanRankDirectoryPage}
         onPreviewAnontraveler={previewAnontraveler}
         onSaveCandidatesDraft={saveCandidatesDraft}

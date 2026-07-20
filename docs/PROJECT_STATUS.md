@@ -1133,7 +1133,7 @@ git diff --check -- src/features/archive src/features/inbox src/i18n/messages.ts
 
 ## 追加完成：专辑封面与曲风正式字段化
 
-- 新增 CLI 生成的 additive migration：`supabase/migrations/20260717064514_add_album_cover_and_styles.sql`，仅增加 `albums.cover_url text` 与 `albums.styles text[] not null default '{}'::text[]`。
+- 新增 CLI 生成的 additive migration：`supabase/migrations/20260717073327_add_album_cover_and_styles.sql`，仅增加 `albums.cover_url text` 与 `albums.styles text[] not null default '{}'::text[]`。
 - 新导入专辑在原有单次 album insert 中写入清洗后的正式字段：封面去除首尾空格并把空值写为 `null`；曲风去除首尾空格、过滤空值并按首次出现顺序做区分大小写的精确去重。
 - `external_sources.raw_payload` 继续保存来源原文；手动 `match_existing` 和已有 external source 自动复用均不更新目标专辑正式字段。
 - Albums 集合卡片、完整集合曲风选项与筛选采用正式字段优先、raw payload 回退；正式曲风按 200 条分块、最多 3 路并发读取。
@@ -1205,11 +1205,29 @@ git diff --check -- src/features/toolbox src/i18n/messages.ts docs/superpowers/p
 - `tsc -b && vite build` 通过；仅保留既有主 chunk 超过 500 kB 警告。没有运行 `npm install`、完整仓库测试、真实导入或真实 PDF 验收。
 - Supabase linked 项目状态为 `ACTIVE_HEALTHY`；运行环境 URL 与 linked 项目一致，前端 anon key 已配置，未发现前端或本地 service role key。
 - 远端已存在 `albums.cover_url text` 与 `albums.styles text[] not null default '{}'::text[]`，Albums RLS 已启用，public read 与 admin-only insert / update / delete policy 保持生效。
-- 远端 migration history 为 `20260717073327_add_album_cover_and_styles`，仓库文件为 `20260717064514_add_album_cover_and_styles.sql`；两者 SQL 内容完全一致，但版本号不一致。上线前不得直接 `db push`，需先确认是否将本地文件名对齐远端版本。
-- Supabase Auth 当前保持开放注册、邮箱 provider 启用、匿名登录关闭，但 `email_autoconfirm = true`；因此当前不会发生邮箱确认流程。是否保持自动确认或改为邮箱确认，需要在真实 Auth 冒烟前由用户确认。
+- 远端 migration history 与仓库文件现已统一为 `20260717073327_add_album_cover_and_styles`；本地仅重命名文件，SQL 内容与哈希未变，没有重复执行 DDL、repair 或 push。
+- Supabase Auth 当前保持开放注册、邮箱 provider 启用、匿名登录关闭和 `email_autoconfirm = true`；用户已确认首发继续自动确认，本轮没有修改远端 Auth 配置。
 
 当前上线 P0 阻塞项：
 
-1. 确认 migration history 对齐方案；未确认前不修改 `supabase/`、不 apply migration。
-2. 确认注册采用自动确认还是邮箱确认；未确认前不修改远端 Auth 配置。
-3. 随后执行真实注册 / 登录 / 退出 / 找回密码和 anon / 普通用户 / admin 三角色权限探针；这些操作会创建测试账号或短暂写入测试数据，执行前需再次明确范围。
+1. Migration history 对齐与 Auth 自动确认策略已经确认并完成收口。
+2. anon / 普通用户 / admin 三角色 RLS 探针已经在单个事务内完成并回滚，无测试数据残留。
+3. 真实注册 / 登录 / 退出 / 找回密码仍待执行；当前应用缺少找回密码闭环，且真实邮件验证需要测试邮箱与残留清理方式。
+
+## 追加完成：P0 migration、RLS 与匿名页面验收（2026-07-20）
+
+- 本地专辑 migration 已纯重命名为 `supabase/migrations/20260717073327_add_album_cover_and_styles.sql`，重命名前后 SHA-256 均为 `D98A3A54498B902AD0664AEE3731EADE9656E21D487D11A84D2B5E5EBBAB2743`；远端未执行 SQL、migration repair 或 push。
+- 使用 linked Supabase 在单个事务内完成 8 项 RLS 探针：admin 可写 public artist；普通用户可读 public artist、可写/读自己的 Practice、不能写资料库、不能自升 admin；anon 只能读 public artist、不能写资料库。事务最终 rollback，复核 admin profile 仍为 1、普通 user profile 与探针数据均为 0。
+- 本地浏览器以 Guest 身份确认 Archive 可公开读取 14 个既有榜单，没有执行预览、扫描或导入。
+- 冒烟发现 Archive 的 URL 预览、目录扫描与新增区未按角色隐藏。根因是外层管理区无条件渲染；现已统一由 `canManageArchive` 控制，并增加 anonymous / user 双角色回归测试。编辑、删除、Review plan 与 `match_existing` 语义未改变。
+- `docs/PERMISSIONS.md` 已同步将 URL 预览导入与目录扫描入口明确为 admin-only；RLS / policy 已满足边界，因此没有新增数据库 migration。
+- Auth 页面现有注册、密码登录、Magic Link 和退出基础，但缺少 `resetPasswordForEmail` / 回链后设置新密码的完整找回密码流程；页面还显示远端已禁用的“Anonymous test login”。实现前需确认最小 Auth 交互方案和测试邮箱。
+
+验证：
+
+```powershell
+$env:PATH='C:\Users\Ashin\AppData\Local\nvm\v20.20.2;' + $env:PATH; npm test -- --run src/features/archive
+$env:PATH='C:\Users\Ashin\AppData\Local\nvm\v20.20.2;' + $env:PATH; npm run build
+```
+
+结果：Archive 3 个测试文件、31 个用例通过；production build 通过，仅保留既有主 chunk 超过 500 kB 警告；匿名浏览器确认 14 个 public collection 可见且管理入口全部隐藏。没有运行 `npm install`、真实导入、真实注册、邮件发送或部署。
