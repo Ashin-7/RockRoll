@@ -2,7 +2,16 @@ import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { renderWithI18n } from '../../test/render';
-import { ActionBar, Button, Field, FormSection, SearchableDropdown } from './index';
+import {
+  ActionBar,
+  Button,
+  Field,
+  FormSection,
+  Panel,
+  SearchableDropdown,
+  SectionHeading,
+  StatCard,
+} from './index';
 
 describe('minimal UI components', () => {
   it('renders a button and forwards click handlers', async () => {
@@ -65,5 +74,42 @@ describe('minimal UI components', () => {
     await user.click(screen.getByRole('button', { name: 'Select Classic rock guide' }));
 
     expect(onSelect).toHaveBeenCalledWith('classic');
+  });
+
+  it('renders Panel with the requested semantic element and variant classes', () => {
+    renderWithI18n(
+      <Panel as="aside" aria-label="Signal summary" className="custom-panel" variant="hero">
+        Signal
+      </Panel>,
+    );
+
+    expect(screen.getByRole('complementary', { name: 'Signal summary' })).toHaveClass(
+      'ui-panel',
+      'ui-panel--hero',
+      'custom-panel',
+    );
+  });
+
+  it('renders SectionHeading with the requested heading level and optional content', () => {
+    renderWithI18n(
+      <SectionHeading
+        action={<Button>Open</Button>}
+        as="h3"
+        eyebrow="Archive"
+        title="Collection"
+      />,
+    );
+
+    expect(screen.getByText('Archive')).toHaveClass('eyebrow');
+    expect(screen.getByRole('heading', { level: 3, name: 'Collection' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Open' })).toBeInTheDocument();
+  });
+
+  it('renders StatCard alignment and optional detail', () => {
+    renderWithI18n(<StatCard align="right" detail="In rotation" label="Songs" value={12} />);
+
+    expect(screen.getByText('Songs').closest('article')).toHaveClass('ui-stat-card--right');
+    expect(screen.getByText('12')).toHaveClass('ui-stat-card__value');
+    expect(screen.getByText('In rotation')).toHaveClass('ui-stat-card__detail');
   });
 });
