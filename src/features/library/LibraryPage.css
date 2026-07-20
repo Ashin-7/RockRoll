@@ -20,16 +20,16 @@
 
 .library-signals article,
 .library-categories article {
-  border: 1px solid rgba(148, 163, 184, 0.28);
+  border: 1px solid var(--color-border-strong);
   border-radius: 8px;
   padding: 1rem;
-  background: rgba(255, 255, 255, 0.72);
+  background: var(--color-bg-input);
 }
 
 .library-signals span,
 .library-categories span,
 .library-form-heading span {
-  color: #64748b;
+  color: var(--color-fg-subtle);
   font-size: 0.78rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -70,7 +70,7 @@
   gap: 0.75rem;
   margin: 0;
   padding: 1rem;
-  border: 1px solid rgba(148, 163, 184, 0.28);
+  border: 1px solid var(--color-border-strong);
   border-radius: 8px;
 }
 
@@ -103,7 +103,7 @@
 
 .library-secondary-action {
   background: transparent;
-  color: #475569;
+  color: var(--color-fg-muted);
 }
 
 .library-assets {
@@ -124,13 +124,13 @@
 .library-asset-table th,
 .library-asset-table td {
   padding: 0.75rem;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.24);
+  border-bottom: 1px solid var(--color-border-strong);
   text-align: left;
   vertical-align: top;
 }
 
 .library-asset-table th {
-  color: #475569;
+  color: var(--color-fg-muted);
   font-size: 0.82rem;
   text-transform: uppercase;
 }
@@ -142,7 +142,7 @@
 
 .library-asset-table td small {
   margin-top: 0.2rem;
-  color: #64748b;
+  color: var(--color-fg-subtle);
 }
 
 .library-row-actions {

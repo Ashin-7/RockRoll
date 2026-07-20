@@ -23,11 +23,11 @@
   align-items: flex-end;
   justify-content: space-between;
   gap: var(--space-6);
-  border: 1px solid rgba(167, 162, 154, 0.16);
+  border: 1px solid var(--color-border);
   border-radius: calc(var(--radius-panel) * 1.4);
   background:
-    linear-gradient(135deg, rgba(34, 32, 31, 0.9), rgba(17, 16, 15, 0.88)),
-    repeating-linear-gradient(120deg, rgba(243, 234, 216, 0.04) 0 1px, transparent 1px 10px);
+    linear-gradient(135deg, var(--color-bg-panel-elevated), var(--color-bg-panel-elevated)),
+    repeating-linear-gradient(120deg, var(--color-fg-subtle) 0 1px, transparent 1px 10px);
   box-shadow: var(--shadow-stage);
   padding: clamp(1.5rem, 4vw, 3.5rem);
 }
@@ -62,7 +62,7 @@
 .song-detail-hero span,
 .song-detail-hero__actions button {
   align-self: flex-start;
-  border: 1px solid rgba(242, 169, 59, 0.3);
+  border: 1px solid var(--color-border-strong);
   color: var(--color-amber);
   font-size: 0.75rem;
   letter-spacing: 0.08em;
@@ -77,13 +77,13 @@
 
 .song-detail-hero__actions button {
   border-radius: 0.5rem;
-  background: rgba(242, 169, 59, 0.12);
+  background: var(--color-accent-soft);
   padding: 0.7rem 0.9rem;
 }
 
 .song-detail-hero__actions button:hover,
 .song-detail-hero__actions button:focus-visible {
-  background: rgba(242, 169, 59, 0.22);
+  background: var(--color-border-strong);
   color: var(--color-paper);
 }
 
@@ -95,9 +95,9 @@
 .song-detail-edit-form,
 .song-detail-edit-form__section,
 .song-detail-edit-form__actions {
-  border: 1px solid rgba(167, 162, 154, 0.16);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-panel);
-  background: rgba(34, 32, 31, 0.72);
+  background: var(--color-bg-panel);
 }
 
 .song-detail-edit-form {
@@ -157,9 +157,9 @@
 .song-detail-edit-form input,
 .song-detail-edit-form select,
 .song-detail-edit-form textarea {
-  border: 1px solid rgba(167, 162, 154, 0.26);
+  border: 1px solid var(--color-border);
   border-radius: 0.5rem;
-  background: rgba(15, 15, 15, 0.54);
+  background: var(--color-bg-panel-deep);
   color: var(--color-paper);
   padding: var(--space-3);
 }
@@ -183,16 +183,16 @@
 
 .song-detail-edit-form__actions button {
   min-height: 2.75rem;
-  border: 1px solid rgba(242, 169, 59, 0.42);
+  border: 1px solid var(--color-border-strong);
   border-radius: 0.5rem;
-  background: rgba(242, 169, 59, 0.16);
+  background: var(--color-accent-soft);
   color: var(--color-paper);
   padding: 0.7rem 1.1rem;
 }
 
 .song-detail-edit-form__actions button:hover,
 .song-detail-edit-form__actions button:focus-visible {
-  background: rgba(242, 169, 59, 0.24);
+  background: var(--color-border-strong);
 }
 
 .song-detail-grid {
@@ -203,9 +203,9 @@
 }
 
 .song-detail-grid div {
-  border: 1px solid rgba(167, 162, 154, 0.16);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-panel);
-  background: rgba(34, 32, 31, 0.72);
+  background: var(--color-bg-panel);
   padding: var(--space-6);
 }
 
@@ -233,9 +233,9 @@
 
 .song-detail-notes > div,
 .song-detail-related {
-  border: 1px solid rgba(167, 162, 154, 0.16);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-panel);
-  background: rgba(34, 32, 31, 0.72);
+  background: var(--color-bg-panel);
   padding: var(--space-6);
 }
 

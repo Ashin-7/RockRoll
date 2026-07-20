@@ -8,7 +8,7 @@
   align-items: flex-end;
   justify-content: space-between;
   gap: var(--space-6);
-  border-bottom: 1px solid rgba(167, 162, 154, 0.16);
+  border-bottom: 1px solid var(--color-border);
   padding: 0 0 var(--space-5);
 }
 
@@ -22,9 +22,9 @@
 
 .albums-hero__summary {
   min-width: 9rem;
-  border: 1px solid rgba(242, 169, 59, 0.24);
+  border: 1px solid var(--color-border-strong);
   border-radius: 0.75rem;
-  background: rgba(17, 16, 15, 0.56);
+  background: var(--color-bg-panel-deep);
   padding: var(--space-3) var(--space-4);
   text-align: right;
 }
@@ -45,9 +45,9 @@
 .albums-add-form {
   display: grid;
   gap: var(--space-5);
-  border: 1px solid rgba(167, 162, 154, 0.16);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-panel);
-  background: rgba(34, 32, 31, 0.72);
+  background: var(--color-bg-panel);
   padding: var(--space-6);
 }
 
@@ -84,7 +84,7 @@
   gap: var(--space-4);
   min-width: 0;
   margin: 0;
-  border: 1px solid rgba(167, 162, 154, 0.14);
+  border: 1px solid var(--color-border);
   border-radius: 0.75rem;
   padding: var(--space-5);
 }
@@ -116,9 +116,9 @@
 .albums-add-form input,
 .albums-add-form select {
   min-height: 2.5rem;
-  border: 1px solid rgba(167, 162, 154, 0.22);
+  border: 1px solid var(--color-border);
   border-radius: 0.5rem;
-  background: rgba(17, 16, 15, 0.74);
+  background: var(--color-bg-panel);
   color: var(--color-paper);
   padding: 0.65rem 0.75rem;
 }
@@ -130,9 +130,9 @@
 
 .albums-add-form button {
   min-height: 2.5rem;
-  border: 1px solid rgba(242, 169, 59, 0.42);
+  border: 1px solid var(--color-border-strong);
   border-radius: 0.5rem;
-  background: rgba(242, 169, 59, 0.16);
+  background: var(--color-accent-soft);
   color: var(--color-paper);
   padding: 0.65rem 1rem;
 }
@@ -149,9 +149,9 @@
 
 .albums-table-wrap {
   overflow-x: auto;
-  border: 1px solid rgba(167, 162, 154, 0.16);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-panel);
-  background: rgba(34, 32, 31, 0.58);
+  background: var(--color-bg-panel-deep);
 }
 
 .albums-table {
@@ -162,7 +162,7 @@
 
 .albums-table th,
 .albums-table td {
-  border-bottom: 1px solid rgba(167, 162, 154, 0.12);
+  border-bottom: 1px solid var(--color-border);
   padding: var(--space-4);
   text-align: left;
   vertical-align: top;
@@ -198,7 +198,7 @@
   display: inline-flex;
   align-items: center;
   min-height: 1.75rem;
-  border: 1px solid rgba(242, 169, 59, 0.3);
+  border: 1px solid var(--color-border-strong);
   border-radius: 999px;
   color: var(--color-amber);
   font-size: 0.75rem;
@@ -209,7 +209,7 @@
 }
 
 .albums-empty {
-  border: 1px dashed rgba(167, 162, 154, 0.26);
+  border: 1px dashed var(--color-border);
   border-radius: var(--radius-panel);
   color: var(--color-paper-muted);
   padding: var(--space-8);
@@ -217,9 +217,9 @@
 
 .albums-toolbar,
 .albums-collection {
-  border: 1px solid rgba(167, 162, 154, 0.16);
+  border: 1px solid var(--color-border);
   border-radius: 0.85rem;
-  background: rgba(34, 32, 31, 0.58);
+  background: var(--color-bg-panel-deep);
 }
 
 .albums-toolbar {
@@ -291,9 +291,9 @@
   align-items: center;
   width: 100%;
   min-height: 3rem;
-  border: 1px solid rgba(167, 162, 154, 0.2);
+  border: 1px solid var(--color-border);
   border-radius: 0.6rem;
-  background: rgba(17, 16, 15, 0.58);
+  background: var(--color-bg-panel-deep);
   color: var(--color-paper);
   cursor: text;
   font: inherit;
@@ -323,8 +323,8 @@
 
 .albums-filter-input:hover,
 .albums-filter-input:focus-visible {
-  border-color: rgba(242, 169, 59, 0.5);
-  background: rgba(242, 169, 59, 0.12);
+  border-color: var(--color-border-strong);
+  background: var(--color-accent-soft);
 }
 
 .albums-dropdown-panel {
@@ -336,10 +336,10 @@
   gap: 0.5rem;
   box-sizing: border-box;
   width: 100%;
-  border: 1px solid rgba(167, 162, 154, 0.2);
+  border: 1px solid var(--color-border);
   border-radius: 0.65rem;
-  background: rgba(24, 23, 22, 0.98);
-  box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.26);
+  background: var(--color-bg-panel-elevated);
+  box-shadow: 0 1rem 2rem var(--shadow-md);
   padding: 0.55rem;
 }
 
@@ -349,7 +349,7 @@
   max-height: 14rem;
   overflow: auto;
   padding: 0.1rem 0.25rem 0.1rem 0.1rem;
-  scrollbar-color: rgba(242, 169, 59, 0.5) rgba(17, 16, 15, 0.58);
+  scrollbar-color: var(--color-border-strong) var(--color-bg-panel-deep);
   scrollbar-width: thin;
 }
 
@@ -359,17 +359,17 @@
 
 .albums-dropdown-list::-webkit-scrollbar-track {
   border-radius: 999px;
-  background: rgba(17, 16, 15, 0.58);
+  background: var(--color-bg-panel-deep);
 }
 
 .albums-dropdown-list::-webkit-scrollbar-thumb {
-  border: 1px solid rgba(24, 23, 22, 0.98);
+  border: 1px solid var(--color-bg-panel-elevated);
   border-radius: 999px;
-  background: rgba(242, 169, 59, 0.52);
+  background: var(--color-accent);
 }
 
 .albums-dropdown-list::-webkit-scrollbar-thumb:hover {
-  background: rgba(242, 169, 59, 0.72);
+  background: var(--color-accent);
 }
 
 .albums-dropdown-option {
@@ -390,7 +390,7 @@
 .albums-dropdown-option:hover,
 .albums-dropdown-option:focus-visible,
 .albums-dropdown-option.is-selected {
-  background: rgba(242, 169, 59, 0.14);
+  background: var(--color-accent-soft);
 }
 
 
@@ -472,7 +472,7 @@
 }
 
 .albums-collection__meta span {
-  border: 1px solid rgba(242, 169, 59, 0.22);
+  border: 1px solid var(--color-border-strong);
   border-radius: 999px;
   color: var(--color-amber);
   font-size: 0.78rem;
@@ -504,9 +504,9 @@
 
 .albums-collection__pagination button {
   min-height: 2.4rem;
-  border: 1px solid rgba(242, 169, 59, 0.34);
+  border: 1px solid var(--color-border-strong);
   border-radius: 0.5rem;
-  background: rgba(242, 169, 59, 0.12);
+  background: var(--color-accent-soft);
   color: var(--color-paper);
   cursor: pointer;
   font-weight: 700;
@@ -514,7 +514,7 @@
 }
 
 .albums-collection__pagination button:disabled {
-  border-color: rgba(167, 162, 154, 0.14);
+  border-color: var(--color-border);
   color: var(--color-silver);
   cursor: not-allowed;
   opacity: 0.58;
@@ -531,7 +531,7 @@
   gap: var(--space-3);
   grid-template-columns: 3.25rem 4.75rem minmax(13rem, 1fr) minmax(14rem, 0.9fr);
   min-width: 0;
-  border-top: 1px solid rgba(167, 162, 154, 0.12);
+  border-top: 1px solid var(--color-border);
   padding: var(--space-3) 0 0;
 }
 
@@ -542,9 +542,9 @@
 .albums-card__cover {
   align-items: center;
   aspect-ratio: 1;
-  border: 1px solid rgba(167, 162, 154, 0.18);
+  border: 1px solid var(--color-border);
   border-radius: 0.5rem;
-  background: rgba(17, 16, 15, 0.72);
+  background: var(--color-bg-panel);
   color: var(--color-silver);
   display: flex;
   font-size: 0.8rem;
@@ -575,7 +575,7 @@
 
 .albums-card__meta span,
 .albums-card__styles span {
-  border: 1px solid rgba(167, 162, 154, 0.16);
+  border: 1px solid var(--color-border);
   border-radius: 999px;
   color: var(--color-paper-muted);
   font-size: 0.78rem;
@@ -591,7 +591,7 @@
 }
 
 .albums-card__styles span {
-  border-color: rgba(242, 169, 59, 0.24);
+  border-color: var(--color-border-strong);
   color: var(--color-amber);
   font-size: 0.68rem;
   padding: 0.24rem 0.42rem;

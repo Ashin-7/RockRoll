@@ -4,11 +4,11 @@
 }
 
 .practice-history-hero {
-  border: 1px solid rgba(167, 162, 154, 0.16);
+  border: 1px solid var(--color-border);
   border-radius: calc(var(--radius-panel) * 1.4);
   background:
-    linear-gradient(135deg, rgba(34, 32, 31, 0.9), rgba(17, 16, 15, 0.88)),
-    repeating-linear-gradient(120deg, rgba(243, 234, 216, 0.04) 0 1px, transparent 1px 10px);
+    linear-gradient(135deg, var(--color-bg-panel-elevated), var(--color-bg-panel-elevated)),
+    repeating-linear-gradient(120deg, var(--color-fg-subtle) 0 1px, transparent 1px 10px);
   box-shadow: var(--shadow-stage);
   padding: clamp(1.5rem, 4vw, 3.5rem);
 }
@@ -25,9 +25,9 @@
 .practice-session-entry {
   display: grid;
   gap: var(--space-4);
-  border: 1px solid rgba(167, 162, 154, 0.16);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-panel);
-  background: rgba(34, 32, 31, 0.72);
+  background: var(--color-bg-panel);
   padding: var(--space-6);
 }
 
@@ -46,9 +46,9 @@
 
 .practice-session-form__section,
 .practice-session-form__actions {
-  border: 1px solid rgba(167, 162, 154, 0.16);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-panel);
-  background: rgba(17, 16, 15, 0.42);
+  background: var(--color-bg-panel-deep);
   padding: var(--space-6);
 }
 
@@ -85,9 +85,9 @@
 .practice-session-entry input,
 .practice-session-entry select,
 .practice-session-entry textarea {
-  border: 1px solid rgba(167, 162, 154, 0.26);
+  border: 1px solid var(--color-border);
   border-radius: 0.5rem;
-  background: rgba(15, 15, 15, 0.54);
+  background: var(--color-bg-panel-deep);
   color: var(--color-paper);
   padding: var(--space-3);
 }
@@ -117,9 +117,9 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   overflow: hidden;
-  border: 1px solid rgba(167, 162, 154, 0.26);
+  border: 1px solid var(--color-border);
   border-radius: 0.5rem;
-  background: rgba(15, 15, 15, 0.54);
+  background: var(--color-bg-panel-deep);
 }
 
 .practice-number-field input {
@@ -132,7 +132,7 @@
 .practice-number-field__controls {
   display: grid;
   grid-template-columns: repeat(2, 2.4rem);
-  border-left: 1px solid rgba(167, 162, 154, 0.18);
+  border-left: 1px solid var(--color-border);
 }
 
 .practice-number-field__controls button {
@@ -140,7 +140,7 @@
   min-height: 100%;
   border: 0;
   border-radius: 0;
-  background: rgba(242, 169, 59, 0.1);
+  background: var(--color-accent-soft);
   color: var(--color-paper);
   padding: 0;
   cursor: pointer;
@@ -150,14 +150,14 @@
 }
 
 .practice-number-field__controls button + button {
-  border-left: 1px solid rgba(167, 162, 154, 0.14);
+  border-left: 1px solid var(--color-border);
 }
 
 .practice-number-field__controls button:hover,
 .practice-number-field__controls button:focus-visible {
-  background: rgba(242, 169, 59, 0.24);
+  background: var(--color-border-strong);
   color: var(--color-amber);
-  outline: 1px solid rgba(242, 169, 59, 0.42);
+  outline: 1px solid var(--color-border-strong);
   outline-offset: -1px;
 }
 
@@ -170,24 +170,24 @@
 
 .practice-session-form__actions button {
   min-height: 2.75rem;
-  border: 1px solid rgba(242, 169, 59, 0.42);
+  border: 1px solid var(--color-border-strong);
   border-radius: 0.5rem;
-  background: rgba(242, 169, 59, 0.16);
+  background: var(--color-accent-soft);
   color: var(--color-paper);
   padding: 0.7rem 1.1rem;
 }
 
 .practice-session-form__actions button:hover,
 .practice-session-form__actions button:focus-visible {
-  background: rgba(242, 169, 59, 0.24);
+  background: var(--color-border-strong);
 }
 
 .practice-statistics {
   display: grid;
   gap: var(--space-4);
-  border: 1px solid rgba(167, 162, 154, 0.16);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-panel);
-  background: rgba(34, 32, 31, 0.72);
+  background: var(--color-bg-panel);
   padding: var(--space-6);
 }
 
@@ -207,9 +207,9 @@
 }
 
 .practice-statistics__item {
-  border: 1px solid rgba(167, 162, 154, 0.14);
+  border: 1px solid var(--color-border);
   border-radius: 0.875rem;
-  background: rgba(17, 16, 15, 0.38);
+  background: var(--color-bg-panel-deep);
   padding: var(--space-4);
 }
 
@@ -231,9 +231,9 @@
 .practice-history-filters {
   display: grid;
   gap: var(--space-4);
-  border: 1px solid rgba(167, 162, 154, 0.16);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-panel);
-  background: rgba(34, 32, 31, 0.72);
+  background: var(--color-bg-panel);
   padding: var(--space-6);
 }
 
@@ -267,26 +267,26 @@
 .practice-history-filters select {
   min-height: 2.75rem;
   min-width: 0;
-  border: 1px solid rgba(167, 162, 154, 0.26);
+  border: 1px solid var(--color-border);
   border-radius: 0.5rem;
-  background: rgba(15, 15, 15, 0.54);
+  background: var(--color-bg-panel-deep);
   color: var(--color-paper);
   padding: var(--space-3);
 }
 
 .practice-history-filters input:focus-visible,
 .practice-history-filters select:focus-visible {
-  border-color: rgba(242, 169, 59, 0.48);
-  outline: 2px solid rgba(242, 169, 59, 0.24);
+  border-color: var(--color-border-strong);
+  outline: 2px solid var(--color-border-strong);
   outline-offset: 2px;
 }
 
 .practice-history-list {
   display: grid;
   gap: var(--space-3);
-  border: 1px solid rgba(167, 162, 154, 0.16);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-panel);
-  background: rgba(34, 32, 31, 0.72);
+  background: var(--color-bg-panel);
   padding: var(--space-4);
 }
 
@@ -306,11 +306,11 @@
   grid-template-columns: minmax(12rem, 1.3fr) repeat(4, minmax(5.5rem, 0.45fr)) minmax(12rem, 1.2fr) minmax(7rem, 0.6fr);
   gap: var(--space-4);
   align-items: center;
-  border: 1px solid rgba(167, 162, 154, 0.16);
+  border: 1px solid var(--color-border);
   border-radius: 0.875rem;
   background:
-    linear-gradient(180deg, rgba(58, 54, 51, 0.68), rgba(17, 16, 15, 0.72)),
-    radial-gradient(circle at 0% 0%, rgba(123, 30, 43, 0.16), transparent 12rem);
+    linear-gradient(180deg, rgba(58, 54, 51, 0.68), var(--color-bg-panel)),
+    radial-gradient(circle at 0% 0%, var(--color-wine-radial), transparent 12rem);
   padding: var(--space-4);
 }
 
@@ -381,9 +381,9 @@
 }
 
 .practice-history-card__tags span {
-  border: 1px solid rgba(167, 162, 154, 0.18);
+  border: 1px solid var(--color-border);
   border-radius: 999px;
-  background: rgba(15, 15, 15, 0.4);
+  background: var(--color-bg-panel-deep);
   color: var(--color-paper);
   padding: 0.18rem 0.5rem;
   font-size: 0.74rem;
@@ -412,15 +412,15 @@
 }
 
 .practice-history-card__actions button {
-  border: 1px solid rgba(242, 169, 59, 0.3);
+  border: 1px solid var(--color-border-strong);
   border-radius: 0.5rem;
-  background: rgba(242, 169, 59, 0.12);
+  background: var(--color-accent-soft);
   color: var(--color-paper);
   padding: 0.6rem 0.8rem;
 }
 
 .practice-history-card__actions button:last-child {
-  border-color: rgba(138, 30, 45, 0.48);
+  border-color: var(--color-border-strong);
   color: var(--color-paper);
 }
 
@@ -436,14 +436,14 @@
 .practice-history-error,
 .practice-history-auth-required,
 .practice-history-loading {
-  border: 1px dashed rgba(167, 162, 154, 0.26);
+  border: 1px dashed var(--color-border);
   border-radius: var(--radius-panel);
   color: var(--color-paper-muted);
   padding: var(--space-8);
 }
 
 .practice-history-error {
-  border-color: rgba(138, 30, 45, 0.48);
+  border-color: var(--color-border-strong);
   color: var(--color-paper);
 }
 
