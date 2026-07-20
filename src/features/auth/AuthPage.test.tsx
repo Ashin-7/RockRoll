@@ -138,10 +138,32 @@ describe('AuthPage', () => {
     expect(await screen.findByText('Confirmation email resent.')).toBeInTheDocument();
   });
 
-  it('signs in anonymously for quick testing', async () => {
-    const signInAnonymously = vi.fn().mockResolvedValue(undefined);
+  it('requests a password reset without revealing whether the account exists', async () => {
+    const sendPasswordResetEmail = vi.fn().mockResolvedValue(undefined);
     const user = userEvent.setup();
-    let authCallback: (session: typeof signedInSession | null) => void = () => undefined;
+
+    renderWithI18n(
+      <AuthPage
+        onGetCurrentSession={vi.fn().mockResolvedValue(null)}
+        onAuthStateChange={() => vi.fn()}
+        onSendPasswordResetEmail={sendPasswordResetEmail}
+      />,
+    );
+
+    await user.click(await screen.findByRole('button', { name: 'Forgot password?' }));
+    await user.type(screen.getByLabelText('Email'), 'player@example.com');
+    await user.click(screen.getByRole('button', { name: 'Send password reset link' }));
+
+    expect(sendPasswordResetEmail).toHaveBeenCalledWith('player@example.com');
+    expect(
+      await screen.findByText('If an account exists for this email, a password reset link has been sent.'),
+    ).toBeInTheDocument();
+  });
+
+  it('updates the password after a password recovery auth event', async () => {
+    const updatePassword = vi.fn().mockResolvedValue(undefined);
+    const user = userEvent.setup();
+    let authCallback: (session: typeof signedInSession | null, event?: string) => void = () => undefined;
 
     renderWithI18n(
       <AuthPage
@@ -150,39 +172,65 @@ describe('AuthPage', () => {
           authCallback = callback;
           return vi.fn();
         }}
-        onSignInAnonymously={signInAnonymously}
+        onUpdatePassword={updatePassword}
       />,
     );
 
-    await user.click(await screen.findByRole('button', { name: 'Anonymous test login' }));
-
-    expect(signInAnonymously).toHaveBeenCalledWith();
+    await screen.findByLabelText('Email');
 
     act(() => {
-      authCallback(signedInSession);
+      authCallback(signedInSession, 'PASSWORD_RECOVERY');
     });
 
-    await waitFor(() => expect(screen.getByText(/player@example.com/)).toBeInTheDocument());
+    await user.type(await screen.findByLabelText('New password'), 'new-secret-123');
+    await user.type(screen.getByLabelText('Confirm new password'), 'new-secret-123');
+    await user.click(screen.getByRole('button', { name: 'Update password' }));
+
+    expect(updatePassword).toHaveBeenCalledWith('new-secret-123');
+    expect(await screen.findByText('Password updated.')).toBeInTheDocument();
+    expect(screen.getByText('Signed in')).toBeInTheDocument();
   });
 
-  it('refreshes the current session after anonymous sign-in', async () => {
-    const signInAnonymously = vi.fn().mockResolvedValue(undefined);
-    const getCurrentSession = vi.fn().mockResolvedValueOnce(null).mockResolvedValueOnce(signedInSession);
+  it('rejects mismatched passwords during recovery', async () => {
+    const updatePassword = vi.fn().mockResolvedValue(undefined);
     const user = userEvent.setup();
+    let authCallback: (session: typeof signedInSession | null, event?: string) => void = () => undefined;
 
     renderWithI18n(
       <AuthPage
-        onGetCurrentSession={getCurrentSession}
-        onAuthStateChange={() => vi.fn()}
-        onSignInAnonymously={signInAnonymously}
+        onGetCurrentSession={vi.fn().mockResolvedValue(null)}
+        onAuthStateChange={(callback) => {
+          authCallback = callback;
+          return vi.fn();
+        }}
+        onUpdatePassword={updatePassword}
       />,
     );
 
-    await user.click(await screen.findByRole('button', { name: 'Anonymous test login' }));
+    await screen.findByLabelText('Email');
 
-    expect(signInAnonymously).toHaveBeenCalledWith();
-    expect(getCurrentSession).toHaveBeenCalledTimes(2);
-    expect(await screen.findByText(/player@example.com/)).toBeInTheDocument();
+    act(() => {
+      authCallback(signedInSession, 'PASSWORD_RECOVERY');
+    });
+
+    await user.type(await screen.findByLabelText('New password'), 'new-secret-123');
+    await user.type(screen.getByLabelText('Confirm new password'), 'different-secret');
+    await user.click(screen.getByRole('button', { name: 'Update password' }));
+
+    expect(updatePassword).not.toHaveBeenCalled();
+    expect(await screen.findByRole('alert')).toHaveTextContent('Passwords do not match.');
+  });
+
+  it('does not expose the anonymous test login entry', async () => {
+    renderWithI18n(
+      <AuthPage
+        onGetCurrentSession={vi.fn().mockResolvedValue(null)}
+        onAuthStateChange={() => vi.fn()}
+      />,
+    );
+
+    expect(await screen.findByLabelText('Email')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Anonymous test login' })).not.toBeInTheDocument();
   });
 
   it('shows the signed-in email when a session exists', async () => {

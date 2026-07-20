@@ -1386,3 +1386,54 @@ Migration 名称已与远端 20260717073327 对齐，没有执行远端 SQL；�
 ```
 
 建议开启新对话，并粘贴以上提示词继续。
+
+## 当前有效交接（2026-07-20，Auth 找回密码闭环完成后）
+
+本轮完成：
+
+- Auth service 新增 `sendPasswordResetEmail` 与 `updatePassword`；Auth 状态订阅现在保留 Supabase 事件，以识别 `PASSWORD_RECOVERY`。
+- Supabase 浏览器客户端启用 PKCE flow；重置邮件回跳地址为当前 origin 的 `/#auth`，兼容现有 hash 路由。
+- Auth 页面新增忘记密码发送页和恢复 session 下的新密码确认表单，成功提示不暴露账号存在性；无效匿名测试登录入口已移除。
+- 注册、密码登录、Magic Link、确认邮件重发、测试邮箱填充和既有退出流程保持不变；未修改 schema、migration、RLS、远端 Auth 配置或依赖。
+- `docs/PERMISSIONS.md` 已明确自助密码恢复不提供管理员代改能力，也不影响资料库 admin-only 写权限。
+- Auth / Supabase 客户端 3 个测试文件、43 个用例通过；production build 通过；本地 `#auth` 浏览器冒烟通过且无控制台错误。
+- 没有运行 `npm install`、发送真实邮件、创建真实账号、执行真实导入、恢复 Inbox 主导航、修改一键导入或 `match_existing`。
+
+本轮修改：
+
+- `src/features/auth/AuthPage.tsx`
+- `src/features/auth/AuthPage.test.tsx`
+- `src/features/auth/auth.service.ts`
+- `src/features/auth/auth.service.test.ts`
+- `src/lib/supabase.ts`
+- `src/lib/supabase.test.ts`
+- `docs/PERMISSIONS.md`
+- 三份状态 / 交接文档
+
+未完成事项：
+
+1. 只读确认预览与生产 `/#auth` 是否已列入 Supabase Redirect URLs；变更远端配置前需再次确认。
+2. 用户提供测试邮箱并确认账号残留清理方式后，再做真实注册 / 登录 / 退出 / 找回密码冒烟。
+3. 补普通用户与 admin 的浏览器页面可见性验收；不得执行真实榜单导入。
+4. P0 通过后再进入预览部署。
+
+下一轮提示词：
+
+```text
+继续 RockRoll Web MVP 上线 P0。
+请只读取：
+- AGENTS.md
+- docs/PROJECT_STATUS.md
+- docs/NEXT_TASKS.md
+- docs/SESSION_HANDOFF.md
+- docs/PERMISSIONS.md
+- src/features/auth
+- 当前角色页面冒烟涉及的最小文件
+
+Auth 找回密码最小闭环已完成：发送恢复邮件、PKCE 回链、PASSWORD_RECOVERY 设置新密码；匿名测试登录页面入口已移除。
+先只读确认预览与生产 /#auth Redirect URLs，再约定测试邮箱和账号清理方式后执行真实 Auth 冒烟；远端配置变化前必须明确确认。
+资料库写入、导入、匹配和批处理仍仅管理员可见、可触发；不要运行 npm install，不重复真实导入，不恢复 Inbox 主导航，不改变一键导入或 match_existing，不开发艺人列表，不读取真实 PDF。
+完成后中文总结。
+```
+
+建议开启新对话，并粘贴以上提示词继续。

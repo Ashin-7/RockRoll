@@ -1,27 +1,30 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { useI18n } from '../../i18n/I18nProvider';
 import {
+  AuthStateChangeCallback,
   AuthSession,
   SupabaseCrudSmokeResult,
   getCurrentSession,
   onAuthStateChange,
   runSupabaseCrudSmokeTest,
-  signInAnonymously,
+  sendPasswordResetEmail,
   signInWithEmail,
   signInWithPassword,
   resendSignupConfirmation,
   signUpWithPassword,
   signOut,
+  updatePassword,
 } from './auth.service';
 
 interface AuthPageProps {
-  onAuthStateChange?: (callback: (session: AuthSession | null) => void) => () => void;
+  onAuthStateChange?: (callback: AuthStateChangeCallback) => () => void;
   onGetCurrentSession?: () => Promise<AuthSession | null>;
-  onSignInAnonymously?: () => Promise<void>;
   onSignIn?: (email: string) => Promise<void>;
   onSignInWithPassword?: (email: string, password: string) => Promise<void>;
   onSignUpWithPassword?: (email: string, password: string) => Promise<AuthSession | null>;
   onResendSignupConfirmation?: (email: string) => Promise<void>;
+  onSendPasswordResetEmail?: (email: string) => Promise<void>;
+  onUpdatePassword?: (password: string) => Promise<void>;
   onRunSupabaseCrudSmokeTest?: () => Promise<unknown>;
   onSignOut?: () => Promise<void>;
   testLoginEmail?: string;
@@ -30,11 +33,12 @@ interface AuthPageProps {
 export function AuthPage({
   onAuthStateChange: subscribeToAuthState = onAuthStateChange,
   onGetCurrentSession = getCurrentSession,
-  onSignInAnonymously = signInAnonymously,
   onSignIn = signInWithEmail,
   onSignInWithPassword = signInWithPassword,
   onSignUpWithPassword = signUpWithPassword,
   onResendSignupConfirmation = resendSignupConfirmation,
+  onSendPasswordResetEmail = sendPasswordResetEmail,
+  onUpdatePassword = updatePassword,
   onRunSupabaseCrudSmokeTest = runSupabaseCrudSmokeTest,
   onSignOut = signOut,
   testLoginEmail = import.meta.env.VITE_TEST_LOGIN_EMAIL,
@@ -42,14 +46,18 @@ export function AuthPage({
   const { t } = useI18n();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [authMode, setAuthMode] = useState<'signIn' | 'signUp'>('signIn');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
+  const [authMode, setAuthMode] = useState<'signIn' | 'signUp' | 'forgotPassword'>('signIn');
   const [showMagicLink, setShowMagicLink] = useState(false);
+  const [isPasswordRecovery, setIsPasswordRecovery] = useState(false);
   const [session, setSession] = useState<AuthSession | null>(null);
   const [isLoadingSession, setIsLoadingSession] = useState(true);
   const [isSendingMagicLink, setIsSendingMagicLink] = useState(false);
+  const [isSendingPasswordReset, setIsSendingPasswordReset] = useState(false);
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
   const [isSubmittingPassword, setIsSubmittingPassword] = useState(false);
   const [isResendingConfirmation, setIsResendingConfirmation] = useState(false);
-  const [isSigningInAnonymously, setIsSigningInAnonymously] = useState(false);
   const [isRunningSmokeTest, setIsRunningSmokeTest] = useState(false);
   const [smokeTestResult, setSmokeTestResult] = useState<SupabaseCrudSmokeResult | null>(null);
   const [pendingConfirmationEmail, setPendingConfirmationEmail] = useState('');
@@ -79,10 +87,15 @@ export function AuthPage({
     let unsubscribe: () => void = () => undefined;
 
     try {
-      unsubscribe = subscribeToAuthState((nextSession) => {
+      unsubscribe = subscribeToAuthState((nextSession, event) => {
         if (isMounted) {
           setSession(nextSession);
           setIsLoadingSession(false);
+          if (event === 'PASSWORD_RECOVERY') {
+            setIsPasswordRecovery(true);
+            setError('');
+            setMessage('');
+          }
         }
       });
     } catch (caughtError) {
@@ -104,6 +117,20 @@ export function AuthPage({
     event.preventDefault();
     setError('');
     setMessage('');
+
+    if (authMode === 'forgotPassword') {
+      try {
+        setIsSendingPasswordReset(true);
+        await onSendPasswordResetEmail(email);
+        setPendingConfirmationEmail('');
+        setMessage('If an account exists for this email, a password reset link has been sent.');
+      } catch (caughtError) {
+        setError(caughtError instanceof Error ? caughtError.message : t('auth.errorFallback'));
+      } finally {
+        setIsSendingPasswordReset(false);
+      }
+      return;
+    }
 
     if (!showMagicLink) {
       try {
@@ -162,21 +189,27 @@ export function AuthPage({
     }
   }
 
-  async function handleAnonymousSignIn() {
+  async function handleUpdatePassword(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
     setError('');
     setMessage('');
-    setIsSigningInAnonymously(true);
+
+    if (newPassword !== confirmNewPassword) {
+      setError('Passwords do not match.');
+      return;
+    }
 
     try {
-      await onSignInAnonymously();
-      const currentSession = await onGetCurrentSession();
-      setSession(currentSession);
-      setPendingConfirmationEmail('');
-      setMessage(t('auth.anonymousSignedIn'));
+      setIsUpdatingPassword(true);
+      await onUpdatePassword(newPassword);
+      setNewPassword('');
+      setConfirmNewPassword('');
+      setIsPasswordRecovery(false);
+      setMessage('Password updated.');
     } catch (caughtError) {
-      setError(caughtError instanceof Error ? caughtError.message : t('auth.anonymousErrorFallback'));
+      setError(caughtError instanceof Error ? caughtError.message : t('auth.errorFallback'));
     } finally {
-      setIsSigningInAnonymously(false);
+      setIsUpdatingPassword(false);
     }
   }
 
@@ -187,6 +220,9 @@ export function AuthPage({
     try {
       await onSignOut();
       setSession(null);
+      setIsPasswordRecovery(false);
+      setNewPassword('');
+      setConfirmNewPassword('');
       setPendingConfirmationEmail('');
       setMessage(t('auth.signedOut'));
     } catch (caughtError) {
@@ -222,7 +258,36 @@ export function AuthPage({
         {!isLoadingSession && message ? <p role="status">{message}</p> : null}
         {!isLoadingSession && error ? <p role="alert">{error}</p> : null}
 
-        {!isLoadingSession && session ? (
+        {!isLoadingSession && session && isPasswordRecovery ? (
+          <form onSubmit={handleUpdatePassword}>
+            <h2>Set a new password</h2>
+            <label htmlFor="new-password">New password</label>
+            <input
+              id="new-password"
+              type="password"
+              value={newPassword}
+              onChange={(event) => setNewPassword(event.target.value)}
+              disabled={isUpdatingPassword}
+              minLength={6}
+              required
+            />
+            <label htmlFor="confirm-new-password">Confirm new password</label>
+            <input
+              id="confirm-new-password"
+              type="password"
+              value={confirmNewPassword}
+              onChange={(event) => setConfirmNewPassword(event.target.value)}
+              disabled={isUpdatingPassword}
+              minLength={6}
+              required
+            />
+            <button type="submit" disabled={isUpdatingPassword}>
+              {isUpdatingPassword ? 'Updating password...' : 'Update password'}
+            </button>
+          </form>
+        ) : null}
+
+        {!isLoadingSession && session && !isPasswordRecovery ? (
           <div>
             <p>{t('auth.signedIn')}</p>
             {session.isDemo ? <p role="status">Demo Mode：当前不是 Supabase 真实登录</p> : null}
@@ -250,44 +315,64 @@ export function AuthPage({
 
         {!isLoadingSession && !session ? (
           <form onSubmit={handleSubmit}>
-            <div aria-label="Authentication mode">
-              <button
-                type="button"
-                aria-pressed={authMode === 'signIn'}
-                onClick={() => {
-                  setAuthMode('signIn');
-                  setShowMagicLink(false);
-                  setError('');
-                  setMessage('');
-                  setPendingConfirmationEmail('');
-                }}
-              >
-                Use existing account
-              </button>
-              <button
-                type="button"
-                aria-pressed={authMode === 'signUp'}
-                onClick={() => {
-                  setAuthMode('signUp');
-                  setShowMagicLink(false);
-                  setError('');
-                  setMessage('');
-                  setPendingConfirmationEmail('');
-                }}
-              >
-                Register new account
-              </button>
-            </div>
+            {authMode !== 'forgotPassword' ? (
+              <div aria-label="Authentication mode">
+                <button
+                  type="button"
+                  aria-pressed={authMode === 'signIn'}
+                  onClick={() => {
+                    setAuthMode('signIn');
+                    setShowMagicLink(false);
+                    setError('');
+                    setMessage('');
+                    setPendingConfirmationEmail('');
+                  }}
+                >
+                  Use existing account
+                </button>
+                <button
+                  type="button"
+                  aria-pressed={authMode === 'signUp'}
+                  onClick={() => {
+                    setAuthMode('signUp');
+                    setShowMagicLink(false);
+                    setError('');
+                    setMessage('');
+                    setPendingConfirmationEmail('');
+                  }}
+                >
+                  Register new account
+                </button>
+              </div>
+            ) : (
+              <h2>Reset password</h2>
+            )}
             <label htmlFor="email">{t('auth.email')}</label>
             <input
               id="email"
               type="email"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
-              disabled={isSendingMagicLink || isSubmittingPassword}
+              disabled={isSendingMagicLink || isSendingPasswordReset || isSubmittingPassword}
               required
             />
-            {!showMagicLink ? (
+            {authMode === 'forgotPassword' ? (
+              <>
+                <button type="submit" disabled={isSendingPasswordReset}>
+                  {isSendingPasswordReset ? 'Sending password reset link...' : 'Send password reset link'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAuthMode('signIn');
+                    setError('');
+                    setMessage('');
+                  }}
+                >
+                  Back to sign in
+                </button>
+              </>
+            ) : !showMagicLink ? (
               <>
                 <label htmlFor="password">Password</label>
                 <input
@@ -316,6 +401,20 @@ export function AuthPage({
                 <button type="button" onClick={() => setShowMagicLink(true)}>
                   Send a magic link instead
                 </button>
+                {authMode === 'signIn' ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAuthMode('forgotPassword');
+                      setShowMagicLink(false);
+                      setError('');
+                      setMessage('');
+                      setPendingConfirmationEmail('');
+                    }}
+                  >
+                    Forgot password?
+                  </button>
+                ) : null}
               </>
             ) : (
               <>
@@ -327,9 +426,6 @@ export function AuthPage({
                 </button>
               </>
             )}
-            <button type="button" onClick={handleAnonymousSignIn} disabled={isSigningInAnonymously}>
-              {isSigningInAnonymously ? t('auth.anonymousSigningIn') : t('auth.anonymousTestLogin')}
-            </button>
             {testLoginEmail ? (
               <button type="button" onClick={() => setEmail(testLoginEmail)}>
                 {t('auth.useTestEmail')}

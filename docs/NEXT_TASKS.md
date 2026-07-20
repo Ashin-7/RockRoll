@@ -786,3 +786,32 @@ npm run build
 - `src/features/archive/ArchivePage.test.tsx`
 
 不要运行 `npm install`，不要重复真实导入，不恢复 Inbox 主导航，不改变一键导入或 `match_existing`，不开发艺人列表，不读取真实 PDF。找回密码行为和真实测试邮箱需确认后再继续。
+
+## 当前任务索引（2026-07-20，Auth 找回密码闭环完成后）
+
+已完成：
+
+- Auth 已实现发送密码恢复邮件、PKCE 回链 session 和设置新密码的最小闭环。
+- 未知邮箱使用统一成功提示，避免暴露账号是否存在。
+- 无效的“Anonymous test login”页面入口已移除；现有注册、登录、Magic Link 与确认邮件重发保持兼容。
+- 权限文档已明确密码更新只作用于恢复 session 对应账号，不扩大管理员或普通用户的资料库权限。
+- Auth / Supabase 客户端 43 个用例、production build 和本地页面冒烟通过。
+
+### P0：下一步只执行
+
+1. **确认 Redirect URLs**：只读核对预览与生产站点的 `/#auth` 是否已加入 Supabase Auth Redirect URLs；如需修改远端配置，先说明具体地址与影响并取得确认。
+2. **真实 Auth 冒烟**：用户提供测试邮箱与账号清理约定后，验证注册、自动确认、密码登录、退出、找回密码和恢复链接；不得记录密码、token 或 cookie。
+3. **普通用户 / admin 页面冒烟**：验证资料库写入、导入、匹配和批处理入口仍仅管理员可见；不执行真实榜单导入。
+4. **预览部署**：以上验收完成后再部署预览环境，并验证 public Archive 与用户私有 Practice / Songs 隔离。
+
+推荐下一轮只读取：
+
+- `AGENTS.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/NEXT_TASKS.md`
+- `docs/SESSION_HANDOFF.md`
+- `docs/PERMISSIONS.md`
+- `src/features/auth`
+- 角色页面冒烟涉及的最小 Archive / Practice / Songs 文件
+
+不要运行 `npm install`，不要重复真实导入，不恢复 Inbox 主导航，不改变一键导入或 `match_existing`，不开发艺人列表，不读取真实 PDF。远端 Auth 配置、真实邮件、测试账号或部署发生外部状态变化前，必须先确认范围与清理方式。

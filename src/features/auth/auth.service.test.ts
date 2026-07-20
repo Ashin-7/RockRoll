@@ -13,12 +13,14 @@ const queryBuilderMock = {
 const authMock = {
   getSession: vi.fn(),
   onAuthStateChange: vi.fn(),
+  resetPasswordForEmail: vi.fn(),
   signInAnonymously: vi.fn(),
   signInWithPassword: vi.fn(),
   signInWithOtp: vi.fn(),
   resend: vi.fn(),
   signUp: vi.fn(),
   signOut: vi.fn(),
+  updateUser: vi.fn(),
 };
 
 vi.mock('../../lib/supabase', () => ({
@@ -110,6 +112,38 @@ describe('auth.service', () => {
     const { resendSignupConfirmation } = await import('./auth.service');
 
     await expect(resendSignupConfirmation('player@example.com')).rejects.toThrow('Email rate limit exceeded');
+  });
+
+  it('sends a password reset email back to the Auth route', async () => {
+    authMock.resetPasswordForEmail.mockResolvedValue({ error: null });
+    const { sendPasswordResetEmail } = await import('./auth.service');
+
+    await expect(sendPasswordResetEmail('player@example.com')).resolves.toBeUndefined();
+    expect(authMock.resetPasswordForEmail).toHaveBeenCalledWith('player@example.com', {
+      redirectTo: `${window.location.origin}/#auth`,
+    });
+  });
+
+  it('throws when requesting a password reset fails', async () => {
+    authMock.resetPasswordForEmail.mockResolvedValue({ error: { message: 'Email rate limit exceeded' } });
+    const { sendPasswordResetEmail } = await import('./auth.service');
+
+    await expect(sendPasswordResetEmail('player@example.com')).rejects.toThrow('Email rate limit exceeded');
+  });
+
+  it('updates the password for the current recovery session', async () => {
+    authMock.updateUser.mockResolvedValue({ error: null });
+    const { updatePassword } = await import('./auth.service');
+
+    await expect(updatePassword('new-secret-123')).resolves.toBeUndefined();
+    expect(authMock.updateUser).toHaveBeenCalledWith({ password: 'new-secret-123' });
+  });
+
+  it('throws when updating the recovery password fails', async () => {
+    authMock.updateUser.mockResolvedValue({ error: { message: 'Recovery session expired' } });
+    const { updatePassword } = await import('./auth.service');
+
+    await expect(updatePassword('new-secret-123')).rejects.toThrow('Recovery session expired');
   });
 
   it('throws when password sign up fails', async () => {
@@ -206,7 +240,7 @@ describe('auth.service', () => {
     await expect(signOut()).rejects.toThrow('sign out failed');
   });
 
-  it('subscribes to auth state changes and returns an unsubscribe function', async () => {
+  it('subscribes to auth state changes with the event and returns an unsubscribe function', async () => {
     const unsubscribe = vi.fn();
     const callback = vi.fn();
     const session = { user: { email: 'player@example.com' } };
@@ -218,7 +252,7 @@ describe('auth.service', () => {
 
     const stopListening = onAuthStateChange(callback);
 
-    expect(callback).toHaveBeenCalledWith(session);
+    expect(callback).toHaveBeenCalledWith(session, 'SIGNED_IN');
     stopListening();
     expect(unsubscribe).toHaveBeenCalledWith();
   });

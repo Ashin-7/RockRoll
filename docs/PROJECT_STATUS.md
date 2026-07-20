@@ -1231,3 +1231,21 @@ $env:PATH='C:\Users\Ashin\AppData\Local\nvm\v20.20.2;' + $env:PATH; npm run buil
 ```
 
 结果：Archive 3 个测试文件、31 个用例通过；production build 通过，仅保留既有主 chunk 超过 500 kB 警告；匿名浏览器确认 14 个 public collection 可见且管理入口全部隐藏。没有运行 `npm install`、真实导入、真实注册、邮件发送或部署。
+
+## 追加完成：Auth 找回密码最小闭环（2026-07-20）
+
+- 未登录 Auth 页面新增“Forgot password?”入口，可调用 Supabase `resetPasswordForEmail` 发送恢复链接；成功提示不泄露邮箱是否已注册。
+- Supabase 客户端改为 PKCE flow，恢复链接返回 `/#auth` 后通过 `PASSWORD_RECOVERY` 事件进入设置新密码表单，再由当前恢复 session 调用 `updateUser({ password })` 更新自己的密码。
+- 页面已移除远端禁用且无效的“Anonymous test login”；注册、密码登录、Magic Link、确认邮件重发和测试邮箱填充行为保持不变，service 中原匿名方法保留以避免无关兼容性破坏。
+- 权限边界未扩大：找回密码是账号自助能力，管理员也不能替其他用户设置密码；资料库写入、导入、匹配和批处理仍仅管理员可见、可触发，并由既有 service guard 与 RLS / RPC 约束。
+- 未修改 Supabase schema、migration、RLS 或远端 Auth 配置；未发送真实邮件、创建账号、执行真实导入或部署。生产 / 预览环境仍需把对应 `/#auth` 地址加入 Supabase Redirect URLs 后再做真实邮件冒烟。
+
+验证：
+
+```powershell
+$env:PATH='C:\Users\Ashin\AppData\Local\nvm\v20.20.2;' + $env:PATH; npm test -- --run src/features/auth src/lib/supabase.test.ts
+$env:PATH='C:\Users\Ashin\AppData\Local\nvm\v20.20.2;' + $env:PATH; npm run build
+git diff --check -- src/features/auth src/lib/supabase.ts src/lib/supabase.test.ts docs/PERMISSIONS.md docs/PROJECT_STATUS.md docs/NEXT_TASKS.md docs/SESSION_HANDOFF.md
+```
+
+结果：Auth 与 Supabase 客户端 3 个测试文件、43 个用例通过；TypeScript 与 Vite production build 通过，仅保留既有主 chunk 超过 500 kB 警告；本地浏览器确认忘记密码页进入/返回正常、匿名登录入口不存在、控制台无错误。

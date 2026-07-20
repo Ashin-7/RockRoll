@@ -17,6 +17,8 @@ export interface SupabaseCrudSmokeResult {
   userId: string;
 }
 
+export type AuthStateChangeCallback = (session: AuthSession | null, event?: string) => void;
+
 const demoSessionStorageKey = 'rockroll.demoSession';
 const demoSession: AuthSession = {
   isDemo: true,
@@ -109,6 +111,26 @@ export async function resendSignupConfirmation(email: string): Promise<void> {
   }
 }
 
+export async function sendPasswordResetEmail(email: string): Promise<void> {
+  const supabase = getSupabase();
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${window.location.origin}/#auth`,
+  });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+}
+
+export async function updatePassword(password: string): Promise<void> {
+  const supabase = getSupabase();
+  const { error } = await supabase.auth.updateUser({ password });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+}
+
 export async function signInAnonymously(): Promise<void> {
   let supabase: ReturnType<typeof getSupabase>;
   try {
@@ -164,7 +186,7 @@ export async function signOut(): Promise<void> {
   }
 }
 
-export function onAuthStateChange(callback: (session: AuthSession | null) => void): () => void {
+export function onAuthStateChange(callback: AuthStateChangeCallback): () => void {
   let supabase: ReturnType<typeof getSupabase>;
   try {
     supabase = getSupabase();
@@ -175,8 +197,8 @@ export function onAuthStateChange(callback: (session: AuthSession | null) => voi
     }
     throw isMissingSupabaseEnvError(caughtError) ? createMissingSupabaseEnvError(caughtError) : caughtError;
   }
-  const { data } = supabase.auth.onAuthStateChange((_event: string, session: AuthSession | null) => {
-    callback(session);
+  const { data } = supabase.auth.onAuthStateChange((event: string, session: AuthSession | null) => {
+    callback(session, event);
   });
 
   return () => data.subscription.unsubscribe();
