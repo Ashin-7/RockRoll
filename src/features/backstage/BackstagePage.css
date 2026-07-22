@@ -51,13 +51,11 @@
 }
 
 .amp-panel {
-  border: 1px solid var(--color-border-strong);
-  border-radius: calc(var(--radius-panel) * 1.4);
+  border-color: var(--color-border-strong);
   background:
     linear-gradient(180deg, var(--color-bg-panel-elevated), var(--color-bg-panel-elevated)),
     repeating-linear-gradient(0deg, var(--color-fg-subtle) 0 1px, transparent 1px 6px);
   box-shadow: var(--shadow-stage);
-  padding: var(--space-6);
 }
 
 .amp-panel__topline {

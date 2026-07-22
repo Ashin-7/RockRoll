@@ -12,6 +12,7 @@ describe('BackstagePage', () => {
     expect(screen.getByRole('heading', { level: 1, name: 'Your private music archive.' })).toBeInTheDocument();
     expect(screen.getByText('Your private music archive.')).toBeInTheDocument();
     expect(screen.getByLabelText('Today practice amp panel')).toBeInTheDocument();
+    expect(container.querySelector('article.amp-panel.ui-panel--card')).toBeInTheDocument();
     expect(screen.getByText('Little Wing')).toBeInTheDocument();
     const signalCards = Array.from(container.querySelectorAll('.signal-grid > .ui-stat-card'));
     expect(signalCards).toHaveLength(3);

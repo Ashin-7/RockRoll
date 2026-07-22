@@ -1164,3 +1164,20 @@ npm run build
 3. 继续先 RED 后 GREEN，不新增 `EntityCard`，不改变 Supabase、Auth、导入、权限、Inbox 导航、一键导入或 `match_existing`。
 
 推荐下一轮只读取三份状态 / 交接文档、`docs/UI_REFACTOR_PLAN.md` 与下一单页面切片及对应共享 UI 原语；不要扫描整个仓库，不运行 `npm install`。
+
+## 当前任务索引（2026-07-22，Backstage amp Panel 迁移后）
+
+已完成：
+
+- 上一批 UI 切片已提交并推送为 `6dc1720`；当前分支跟踪 `origin/codex/ui-phase-2-slices`。
+- Backstage amp article 已迁移到既有 `Panel variant="card"`，结构测试完成先红后绿。
+- amp 数据、`dl/dt/dd` 语义、强边框颜色、设备纹理、meter 及桌面 / 窄屏布局保持不变。
+- Backstage 与共享 UI 共 2 个测试文件、8 个用例、production build 及桌面 / 窄屏只读视觉冒烟通过。
+
+下一步只执行：
+
+1. 先核对本轮尚未提交的 Backstage amp 小切片；未经用户要求不要提交、推送或合并。
+2. 如继续 UI 第 2 期，从计划中选择另一个新的单页面小切片，一次只迁移一种重复 hero / panel / heading 样式。
+3. 继续先 RED 后 GREEN，不新增 `EntityCard`，不改变 Supabase、Auth、导入、权限、Inbox 导航、一键导入或 `match_existing`。
+
+推荐下一轮只读取三份状态 / 交接文档、`docs/UI_REFACTOR_PLAN.md` 与下一单页面切片及对应共享 UI 原语；不要扫描整个仓库，不运行 `npm install`。

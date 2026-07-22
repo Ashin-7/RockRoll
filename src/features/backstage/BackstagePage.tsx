@@ -23,7 +23,7 @@ export function BackstagePage() {
           />
           <p>{t('backstage.hero.description')}</p>
         </Panel>
-        <article className="amp-panel" aria-label={t('backstage.amp.ariaLabel')}>
+        <Panel as="article" className="amp-panel" variant="card" aria-label={t('backstage.amp.ariaLabel')}>
           <div className="amp-panel__topline">
             <span className="rec-light" aria-hidden="true" />
             <span>{practiceFocus.takeLabel}</span>
@@ -49,7 +49,7 @@ export function BackstagePage() {
               </dd>
             </div>
           </dl>
-        </article>
+        </Panel>
       </div>
 
       <div className="signal-grid" aria-label={t('backstage.signals.ariaLabel')}>

@@ -1448,3 +1448,13 @@ rebase 前结果：4 个测试文件、19 个用例通过；生产构建通过�
 - 新增结构断言先因 Notes 区域找不到 card Panel 出现预期 RED；迁移后 Song Detail 与共享 UI 共 2 个测试文件、14 个用例通过。
 - production build 通过，仅保留既有主 chunk 超过 500 kB 警告；本地没有可访问的歌曲详情数据，因此未伪造浏览器视觉结论。
 - 未运行完整测试或 `npm install`，未新增 `EntityCard`，未修改 Supabase、Auth、导入、权限、Inbox 导航、一键导入或 `match_existing`；当前全部 UI 切片仍未提交或推送。
+
+## 追加完成：Backstage amp 面板原语迁移（2026-07-22）
+
+- 上一批 UI 第 2 期切片已统一提交为 `6dc1720 refactor: migrate ui phase 2 page slices`，并推送到 `origin/codex/ui-phase-2-slices`；本轮从干净且已跟踪远端的分支继续。
+- `BackstagePage` 的 amp `article` 已按 TDD 迁移到既有 `Panel variant="card"`；practice focus 数据、`dl/dt/dd` 语义、内容顺序及可访问名称保持不变。
+- 删除共享 `Panel` 已承担的边框结构、圆角和内边距 CSS；保留强边框颜色、横向设备纹理、舞台阴影、meter 和响应式布局。
+- 新增结构断言先因 amp article 缺少 `ui-panel--card` 出现预期 RED；迁移后 Backstage 与共享 UI 共 2 个测试文件、8 个用例通过。
+- production build 通过，仅保留既有主 chunk 超过 500 kB 警告；`/#backstage` 在 `1280x720` 与 `390x844` 完成只读视觉冒烟，无横向溢出。
+- 浏览器控制台无应用 warning，仅有既有 `/favicon.ico` 404；未运行完整测试或 `npm install`。
+- 未新增 `EntityCard`，未修改 Supabase、Auth、导入、权限、Inbox 导航、一键导入或 `match_existing`；本轮 Backstage 小切片尚未提交或推送。

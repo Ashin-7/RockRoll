@@ -2344,3 +2344,48 @@ Song Detail 的 Notes / Related 双面板已完成 Panel card 迁移；Song Deta
 ```
 
 建议开启新对话，并粘贴以上提示词继续。
+
+## 当前有效交接（2026-07-22，Backstage amp Panel 迁移后）
+
+本轮完成：
+
+- 上一批 UI 第 2 期切片已提交为 `6dc1720 refactor: migrate ui phase 2 page slices` 并推送到 `origin/codex/ui-phase-2-slices`；本轮从干净分支继续。
+- 选择 `BackstagePage` 的 amp article，将其迁移到既有 `Panel variant="card"`。
+- practice focus 数据、`dl/dt/dd` 语义、内容顺序及可访问名称保持不变；强边框颜色、横向设备纹理、舞台阴影和 meter 均保留。
+- 结构测试完成预期 RED / GREEN；Backstage 与共享 UI 共 2 个测试文件、8 个用例通过。
+- production build 通过，仅保留既有 chunk size 警告；`/#backstage` 在 `1280x720` 与 `390x844` 完成只读视觉冒烟，无横向溢出，控制台仅有既有 `/favicon.ico` 404。
+- 未运行完整测试或 `npm install`；未新增 `EntityCard`，未修改 Supabase、Auth、导入、权限、Inbox 导航、一键导入或 `match_existing`。
+
+本轮新增修改：
+
+- `src/features/backstage/BackstagePage.tsx`
+- `src/features/backstage/BackstagePage.css`
+- `src/features/backstage/BackstagePage.test.tsx`
+- 三份状态 / 交接文档
+
+未完成事项：
+
+1. 本轮 Backstage amp 小切片尚未提交、推送或合并。
+2. 下一轮开始前应选择另一个新的单页面小切片，不继续扩大 Backstage 范围。
+3. UI 第 2 期继续保持一次一个小切片，不新增 `EntityCard`。
+
+下一轮提示词：
+
+```text
+继续 RockRoll UI 重构。
+请在 E:\Code\RcokRoll 的 codex/ui-phase-2-slices 分支工作。
+请只读取：
+- AGENTS.md
+- docs/PROJECT_STATUS.md
+- docs/NEXT_TASKS.md
+- docs/SESSION_HANDOFF.md
+- docs/UI_REFACTOR_PLAN.md
+- 下一单页面切片涉及的组件、样式、测试和对应共享 UI 原语
+
+上一批 UI 切片已提交并推送为 6dc1720；Backstage amp article 已完成 Panel card 迁移，Backstage 与共享 UI 共 8 个用例、production build 和桌面 / 窄屏视觉冒烟通过，本轮切片尚未提交。
+先核对分支和未提交改动，再从 UI 计划中选择一个新的单页面小切片，先 RED 后 GREEN，一次只迁移一种重复样式。
+不要扫描整个仓库，不运行 npm install，不新增 EntityCard，不修改 Supabase、Auth、导入、权限、Inbox 导航、一键导入或 match_existing。
+完成后中文总结。
+```
+
+建议开启新对话，并粘贴以上提示词继续。
