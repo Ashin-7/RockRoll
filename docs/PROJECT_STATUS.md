@@ -1458,3 +1458,11 @@ rebase 前结果：4 个测试文件、19 个用例通过；生产构建通过�
 - production build 通过，仅保留既有主 chunk 超过 500 kB 警告；`/#backstage` 在 `1280x720` 与 `390x844` 完成只读视觉冒烟，无横向溢出。
 - 浏览器控制台无应用 warning，仅有既有 `/favicon.ico` 404；未运行完整测试或 `npm install`。
 - 未新增 `EntityCard`，未修改 Supabase、Auth、导入、权限、Inbox 导航、一键导入或 `match_existing`；本轮 Backstage 小切片尚未提交或推送。
+
+## 追加完成：UI 第 2 期切片分支本地合并（2026-07-22）
+
+- Backstage amp 小切片已提交为 `82abfd0 refactor: migrate backstage amp panel`，并推送到 `origin/codex/ui-phase-2-slices`。
+- 本地 `main` 在确认相对 `origin/main` 为 ahead 21 / behind 0 后，以 fast-forward 方式合并 `codex/ui-phase-2-slices`，合并点为 `82abfd0`，无冲突。
+- 合并后的 `main` 已运行全量测试：45 个测试文件、391 个用例全部通过；production build 通过，仅保留既有主 chunk 超过 500 kB 警告。
+- 本地 `main` 当前包含既有未推送提交与本次 UI 合并，尚未推送 `origin/main`；本轮未创建 PR，也未删除远端功能分支。
+- 未运行 `npm install`，未修改 Supabase、Auth、导入、权限、Inbox 导航、一键导入或 `match_existing`。

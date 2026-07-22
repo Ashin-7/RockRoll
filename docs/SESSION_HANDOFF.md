@@ -2389,3 +2389,44 @@ Song Detail 的 Notes / Related 双面板已完成 Panel card 迁移；Song Deta
 ```
 
 建议开启新对话，并粘贴以上提示词继续。
+
+## 当前有效交接（2026-07-22，UI 第 2 期分支本地合并后）
+
+本轮完成：
+
+- Backstage amp 小切片已提交为 `82abfd0 refactor: migrate backstage amp panel`，并推送到 `origin/codex/ui-phase-2-slices`。
+- 本地 `main` 相对 `origin/main` 没有落后提交，已 fast-forward 合并 `codex/ui-phase-2-slices`，合并点为 `82abfd0`，无冲突。
+- 合并后的全量测试为 45 个测试文件、391 个用例全部通过；production build 通过，仅保留既有 chunk size 警告。
+- 本地 `main` 尚未推送 `origin/main`；远端功能分支保留，本轮未创建 PR。
+- 未运行 `npm install`，未修改 Supabase、Auth、导入、权限、Inbox 导航、一键导入或 `match_existing`。
+
+本轮合并后新增修改：
+
+- `docs/PROJECT_STATUS.md`
+- `docs/NEXT_TASKS.md`
+- `docs/SESSION_HANDOFF.md`
+
+未完成事项：
+
+1. 本地 `main` 包含既有未推送提交与本次 UI 合并，推送主分支前必须复核全部领先提交范围并取得用户确认。
+2. 远端 `origin/codex/ui-phase-2-slices` 尚未删除。
+3. 如继续开发，应从最新 `main` 创建新的 `codex/` 功能分支，不直接在 `main` 累积改动。
+
+下一轮提示词：
+
+```text
+继续 RockRoll 项目开发。
+请只读取：
+- AGENTS.md
+- docs/PROJECT_STATUS.md
+- docs/NEXT_TASKS.md
+- docs/SESSION_HANDOFF.md
+- docs/UI_REFACTOR_PLAN.md
+- 当前任务相关目录
+
+UI 第 2 期切片已通过 82abfd0 推送到 origin/codex/ui-phase-2-slices，并 fast-forward 合并到本地 main；合并后全量 391 个用例和 production build 通过。main 尚未推送 origin/main。
+继续开发前，从最新 main 创建新的 codex/ 功能分支；不要扫描整个仓库，不运行 npm install，不新增 EntityCard，不修改受限业务范围。
+完成后中文总结。
+```
+
+建议开启新对话，并粘贴以上提示词继续。

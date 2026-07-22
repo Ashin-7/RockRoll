@@ -1181,3 +1181,19 @@ npm run build
 3. 继续先 RED 后 GREEN，不新增 `EntityCard`，不改变 Supabase、Auth、导入、权限、Inbox 导航、一键导入或 `match_existing`。
 
 推荐下一轮只读取三份状态 / 交接文档、`docs/UI_REFACTOR_PLAN.md` 与下一单页面切片及对应共享 UI 原语；不要扫描整个仓库，不运行 `npm install`。
+
+## 当前任务索引（2026-07-22，UI 第 2 期分支本地合并后）
+
+已完成：
+
+- `codex/ui-phase-2-slices` 最新提交 `82abfd0` 已推送远端，并 fast-forward 合并到本地 `main`。
+- 合并后的全量测试 45 个文件、391 个用例通过；production build 通过。
+- 本地 `main` 尚未推送 `origin/main`，远端功能分支保留。
+
+下一步只执行：
+
+1. 如需同步 GitHub 主分支，先复核本地 `main` 领先 `origin/main` 的全部提交范围，再由用户明确确认是否推送。
+2. 如继续 UI 第 2 期开发，从最新 `main` 创建新的 `codex/` 功能分支，不直接在 `main` 累积新切片。
+3. 继续保持一次一个单页面小切片、先 RED 后 GREEN，不新增 `EntityCard`，不修改受限业务范围。
+
+推荐下一轮只读取三份状态 / 交接文档、`docs/UI_REFACTOR_PLAN.md` 与下一任务相关目录；不要扫描整个仓库，不运行 `npm install`。
