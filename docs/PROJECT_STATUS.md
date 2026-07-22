@@ -1299,3 +1299,46 @@ rebase 前结果：4 个测试文件、19 个用例通过；生产构建通过�
 - Album Detail hero 已按 TDD 迁移到 `Panel as="header" variant="hero"` 与 `SectionHeading as="h1"`，编辑、删除、角色可见性和路由行为未改变。
 - 本地浏览器在 `1280x720` 检查 `/#songs`：共享 hero 无双重表面、计数卡右对齐、无重叠。因本地没有 Supabase 配置/Album 数据且当前浏览器不能调整实际 viewport，Album 与窄屏未做伪造的视觉结论，分别由结构测试、构建和既有响应式 CSS 覆盖。
 - 未修改 Supabase、Auth、导入、Inbox 导航、一键导入、`match_existing` 或艺人列表。
+
+## 追加完成：Albums 筛选样式修复与 Archive Detail hero 迁移（2026-07-20）
+
+- UI 分支已 fast-forward 合并回本地 `main`；当前 UI 重构继续在 `main` 工作区推进，尚未推送远端。
+- 修复 Albums 集合/曲风下拉选项被全局裸按钮兼容样式覆盖的问题：显式退出兼容层，恢复紧凑透明选项，仅当前项高亮；筛选、滚动和服务调用逻辑未变。
+- Archive Detail hero 已按 TDD 迁移到 `Panel as="header" variant="hero"` 与 `SectionHeading as="h1"`，公开读取、管理员可见性、分页及条目 CRUD 未改变。
+- 浏览器只读检查真实公开 Archive Detail：共享 hero 正常，长标题和长说明无水平溢出；未点击编辑、删除、导入或匹配入口。
+- 未运行 `npm install`，未修改 Supabase、Auth、导入、Inbox 导航、一键导入、`match_existing` 或艺人列表。
+
+## 追加完成：Album List hero / summary 原语迁移（2026-07-20）
+
+- `AlbumListPage` hero 已迁移到 `Panel as="header" variant="hero"`，专辑总数摘要已迁移到 `StatCard align="right"`。
+- 删除 Album List 中由共享原语统一提供的 hero 底边框、内边距及摘要卡表面/字号重复样式，保留页面布局类与现有移动端左对齐规则。
+- Albums 集合/曲风筛选兼容修复、集合加载、分页和说明展开行为未改；Supabase、Auth、导入、权限与 `match_existing` 均未触碰。
+- TDD 结构用例先因共享原语结构缺失而失败，迁移后 Albums + UI 原语 4 个测试文件、46 个用例通过；production build 通过，仅保留既有 chunk size 警告。
+- 本地 `/#albums` 在 `1280x720` 与 `390x844` 完成只读视觉冒烟，hero / summary 无双重表面或溢出；本地数据停留在 loading，未伪造集合数据或执行写操作。
+- 未运行 `npm install`，未提交或推送 Git。
+
+## 追加完成：Backstage hero 原语迁移（2026-07-20）
+
+- 在避开 Archive / Inbox / Artists 限制范围后，选择静态 `BackstagePage` 作为下一张低风险页面切片。
+- Backstage 左侧 hero copy 已迁移到 `Panel as="header" variant="hero"`，eyebrow + h1 已迁移到 `SectionHeading as="h1"`。
+- 删除共享 `Panel` 已承担的边框、圆角、背景、阴影、内边距与定位重复样式；两栏布局、装饰圆环、右侧 amp panel、signal cards 和 mock 数据未改。
+- TDD 结构用例先因共享原语结构缺失而失败；修正测试中的既有英文标题假设后，Backstage + UI 原语 2 个测试文件、8 个用例通过。
+- production build 通过，仅保留既有 chunk size 警告；本地 `/#backstage` 在 `1280x720` 与 `390x844` 只读视觉冒烟通过，无横向溢出。
+- 未运行 `npm install`，未修改 Supabase、Auth、导入、权限、Inbox 导航、一键导入或 `match_existing`，未提交或推送 Git。
+
+## 追加完成：Backstage signal cards 原语迁移（2026-07-22）
+
+- `BackstagePage` 的 3 个 `signal-card` 已直接迁移到既有 `StatCard`，`archiveSignals` 数据、文字、顺序与 key 保持不变。
+- `signal-grid` 仍负责桌面三列与窄屏单列布局；旧 `signal-card` 的重复表面和文字 CSS 已删除，tape / draft cards 未迁移。
+- 结构测试按 TDD 先因共享卡片缺失而失败，迁移后 Backstage + UI 原语 2 个测试文件、8 个用例通过。
+- production build 通过，仅保留既有 chunk size 警告；`git diff --check` 通过，仅提示 Windows 的 LF/CRLF 转换。
+- 本地 `/#backstage` 在 `1280x720` 与 `390x844` 完成只读视觉冒烟：卡片分别为三列 / 单列，顺序正确，无横向溢出，控制台无 warning / error。
+- 未运行 `npm install`，未修改 Supabase、Auth、导入、权限、Inbox 导航、一键导入或 `match_existing`，未提交或推送 Git。
+
+## 追加完成：Backstage section headings 原语迁移与分支收口（2026-07-22）
+
+- recent tapes / import inbox 两组标题已迁移到既有 `SectionHeading`，保留 eyebrow、`h2` 语义和原始文案。
+- tape / draft cards、mock 数据、渲染顺序、两栏/单栏响应式容器均未修改；页面级标题类只抵消共享组件与现有 grid gap 的重复底部间距。
+- 结构测试按 TDD 先因共享标题缺失而失败，迁移后 Backstage 定向测试通过；production build 与目标文件 `git diff --check` 通过，仅保留既有 chunk size 和 LF/CRLF 提示。
+- 为避免直接在领先远端 21 个提交的本地 `main` 上继续提交，当前工作已切换到 `codex/ui-phase-2-slices`；既有 `ui/tokens-rebuild` worktree 保持干净且未修改。
+- 未运行 `npm install`，未新增 `EntityCard`，未修改 Supabase、Auth、导入、权限、Inbox 导航、一键导入或 `match_existing`，未推送远端。

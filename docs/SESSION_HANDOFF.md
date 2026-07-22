@@ -1,4 +1,4 @@
-﻿# RockRoll 会话交接
+# RockRoll 会话交接
 
 更新时间：2026-07-20
 
@@ -1562,6 +1562,215 @@ UI 分支已 rebase 到包含完整 Auth P0 的本地 main。
 UI 第 2 期首个切片已完成：原语测试、依赖漂移清理、Songs hero CSS 收口、Album Detail hero 原语迁移。
 下一步按 TDD 只迁移 Archive Detail hero / panel 重复样式，不改变 Archive 权限或导入行为。
 不要运行 npm install，不修改 Supabase、Auth、Inbox 导航、一键导入或 match_existing，不开发艺人列表。
+完成后中文总结。
+```
+
+建议开启新对话，并粘贴以上提示词继续。
+
+## 当前有效交接（2026-07-20，Archive Detail hero 迁移后）
+
+本轮完成：
+
+- `ui/tokens-rebuild` 已 fast-forward 合并回本地 `main`；未推送远端，外部 UI worktree 仍保留。
+- Albums 集合/曲风筛选选项增加全局裸按钮兼容层 opt-out，修复紫色胶囊样式覆盖；筛选行为未变。
+- Archive Detail hero 按 TDD 迁移到 `Panel` / `SectionHeading`；公开读取、管理员入口、分页和 CRUD 未变。
+- Albums / Archive Detail / UI 原语定向测试、production build 与浏览器只读冒烟通过；仅保留既有 chunk size 警告。
+- 没有运行 `npm install`，没有修改 Supabase、真实 Auth、真实导入、Inbox 导航、一键导入、`match_existing` 或艺人列表。
+
+下一轮提示词：
+
+```text
+继续 RockRoll UI 重构。
+请在 E:\Code\RcokRoll 的 main 分支工作。
+只读取：
+- AGENTS.md
+- docs/UI_REFACTOR_PLAN.md
+- docs/PROJECT_STATUS.md
+- docs/NEXT_TASKS.md
+- docs/SESSION_HANDOFF.md
+- src/components/ui
+- src/features/albums/AlbumListPage.tsx
+- src/features/albums/AlbumListPage.css
+- src/features/albums/AlbumListPage.test.tsx
+
+Albums 筛选样式覆盖已修复，Archive Detail hero 已完成共享原语迁移。
+下一步按 TDD 只迁移 Album List hero/summary 到 Panel/StatCard，保留两个筛选下拉与集合加载行为。
+不要运行 npm install，不修改 Supabase、Auth、导入、Inbox 导航、一键导入或 match_existing，不开发艺人列表。
+完成后中文总结。
+```
+
+建议开启新对话，并粘贴以上提示词继续。
+
+## 当前有效交接（2026-07-20，Album List hero / summary 迁移后）
+
+本轮完成：
+
+- `AlbumListPage` hero 迁移到 `Panel as="header" variant="hero"`，总数摘要迁移到 `StatCard align="right"`。
+- 只移除共享原语已承担的重复表面与摘要文字样式；保留 hero / summary 页面布局类和移动端响应式规则。
+- 新增结构测试并完成 RED / GREEN；Albums 筛选兼容修复、集合/曲风筛选、集合加载、分页与说明展开行为未变。
+- Albums + UI 原语定向回归 4 个测试文件、46 个用例通过；production build 通过，仅有既有 chunk size 警告。
+- 本地 `/#albums` 在 `1280x720` 和 `390x844` 只读冒烟通过；本地数据停留在 loading，未执行写操作。
+- 没有运行 `npm install`，没有修改 Supabase、Auth、导入、权限、Inbox 导航、一键导入或 `match_existing`，没有提交或推送。
+
+本轮新增修改：
+
+- `src/features/albums/AlbumListPage.tsx`
+- `src/features/albums/AlbumListPage.css`
+- `src/features/albums/AlbumListPage.test.tsx`
+- 三份状态 / 交接文档
+
+下一轮提示词：
+
+```text
+继续 RockRoll UI 重构。
+请在 E:\Code\RcokRoll 的 main 分支工作。
+只读取：
+- AGENTS.md
+- docs/UI_REFACTOR_PLAN.md
+- docs/PROJECT_STATUS.md
+- docs/NEXT_TASKS.md
+- docs/SESSION_HANDOFF.md
+- src/components/ui
+- 下一次准备迁移的单个 feature 页面及测试
+
+Album List hero / summary 已完成 Panel / StatCard 迁移，Albums 筛选修复与集合加载行为保持不变。
+先审查当前 main 未提交 UI 切片，再从 UI 第 2 期选择一个页面，只迁移一个 hero / panel 重复样式；先 RED 后 GREEN。
+不要运行 npm install，不修改 Supabase、Auth、导入、权限、Inbox 导航、一键导入或 match_existing，不开发艺人列表。
+完成后中文总结。
+```
+
+建议开启新对话，并粘贴以上提示词继续。
+
+## 当前有效交接（2026-07-20，Backstage hero 迁移后）
+
+本轮完成：
+
+- 从未迁移 hero 候选中排除 Archive / Inbox / Artists，选择静态 Backstage 页面作为低风险切片。
+- Backstage 左侧 hero copy 迁移到 `Panel as="header" variant="hero"`，标题组合迁移到 `SectionHeading as="h1"`。
+- 只删除共享原语已承担的 hero 表面样式；两栏布局、装饰圆环、amp panel、signal cards、tape / draft cards 和 mock 数据均未改。
+- 新增结构测试并完成预期 RED；迁移后发现测试误用了不存在的英文标题，已按真实 i18n 文案修正，Backstage + UI 原语 2 个测试文件、8 个用例通过。
+- production build 通过，仅有既有 chunk size 警告；`/#backstage` 在 `1280x720` 与 `390x844` 只读视觉冒烟通过。
+- 没有运行 `npm install`，没有修改 Supabase、Auth、导入、权限、Inbox 导航、一键导入或 `match_existing`，没有提交或推送。
+
+本轮新增修改：
+
+- `src/features/backstage/BackstagePage.tsx`
+- `src/features/backstage/BackstagePage.css`
+- `src/features/backstage/BackstagePage.test.tsx`
+- 三份状态 / 交接文档
+
+下一轮提示词：
+
+```text
+继续 RockRoll UI 重构。
+请在 E:\Code\RcokRoll 的 main 分支工作。
+只读取：
+- AGENTS.md
+- docs/PROJECT_STATUS.md
+- docs/NEXT_TASKS.md
+- docs/SESSION_HANDOFF.md
+- src/components/ui/StatCard.tsx
+- src/components/ui/StatCard.css
+- src/features/backstage/BackstagePage.tsx
+- src/features/backstage/BackstagePage.css
+- src/features/backstage/BackstagePage.test.tsx
+
+Backstage hero 已完成 Panel / SectionHeading 迁移。
+下一步按 TDD 只迁移 3 个 signal-card 到 StatCard，保留数据、顺序和响应式布局，不迁移 tape / draft cards。
+不要运行 npm install，不修改 Supabase、Auth、导入、权限、Inbox 导航、一键导入或 match_existing。
+完成后中文总结。
+```
+
+建议开启新对话，并粘贴以上提示词继续。
+
+## 当前有效交接（2026-07-22，Backstage signal cards 迁移后）
+
+本轮完成：
+
+- `BackstagePage` 的 3 个 `signal-card` 已迁移到共享 `StatCard`；`archiveSignals` 数据、文字、顺序和响应式容器保持不变。
+- 删除旧 `signal-card` 的重复表面与文字 CSS，未迁移 tape / draft cards，未修改 amp panel 或业务数据流。
+- 新增结构断言并完成预期 RED / GREEN；Backstage + UI 原语 2 个测试文件、8 个用例通过。
+- production build 与 `git diff --check` 通过；仅保留既有 chunk size 和 Windows LF/CRLF 提示。
+- `/#backstage` 在 `1280x720` 与 `390x844` 只读视觉冒烟通过：三列 / 单列布局正确，无横向溢出，控制台无 warning / error。
+- 没有运行 `npm install`，没有修改 Supabase、Auth、导入、权限、Inbox 导航、一键导入或 `match_existing`，没有提交或推送。
+
+本轮新增修改：
+
+- `src/features/backstage/BackstagePage.tsx`
+- `src/features/backstage/BackstagePage.css`
+- `src/features/backstage/BackstagePage.test.tsx`
+- 三份状态 / 交接文档
+
+下一轮提示词：
+
+```text
+继续 RockRoll UI 重构。
+请在 E:\Code\RcokRoll 的 main 分支工作。
+只读取：
+- AGENTS.md
+- docs/PROJECT_STATUS.md
+- docs/NEXT_TASKS.md
+- docs/SESSION_HANDOFF.md
+- src/components/ui/SectionHeading.tsx
+- src/components/ui/SectionHeading.css
+- src/features/backstage/BackstagePage.tsx
+- src/features/backstage/BackstagePage.css
+- src/features/backstage/BackstagePage.test.tsx
+
+Backstage hero 与 3 个 signal cards 已完成共享原语迁移。
+下一步按 TDD 只迁移 recent tapes / import inbox 的两组 section-heading 到既有 SectionHeading，保留 tape / draft cards、数据、顺序和响应式布局。
+不要运行 npm install，不新增 EntityCard，不修改 Supabase、Auth、导入、权限、Inbox 导航、一键导入或 match_existing。
+完成后中文总结。
+```
+
+建议开启新对话，并粘贴以上提示词继续。
+
+## 当前有效交接（2026-07-22，Backstage section headings 迁移与提交后）
+
+本轮完成：
+
+- recent tapes / import inbox 两组 `.section-heading` 已按 TDD 迁移到既有 `SectionHeading`。
+- tape / draft cards、mock 数据、顺序和响应式容器未改；新增页面级布局类避免共享标题 margin 与 grid gap 重复。
+- Backstage 定向测试、production build 与目标文件 `git diff --check` 通过；仅有既有 chunk size 和 Windows LF/CRLF 提示。
+- 当前工作区已从本地 `main` 切换到 `codex/ui-phase-2-slices`，避免直接污染主分支；`ui/tokens-rebuild` 仍在独立干净 worktree 中。
+- UI 第 2 期累积改动按 Archive、Albums、Backstage、文档四个逻辑边界提交；未推送远端。
+- 未运行 `npm install`，未新增 `EntityCard`，未修改 Supabase、Auth、导入、权限、Inbox 导航、一键导入或 `match_existing`。
+
+修改文件：
+
+- `src/styles/global.css`
+- `src/features/archive/ArchiveDetailPage.tsx`
+- `src/features/archive/ArchiveDetailPage.css`
+- `src/features/archive/ArchiveDetailPage.test.tsx`
+- `src/features/albums/AlbumListPage.tsx`
+- `src/features/albums/AlbumListPage.css`
+- `src/features/albums/AlbumListPage.test.tsx`
+- `src/features/backstage/BackstagePage.tsx`
+- `src/features/backstage/BackstagePage.css`
+- `src/features/backstage/BackstagePage.test.tsx`
+- 三份状态 / 交接文档
+
+未完成事项：
+
+1. 当前分支尚未推送或合并；后续操作需由用户明确选择。
+2. UI 第 2 期仍应每次只迁移一个页面，不开始 EntityCard 或范围外业务改造。
+
+下一轮提示词：
+
+```text
+继续 RockRoll UI 重构。
+请在 E:\Code\RcokRoll 的 codex/ui-phase-2-slices 分支工作。
+只读取：
+- AGENTS.md
+- docs/PROJECT_STATUS.md
+- docs/NEXT_TASKS.md
+- docs/SESSION_HANDOFF.md
+- docs/UI_REFACTOR_PLAN.md
+- 下一次准备迁移的单个 feature 页面、测试和对应共享 UI 原语
+
+UI 第 2 期的 Archive Detail、Album List 与 Backstage 共享原语切片已按逻辑提交；当前分支尚未推送或合并。
+先核对分支状态，再从计划中选择一个未迁移页面，只迁移一个重复 hero / panel / heading 样式；先 RED 后 GREEN。
+不要扫描整个仓库，不运行 npm install，不新增 EntityCard，不修改 Supabase、Auth、导入、权限、Inbox 导航、一键导入或 match_existing。
 完成后中文总结。
 ```
 

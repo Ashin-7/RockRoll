@@ -900,3 +900,83 @@ npm run build
 - `src/features/archive/ArchiveDetailPage.test.tsx`
 
 不要运行 `npm install`，不要修改 Supabase、Auth、导入、Inbox 导航、一键导入或 `match_existing`，不要开发艺人列表。
+
+## 当前任务索引（2026-07-20，Archive Detail hero 迁移后）
+
+已完成：
+
+- Albums 集合与曲风下拉选项不再被全局裸按钮兼容样式覆盖。
+- Archive Detail hero 已迁移到 `Panel` / `SectionHeading`，结构测试完成先红后绿。
+- 真实公开 Archive Detail 只读浏览器冒烟通过，没有水平溢出。
+
+下一步只执行：
+
+1. 按 UI 第 2 期继续一次迁移一个页面。
+2. 优先迁移 `AlbumListPage` hero 与 summary 到 `Panel` / `StatCard`，保留刚修复的两个筛选下拉和现有集合加载行为。
+3. 先补结构失败测试，再做最小 JSX / CSS 替换，运行 Albums 与 UI 原语回归及 production build。
+
+推荐下一轮只读取 `src/components/ui` 与 `src/features/albums/AlbumListPage.{tsx,css,test.tsx}`；不要修改 Supabase、Auth、导入或权限语义，不运行 `npm install`。
+
+## 当前任务索引（2026-07-20，Album List hero / summary 迁移后）
+
+已完成：
+
+- `AlbumListPage` hero / summary 已迁移到 `Panel` / `StatCard`，结构测试完成先红后绿。
+- Albums 集合与曲风筛选修复、集合加载、分页及说明展开行为保持不变。
+- Albums + UI 原语 4 个测试文件、46 个用例与 production build 通过；桌面和移动端只读视觉冒烟通过。
+
+下一步只执行：
+
+1. 先审查当前 `main` 未提交 UI 切片，避免夹带范围外改动；未经用户要求不要提交或推送。
+2. 继续 UI 第 2 期时仍每次只迁移一个页面，并从 `docs/UI_REFACTOR_PLAN.md` 选择下一个重复 hero / panel 最明显的页面。
+3. 下一页继续先补结构失败测试，再做最小 JSX / CSS 替换；不要改变业务数据流、权限或导入语义。
+
+推荐下一轮只读取三份状态 / 交接文档、`docs/UI_REFACTOR_PLAN.md`、`src/components/ui` 与选定的单个页面及测试；不要运行 `npm install`。
+
+## 当前任务索引（2026-07-20，Backstage hero 迁移后）
+
+已完成：
+
+- Backstage 左侧 hero 已迁移到 `Panel` / `SectionHeading`，右侧 amp panel 和下方内容保持不变。
+- Backstage + UI 原语 2 个测试文件、8 个用例及 production build 通过。
+- `/#backstage` 桌面和移动端只读视觉冒烟通过，无横向溢出。
+
+下一步只执行：
+
+1. 按 TDD 只把 `BackstagePage` 的 3 个 `signal-card` 迁移到既有 `StatCard`。
+2. 保留 `archiveSignals` 数据结构、三列/单列响应式布局、文字内容和顺序，不迁移 tape / draft cards，不修改任何业务数据流。
+3. 先补结构失败测试，再做最小 JSX / CSS 替换，运行 Backstage + UI 原语定向测试、production build 和只读视觉冒烟。
+
+推荐下一轮只读取三份状态 / 交接文档、`src/components/ui/StatCard.*` 与 `src/features/backstage/BackstagePage.{tsx,css,test.tsx}`；不要运行 `npm install`。
+
+## 当前任务索引（2026-07-22，Backstage signal cards 迁移后）
+
+已完成：
+
+- 3 个 `signal-card` 已迁移到共享 `StatCard`，结构测试完成先红后绿。
+- `archiveSignals` 数据、文字和顺序保持不变；桌面三列、移动端单列布局均已验证。
+- Backstage + UI 原语 2 个测试文件、8 个用例、production build 与只读视觉冒烟通过。
+
+下一步只执行：
+
+1. 先审查当前 `main` 未提交 UI 切片，避免夹带范围外改动；未经用户要求不要提交或推送。
+2. 按 TDD 只把 Backstage 的两组 `.section-heading` 标题组合迁移到既有 `SectionHeading`，保留 tape / draft cards 的结构、数据和布局。
+3. 不新增 `EntityCard`，不修改 amp panel、业务数据流、权限或导入语义；运行 Backstage + UI 原语定向测试、production build 和只读视觉冒烟。
+
+推荐下一轮只读取三份状态 / 交接文档、`src/components/ui/SectionHeading.*` 与 `src/features/backstage/BackstagePage.{tsx,css,test.tsx}`；不要运行 `npm install`。
+
+## 当前任务索引（2026-07-22，Backstage section headings 迁移与提交后）
+
+已完成：
+
+- Backstage hero、3 个 signal cards、recent tapes / import inbox 两组标题均已迁移到既有共享显示原语。
+- tape / draft cards、数据、顺序和响应式布局保持不变；未新增 `EntityCard`。
+- 当前提交分支为 `codex/ui-phase-2-slices`；本地 `main` 与既有 `ui/tokens-rebuild` worktree 未被强行切换或清理。
+
+下一步只执行：
+
+1. 先核对 `codex/ui-phase-2-slices` 与本地 `main` 的提交关系；未经用户要求不要推送、合并或删除 worktree。
+2. 如继续 UI 第 2 期，从计划中选择一个尚未迁移的单页面，只处理一个重复 hero / panel / heading 样式。
+3. 继续先 RED 后 GREEN，不改变 Supabase、Auth、导入、权限、Inbox 导航、一键导入或 `match_existing`。
+
+推荐下一轮只读取三份状态 / 交接文档、`docs/UI_REFACTOR_PLAN.md`、选定页面及对应共享原语；不要扫描整个仓库，不运行 `npm install`。
