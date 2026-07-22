@@ -18,7 +18,9 @@ const song: SongDetail = {
 
 describe('SongDetailPage', () => {
   it('loads and renders a song detail', async () => {
-    renderWithI18n(<SongDetailPage onLoadSong={vi.fn().mockResolvedValue(song)} songId="song-1" />);
+    const { container } = renderWithI18n(
+      <SongDetailPage onLoadSong={vi.fn().mockResolvedValue(song)} songId="song-1" />,
+    );
 
     expect(screen.getByText('Loading song detail...')).toBeInTheDocument();
     expect(await screen.findByText('Little Wing')).toBeInTheDocument();
@@ -28,6 +30,17 @@ describe('SongDetailPage', () => {
     expect(screen.getByText('1967')).toBeInTheDocument();
     expect(screen.getByText('92')).toBeInTheDocument();
     expect(screen.getByText('Work on phrasing.')).toBeInTheDocument();
+    expect(container.querySelectorAll('.song-detail-notes > .ui-panel--card')).toHaveLength(2);
+  });
+
+  it('renders the song hero with shared display primitives', async () => {
+    renderWithI18n(<SongDetailPage onLoadSong={vi.fn().mockResolvedValue(song)} songId="song-1" />);
+
+    const heading = await screen.findByRole('heading', { level: 1, name: 'Little Wing' });
+    const hero = heading.closest('header');
+
+    expect(hero).toHaveClass('ui-panel', 'ui-panel--hero', 'song-detail-hero');
+    expect(heading.closest('.ui-section-heading')).toBeInTheDocument();
   });
 
   it('renders not found when the song cannot be loaded', async () => {

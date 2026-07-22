@@ -39,6 +39,16 @@ describe('LibraryPage', () => {
     expect(screen.getByText('Optional link')).toBeInTheDocument();
   });
 
+  it('renders the library hero with shared display primitives', () => {
+    renderWithI18n(<LibraryPage />);
+
+    const heading = screen.getByRole('heading', { level: 1, name: 'Library' });
+    const hero = heading.closest('header');
+
+    expect(hero).toHaveClass('ui-panel', 'ui-panel--hero', 'library-hero');
+    expect(heading.closest('.ui-section-heading')).toBeInTheDocument();
+  });
+
   it('loads and renders media assets', async () => {
     renderWithI18n(<LibraryPage onLoadMediaAssets={vi.fn().mockResolvedValue(mediaAssets)} />);
 
@@ -47,7 +57,10 @@ describe('LibraryPage', () => {
     expect(screen.getByText('Assets filed')).toBeInTheDocument();
     const totalAssetsCard = screen.getByText('Assets filed').closest('article');
     expect(totalAssetsCard).not.toBeNull();
+    expect(totalAssetsCard).toHaveClass('ui-stat-card');
     expect(within(totalAssetsCard as HTMLElement).getByText('1')).toBeInTheDocument();
+    expect(screen.getByText('Linked assets').closest('article')).toHaveClass('ui-stat-card');
+    expect(screen.getByText('Media types').closest('article')).toHaveClass('ui-stat-card');
     expect(screen.getByRole('columnheader', { name: 'Asset' })).toBeInTheDocument();
     expect(screen.getByRole('columnheader', { name: 'Storage' })).toBeInTheDocument();
     expect(screen.getByRole('columnheader', { name: 'Linked entity' })).toBeInTheDocument();

@@ -291,14 +291,14 @@ export function AlbumDetailPage({
           </dl>
 
           <div className="album-detail-panels">
-            <section className="album-detail-panel">
+            <Panel as="section" className="album-detail-panel" variant="card">
               <h2>{t('albums.notesSection')}</h2>
               <p>{album.notes || t('albums.noNotes')}</p>
-            </section>
-            <section className="album-detail-panel">
+            </Panel>
+            <Panel as="section" className="album-detail-panel" variant="card">
               <h2>{t('albumDetail.relatedSection')}</h2>
               <p>{t('albumDetail.relatedHint')}</p>
-            </section>
+            </Panel>
           </div>
         </>
       ) : null}

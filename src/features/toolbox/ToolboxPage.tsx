@@ -1,5 +1,5 @@
 import { ChangeEvent, useState } from 'react';
-import { Field } from '../../components/ui';
+import { Field, Panel, SectionHeading } from '../../components/ui';
 import { useI18n } from '../../i18n/I18nProvider';
 import { createMusicXml as createMusicXmlDefault, getMusicXmlFileName as getMusicXmlFileNameDefault } from './musicxml.service';
 import { readPdfSnapshot as readPdfSnapshotDefault } from './pdf.service';
@@ -75,14 +75,18 @@ export function ToolboxPage({
 
   return (
     <section className="toolbox-page">
-      <header className="toolbox-hero">
+      <Panel as="header" className="toolbox-hero" variant="hero">
         <div>
-          <p className="eyebrow">{t('toolbox.eyebrow')}</p>
-          <h1>{t('toolbox.title')}</h1>
+          <SectionHeading
+            as="h1"
+            className="toolbox-hero__heading"
+            eyebrow={t('toolbox.eyebrow')}
+            title={t('toolbox.title')}
+          />
           <p className="toolbox-hero__description">{t('toolbox.description')}</p>
         </div>
         <p className="toolbox-local-badge">{t('toolbox.localOnly')}</p>
-      </header>
+      </Panel>
 
       <ol className="toolbox-steps" aria-label={t('toolbox.title')}>
         <li>{t('toolbox.stepInput')}</li>
@@ -91,7 +95,7 @@ export function ToolboxPage({
       </ol>
 
       <div className="toolbox-workbench">
-        <section className="toolbox-input-panel">
+        <Panel as="section" className="toolbox-input-panel" variant="card">
           <span className="toolbox-panel-label">PDF / TAB</span>
           <Field label={t('toolbox.inputLabel')} hint={t('toolbox.inputHint')}>
             <input accept="application/pdf,.pdf" id="toolbox-pdf-file" type="file" onChange={handleFileChange} />
@@ -113,9 +117,9 @@ export function ToolboxPage({
             <span />
             <span />
           </div>
-        </section>
+        </Panel>
 
-        <aside className="toolbox-output-panel">
+        <Panel as="aside" className="toolbox-output-panel" variant="card">
           <span className="toolbox-panel-label">MUSICXML / GP</span>
           <h2>{t('toolbox.outputLabel')}</h2>
           <p>{t('toolbox.outputDescription')}</p>
@@ -163,7 +167,7 @@ export function ToolboxPage({
               ) : null}
             </div>
           ) : null}
-        </aside>
+        </Panel>
       </div>
     </section>
   );

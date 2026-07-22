@@ -3,23 +3,14 @@
   gap: var(--space-8);
 }
 
-.practice-history-hero {
-  border: 1px solid var(--color-border);
-  border-radius: calc(var(--radius-panel) * 1.4);
-  background:
-    linear-gradient(135deg, var(--color-bg-panel-elevated), var(--color-bg-panel-elevated)),
-    repeating-linear-gradient(120deg, var(--color-fg-subtle) 0 1px, transparent 1px 10px);
-  box-shadow: var(--shadow-stage);
-  padding: clamp(1.5rem, 4vw, 3.5rem);
+.practice-history-hero__heading {
+  margin-bottom: 0;
 }
 
-.practice-history-hero h1 {
-  margin: var(--space-2) 0 0;
-  font-family: var(--font-display);
+.practice-history-hero__heading h1 {
   font-size: clamp(3rem, 7vw, 6rem);
   letter-spacing: -0.06em;
   line-height: 0.9;
-  text-transform: uppercase;
 }
 
 .practice-session-entry {
@@ -185,10 +176,6 @@
 .practice-statistics {
   display: grid;
   gap: var(--space-4);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-panel);
-  background: var(--color-bg-panel);
-  padding: var(--space-6);
 }
 
 .practice-statistics h2 {

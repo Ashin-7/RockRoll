@@ -19,13 +19,29 @@ describe('ArtistDetailPage', () => {
     renderWithI18n(<ArtistDetailPage artistId="artist-1" onLoadArtist={vi.fn().mockResolvedValue(artist)} />);
 
     expect(screen.getByText('Loading artist detail...')).toBeInTheDocument();
-    expect(await screen.findByText('Jimi Hendrix')).toBeInTheDocument();
+    const heroHeading = await screen.findByRole('heading', { level: 1, name: 'Jimi Hendrix' });
+    const hero = heroHeading.closest('header');
+
+    expect(hero).toHaveClass('artist-detail-hero', 'ui-panel', 'ui-panel--hero');
+    expect(heroHeading.closest('.ui-section-heading')).toBeInTheDocument();
     expect(screen.getByText('US')).toBeInTheDocument();
     expect(screen.getByText('Timeline')).toBeInTheDocument();
     expect(screen.getByText('Related')).toBeInTheDocument();
     expect(screen.getByText('1942')).toBeInTheDocument();
     expect(screen.getByText('1970')).toBeInTheDocument();
     expect(screen.getByText('Electric blues vocabulary.')).toBeInTheDocument();
+
+    const informationPanels = screen.getAllByRole('heading', { level: 2 }).map((heading) => heading.closest('section'));
+
+    expect(informationPanels).toHaveLength(3);
+    expect(informationPanels.map((panel) => panel?.querySelector('h2')?.textContent)).toEqual([
+      'Timeline',
+      'Notes',
+      'Related',
+    ]);
+    informationPanels.forEach((panel) => {
+      expect(panel).toHaveClass('artist-detail-panel', 'ui-panel', 'ui-panel--card');
+    });
   });
 
   it('renders not found when the artist cannot be loaded', async () => {

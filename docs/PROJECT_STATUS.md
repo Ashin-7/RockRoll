@@ -1342,3 +1342,109 @@ rebase 前结果：4 个测试文件、19 个用例通过；生产构建通过�
 - 结构测试按 TDD 先因共享标题缺失而失败，迁移后 Backstage 定向测试通过；production build 与目标文件 `git diff --check` 通过，仅保留既有 chunk size 和 LF/CRLF 提示。
 - 为避免直接在领先远端 21 个提交的本地 `main` 上继续提交，当前工作已切换到 `codex/ui-phase-2-slices`；既有 `ui/tokens-rebuild` worktree 保持干净且未修改。
 - 未运行 `npm install`，未新增 `EntityCard`，未修改 Supabase、Auth、导入、权限、Inbox 导航、一键导入或 `match_existing`，未推送远端。
+
+## 追加完成：Song Detail hero 原语迁移（2026-07-22）
+
+- `SongDetailPage` hero 已按 TDD 迁移到 `Panel as="header" variant="hero"` 与 `SectionHeading as="h1"`。
+- 状态标签、编辑 / 删除动作、加载与错误状态、编辑表单、数据读取和移动端纵向布局均未改变；未迁移按钮体系，未新增 `EntityCard`。
+- 删除共享原语已承担的 hero 边框、圆角、背景、阴影、内边距及通用标题样式，只保留详情页标题尺寸、artist 文案、动作区和响应式布局规则。
+- 新增结构测试先因共享原语缺失而失败；迁移后 Songs + UI 原语 4 个测试文件、31 个用例通过，production build 通过，仅保留既有 chunk size 警告。
+- 本地 `/#songs` 可正常打开且控制台无 warning / error；Guest 环境歌曲数为 0，无法进入真实详情页，因此未声称完成 Song Detail 桌面 / 窄屏视觉验收。
+- 未运行 `npm install`，未修改 Supabase、Auth、导入、权限、Inbox 导航、一键导入或 `match_existing`，未提交或推送。
+
+## 追加完成：Library 统计卡与 Artist List hero 原语迁移（2026-07-22）
+
+- `LibraryPage` 的 3 项媒体统计已按 TDD 迁移到既有 `StatCard`；统计数据、文案、顺序和响应式网格保持不变，表单、表格与媒体 CRUD 未修改。
+- `ArtistListPage` hero 已按 TDD 迁移到 `Panel as="header" variant="hero"` 与 `SectionHeading as="h1"`，艺人总数已迁移到 `StatCard align="right"`；新增表单、列表加载和表格未修改。
+- 两个结构测试均先因共享原语缺失出现预期 RED，迁移后共享 UI 与当前未提交页面共 6 个测试文件、45 个用例通过。
+- production build 与目标文件 `git diff --check` 通过；仅保留既有 chunk size 与 Windows LF/CRLF 提示。
+- `/#library` 在 `1280x720` 为三列统计卡，在 `390x844` 为单列；两个视口均无横向溢出，控制台无 warning / error。
+- `ArtistListPage` 当前没有可访问的 hash 路由，`#artists` 会回落到 Backstage，因此未为视觉验收临时改路由或伪造页面。
+- 未运行 `npm install`，未修改 Supabase、Auth、导入、权限、Inbox 导航、一键导入或 `match_existing`，未提交或推送。
+
+## 追加完成：Practice History hero 原语迁移（2026-07-22）
+
+- 在核对未提交 Song Detail 切片后，选择 `PracticeHistoryPage` 作为下一张单页面切片。
+- Practice History hero 已按 TDD 迁移到 `Panel as="header" variant="hero"` 与 `SectionHeading as="h1"`。
+- 删除共享原语已承担的边框、圆角、背景、阴影、内边距及通用标题样式，只保留页面标题尺寸和间距覆盖。
+- 练习 session 加载、登录态、表单、统计、筛选、排序、编辑、删除和响应式列表均未修改；未新增 `EntityCard`。
+- 新增结构测试先因共享原语结构缺失而失败；迁移后 Songs、Practice History 与 UI 原语共 5 个测试文件、42 个用例通过，production build 通过，仅保留既有 chunk size 警告。
+- 本地 `/#practice` 在 `1280x720` 与 `390x844` 完成只读视觉冒烟，hero 无双重表面或横向溢出；控制台仅有既有 `/favicon.ico` 404，无应用 warning。
+- 未运行 `npm install`，未修改 Supabase、Auth、导入、权限、Inbox 导航、一键导入或 `match_existing`，未提交或推送。
+
+## 追加完成：Toolbox hero 原语迁移（2026-07-22）
+
+- 在核对 Song Detail 与 Practice History 未提交切片后，选择静态 `ToolboxPage` 作为下一张低风险单页面切片。
+- Toolbox hero 已按 TDD 迁移到 `Panel as="header" variant="hero"` 与 `SectionHeading as="h1"`。
+- 删除共享原语已承担的 hero 表面和通用标题样式，只保留两列/单列布局、标题尺寸、说明与 local-only badge 样式。
+- PDF 选择、本地分析、MusicXML 下载、节奏识别状态、错误重试和响应式 workbench 均未修改；未新增 `EntityCard`。
+- 结构测试先因共享原语结构缺失而失败；迁移后 Songs、Practice History、Toolbox 与 UI 原语共 4 个测试文件、31 个用例通过，production build 通过，仅保留既有 chunk size 警告。
+- 本地 `/#toolbox` 在 `1280x720` 与 `390x844` 完成只读视觉冒烟，两种视口均无横向溢出，控制台无 warning / error；未选择或上传文件。
+- 未运行 `npm install`，未修改 Supabase、Auth、导入、权限、Inbox 导航、一键导入或 `match_existing`，未提交或推送。
+
+## 追加完成：Library hero 原语迁移（2026-07-22）
+
+- 在保留 Song Detail、Practice History 与 Toolbox 三个未提交切片的前提下，选择 `LibraryPage` 作为下一张单页面 UI 切片。
+- Library hero 已按 TDD 迁移到 `Panel as="header" variant="hero"` 与 `SectionHeading as="h1"`。
+- 三项媒体统计、媒体 CRUD、加载 / 错误状态、表单、表格和响应式工作区均未修改；未迁移统计卡，未新增 `EntityCard`。
+- 结构测试先因共享原语结构缺失而失败；迁移后四个未提交页面与 UI 原语共 5 个测试文件、39 个用例通过。
+- production build 与目标文件 `git diff --check` 通过；仅保留既有 chunk size 与 Windows LF/CRLF 提示。
+- 本地 `/#library` 在 `1280x720` 与 `390x844` 完成只读视觉冒烟，两种视口均无横向溢出；控制台仅有既有 `/favicon.ico` 404。
+- 未运行 `npm install`，未修改 Supabase、Auth、导入、权限、Inbox 导航、一键导入或 `match_existing`，未提交或推送。
+
+## 追加完成：Artist Detail hero 原语迁移（2026-07-22）
+
+- `ArtistDetailPage` hero 已按 TDD 迁移到既有 `Panel as="header" variant="hero"` 与 `SectionHeading as="h1"`。
+- 编辑 / 删除按钮、编辑表单、数据加载、保存、删除确认与返回艺人列表路由行为保持不变；未迁移按钮体系，未新增 `EntityCard`。
+- 删除由共享 `Panel` 重复承担的 hero 边框、圆角、背景、阴影和内边距，只保留详情页布局、标题尺寸与响应式规则。
+- 新增结构测试先因共享原语结构缺失出现预期 RED；迁移后 `ArtistDetailPage.test.tsx` 6 个用例通过，production build 通过。
+- `git diff --check` 通过，仅提示 Windows LF/CRLF 转换；production build 仍只有既有主 chunk 超过 500 kB 警告。
+- 当前没有可直接访问 Artist Detail 的已知路由 / 数据条件，因此未伪造数据做视觉验收；未运行完整测试或 `npm install`。
+- 当前分支仍为 `codex/ui-phase-2-slices`；既有未提交 UI 切片和三份状态文档保持未提交，未推送或合并。
+
+## 追加完成：Artist Detail 只读信息面板原语迁移（2026-07-22）
+
+- `ArtistDetailPage` 的 Timeline、Notes、Related 三个只读信息面板已按 TDD 迁移到既有 `Panel as="section" variant="card"`。
+- 三个标题、正文、渲染顺序及 `.artist-detail-panels` 的桌面三列 / 窄屏单列布局保持不变。
+- 删除共享 `Panel` 已承担的面板边框、背景、圆角和内边距重复 CSS；统计网格、编辑表单和按钮体系均未迁移。
+- 新增结构断言先因缺少 `ui-panel ui-panel--card` 出现预期 RED；迁移后 `ArtistDetailPage.test.tsx` 6 个用例通过。
+- production build 通过，仅保留既有主 chunk 超过 500 kB 警告；未运行完整测试或 `npm install`。
+- 未新增 `EntityCard`，未修改 Supabase、Auth、导入、权限、Inbox 导航、一键导入或 `match_existing`；当前切片仍未提交或推送。
+
+## 追加完成：Album Detail 只读信息面板原语迁移（2026-07-22）
+
+- 从 UI 计划中选择 `AlbumDetailPage` 作为新的单页面小切片，仅迁移 Archive notes 与 Related 两个只读信息面板。
+- 两个面板已按 TDD 迁移到既有 `Panel as="section" variant="card"`，标题、正文、顺序及桌面两列 / 窄屏单列布局保持不变。
+- 删除共享 `Panel` 已承担的面板边框、背景、圆角和内边距重复 CSS；统计网格、编辑表单、按钮和权限判断均未修改。
+- 新增结构断言先因找不到 `ui-panel--card` 出现预期 RED；迁移后 Album Detail 与共享 UI 共 2 个测试文件、11 个用例通过。
+- production build 通过，仅保留既有主 chunk 超过 500 kB 警告；未运行完整测试、浏览器视觉验收或 `npm install`。
+- 未新增 `EntityCard`，未修改 Supabase、Auth、导入、权限、Inbox 导航、一键导入或 `match_existing`；当前全部 UI 切片仍未提交或推送。
+
+## 追加完成：Practice History 统计区域 Panel 迁移（2026-07-22）
+
+- 在不继续扩大 Album Detail 的前提下，选择 `PracticeHistoryPage` 的 Practice Statistics 外层区域作为下一单页面小切片。
+- 统计区域已按 TDD 迁移到既有 `Panel as="section" variant="card"`；五项统计数据、`dl/dt/dd` 语义、排列顺序与五列 / 单列响应式网格保持不变。
+- 删除共享 `Panel` 已承担的边框、背景、圆角和内边距重复 CSS；统计项卡片、登录态、表单、筛选、排序和 CRUD 均未修改。
+- `Panel` 仅补充标准 `aria-labelledby` 属性类型，以保留统计区域原有标题关联；组件渲染逻辑和视觉样式未改。
+- 新增结构断言先因统计区域缺少 `ui-panel--card` 出现预期 RED；迁移后 Practice History 与共享 UI 共 2 个测试文件、18 个用例通过。
+- production build 通过，仅保留既有主 chunk 超过 500 kB 警告；未运行完整测试、浏览器视觉验收或 `npm install`。
+- 未新增 `EntityCard`，未修改 Supabase、Auth、导入、权限、Inbox 导航、一键导入或 `match_existing`；当前全部 UI 切片仍未提交或推送。
+
+## 追加完成：Toolbox workbench 双面板原语迁移（2026-07-22）
+
+- 在不继续扩大 Practice History 的前提下，选择 `ToolboxPage` 的 workbench 输入 / 输出双面板作为下一单页面小切片。
+- 输入 `<section>` 与输出 `<aside>` 已按 TDD 迁移到既有 `Panel variant="card"`，语义元素、内容顺序和两列 / 单列响应式布局保持不变。
+- 删除两个面板重复的边框与圆角 CSS；各自背景、响应式内边距、文件选择、本地分析、MusicXML 下载、错误状态和节奏识别均未修改。
+- 新增结构断言先因 workbench 下找不到 card Panel 出现预期 RED；迁移后 Toolbox 与共享 UI 共 2 个测试文件、13 个用例通过。
+- production build 通过，仅保留既有主 chunk 超过 500 kB 警告；`/#toolbox` 在 `1280x720` 与 `390x844` 完成只读视觉冒烟，双面板分别为左右 / 上下布局，无横向溢出。
+- 浏览器控制台无应用 warning，仅有既有 `/favicon.ico` 404；未选择或上传文件，未运行完整测试或 `npm install`。
+- 未新增 `EntityCard`，未修改 Supabase、Auth、导入、权限、Inbox 导航、一键导入或 `match_existing`；当前全部 UI 切片仍未提交或推送。
+
+## 追加完成：Song Detail Notes / Related 双面板原语迁移（2026-07-22）
+
+- 在不继续扩大 Toolbox 的前提下，选择 `SongDetailPage` 的 Notes / Related 两个只读内容块作为下一单页面小切片。
+- Notes 内容块与 Related `aside` 已按 TDD 迁移到既有 `Panel variant="card"`；标题、正文、顺序、Related 可访问名称及两列 / 单列响应式布局保持不变。
+- 删除两个内容块重复的边框、背景、圆角和内边距 CSS；三项元数据、状态标签、加载 / 错误状态、编辑表单和歌曲 CRUD 均未修改。
+- 新增结构断言先因 Notes 区域找不到 card Panel 出现预期 RED；迁移后 Song Detail 与共享 UI 共 2 个测试文件、14 个用例通过。
+- production build 通过，仅保留既有主 chunk 超过 500 kB 警告；本地没有可访问的歌曲详情数据，因此未伪造浏览器视觉结论。
+- 未运行完整测试或 `npm install`，未新增 `EntityCard`，未修改 Supabase、Auth、导入、权限、Inbox 导航、一键导入或 `match_existing`；当前全部 UI 切片仍未提交或推送。

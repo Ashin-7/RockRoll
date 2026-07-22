@@ -1,4 +1,5 @@
 import { FormEvent, useEffect, useState } from 'react';
+import { Panel, SectionHeading } from '../../components/ui';
 import { useI18n } from '../../i18n/I18nProvider';
 import { MessageKey } from '../../i18n/messages';
 import { deleteSong, getSongById, updateSong } from './songs.service';
@@ -149,10 +150,14 @@ export function SongDetailPage({
 
       {!isLoading && !error && song ? (
         <>
-          <div className="song-detail-hero">
-            <div>
-              <p className="eyebrow">{t('songDetail.eyebrow')}</p>
-              <h1>{song.title}</h1>
+          <Panel as="header" className="song-detail-hero" variant="hero">
+            <div className="song-detail-hero__copy">
+              <SectionHeading
+                as="h1"
+                className="song-detail-hero__heading"
+                eyebrow={t('songDetail.eyebrow')}
+                title={song.title}
+              />
               <p>{song.artistName}</p>
             </div>
             <div className="song-detail-hero__actions">
@@ -164,7 +169,7 @@ export function SongDetailPage({
                 {t('songDetail.delete')}
               </button>
             </div>
-          </div>
+          </Panel>
 
           {isEditing ? (
             <form className="song-detail-edit-form" onSubmit={handleUpdateSong}>
@@ -255,14 +260,19 @@ export function SongDetailPage({
           </dl>
 
           <section className="song-detail-notes">
-            <div>
+            <Panel variant="card">
               <h2>{t('songDetail.notes')}</h2>
               <p>{song.notes || t('songDetail.noNotes')}</p>
-            </div>
-            <aside className="song-detail-related" aria-label={t('songDetail.related')}>
+            </Panel>
+            <Panel
+              as="aside"
+              className="song-detail-related"
+              variant="card"
+              aria-label={t('songDetail.related')}
+            >
               <h2>{t('songDetail.related')}</h2>
               <p>{t('songDetail.relatedHint')}</p>
-            </aside>
+            </Panel>
           </section>
         </>
       ) : null}

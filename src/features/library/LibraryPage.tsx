@@ -1,4 +1,5 @@
 import { FormEvent, useEffect, useState } from 'react';
+import { Panel, SectionHeading, StatCard } from '../../components/ui';
 import { useI18n } from '../../i18n/I18nProvider';
 import {
   createMediaAsset,
@@ -190,26 +191,19 @@ export function LibraryPage({
 
   return (
     <section className="library-page">
-      <div className="library-hero">
-        <div>
-          <p className="eyebrow">{t('library.eyebrow')}</p>
-          <h1>{t('library.title')}</h1>
-        </div>
+      <Panel as="header" className="library-hero" variant="hero">
+        <SectionHeading
+          as="h1"
+          className="library-hero__heading"
+          eyebrow={t('library.eyebrow')}
+          title={t('library.title')}
+        />
         <div className="library-signals" aria-label={t('library.assetIndex')}>
-          <article>
-            <span>{t('library.totalAssets')}</span>
-            <strong>{mediaAssets.length}</strong>
-          </article>
-          <article>
-            <span>{t('library.linkedAssets')}</span>
-            <strong>{linkedAssetCount}</strong>
-          </article>
-          <article>
-            <span>{t('library.mediaTypesFiled')}</span>
-            <strong>{mediaTypeCount}</strong>
-          </article>
+          <StatCard label={t('library.totalAssets')} value={mediaAssets.length} />
+          <StatCard label={t('library.linkedAssets')} value={linkedAssetCount} />
+          <StatCard label={t('library.mediaTypesFiled')} value={mediaTypeCount} />
         </div>
-      </div>
+      </Panel>
 
       <section className="library-categories" aria-label={t('library.librarySectionsLabel')}>
         <h2 className="library-section-title">{t('library.librarySectionsLabel')}</h2>

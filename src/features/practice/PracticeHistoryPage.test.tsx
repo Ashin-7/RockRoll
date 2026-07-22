@@ -24,12 +24,13 @@ describe('PracticeHistoryPage', () => {
       },
     ]);
 
-    renderWithI18n(<PracticeHistoryPage onLoadSessions={onLoadSessions} />);
+    const { container } = renderWithI18n(<PracticeHistoryPage onLoadSessions={onLoadSessions} />);
 
     expect(screen.getByText('Practice History')).toBeInTheDocument();
     expect(screen.getByText('Loading practice history...')).toBeInTheDocument();
     expect(await screen.findByRole('heading', { name: 'Little Wing' })).toBeInTheDocument();
     expect(screen.getByText('Practice Statistics')).toBeInTheDocument();
+    expect(container.querySelector('section.practice-statistics.ui-panel--card')).toBeInTheDocument();
     expect(screen.getByText('Total sessions')).toBeInTheDocument();
     expect(screen.getByText('Total minutes')).toBeInTheDocument();
     expect(screen.getAllByText('45 min')).toHaveLength(3);
@@ -47,6 +48,16 @@ describe('PracticeHistoryPage', () => {
     expect(screen.getByText('bends')).toBeInTheDocument();
     expect(screen.getByText('Verse rhythm and bends')).toBeInTheDocument();
     expect(onLoadSessions).toHaveBeenCalledWith();
+  });
+
+  it('renders the practice history hero with shared display primitives', () => {
+    renderWithI18n(<PracticeHistoryPage sessions={[]} />);
+
+    const heading = screen.getByRole('heading', { level: 1, name: 'Practice History' });
+    const hero = heading.closest('header');
+
+    expect(hero).toHaveClass('ui-panel', 'ui-panel--hero', 'practice-history-hero');
+    expect(heading.closest('.ui-section-heading')).toBeInTheDocument();
   });
 
   it('renders empty state when no practice records exist', () => {

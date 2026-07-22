@@ -23,21 +23,16 @@
   align-items: flex-end;
   justify-content: space-between;
   gap: var(--space-6);
-  border: 1px solid var(--color-border);
-  border-radius: calc(var(--radius-panel) * 1.4);
-  background:
-    linear-gradient(135deg, var(--color-bg-panel-elevated), var(--color-bg-panel-elevated)),
-    repeating-linear-gradient(90deg, var(--color-border) 0 1px, transparent 1px 1.2rem);
-  box-shadow: var(--shadow-stage);
-  padding: clamp(1.5rem, 4vw, 3.5rem);
 }
 
-.artist-detail-hero h1 {
+.artist-detail-hero__heading {
+  margin-bottom: 0;
+}
+
+.artist-detail-hero__heading .ui-section-heading__text h1 {
   margin: var(--space-2) 0;
-  font-family: var(--font-display);
   font-size: clamp(3.2rem, 8vw, 7rem);
   line-height: 0.85;
-  text-transform: uppercase;
 }
 
 .artist-detail-hero p:last-child,
@@ -175,8 +170,7 @@
   margin: 0;
 }
 
-.artist-detail-grid div,
-.artist-detail-panel {
+.artist-detail-grid div {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-panel);
   background: var(--color-bg-panel);

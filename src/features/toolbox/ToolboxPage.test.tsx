@@ -93,10 +93,21 @@ const singleRhythmAnalysis: TabScoreAnalysis = {
 };
 
 describe('ToolboxPage', () => {
-  it('renders the browser-local PDF tab workflow shell', () => {
+  it('renders the toolbox hero with shared display primitives', () => {
     renderWithI18n(<ToolboxPage />);
 
+    const heading = screen.getByRole('heading', { level: 1, name: 'PDF Tab Workbench' });
+    const hero = heading.closest('header');
+
+    expect(hero).toHaveClass('ui-panel', 'ui-panel--hero', 'toolbox-hero');
+    expect(heading.closest('.ui-section-heading')).toBeInTheDocument();
+  });
+
+  it('renders the browser-local PDF tab workflow shell', () => {
+    const { container } = renderWithI18n(<ToolboxPage />);
+
     expect(screen.getByRole('heading', { name: 'PDF Tab Workbench' })).toBeInTheDocument();
+    expect(container.querySelectorAll('.toolbox-workbench > .ui-panel--card')).toHaveLength(2);
     expect(screen.getByText('Your score stays in this browser. Nothing is uploaded.')).toBeInTheDocument();
     expect(screen.getByLabelText(/Guitar tab PDF/)).toHaveAttribute('accept', 'application/pdf,.pdf');
     expect(screen.getByText('MusicXML for Guitar Pro')).toBeInTheDocument();

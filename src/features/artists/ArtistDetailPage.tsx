@@ -1,4 +1,6 @@
 import { FormEvent, useEffect, useState } from 'react';
+import { Panel } from '../../components/ui/Panel';
+import { SectionHeading } from '../../components/ui/SectionHeading';
 import { useI18n } from '../../i18n/I18nProvider';
 import { ArtistDetail, UpdateArtistInput } from './artist.types';
 import { deleteArtist, getArtistById, updateArtist } from './artists.service';
@@ -156,10 +158,14 @@ export function ArtistDetailPage({
 
       {!isLoading && !error && artist ? (
         <>
-          <div className="artist-detail-hero">
+          <Panel as="header" className="artist-detail-hero" variant="hero">
             <div>
-              <p className="eyebrow">{t('artistDetail.eyebrow')}</p>
-              <h1>{artist.name}</h1>
+              <SectionHeading
+                as="h1"
+                className="artist-detail-hero__heading"
+                eyebrow={t('artistDetail.eyebrow')}
+                title={artist.name}
+              />
               <p>{artist.country || t('artistDetail.unknownCountry')}</p>
             </div>
             <div className="artist-detail-hero__actions">
@@ -170,7 +176,7 @@ export function ArtistDetailPage({
                 {t('artistDetail.delete')}
               </button>
             </div>
-          </div>
+          </Panel>
 
           {isEditing ? (
             <form className="artist-detail-edit-form" onSubmit={handleUpdateArtist}>
@@ -247,18 +253,18 @@ export function ArtistDetailPage({
               </dl>
 
               <div className="artist-detail-panels">
-                <section className="artist-detail-panel">
+                <Panel as="section" className="artist-detail-panel" variant="card">
                   <h2>{t('artistDetail.timelineSection')}</h2>
                   <p>{renderArtistActivity(artist)}</p>
-                </section>
-                <section className="artist-detail-panel">
+                </Panel>
+                <Panel as="section" className="artist-detail-panel" variant="card">
                   <h2>{t('artists.notes')}</h2>
                   <p>{artist.notes || t('artists.noNotes')}</p>
-                </section>
-                <section className="artist-detail-panel">
+                </Panel>
+                <Panel as="section" className="artist-detail-panel" variant="card">
                   <h2>{t('artistDetail.relatedSection')}</h2>
                   <p>{t('artistDetail.relatedHint')}</p>
-                </section>
+                </Panel>
               </div>
             </>
           ) : null}

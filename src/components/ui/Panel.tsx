@@ -7,6 +7,7 @@ interface PanelProps {
   variant?: 'panel' | 'card' | 'hero';
   as?: 'div' | 'section' | 'article' | 'aside' | 'header';
   'aria-label'?: string;
+  'aria-labelledby'?: string;
 }
 
 export function Panel({

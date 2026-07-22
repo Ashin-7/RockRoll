@@ -1,4 +1,5 @@
 import { FormEvent, useEffect, useState } from 'react';
+import { Panel, SectionHeading, StatCard } from '../../components/ui';
 import { useI18n } from '../../i18n/I18nProvider';
 import { ArtistSummary, CreateArtistInput } from './artist.types';
 import { createArtist, listArtists } from './artists.service';
@@ -123,16 +124,20 @@ export function ArtistListPage({
 
   return (
     <section className="artists-page">
-      <div className="artists-hero">
-        <div>
-          <p className="eyebrow">{t('artists.eyebrow')}</p>
-          <h1>{t('artists.title')}</h1>
-        </div>
-        <div className="artists-hero__summary">
-          <strong>{displayArtists.length}</strong>
-          <span>{t('artists.total')}</span>
-        </div>
-      </div>
+      <Panel as="header" className="artists-hero" variant="hero">
+        <SectionHeading
+          as="h1"
+          className="artists-hero__heading"
+          eyebrow={t('artists.eyebrow')}
+          title={t('artists.title')}
+        />
+        <StatCard
+          align="right"
+          className="artists-hero__summary"
+          label={t('artists.total')}
+          value={displayArtists.length}
+        />
+      </Panel>
 
       <form className="artists-add-form" onSubmit={handleCreateArtist}>
         <div className="artists-add-form__header">

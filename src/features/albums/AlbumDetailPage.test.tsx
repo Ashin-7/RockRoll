@@ -30,6 +30,7 @@ describe('AlbumDetailPage', () => {
     expect(screen.getByText('Album type')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Archive notes' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Related' })).toBeInTheDocument();
+    expect(container.querySelectorAll('section.album-detail-panel.ui-panel--card')).toHaveLength(2);
     expect(screen.getByText('Songs, media links, archive collections, and artist relationships will collect here as the MVP grows.')).toBeInTheDocument();
   });
 

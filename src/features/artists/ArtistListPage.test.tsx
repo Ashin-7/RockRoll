@@ -17,6 +17,14 @@ const realArtists: ArtistSummary[] = [
 ];
 
 describe('ArtistListPage', () => {
+  it('renders the artist hero and total with shared display primitives', () => {
+    const { container } = renderWithI18n(<ArtistListPage artists={realArtists} />);
+
+    expect(container.querySelector('header.artists-hero.ui-panel--hero')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: 'Artists' })).toBeInTheDocument();
+    expect(container.querySelector('article.artists-hero__summary.ui-stat-card--right')).toHaveTextContent('1');
+  });
+
   it('loads and renders artists from the provided loader', async () => {
     renderWithI18n(<ArtistListPage onLoadArtists={vi.fn().mockResolvedValue(realArtists)} />);
 

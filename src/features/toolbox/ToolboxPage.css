@@ -5,20 +5,20 @@
 
 .toolbox-hero {
   align-items: end;
-  border-bottom: 1px solid var(--color-border-strong);
   display: grid;
   gap: var(--space-6);
   grid-template-columns: minmax(0, 1fr) minmax(15rem, 22rem);
-  padding-bottom: var(--space-6);
 }
 
-.toolbox-hero h1,
 .toolbox-output-panel h2 {
   margin: 0;
 }
 
-.toolbox-hero h1 {
-  font-family: var(--font-display);
+.toolbox-hero__heading {
+  margin-bottom: var(--space-2);
+}
+
+.toolbox-hero__heading h1 {
   font-size: clamp(2.4rem, 7vw, 5.6rem);
   letter-spacing: -0.055em;
   line-height: 0.92;
@@ -30,6 +30,10 @@
   color: var(--color-paper-muted);
   line-height: 1.65;
   max-width: 42rem;
+}
+
+.toolbox-hero__description {
+  margin: 0;
 }
 
 .toolbox-local-badge {
@@ -71,8 +75,6 @@
 
 .toolbox-input-panel,
 .toolbox-output-panel {
-  border: 1px solid var(--color-border);
-  border-radius: 1.2rem;
   min-width: 0;
   padding: clamp(1rem, 3vw, 2rem);
 }

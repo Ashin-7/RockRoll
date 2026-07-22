@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Panel, SectionHeading } from '../../components/ui';
 import { useI18n } from '../../i18n/I18nProvider';
 import { listSongs } from '../songs/songs.service';
 import { SongSummary } from '../songs/song.types';
@@ -292,10 +293,14 @@ export function PracticeHistoryPage({
 
   return (
     <section className="practice-history-page">
-      <div className="practice-history-hero">
-        <p className="eyebrow">{t('practiceHistory.eyebrow')}</p>
-        <h1>{t('practiceHistory.title')}</h1>
-      </div>
+      <Panel as="header" className="practice-history-hero" variant="hero">
+        <SectionHeading
+          as="h1"
+          className="practice-history-hero__heading"
+          eyebrow={t('practiceHistory.eyebrow')}
+          title={t('practiceHistory.title')}
+        />
+      </Panel>
 
       {!hasProvidedSessions && isLoadingSession ? (
         <p className="practice-history-loading">{t('practiceHistory.authLoading')}</p>
@@ -335,7 +340,12 @@ export function PracticeHistoryPage({
         </section>
       ) : null}
 
-      <section className="practice-statistics" aria-labelledby="practice-statistics-title">
+      <Panel
+        as="section"
+        className="practice-statistics"
+        variant="card"
+        aria-labelledby="practice-statistics-title"
+      >
         <h2 id="practice-statistics-title">{t('practiceStatistics.title')}</h2>
         <dl className="practice-statistics__grid">
           {statisticItems.map((item) => (
@@ -345,7 +355,7 @@ export function PracticeHistoryPage({
             </div>
           ))}
         </dl>
-      </section>
+      </Panel>
 
       {error ? (
         <p className="practice-history-error" role="alert">
