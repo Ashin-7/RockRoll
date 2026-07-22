@@ -5,6 +5,7 @@ import {
   recentTapes,
 } from './backstage.mock';
 import './BackstagePage.css';
+import { Panel, SectionHeading, StatCard } from '../../components/ui';
 import { useI18n } from '../../i18n/I18nProvider';
 
 export function BackstagePage() {
@@ -13,11 +14,15 @@ export function BackstagePage() {
   return (
     <section className="backstage-page">
       <div className="backstage-hero">
-        <div className="backstage-hero__copy">
-          <p className="eyebrow">{t('backstage.hero.eyebrow')}</p>
-          <h1>{t('backstage.hero.title')}</h1>
+        <Panel as="header" className="backstage-hero__copy" variant="hero">
+          <SectionHeading
+            as="h1"
+            className="backstage-hero__heading"
+            eyebrow={t('backstage.hero.eyebrow')}
+            title={t('backstage.hero.title')}
+          />
           <p>{t('backstage.hero.description')}</p>
-        </div>
+        </Panel>
         <article className="amp-panel" aria-label={t('backstage.amp.ariaLabel')}>
           <div className="amp-panel__topline">
             <span className="rec-light" aria-hidden="true" />
@@ -49,20 +54,22 @@ export function BackstagePage() {
 
       <div className="signal-grid" aria-label={t('backstage.signals.ariaLabel')}>
         {archiveSignals.map((signal) => (
-          <article className="signal-card" key={signal.label}>
-            <p>{signal.label}</p>
-            <strong>{signal.value}</strong>
-            <span>{signal.detail}</span>
-          </article>
+          <StatCard
+            detail={signal.detail}
+            key={signal.label}
+            label={signal.label}
+            value={signal.value}
+          />
         ))}
       </div>
 
       <div className="backstage-columns">
         <article className="tape-stack">
-          <div className="section-heading">
-            <p className="eyebrow">{t('backstage.sections.recentTapes')}</p>
-            <h2>{t('backstage.sections.practiceEvidence')}</h2>
-          </div>
+          <SectionHeading
+            className="backstage-section-heading"
+            eyebrow={t('backstage.sections.recentTapes')}
+            title={t('backstage.sections.practiceEvidence')}
+          />
           {recentTapes.map((tape) => (
             <div className="tape-card" key={tape.title}>
               <div>
@@ -75,10 +82,11 @@ export function BackstagePage() {
         </article>
 
         <article className="inbox-board">
-          <div className="section-heading">
-            <p className="eyebrow">{t('backstage.sections.importInbox')}</p>
-            <h2>{t('backstage.sections.curate')}</h2>
-          </div>
+          <SectionHeading
+            className="backstage-section-heading"
+            eyebrow={t('backstage.sections.importInbox')}
+            title={t('backstage.sections.curate')}
+          />
           {importDrafts.map((draft) => (
             <div className="draft-card" key={`${draft.source}-${draft.title}`}>
               <span>{draft.type}</span>
