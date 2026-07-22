@@ -43,6 +43,14 @@ const albumCollections: AlbumCollectionSummary[] = [
 const albumCollectionOptions: AlbumCollectionOption[] = albumCollections.map(({ albums: _albums, ...collection }) => collection);
 
 describe('AlbumListPage', () => {
+  it('renders the album hero and total with shared display primitives', () => {
+    const { container } = renderWithI18n(<AlbumListPage albums={albums} />);
+
+    expect(container.querySelector('header.albums-hero.ui-panel--hero')).toBeInTheDocument();
+    expect(container.querySelector('article.albums-hero__summary.ui-stat-card--right')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: 'Albums' })).toBeInTheDocument();
+  });
+
   it('searches collection categories in the trigger input and selects from a floating list', async () => {
     const user = userEvent.setup();
     const secondCollection: AlbumCollectionSummary = {
@@ -77,6 +85,7 @@ describe('AlbumListPage', () => {
 
     expect(screen.getByRole('button', { name: 'Classic rock guide' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Folk essentials' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Classic rock guide' })).toHaveClass('ui-button-unstyled');
 
     await user.type(collectionFilter, 'folk');
 

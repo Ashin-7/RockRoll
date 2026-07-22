@@ -8,8 +8,6 @@
   align-items: flex-end;
   justify-content: space-between;
   gap: var(--space-6);
-  border-bottom: 1px solid var(--color-border);
-  padding: 0 0 var(--space-5);
 }
 
 .albums-hero h1 {
@@ -22,21 +20,8 @@
 
 .albums-hero__summary {
   min-width: 9rem;
-  border: 1px solid var(--color-border-strong);
-  border-radius: 0.75rem;
-  background: var(--color-bg-panel-deep);
-  padding: var(--space-3) var(--space-4);
-  text-align: right;
 }
 
-.albums-hero__summary strong {
-  display: block;
-  font-family: var(--font-display);
-  font-size: 2.6rem;
-  line-height: 1;
-}
-
-.albums-hero__summary span,
 .albums-loading,
 .albums-message {
   color: var(--color-paper-muted);

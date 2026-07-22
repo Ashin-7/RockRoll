@@ -1,4 +1,5 @@
 ﻿import { type FocusEvent, useEffect, useMemo, useRef, useState } from 'react';
+import { Panel, StatCard } from '../../components/ui';
 import { useI18n } from '../../i18n/I18nProvider';
 import { AlbumCollectionOption, AlbumCollectionPageInput, AlbumCollectionSummary, AlbumSummary } from './album.types';
 import { getAlbumCollectionById, listAlbumCollectionOptions, listAlbumCollections } from './albums.service';
@@ -363,16 +364,18 @@ export function AlbumListPage({
 
   return (
     <section className="albums-page">
-      <div className="albums-hero">
+      <Panel as="header" className="albums-hero" variant="hero">
         <div>
           <p className="eyebrow">{t('albums.eyebrow')}</p>
           <h1>{t('albums.title')}</h1>
         </div>
-        <div className="albums-hero__summary">
-          <strong>{totalAlbums}</strong>
-          <span>{t('albums.total')}</span>
-        </div>
-      </div>
+        <StatCard
+          align="right"
+          className="albums-hero__summary"
+          label={t('albums.total')}
+          value={totalAlbums}
+        />
+      </Panel>
 
       <section className="albums-toolbar" aria-label={t('albums.toolbarLabel')}>
         {!hasProvidedAlbums && collectionOptions.length > 0 ? (
@@ -398,7 +401,7 @@ export function AlbumListPage({
                   {filteredCollectionOptions.map((collection) => (
                     <button
                       type="button"
-                      className={`albums-dropdown-option${collection.id === selectedCollectionId ? ' is-selected' : ''}`}
+                      className={`ui-button-unstyled albums-dropdown-option${collection.id === selectedCollectionId ? ' is-selected' : ''}`}
                       key={collection.id}
                       onClick={() => selectCollectionFromDropdown(collection.id)}
                     >
@@ -432,7 +435,7 @@ export function AlbumListPage({
                 <div className="albums-dropdown-list" aria-label="Style options">
                   <button
                     type="button"
-                    className={`albums-dropdown-option${!selectedStyle ? ' is-selected' : ''}`}
+                    className={`ui-button-unstyled albums-dropdown-option${!selectedStyle ? ' is-selected' : ''}`}
                     onClick={() => selectStyleFromDropdown('')}
                   >
                     {t('albums.allStyles')}
@@ -440,7 +443,7 @@ export function AlbumListPage({
                   {filteredStyleOptions.map((styleName) => (
                     <button
                       type="button"
-                      className={`albums-dropdown-option${styleName === selectedStyle ? ' is-selected' : ''}`}
+                      className={`ui-button-unstyled albums-dropdown-option${styleName === selectedStyle ? ' is-selected' : ''}`}
                       key={styleName}
                       onClick={() => selectStyleFromDropdown(styleName)}
                     >
