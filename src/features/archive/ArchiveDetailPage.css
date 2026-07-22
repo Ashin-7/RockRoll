@@ -8,6 +8,10 @@
   gap: 0.75rem;
 }
 
+.archive-detail-hero__heading {
+  margin-bottom: 0;
+}
+
 .archive-detail-hero h1,
 .archive-detail-section-heading h2,
 .archive-detail-form h2,

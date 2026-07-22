@@ -1,10 +1,10 @@
 import { FormEvent, useEffect, useState } from 'react';
+import { Button, Panel, SectionHeading } from '../../components/ui';
 import { useI18n } from '../../i18n/I18nProvider';
 import { getCurrentUserImportRole } from '../inbox/inbox.service';
 import { ImportUserRole } from '../inbox/inbox.types';
 import { addArchiveItem, deleteArchiveItem, getArchiveCollectionById, updateArchiveItem } from './archive.service';
 import { ArchiveCollectionDetail, ArchiveItemSummary, CreateArchiveItemInput, UpdateArchiveItemInput } from './archive.types';
-import { Button } from '../../components/ui';
 import './ArchiveDetailPage.css';
 
 interface ArchiveDetailPageProps {
@@ -179,14 +179,18 @@ export function ArchiveDetailPage({
 
   return (
     <section className="archive-detail-page">
-      <header className="archive-detail-hero">
+      <Panel as="header" className="archive-detail-hero" variant="hero">
         <div>
           <a href="#archive">{t('archiveDetail.backToArchive')}</a>
-          <p className="eyebrow">{t('archiveDetail.eyebrow')}</p>
-          <h1>{collection.title}</h1>
+          <SectionHeading
+            as="h1"
+            className="archive-detail-hero__heading"
+            eyebrow={t('archiveDetail.eyebrow')}
+            title={collection.title}
+          />
           {collection.description ? <p>{collection.description}</p> : null}
         </div>
-      </header>
+      </Panel>
 
       <dl className="archive-detail-stats">
         <div>

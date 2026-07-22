@@ -28,12 +28,14 @@ const collection: ArchiveCollectionDetail = {
 
 describe('ArchiveDetailPage', () => {
   it('loads and renders archive collection details', async () => {
-    renderWithI18n(
+    const { container } = renderWithI18n(
       <ArchiveDetailPage archiveId="collection-1" onLoadCollection={vi.fn().mockResolvedValue(collection)} />,
     );
 
     expect(screen.getByText('Loading archive collection...')).toBeInTheDocument();
     expect(await screen.findByText('Classic rock guide')).toBeInTheDocument();
+    expect(container.querySelector('header.archive-detail-hero.ui-panel--hero')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: 'Classic rock guide' })).toBeInTheDocument();
     expect(screen.getByText('Albums to explore.')).toBeInTheDocument();
     expect(screen.getByText('Source')).toBeInTheDocument();
     expect(screen.getByText('Items filed')).toBeInTheDocument();
