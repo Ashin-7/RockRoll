@@ -3556,11 +3556,21 @@ Inbox Disabled hero 标题已完成 SectionHeading 迁移；累计 15 个定向�
 - `codex/toolbox-explicit-rhythm` 为干净 worktree，含 23 个 `main` 未包含的提交；它采用旧 `rhythm-symbols` 实现，而 `main` 已采用 `notation-primitives / rhythm-topology` 实现。两者修改大量相同 Toolbox 文件，不能无产品判断整体合并。
 - 未推送、未删除远端分支、未修改远端默认分支。
 
+### 本地 Git 最终收口（2026-07-31）
+
+- UI 审查提交：`c3b8b34`。
+- 旧显式节奏恢复标签：`archive/toolbox-explicit-rhythm-20260731 -> abd8218`。
+- 旧分支祖先记录合并：`fe77937`，`ours` 合并前后 tree 一致。
+- 当前仅保留本地分支 `main`；它继续跟踪 `origin/main`，没有推送。
+- 已删除的本地分支：`codex/ui-phase-2-panels`、`ui/tokens-rebuild`、`codex/toolbox-explicit-rhythm`、`codex/toolbox-geometry-compat`、`feature/mvp-foundation`。
+- 所有辅助 worktree 都先确认干净再切为 detached；未删除 worktree 目录。
+- 验证：UI 15 个文件 / 123 个用例通过；当前 Toolbox 11 个文件 / 101 个用例通过；旧恢复分支 Toolbox 10 个文件 / 134 个用例通过；production build 通过，仅保留既有 chunk size 警告。
+- 未运行 `npm install`，未修改业务、权限、导入、Supabase 或 RLS。
+
 未完成事项：
 
-1. 统一审查三十一张未提交 UI 切片。
-2. 取得用户确认后再决定是否提交、推送当前分支。
-3. 如暂不进行 Git 同步，返回 Archive / Import 主线。
+1. 未推送本地 `main`；如需同步远端，必须另行明确确认。
+2. 下一开发任务应返回 Archive / Import 真实大列表导入稳定性主线。
 
 下一轮提示词：
 
@@ -3571,19 +3581,16 @@ Inbox Disabled hero 标题已完成 SectionHeading 迁移；累计 15 个定向�
 - docs/PROJECT_STATUS.md
 - docs/NEXT_TASKS.md
 - docs/SESSION_HANDOFF.md
-- 当前分支状态
-- 本轮修改的 7 个页面目录
+- 当前 Archive / Import 任务相关目录
 
-当前分支是 codex/ui-phase-2-panels，已有三十一张未提交 UI 切片。
-现有 Panel / SectionHeading / StatCard 的安全机械迁移已经集中收口。
-累计 15 个定向测试文件、123 个用例和 production build 通过。
-请先统一审查 git status 与本轮范围，并与我确认是否提交、推送当前分支；不要自行提交或推送。
-如暂不进行 Git 同步，则返回 Archive / Import 主线。
+当前唯一的本地分支是 main，尚未推送本轮本地提交。
+UI Phase 2 切片已经统一审查、提交并完成本地分支收口。
+旧显式节奏实现只保留在本地标签 archive/toolbox-explicit-rhythm-20260731，不要恢复或整体合并。
+继续 docs/NEXT_TASKS.md 中的 Archive / Import 下一任务。
 不要扫描整个仓库。
 不要运行 npm install。
-不要新增 EntityCard。
-不要修改权限敏感业务行为。
 不要做架构重构。
+不要扩大权限。
 完成后中文总结。
 ```
 

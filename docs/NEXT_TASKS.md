@@ -1429,6 +1429,24 @@ npm run build
 3. 只有在相关提交已纳入且 worktree 无占用后，才删除其余本地分支。
 4. 整合完成后运行定向 Toolbox / UI 验证、production build 与 `git diff --check`。
 
+## 当前任务索引（2026-07-31，本地分支统一收口后）
+
+已完成：
+
+- UI Phase 2 审查成果已提交并纳入本地 `main`。
+- 旧显式节奏分支已由本地安全标签保存，并以不改变文件树的 `ours` 合并记录到 `main` 历史。
+- 其余已合并本地分支已通过普通删除清理；当前唯一的本地分支为 `main`。
+- 所有 worktree 在操作前确认干净；辅助 worktree 仅切为 detached，未删除目录。
+- UI 定向 123 个用例、当前 Toolbox 101 个用例、旧恢复分支 Toolbox 134 个用例与 production build 均通过。
+- 未推送或修改任何远端状态。
+
+下一步只执行：
+
+1. 返回 Archive / Import 主线，继续真实大列表导入稳定性任务。
+2. 下一轮只读取 `AGENTS.md`、三份状态 / 交接文档和当前 Archive / Import 任务目录。
+3. 不恢复旧 `rhythm-symbols` 分支实现；如未来确需对照，使用标签 `archive/toolbox-explicit-rhythm-20260731` 只读检查。
+4. 不运行 `npm install`，不做架构重构，不扩大权限。
+
 ## 当前任务索引（2026-07-31，Archive Detail 条目索引标题 SectionHeading 迁移后）
 
 已完成：

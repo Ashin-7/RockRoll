@@ -1666,3 +1666,15 @@ rebase 前结果：4 个测试文件、19 个用例通过；生产构建通过�
 - 两个 Detail 页面继续保留编辑标题及 Notes / Related 标题的 `SectionHeading` 迁移；展示内容、CRUD 和权限可见性没有变化。
 - 修复后重新运行累计 15 个定向测试文件，123 个用例全部通过；未运行 `npm install`。
 - Git 只读盘点确认远端默认分支为 `main`，本地 `main` 跟踪 `origin/main`；旧 `codex/toolbox-explicit-rhythm` 含 23 个未纳入 `main` 的提交，并与 `main` 当前明确节奏拓扑实现存在大量同文件冲突，整合前需要用户选择，不擅自选边。
+
+## 追加完成：本地 Git 分支统一收口（2026-07-31）
+
+- 已审 UI Phase 2 成果以提交 `c3b8b34` 纳入本地 `main`；29 张安全切片保留，Album Detail 与 Song Detail 的两张元数据 `StatCard` 切片继续保持撤回。
+- 用户确认以 `main` 的 `notation-primitives / rhythm-topology` 为唯一 Toolbox 实现。
+- 旧 `codex/toolbox-explicit-rhythm` 的恢复点 `abd8218` 已保存为本地标签 `archive/toolbox-explicit-rhythm-20260731`。
+- 使用 `ours` 合并提交 `fe77937` 只记录旧分支祖先关系；合并前后 Git tree 完全一致，没有把旧 `rhythm-symbols` 文件树覆盖到 `main`。
+- 其余五个本地分支均在确认已被 `main` 包含且 worktree 干净后，通过普通 `git branch -d` 删除；当前仅保留本地分支 `main`。
+- 原 worktree 目录均保留并切为 detached，没有删除目录或未提交文件；主 Codex worktree 当前承载 `main`。
+- 未推送、未删除远端分支、未修改远端默认分支。
+- 验证结果：UI 15 个测试文件、123 个用例通过；当前 `main` Toolbox 11 个测试文件、101 个用例通过；旧恢复分支 Toolbox 10 个测试文件、134 个用例通过；production build 通过，仅保留既有主 chunk 超过 500 kB 警告。
+- 未运行 `npm install`，未新增依赖，未修改业务数据、路由、权限、导入、Supabase 或 RLS。
