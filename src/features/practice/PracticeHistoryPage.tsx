@@ -307,17 +307,35 @@ export function PracticeHistoryPage({
       ) : null}
 
       {!hasProvidedSessions && !isLoadingSession && !session ? (
-        <section className="practice-session-entry" aria-labelledby="practice-session-entry-title">
-          <h2 id="practice-session-entry-title">{t('practiceHistory.formTitle')}</h2>
+        <Panel
+          as="section"
+          className="practice-session-entry"
+          variant="card"
+          aria-labelledby="practice-session-entry-title"
+        >
+          <SectionHeading
+            as="h2"
+            className="practice-session-entry__heading"
+            headingId="practice-session-entry-title"
+            title={t('practiceHistory.formTitle')}
+          />
           <p className="practice-history-auth-required">{t('practiceHistory.signInRequired')}</p>
-        </section>
+        </Panel>
       ) : null}
 
       {!hasProvidedSessions && !isLoadingSession && session ? (
-        <section className="practice-session-entry" aria-labelledby="practice-session-entry-title">
-          <h2 id="practice-session-entry-title">
-            {editingSession ? t('practiceHistory.editTitle') : t('practiceHistory.formTitle')}
-          </h2>
+        <Panel
+          as="section"
+          className="practice-session-entry"
+          variant="card"
+          aria-labelledby="practice-session-entry-title"
+        >
+          <SectionHeading
+            as="h2"
+            className="practice-session-entry__heading"
+            headingId="practice-session-entry-title"
+            title={editingSession ? t('practiceHistory.editTitle') : t('practiceHistory.formTitle')}
+          />
           <PracticeSessionForm
             initialValues={
               editingSession
@@ -337,7 +355,7 @@ export function PracticeHistoryPage({
             songs={songs}
           />
           {isSaving ? <p className="practice-history-loading">{t('practiceHistory.saving')}</p> : null}
-        </section>
+        </Panel>
       ) : null}
 
       <Panel
@@ -346,7 +364,12 @@ export function PracticeHistoryPage({
         variant="card"
         aria-labelledby="practice-statistics-title"
       >
-        <h2 id="practice-statistics-title">{t('practiceStatistics.title')}</h2>
+        <SectionHeading
+          as="h2"
+          className="practice-statistics__heading"
+          headingId="practice-statistics-title"
+          title={t('practiceStatistics.title')}
+        />
         <dl className="practice-statistics__grid">
           {statisticItems.map((item) => (
             <div className="practice-statistics__item" key={item.label}>
@@ -367,7 +390,12 @@ export function PracticeHistoryPage({
 
       {!isLoading && displaySessions.length > 0 ? (
         <section className="practice-history-filters" aria-labelledby="practice-history-filters-title">
-          <h2 id="practice-history-filters-title">{t('practiceHistory.filtersTitle')}</h2>
+          <SectionHeading
+            as="h2"
+            className="practice-history-filters__heading"
+            headingId="practice-history-filters-title"
+            title={t('practiceHistory.filtersTitle')}
+          />
           <div className="practice-history-filters__grid">
             <label>
               <span>{t('practiceHistory.songFilterLabel')}</span>

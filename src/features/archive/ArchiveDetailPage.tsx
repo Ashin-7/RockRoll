@@ -211,10 +211,13 @@ export function ArchiveDetailPage({
 
       <div className="archive-detail-layout">
         <section className="archive-detail-items" aria-labelledby="archive-detail-items-title">
-          <div className="archive-detail-section-heading">
-            <p className="archive-detail-kicker">{t('archiveDetail.itemIndex')}</p>
-            <h2 id="archive-detail-items-title">{t('archiveDetail.itemsTitle')}</h2>
-          </div>
+          <SectionHeading
+            as="h2"
+            className="archive-detail-section-heading"
+            eyebrow={t('archiveDetail.itemIndex')}
+            headingId="archive-detail-items-title"
+            title={t('archiveDetail.itemsTitle')}
+          />
           {collection.items.length === 0 ? <p>{t('archiveDetail.itemsEmpty')}</p> : null}
           {collection.items.length > 0 ? (
             <>

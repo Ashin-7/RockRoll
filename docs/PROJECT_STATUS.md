@@ -1466,3 +1466,203 @@ rebase 前结果：4 个测试文件、19 个用例通过；生产构建通过�
 - 合并后的 `main` 已运行全量测试：45 个测试文件、391 个用例全部通过；production build 通过，仅保留既有主 chunk 超过 500 kB 警告。
 - 本地 `main` 当前包含既有未推送提交与本次 UI 合并，尚未推送 `origin/main`；本轮未创建 PR，也未删除远端功能分支。
 - 未运行 `npm install`，未修改 Supabase、Auth、导入、权限、Inbox 导航、一键导入或 `match_existing`。
+
+## 追加完成：Song List 列表外壳 Panel 迁移（2026-07-22）
+
+- 从最新本地 `main` 创建 `codex/ui-phase-2-panels`，没有继续在主分支累积开发改动。
+- `SongListPage` 的 `song-board` 外层列表容器已按 TDD 迁移到既有 `Panel variant="card"`；`role="list"`、可访问名称、表头、歌曲顺序和单曲卡片保持不变。
+- `Panel` 仅补充标准 `AriaRole` 属性类型，继续通过剩余属性透传到语义元素；删除列表外壳中由共享原语承担的边框、背景、圆角和内边距 CSS。
+- 新增结构断言先因列表缺少共享 Panel 类出现预期 RED；迁移后 Song List 与共享 UI 共 2 个测试文件、13 个用例通过，production build 通过。
+- `/#songs` 在 `1280x720` 与 `390x844` 完成只读冒烟且无横向溢出；Guest 数据为空，未渲染列表，因此未宣称完成本次列表面板的视觉验收。控制台仅有既有 `/favicon.ico` 404。
+- 未运行 `npm install`，未新增 `EntityCard`，未修改歌曲创建 / 加载逻辑、Supabase、Auth、导入、权限、Inbox 导航、一键导入或 `match_existing`；当前切片尚未提交或推送。
+
+## 追加完成：Toolbox 输出标题 SectionHeading 迁移（2026-07-22）
+
+- 在保留 Song List 未提交切片的前提下，选择 `ToolboxPage` 输出面板的 eyebrow + `h2` 作为新的单页面小切片。
+- `MUSICXML / GP` 与 `MusicXML for Guitar Pro` 已迁移到既有 `SectionHeading as="h2"`；文字、标题层级、顺序与输出面板布局保持不变。
+- 页面级 `.toolbox-output-heading` 仅抵消共享组件的额外底部间距；输入面板、步骤列表、文件分析、MusicXML 下载、错误状态与动态 Rhythm 区域均未修改。
+- 新增结构断言先因输出标题缺少共享标题容器出现预期 RED；迁移后 Toolbox 与共享 UI 共 2 个测试文件、13 个用例通过，production build 通过。
+- `/#toolbox` 在 `1280x720` 与 `390x844` 完成桌面 / 窄屏视觉冒烟，共享输出标题清晰且无横向溢出；控制台仅有既有 `/favicon.ico` 404。
+- 未运行 `npm install`，未新增 `EntityCard`，未修改 Supabase、Auth、导入、权限、Inbox 导航、一键导入或 `match_existing`；当前分支累计两张小切片，均尚未提交或推送。
+
+## 追加完成：Album List hero 标题 SectionHeading 迁移（2026-07-22）
+
+- 在保留 Song List 与 Toolbox 两张未提交切片的前提下，选择 `AlbumListPage` hero 标题作为新的单页面小切片。
+- `Album library` eyebrow 与 `Albums` 标题已按 TDD 迁移到既有 `SectionHeading as="h1"`；标题文字、层级、字号、间距及 hero 响应式布局保持不变。
+- 新增结构断言先因缺少共享标题容器出现预期 RED；迁移后 Album List 单文件 17 个用例通过。
+- 累计页面与共享 UI 的 4 个定向测试文件、36 个用例全部通过；production build 通过，仅保留既有主 chunk 超过 500 kB 警告。
+- `/#albums` 在 `1280x720` 与 `390x844` 完成只读视觉冒烟，hero 标题和统计卡无截断或横向溢出，控制台无 warning / error。
+- 未运行 `npm install`，未新增 `EntityCard`，未修改集合加载、搜索、筛选、分页、Supabase、Auth、导入、权限、Inbox 导航、一键导入或 `match_existing`；当前分支累计三张小切片，均尚未提交或推送。
+
+## 追加完成：Practice History 筛选标题 SectionHeading 迁移（2026-07-22）
+
+- 在保留 Song List、Toolbox 与 Album List 三张未提交切片的前提下，选择 `PracticeHistoryPage` 筛选区标题作为新的单页面小切片。
+- 筛选区 `h2` 已按 TDD 迁移到既有 `SectionHeading as="h2"`；标题文字、层级、筛选布局及 `aria-labelledby` 关联保持不变。
+- `SectionHeading` 仅新增可选 `headingId` 透传能力，用于维持标题与所属区域的可访问名称关联；未改变默认渲染与视觉样式。
+- RED 阶段 2 个目标断言按预期失败；GREEN 后 Practice History 与共享 UI 共 2 个测试文件、18 个用例通过，累计五个页面 / 共享 UI 定向测试文件、47 个用例通过；production build 与目标差异检查通过，仅保留既有主 chunk 超过 500 kB 和 Windows LF/CRLF 提示。
+- 本地 `/#practice` Guest 数据为空，筛选区不会渲染；页面可正常打开且控制台无 warning / error，但未声称完成目标标题的桌面 / 窄屏视觉验收。
+- 未运行 `npm install`，未新增 `EntityCard`，未修改练习数据、筛选行为、CRUD 或受限业务范围；当前分支累计四张小切片，均尚未提交或推送。
+
+## 追加完成：Backstage 内容列 Panel 迁移（2026-07-30）
+
+- 在保留 Song List、Toolbox、Album List 与 Practice History 四张未提交切片的前提下，选择静态 `BackstagePage` 的 Recent tapes / Import inbox 两个内容列外壳作为新的单页面小切片。
+- 两个 `article` 已按 TDD 迁移到既有 `Panel variant="card"`；标题、mock 数据、内容顺序、文章语义及桌面两列 / 窄屏单列布局保持不变。
+- 删除由共享 Panel 承担的边框、背景、圆角和内边距 CSS；保留 Backstage 专属阴影、内部 tape / draft card 样式与录音棚视觉语言。
+- 结构断言先因内容列找不到 card Panel 出现预期 RED；GREEN 后累计 6 个定向测试文件、48 个用例全部通过。
+- production build 与目标差异检查通过；仅保留既有主 chunk 超过 500 kB 和 Windows LF/CRLF 提示。
+- `/#backstage` 在 `1280x720` 与 `390x844` 完成只读视觉冒烟：目标面板分别保持两列 / 单列，无横向溢出，控制台无 warning / error。
+- 验证使用 Node.js `v20.20.2` / npm `10.8.2`；未运行 `npm install`，未新增 `EntityCard`，未修改 Supabase、Auth、CRUD、导入或权限范围。
+- 当前分支 `codex/ui-phase-2-panels` 累计五张未提交 UI 切片，HEAD 仍为 `b67e861`；本轮未提交、推送或合并。
+
+## 追加完成：Album Detail 元数据 StatCard 迁移（2026-07-30）
+
+- 在保留此前五张未提交 UI 切片的前提下，选择 `AlbumDetailPage` 的发行年份、专辑类型与艺人三项只读元数据卡作为新的单页面小切片。
+- 三项元数据已按 TDD 迁移到既有 `StatCard`；数据、文案、顺序、三列 / 单列布局及原有字号、颜色和间距保持不变。
+- 结构断言先在 Node.js `v20.20.2` 下因 0 个 `StatCard` 出现预期 RED；GREEN 后 Album Detail 4 个用例通过，累计 7 个定向测试文件、52 个用例全部通过。
+- production build 通过，仅保留既有主 chunk 超过 500 kB 警告。
+- Guest 环境下 Album Detail / Album List 均停留在既有加载状态，目标统计卡未渲染；控制台无 warning / error，未伪造目标视觉验收。
+- 未运行 `npm install`，未新增 `EntityCard`，未修改数据加载、编辑 / 删除权限、CRUD、Supabase、Auth、导入或 RLS。
+- 当前分支 `codex/ui-phase-2-panels` 累计六张未提交 UI 切片，HEAD 仍为 `b67e861`；本轮未提交、推送或合并。
+
+## 追加完成：Library 分区标题 SectionHeading 迁移（2026-07-30）
+
+- 在保留此前六张未提交 UI 切片的前提下，选择 `LibraryPage` 的分区标题作为新的单页面小切片。
+- `Library sections` 二级标题已按 TDD 迁移到既有 `SectionHeading as="h2"`；标题文字、层级、分类卡顺序及响应式布局保持不变。
+- 结构断言在 Node.js `v20.20.2` 下先因缺少共享标题容器出现预期 RED；GREEN 后 Library 8 个用例通过，累计 8 个定向测试文件、60 个用例全部通过。
+- production build 通过，仅保留既有主 chunk 超过 500 kB 警告。
+- `/#library` 在 `1280x720` 与 `390x844` 完成只读视觉冒烟：标题与分类卡对齐正常，窄屏无横向溢出，控制台无 warning / error。
+- 未运行 `npm install`，未新增 `EntityCard`，未修改表单、CRUD、service、Supabase、Auth、导入、权限或 RLS。
+- 当前分支 `codex/ui-phase-2-panels` 累计七张未提交 UI 切片，HEAD 仍为 `b67e861`；本轮未提交、推送或合并。
+
+## 追加完成：Song Detail 元数据 StatCard 迁移（2026-07-30）
+
+- 在保留此前七张未提交 UI 切片的前提下，选择 `SongDetailPage` 的难度、发行年份与 BPM 三项只读元数据卡作为新的单页面小切片。
+- 三项元数据已按 TDD 迁移到既有 `StatCard`；数据、文案、顺序、三列 / 单列布局及原有字号、颜色和间距保持不变。
+- 结构断言在 Node.js `v20.20.2` 下先因 0 个 `StatCard` 出现预期 RED；GREEN 后 Song Detail 7 个用例通过，累计 9 个定向测试文件、67 个用例全部通过。
+- production build 通过，仅保留既有主 chunk 超过 500 kB 警告。
+- Guest 环境没有可渲染的歌曲详情数据，因此未伪造目标统计卡的浏览器视觉验收。
+- 未运行 `npm install`，未新增 `EntityCard`，未修改歌曲加载、编辑 / 删除、CRUD、service、Supabase、Auth、导入、权限或 RLS。
+- 当前分支 `codex/ui-phase-2-panels` 累计八张未提交 UI 切片，HEAD 仍为 `b67e861`；本轮未提交、推送或合并。
+
+## 追加完成：Auth 页面标题 SectionHeading 迁移（2026-07-30）
+
+- 在保留此前八张未提交 UI 切片的前提下，选择 `AuthPage` 的页面 eyebrow + `h1` 作为新的单页面小切片。
+- 页面标题已按 TDD 迁移到既有 `SectionHeading as="h1"`；文案、标题层级及所有认证状态、表单、按钮、回调与 Supabase 调用保持不变。
+- 新增结构断言先准确因标题缺少共享容器出现预期 RED；GREEN 后 Auth 18 个用例通过，累计 10 个定向测试文件、85 个用例全部通过。
+- production build 通过，仅保留既有主 chunk 超过 500 kB 警告。
+- `/#auth` 在桌面与窄屏完成只读视觉冒烟：共享标题清晰、页面无横向溢出，控制台无 warning / error；未执行登录、注册或表单提交。
+- 未运行 `npm install`，未新增 `EntityCard`，未修改 Auth 业务逻辑、Supabase、CRUD、导入、权限或 RLS。
+- 当前分支 `codex/ui-phase-2-panels` 累计九张未提交 UI 切片，HEAD 仍为 `b67e861`；本轮未提交、推送或合并。
+
+## 追加完成：Artist Detail 编辑标题 SectionHeading 迁移（2026-07-30）
+
+- 在保留此前九张未提交 UI 切片的前提下，选择 `ArtistDetailPage` 编辑表单的 eyebrow + `h2` 作为新的单页面小切片。
+- 原计划评估迁移三项统计卡，但现有统计区使用 `dl/dt/dd`，当前 `StatCard` 无法保持定义列表语义；本轮因此收窄为编辑标题迁移，没有扩展共享原语 API。
+- 编辑标题已按 TDD 迁移到既有 `SectionHeading as="h2"`；文案、标题层级、未保存提示、表单字段、按钮、保存 / 删除回调与数据加载均保持不变。
+- 新增结构断言先准确因编辑标题缺少共享容器出现预期 RED；GREEN 后 Artist Detail 6 个用例通过，累计 11 个定向测试文件、91 个用例全部通过。
+- production build 通过，仅保留既有主 chunk 超过 500 kB 警告；本轮未执行浏览器视觉验收。
+- 验证使用 Node.js `v20.20.2` 直接运行本地依赖；未运行 `npm install`，未新增 `EntityCard`，未修改 Artist CRUD 业务行为、Supabase、Auth、导入、权限或 RLS。
+- 当前分支 `codex/ui-phase-2-panels` 累计十张未提交 UI 切片，HEAD 仍为 `b67e861`；本轮未提交、推送或合并。
+
+## 追加完成：Artist List 新增表单标题 SectionHeading 迁移
+
+- 在保留此前十张未提交 UI 切片的前提下，选择 `ArtistListPage` 新增表单的 eyebrow + `h2` 作为新的单页面小切片。
+- 新增表单标题已按 TDD 迁移到既有 `SectionHeading as="h2"`；标题文案、层级、1.6rem 字号、窄屏堆叠、表单字段与 Artist 加载 / 创建行为均保持不变。
+- 新增结构断言先准确因标题缺少共享容器出现预期 RED；GREEN 后 Artist List 6 个用例通过，累计 12 个定向测试文件、97 个用例全部通过。
+- production build 通过，仅保留既有主 chunk 超过 500 kB 警告。
+- 浏览器核对确认 `ArtistListPage` 当前未挂载到 App，`#artists` 按既有路由测试回退 Backstage，因此未伪造目标页面的视觉验收，也未为验收新增路由。
+- 验证通过临时 PATH 使用既有 Node.js `v20.20.2`；终端默认仍为 Node.js `v8.17.0`。未运行 `npm install`，未新增 `EntityCard`，未修改 Artist CRUD、service、Supabase、Auth、导入、权限或 RLS。
+- 当前分支 `codex/ui-phase-2-panels` 累计十一张未提交 UI 切片，HEAD 仍为 `b67e861`；本轮未提交、推送或合并。
+
+## 追加完成：Inbox Disabled hero Panel 迁移
+
+- 在保留此前十一张未提交 UI 切片的前提下，选择实际挂载到 `#inbox` 的 `InboxDisabledPage` hero 外壳作为新的单页面小切片。
+- hero 已按 TDD 迁移到既有 `Panel variant="hero"`；禁用标题、说明、Archive 链接、导入按钮不可见状态及 Inbox 专属酒红纹理均保持不变。
+- 新增结构断言先准确因缺少共享 hero 类出现预期 RED；GREEN 后 App 6 个用例通过，累计 13 个定向测试文件、103 个用例全部通过。
+- production build 通过，仅保留既有主 chunk 超过 500 kB 警告。
+- `/#inbox` 在 `1280x720` 与 `390x844` 完成只读视觉冒烟：hero 布局正常、标题无截断、无横向溢出，控制台无 warning / error。
+- 验证通过临时 PATH 使用既有 Node.js `v20.20.2`；未运行 `npm install`，未新增 `EntityCard`，未修改 Inbox 导航、可见性、service、Supabase、导入、权限或 RLS。
+- 当前分支 `codex/ui-phase-2-panels` 累计十二张未提交 UI 切片，HEAD 仍为 `b67e861`；本轮未提交、推送或合并。
+
+## 追加完成：Practice Statistics 标题 SectionHeading 迁移（2026-07-30）
+
+- 在保留此前十二张未提交 UI 切片的前提下，选择实际挂载到 `#practice` 的 Practice Statistics 标题作为新的单页面小切片。
+- 统计标题已按 TDD 迁移到既有 `SectionHeading as="h2"`；标题文案、层级、`id`、统计区 `aria-labelledby` 及 `dl/dt/dd` 定义列表语义均保持不变。
+- 新增结构断言先准确因标题缺少共享容器出现预期 RED；GREEN 后 Practice History 11 个用例通过，累计 13 个定向测试文件、103 个用例全部通过。
+- production build 通过，仅保留既有主 chunk 超过 500 kB 警告；目标差异 `git diff --check` 通过，仅提示 Windows 下 LF / CRLF 转换。
+- 本地 5173 / 5174 均无可复用服务，后台启动又被桌面环境策略拒绝，因此本轮未完成浏览器视觉冒烟，也未伪造视觉结论。
+- 验证通过临时 PATH 使用既有 Node.js `v20.20.2`；未运行 `npm install`，未新增 `EntityCard`，未修改 Practice 数据加载、CRUD、Supabase、Auth、导入、权限或 RLS。
+- 当前分支 `codex/ui-phase-2-panels` 累计十三张未提交 UI 切片，HEAD 仍为 `b67e861`；本轮未提交、推送或合并。
+
+## 追加完成：Archive hero Panel 迁移（2026-07-31）
+
+- 在保留此前十三张未提交 UI 切片的前提下，选择实际挂载到 `#archive` 的 `ArchivePage` hero 外壳作为新的单页面小切片。
+- hero 已按 TDD 迁移到既有 `Panel as="header" variant="hero"`；`header` 语义、标题、集合计数、文案及桌面 / 窄屏布局保持不变。
+- 新增结构断言先准确因缺少共享 hero 类出现预期 RED；GREEN 后 ArchivePage 12 个用例通过，累计 14 个定向测试文件、115 个用例全部通过。
+- production build 通过，仅保留既有主 chunk 超过 500 kB 警告；目标差异 `git diff --check` 通过，仅提示 Windows 下 LF / CRLF 转换。
+- `/#archive` 在 `1280x720` 与 `390x844` 完成 Guest 只读视觉冒烟：hero 标题无截断、无横向溢出，控制台无 warning / error。
+- 验证通过临时 PATH 使用既有 Node.js `v20.20.2`；未运行 `npm install`，未新增 `EntityCard`，未修改角色判断、管理员入口可见性、Archive CRUD、导入、service、Supabase、Auth、权限或 RLS。
+- 当前分支 `codex/ui-phase-2-panels` 累计十四张未提交 UI 切片，HEAD 仍为 `b67e861`；本轮未提交、推送或合并。
+
+## 追加完成：Song List 新增表单标题 SectionHeading 迁移（2026-07-31）
+
+- 在保留此前十四张未提交 UI 切片的前提下，选择实际挂载到 `#songs` 的 Song List 新增表单标题作为新的单页面小切片；没有继续扩大 Archive 范围。
+- 新增表单的 `h2` 已按 TDD 迁移到既有 `SectionHeading as="h2"`；标题文案、层级、字号、表单字段、提交逻辑及五列 / 单列响应式布局保持不变。
+- 结构断言在校正文案查询后准确因缺少共享标题容器出现预期 RED；GREEN 后 Song List 7 个用例通过，累计 14 个定向测试文件、116 个用例全部通过。
+- production build 通过，仅保留既有主 chunk 超过 500 kB 警告；目标差异 `git diff --check` 通过，仅提示 Windows 下 LF / CRLF 转换。
+- `/#songs` 在 `1280x720` 与 `390x844` 完成 Guest 只读视觉冒烟：新增表单标题清晰、无截断、页面无横向溢出，控制台无 warning / error。
+- 验证通过临时 PATH 使用既有 Node.js `v20.20.2`；未运行 `npm install`，未新增 `EntityCard`，未修改 Song 数据加载、创建逻辑、service、Supabase、Auth、Archive、导入、权限或 RLS。
+- 当前分支 `codex/ui-phase-2-panels` 累计十五张未提交 UI 切片，HEAD 仍为 `b67e861`；本轮未提交、推送或合并。
+
+## 追加完成：Archive Detail 条目索引标题 SectionHeading 迁移（2026-07-31）
+
+- 在保留此前十五张未提交 UI 切片的前提下，选择实际挂载到 `#archive/:id` 的 `ArchiveDetailPage` 条目索引标题作为新的单页面小切片；没有继续扩大 Song List 范围。
+- 手写 eyebrow + `h2` 已按 TDD 迁移到既有 `SectionHeading as="h2"`；标题文案、层级、`id`、条目区 `aria-labelledby`、分页、数据加载及管理员操作保持不变。
+- 新增结构断言先准确因标题缺少共享容器出现预期 RED；校正文案断言后 GREEN，Archive Detail 6 个用例通过，累计 15 个定向测试文件、122 个用例全部通过。
+- production build 通过，仅保留既有主 chunk 超过 500 kB 警告；目标差异 `git diff --check` 通过，仅提示 Windows 下 LF / CRLF 转换。
+- 浏览器连接到真实 `/#archive` 后，Guest 环境显示 0 个集合且列表持续停在加载态，无法进入实际详情页渲染目标标题；控制台无 warning / error，本轮未伪造目标视觉验收。
+- 权限矩阵保持不变：匿名与普通用户只读 public Archive，只有管理员可见并触发新增、编辑、删除；未修改 UI 权限判断、service guard、Supabase、RLS 或 CRUD。
+- 验证通过临时 PATH 使用既有 Node.js `v20.20.2`；未运行 `npm install`，未新增 `EntityCard`。
+- 当前分支 `codex/ui-phase-2-panels` 累计十六张未提交 UI 切片，HEAD 仍为 `b67e861`；本轮未提交、推送或合并。
+
+## 追加完成：Album List 集合容器 Panel 迁移（2026-07-31）
+
+- 在保留此前十六张未提交 UI 切片的前提下，选择实际挂载到 `#albums` 的集合容器作为新的单页面小切片；没有继续扩大 Archive Detail 范围。
+- 集合 `<section>` 已按 TDD 迁移到既有 `Panel as="section" variant="card"`；集合标题、来源、描述展开、数量、专辑列表、分页、筛选与数据加载行为保持不变。
+- 结构断言先准确因集合容器缺少共享 panel 类出现预期 RED；GREEN 后 Album List 17 个用例通过，累计 15 个定向测试文件、122 个用例全部通过。
+- production build 通过，仅保留既有主 chunk 超过 500 kB 警告；目标差异 `git diff --check` 通过，仅提示 Windows 下 LF / CRLF 转换。
+- 浏览器连接到真实 `/#albums` 后，桌面 1280 宽与窄屏 `390x844` 均无横向溢出，控制台无 warning / error；但 Guest 环境持续停在加载态且没有集合数据，目标集合 Panel 未完成真实内容视觉验收，也未注入假数据。
+- 验证通过临时 PATH 使用既有 Node.js `v20.20.2`；未运行 `npm install`，未新增 `EntityCard`，未修改 Album 数据加载、筛选、分页、service、Supabase、Auth、Archive、导入、权限或 RLS。
+- 当前分支 `codex/ui-phase-2-panels` 累计十七张未提交 UI 切片，HEAD 仍为 `b67e861`；本轮未提交、推送或合并。
+
+## 追加完成：Inbox Disabled hero 标题 SectionHeading 迁移（2026-07-31）
+
+- 在保留此前十七张未提交 UI 切片的前提下，选择实际挂载到 `#inbox` 的禁用说明页 hero 标题作为新的单页面小切片；没有继续扩大 Album List 范围。
+- 手写 eyebrow + `h1` 已按 TDD 迁移到既有 `SectionHeading as="h1"`；标题文案、层级、Inbox 禁用说明、Archive 链接及 hero 专属视觉保持不变。
+- 新增结构断言先准确因标题缺少共享容器出现预期 RED；GREEN 后 App 与共享 UI 共 2 个测试文件、13 个用例通过，累计 15 个定向测试文件、122 个用例全部通过。
+- production build 通过，仅保留既有主 chunk 超过 500 kB 警告；目标差异 `git diff --check` 通过，仅提示 Windows 下 LF / CRLF 转换。
+- `/#inbox` 在 `1280x800` 与 `390x844` 完成 Guest 只读视觉冒烟：标题和描述清晰、无截断、页面无横向溢出，控制台无 warning / error。
+- 验证通过临时 PATH 使用既有 Node.js `v20.20.2`；未运行 `npm install`，未新增 `EntityCard`，未修改 Inbox 导入、导航、权限、service、Supabase 或 RLS。
+- 当前分支 `codex/ui-phase-2-panels` 累计十八张未提交 UI 切片，HEAD 仍为 `b67e861`；本轮未提交、推送或合并。
+
+## 追加完成：UI Phase 2 现有原语安全迁移集中收口（2026-07-31）
+
+- 按用户“所有剩余切片一次迭代完成后再交接”的要求，在此前十八张未提交 UI 切片基础上，集中完成实际挂载页面中仍可安全复用既有 `Panel`、`SectionHeading`、`StatCard` 的十三类结构迁移。
+- Song List 完成 hero 标题；Archive 完成 hero 标题、集合计数 StatCard 与集合索引标题；Practice 完成登录提示 / 编辑入口 Panel 与标题。
+- Song Detail 完成编辑标题及 Notes / Related 面板标题；Album Detail 完成编辑标题及 Notes / Related 面板标题；Artist Detail 完成三个只读信息面板标题；Library 完成资产表单与资产列表标题。
+- 7 个页面新增结构断言后出现准确 RED：9 个目标断言失败、原有 47 个用例通过；GREEN 后 7 个测试文件、56 个用例全部通过。
+- 累计定向回归为 15 个测试文件、123 个用例全部通过；最终 production build 通过，仅保留既有主 chunk 超过 500 kB 警告；目标 `git diff --check` 无错误，仅提示 Windows 下 LF / CRLF 转换。
+- 源码收口审计后，实际挂载页面剩余原生 `h2` 仅属于业务实体卡片标题、Archive 管理员 CRUD 表单与 Auth 条件流程；这些内容不属于本轮安全机械迁移范围。
+- 真实 `#songs`、`#archive`、`#practice`、`#library` 在 1280×800 与 390×844 下均完成 Guest 只读视觉冒烟：目标原语存在、无横向溢出，控制台无 warning / error。
+- Song / Album / Artist Detail 在 Guest 环境没有可用真实详情数据，目标面板仅由定向测试覆盖；未新增临时路由或注入假数据。
+- 未运行 `npm install`，未新增 `EntityCard`，未修改业务数据、路由、Supabase、Auth、导入、权限或 RLS。
+- 当前分支 `codex/ui-phase-2-panels` 累计三十一张未提交 UI 切片，HEAD 仍为 `b67e861`；本轮未提交、推送或合并。
+
+## 追加审查：UI Phase 2 累计切片统一复核（2026-07-31）
+
+- 已逐文件复核 31 张记录切片的源码、样式和定向测试范围；未发现路由、数据请求、事件处理、角色判断、导入、Supabase 或 RLS 行为改动。
+- 其中 29 张共享 `Panel / SectionHeading / StatCard` 迁移可保留。
+- 撤回 Album Detail 与 Song Detail 两张元数据 `StatCard` 迁移：两处原本都是 `dl / dt / dd` 定义列表，`StatCard` 会改成 `article / p / strong`，不满足语义结构保持不变的审查标准。
+- 两个 Detail 页面继续保留编辑标题及 Notes / Related 标题的 `SectionHeading` 迁移；展示内容、CRUD 和权限可见性没有变化。
+- 修复后重新运行累计 15 个定向测试文件，123 个用例全部通过；未运行 `npm install`。
+- Git 只读盘点确认远端默认分支为 `main`，本地 `main` 跟踪 `origin/main`；旧 `codex/toolbox-explicit-rhythm` 含 23 个未纳入 `main` 的提交，并与 `main` 当前明确节奏拓扑实现存在大量同文件冲突，整合前需要用户选择，不擅自选边。

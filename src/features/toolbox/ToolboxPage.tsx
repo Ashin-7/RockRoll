@@ -120,8 +120,12 @@ export function ToolboxPage({
         </Panel>
 
         <Panel as="aside" className="toolbox-output-panel" variant="card">
-          <span className="toolbox-panel-label">MUSICXML / GP</span>
-          <h2>{t('toolbox.outputLabel')}</h2>
+          <SectionHeading
+            as="h2"
+            className="toolbox-output-heading"
+            eyebrow="MUSICXML / GP"
+            title={t('toolbox.outputLabel')}
+          />
           <p>{t('toolbox.outputDescription')}</p>
           {analysis ? (
             <div className="toolbox-analysis" aria-live="polite">

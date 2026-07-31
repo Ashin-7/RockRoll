@@ -208,10 +208,12 @@ export function AlbumDetailPage({
 
           {canManageAlbum && isEditing ? (
             <form className="album-detail-edit-form" onSubmit={handleUpdateAlbum}>
-              <div className="album-detail-edit-form__header">
-                <p>{t('albumDetail.formMode')}</p>
-                <h2>{t('albumDetail.editAlbum')}</h2>
-              </div>
+              <SectionHeading
+                as="h2"
+                className="album-detail-edit-form__header"
+                eyebrow={t('albumDetail.formMode')}
+                title={t('albumDetail.editAlbum')}
+              />
 
               <fieldset className="album-detail-form-section">
                 <legend>
@@ -292,11 +294,19 @@ export function AlbumDetailPage({
 
           <div className="album-detail-panels">
             <Panel as="section" className="album-detail-panel" variant="card">
-              <h2>{t('albums.notesSection')}</h2>
+              <SectionHeading
+                as="h2"
+                className="album-detail-panel__heading"
+                title={t('albums.notesSection')}
+              />
               <p>{album.notes || t('albums.noNotes')}</p>
             </Panel>
             <Panel as="section" className="album-detail-panel" variant="card">
-              <h2>{t('albumDetail.relatedSection')}</h2>
+              <SectionHeading
+                as="h2"
+                className="album-detail-panel__heading"
+                title={t('albumDetail.relatedSection')}
+              />
               <p>{t('albumDetail.relatedHint')}</p>
             </Panel>
           </div>

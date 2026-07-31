@@ -12,6 +12,10 @@
   margin-bottom: 0;
 }
 
+.archive-detail-section-heading {
+  margin-bottom: 0;
+}
+
 .archive-detail-hero h1,
 .archive-detail-section-heading h2,
 .archive-detail-form h2,
@@ -63,7 +67,6 @@
   gap: 1rem;
 }
 
-.archive-detail-kicker,
 .archive-detail-form-mode,
 .archive-detail-table-head {
   color: var(--color-fg-muted);

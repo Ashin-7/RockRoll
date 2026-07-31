@@ -81,6 +81,7 @@
   align-items: end;
   justify-content: space-between;
   gap: var(--space-4);
+  margin-bottom: 0;
 }
 
 .artist-detail-edit-form__header p:last-child {
@@ -200,6 +201,10 @@
 .artist-detail-panel {
   display: grid;
   gap: var(--space-3);
+}
+
+.artist-detail-panel__heading.ui-section-heading {
+  margin-bottom: 0;
 }
 
 .artist-detail-panel h2,

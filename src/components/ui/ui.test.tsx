@@ -96,12 +96,16 @@ describe('minimal UI components', () => {
         action={<Button>Open</Button>}
         as="h3"
         eyebrow="Archive"
+        headingId="archive-collection-title"
         title="Collection"
       />,
     );
 
     expect(screen.getByText('Archive')).toHaveClass('eyebrow');
-    expect(screen.getByRole('heading', { level: 3, name: 'Collection' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 3, name: 'Collection' })).toHaveAttribute(
+      'id',
+      'archive-collection-title',
+    );
     expect(screen.getByRole('button', { name: 'Open' })).toBeInTheDocument();
   });
 

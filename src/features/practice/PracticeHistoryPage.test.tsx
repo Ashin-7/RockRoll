@@ -29,7 +29,12 @@ describe('PracticeHistoryPage', () => {
     expect(screen.getByText('Practice History')).toBeInTheDocument();
     expect(screen.getByText('Loading practice history...')).toBeInTheDocument();
     expect(await screen.findByRole('heading', { name: 'Little Wing' })).toBeInTheDocument();
-    expect(screen.getByText('Practice Statistics')).toBeInTheDocument();
+    expect(
+      container.querySelector('#practice-history-filters-title')?.closest('.ui-section-heading'),
+    ).toBeInTheDocument();
+    expect(
+      container.querySelector('#practice-statistics-title')?.closest('.ui-section-heading'),
+    ).toBeInTheDocument();
     expect(container.querySelector('section.practice-statistics.ui-panel--card')).toBeInTheDocument();
     expect(screen.getByText('Total sessions')).toBeInTheDocument();
     expect(screen.getByText('Total minutes')).toBeInTheDocument();
@@ -382,6 +387,11 @@ describe('PracticeHistoryPage', () => {
     );
 
     expect(await screen.findByText('Sign in to save practice sessions.')).toBeInTheDocument();
+    const entryHeading = screen.getByRole('heading', { level: 2, name: 'Add practice session' });
+    const entryPanel = entryHeading.closest('section');
+
+    expect(entryHeading.closest('.ui-section-heading')).toHaveClass('practice-session-entry__heading');
+    expect(entryPanel).toHaveClass('practice-session-entry', 'ui-panel', 'ui-panel--card');
     expect(screen.queryByRole('button', { name: 'Save practice session' })).not.toBeInTheDocument();
     expect(onLoadSongs).not.toHaveBeenCalled();
   });

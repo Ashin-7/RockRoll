@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { AriaRole, ReactNode } from 'react';
 import './Panel.css';
 
 interface PanelProps {
@@ -6,6 +6,7 @@ interface PanelProps {
   className?: string;
   variant?: 'panel' | 'card' | 'hero';
   as?: 'div' | 'section' | 'article' | 'aside' | 'header';
+  role?: AriaRole;
   'aria-label'?: string;
   'aria-labelledby'?: string;
 }

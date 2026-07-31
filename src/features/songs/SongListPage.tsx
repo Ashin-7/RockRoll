@@ -3,7 +3,7 @@ import { useI18n } from '../../i18n/I18nProvider';
 import { MessageKey } from '../../i18n/messages';
 import { CreateSongInput, SongStatus, SongSummary } from './song.types';
 import { createSong, listSongs } from './songs.service';
-import { Panel, StatCard } from '../../components/ui';
+import { Panel, SectionHeading, StatCard } from '../../components/ui';
 import './SongListPage.css';
 
 interface SongListPageProps {
@@ -112,10 +112,12 @@ export function SongListPage({ songs, onCreateSong = createSong, onLoadSongs = l
   return (
     <section className="songs-page">
       <Panel variant="hero" as="header" className="songs-hero">
-        <div>
-          <p className="eyebrow">{t('songs.eyebrow')}</p>
-          <h1>{t('songs.title')}</h1>
-        </div>
+        <SectionHeading
+          as="h1"
+          className="songs-hero__heading"
+          eyebrow={t('songs.eyebrow')}
+          title={t('songs.title')}
+        />
         <StatCard
           align="right"
           label=""
@@ -126,7 +128,7 @@ export function SongListPage({ songs, onCreateSong = createSong, onLoadSongs = l
       </Panel>
 
       <form className="songs-add-form" onSubmit={handleCreateSong}>
-        <h2>{t('songs.addTitle')}</h2>
+        <SectionHeading as="h2" className="songs-add-form__heading" title={t('songs.addTitle')} />
 
         <div className="songs-add-form__field songs-add-form__field--title">
           <label htmlFor="song-title">{t('songs.titleLabel')}</label>
@@ -176,7 +178,7 @@ export function SongListPage({ songs, onCreateSong = createSong, onLoadSongs = l
       ) : null}
 
       {!isLoading && displaySongs.length > 0 ? (
-        <div className="song-board" role="list" aria-label={t('songs.title')}>
+        <Panel className="song-board" variant="card" role="list" aria-label={t('songs.title')}>
           <div className="song-board__header" aria-hidden="true">
             <span>{t('songs.titleLabel')}</span>
             <span>{t('songs.statusLabel')}</span>
@@ -208,7 +210,7 @@ export function SongListPage({ songs, onCreateSong = createSong, onLoadSongs = l
               </a>
             </article>
           ))}
-        </div>
+        </Panel>
       ) : null}
     </section>
   );

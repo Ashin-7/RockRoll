@@ -10,12 +10,12 @@
   grid-template-columns: minmax(0, 1fr) minmax(15rem, 22rem);
 }
 
-.toolbox-output-panel h2 {
-  margin: 0;
-}
-
 .toolbox-hero__heading {
   margin-bottom: var(--space-2);
+}
+
+.toolbox-output-heading {
+  margin-bottom: 0;
 }
 
 .toolbox-hero__heading h1 {

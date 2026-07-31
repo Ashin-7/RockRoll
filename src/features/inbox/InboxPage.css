@@ -8,13 +8,9 @@
   grid-template-columns: minmax(0, 1fr) minmax(18rem, 28rem);
   align-items: end;
   gap: var(--space-6);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-panel);
   background:
     linear-gradient(135deg, var(--color-bg-panel-elevated), var(--color-bg-panel-elevated)),
     repeating-linear-gradient(120deg, var(--color-wine-soft) 0 1px, transparent 1px 12px);
-  box-shadow: var(--shadow-stage);
-  padding: clamp(1.5rem, 4vw, 3.5rem);
 }
 
 .inbox-hero h1 {
@@ -23,6 +19,14 @@
   font-size: clamp(2.8rem, 6vw, 5.8rem);
   line-height: 0.85;
   text-transform: uppercase;
+}
+
+.inbox-hero__heading.ui-section-heading {
+  margin-bottom: var(--space-2);
+}
+
+.inbox-hero__heading .ui-section-heading__text p.eyebrow {
+  margin-bottom: var(--space-2);
 }
 
 .inbox-hero p:last-child {

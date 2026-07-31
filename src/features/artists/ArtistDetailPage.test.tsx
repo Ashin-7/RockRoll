@@ -39,6 +39,9 @@ describe('ArtistDetailPage', () => {
       'Notes',
       'Related',
     ]);
+    screen.getAllByRole('heading', { level: 2 }).forEach((heading) => {
+      expect(heading.closest('.ui-section-heading')).toHaveClass('artist-detail-panel__heading');
+    });
     informationPanels.forEach((panel) => {
       expect(panel).toHaveClass('artist-detail-panel', 'ui-panel', 'ui-panel--card');
     });
@@ -81,6 +84,9 @@ describe('ArtistDetailPage', () => {
 
     await user.click(screen.getByRole('button', { name: 'Edit artist' }));
 
+    const editHeading = screen.getByRole('heading', { level: 2, name: 'Edit artist' });
+
+    expect(editHeading.closest('.ui-section-heading')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Identity' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Timeline' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Archive notes' })).toBeInTheDocument();

@@ -10,12 +10,17 @@
   gap: var(--space-6);
 }
 
-.albums-hero h1 {
-  margin: var(--space-2) 0 0;
-  font-family: var(--font-display);
+.albums-hero__heading.ui-section-heading {
+  margin-bottom: 0;
+}
+
+.albums-hero__heading .ui-section-heading__text p.eyebrow {
+  margin-bottom: var(--space-2);
+}
+
+.albums-hero__heading h1 {
   font-size: clamp(2.6rem, 6vw, 5.25rem);
   line-height: 0.9;
-  text-transform: uppercase;
 }
 
 .albums-hero__summary {
@@ -200,8 +205,7 @@
   padding: var(--space-8);
 }
 
-.albums-toolbar,
-.albums-collection {
+.albums-toolbar {
   border: 1px solid var(--color-border);
   border-radius: 0.85rem;
   background: var(--color-bg-panel-deep);

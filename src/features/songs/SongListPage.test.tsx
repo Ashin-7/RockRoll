@@ -26,6 +26,28 @@ describe('SongListPage', () => {
     expect(screen.getAllByText('Learning')).toHaveLength(2);
   });
 
+  it('renders the song board with the shared card panel', () => {
+    renderWithI18n(<SongListPage songs={realSongs} />);
+
+    expect(screen.getByRole('list', { name: 'Songs' })).toHaveClass('song-board', 'ui-panel', 'ui-panel--card');
+  });
+
+  it('renders the song hero title with the shared section heading', () => {
+    renderWithI18n(<SongListPage songs={realSongs} />);
+
+    expect(screen.getByRole('heading', { name: 'Songs', level: 1 }).closest('.ui-section-heading')).toHaveClass(
+      'songs-hero__heading',
+    );
+  });
+
+  it('renders the add-song title with the shared section heading', () => {
+    renderWithI18n(<SongListPage songs={realSongs} />);
+
+    expect(screen.getByRole('heading', { name: 'Add song', level: 2 }).closest('.ui-section-heading')).toHaveClass(
+      'songs-add-form__heading',
+    );
+  });
+
   it('renders empty state when no real songs exist', async () => {
     renderWithI18n(<SongListPage onLoadSongs={vi.fn().mockResolvedValue([])} />);
 

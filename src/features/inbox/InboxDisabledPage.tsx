@@ -1,3 +1,4 @@
+import { Panel, SectionHeading } from '../../components/ui';
 import { useI18n } from '../../i18n/I18nProvider';
 import './InboxPage.css';
 
@@ -6,13 +7,17 @@ export function InboxDisabledPage() {
 
   return (
     <section className="inbox-page">
-      <div className="inbox-hero">
+      <Panel className="inbox-hero" variant="hero">
         <div>
-          <p className="eyebrow">{t('inbox.disabledEyebrow')}</p>
-          <h1>{t('inbox.disabledTitle')}</h1>
+          <SectionHeading
+            as="h1"
+            className="inbox-hero__heading"
+            eyebrow={t('inbox.disabledEyebrow')}
+            title={t('inbox.disabledTitle')}
+          />
           <p>{t('inbox.disabledDescription')}</p>
         </div>
-      </div>
+      </Panel>
       <div className="inbox-workflow">
         <a href="#archive">{t('inbox.disabledOpenArchive')}</a>
       </div>

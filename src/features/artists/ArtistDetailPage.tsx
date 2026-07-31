@@ -180,13 +180,13 @@ export function ArtistDetailPage({
 
           {isEditing ? (
             <form className="artist-detail-edit-form" onSubmit={handleUpdateArtist}>
-              <div className="artist-detail-edit-form__header">
-                <div>
-                  <p className="eyebrow">{t('artistDetail.formMode')}</p>
-                  <h2>{t('artistDetail.editArtist')}</h2>
-                </div>
-                <p>{t('artistDetail.unsavedHint')}</p>
-              </div>
+              <SectionHeading
+                action={<p>{t('artistDetail.unsavedHint')}</p>}
+                as="h2"
+                className="artist-detail-edit-form__header"
+                eyebrow={t('artistDetail.formMode')}
+                title={t('artistDetail.editArtist')}
+              />
 
               <div className="artist-detail-edit-form__section">
                 <h3>{t('artists.identitySection')}</h3>
@@ -254,15 +254,27 @@ export function ArtistDetailPage({
 
               <div className="artist-detail-panels">
                 <Panel as="section" className="artist-detail-panel" variant="card">
-                  <h2>{t('artistDetail.timelineSection')}</h2>
+                  <SectionHeading
+                    as="h2"
+                    className="artist-detail-panel__heading"
+                    title={t('artistDetail.timelineSection')}
+                  />
                   <p>{renderArtistActivity(artist)}</p>
                 </Panel>
                 <Panel as="section" className="artist-detail-panel" variant="card">
-                  <h2>{t('artists.notes')}</h2>
+                  <SectionHeading
+                    as="h2"
+                    className="artist-detail-panel__heading"
+                    title={t('artists.notes')}
+                  />
                   <p>{artist.notes || t('artists.noNotes')}</p>
                 </Panel>
                 <Panel as="section" className="artist-detail-panel" variant="card">
-                  <h2>{t('artistDetail.relatedSection')}</h2>
+                  <SectionHeading
+                    as="h2"
+                    className="artist-detail-panel__heading"
+                    title={t('artistDetail.relatedSection')}
+                  />
                   <p>{t('artistDetail.relatedHint')}</p>
                 </Panel>
               </div>

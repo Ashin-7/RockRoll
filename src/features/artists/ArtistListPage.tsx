@@ -140,10 +140,12 @@ export function ArtistListPage({
       </Panel>
 
       <form className="artists-add-form" onSubmit={handleCreateArtist}>
-        <div className="artists-add-form__header">
-          <p className="eyebrow">{t('artists.formMode')}</p>
-          <h2>{t('artists.addTitle')}</h2>
-        </div>
+        <SectionHeading
+          as="h2"
+          className="artists-add-form__header"
+          eyebrow={t('artists.formMode')}
+          title={t('artists.addTitle')}
+        />
 
         <div className="artists-add-form__section">
           <h3>{t('artists.identitySection')}</h3>

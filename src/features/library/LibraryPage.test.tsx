@@ -32,7 +32,14 @@ describe('LibraryPage', () => {
     expect(screen.getByText('Videos')).toBeInTheDocument();
     expect(screen.getByText('Scores')).toBeInTheDocument();
     expect(screen.getByText('Audio')).toBeInTheDocument();
-    expect(screen.getByText('Library sections')).toBeInTheDocument();
+    const sectionsHeading = screen.getByRole('heading', { level: 2, name: 'Library sections' });
+    expect(sectionsHeading.closest('.ui-section-heading')).toHaveClass('library-section-title');
+    expect(screen.getByRole('heading', { level: 2, name: 'Add media asset' }).closest('.ui-section-heading')).toHaveClass(
+      'library-form-heading',
+    );
+    expect(screen.getByRole('heading', { level: 2, name: 'Media assets' }).closest('.ui-section-heading')).toHaveClass(
+      'library-assets-heading',
+    );
     expect(screen.getByText('Media / create')).toBeInTheDocument();
     expect(screen.getByText('Asset identity')).toBeInTheDocument();
     expect(screen.getByText('Storage profile')).toBeInTheDocument();

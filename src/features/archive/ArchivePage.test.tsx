@@ -166,7 +166,19 @@ describe('ArchivePage', () => {
   it('renders archive sections', async () => {
     renderWithI18n(<ArchivePage onLoadImportRole={async () => 'admin'} />);
 
-    expect(screen.getByText('Music Archive')).toBeInTheDocument();
+    const heading = screen.getByRole('heading', { name: 'Music Archive' });
+    const hero = heading.closest('.archive-hero');
+
+    expect(heading).toBeInTheDocument();
+    expect(heading.closest('.ui-section-heading')).toHaveClass('archive-hero__heading');
+    expect(hero).toHaveClass('ui-panel', 'ui-panel--hero');
+    expect(screen.getByText('Collections filed').closest('article')).toHaveClass(
+      'archive-hero-metric',
+      'ui-stat-card',
+    );
+    expect(
+      screen.getByRole('heading', { level: 2, name: 'Archive collections' }).closest('.ui-section-heading'),
+    ).toHaveClass('archive-section-heading');
     expect(screen.getByText('Artists')).toBeInTheDocument();
     expect(screen.getByText('Albums')).toBeInTheDocument();
     expect(screen.getByText('Genres')).toBeInTheDocument();

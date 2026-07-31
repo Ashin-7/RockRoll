@@ -206,7 +206,11 @@ export function LibraryPage({
       </Panel>
 
       <section className="library-categories" aria-label={t('library.librarySectionsLabel')}>
-        <h2 className="library-section-title">{t('library.librarySectionsLabel')}</h2>
+        <SectionHeading
+          as="h2"
+          className="library-section-title"
+          title={t('library.librarySectionsLabel')}
+        />
         <article>
           <span>{t('library.videos')}</span>
           <p>{t('library.videosDescription')}</p>
@@ -223,10 +227,12 @@ export function LibraryPage({
 
       <div className="library-workspace">
         <form className="library-form" onSubmit={handleSubmit}>
-          <div className="library-form-heading">
-            <span>{editingAssetId ? t('library.editMode') : t('library.formMode')}</span>
-            <h2>{editingAssetId ? t('library.editTitle') : t('library.addTitle')}</h2>
-          </div>
+          <SectionHeading
+            as="h2"
+            className="library-form-heading"
+            eyebrow={editingAssetId ? t('library.editMode') : t('library.formMode')}
+            title={editingAssetId ? t('library.editTitle') : t('library.addTitle')}
+          />
           <fieldset>
             <legend>{t('library.identitySection')}</legend>
             <label>
@@ -322,7 +328,7 @@ export function LibraryPage({
         </form>
 
         <div className="library-assets">
-          <h2>{t('library.assetsTitle')}</h2>
+          <SectionHeading as="h2" className="library-assets-heading" title={t('library.assetsTitle')} />
           {isLoading ? <p>{t('library.loading')}</p> : null}
           {error ? <p role="alert">{error}</p> : null}
           {!isLoading && !error && mediaAssets.length === 0 ? <p>{t('library.empty')}</p> : null}

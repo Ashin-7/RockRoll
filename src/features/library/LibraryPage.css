@@ -26,7 +26,8 @@
 }
 
 .library-categories span,
-.library-form-heading span {
+.library-form-heading .ui-section-heading__text p.eyebrow {
+  margin: 0;
   color: var(--color-fg-subtle);
   font-size: 0.78rem;
   font-weight: 700;
@@ -53,8 +54,18 @@
   gap: 1rem;
 }
 
+.library-form-heading.ui-section-heading,
+.library-assets-heading.ui-section-heading {
+  margin-bottom: 0;
+}
+
 .library-form-heading h2 {
   margin: 0.2rem 0 0;
+  font-size: 1.5em;
+}
+
+.library-assets-heading h2 {
+  font-size: 1.5em;
 }
 
 .library-form fieldset {

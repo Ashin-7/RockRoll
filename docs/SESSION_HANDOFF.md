@@ -2390,6 +2390,98 @@ Song Detail 的 Notes / Related 双面板已完成 Panel card 迁移；Song Deta
 
 建议开启新对话，并粘贴以上提示词继续。
 
+## 集中收口执行记录（2026-07-31，UI Phase 2 现有原语安全迁移）
+
+本轮完成：
+
+- 用户要求“一次迭代完所有后再进行交接”，因此本轮在第十八张切片后继续完成全部剩余安全机械迁移，再统一交接。
+- 当前分支仍为 `codex/ui-phase-2-panels`，HEAD 为 `b67e861`；累计三十一张 UI 切片均尚未提交或推送。
+- 集中完成 7 个实际挂载页面、十三类既有原语迁移：
+  - Song List：hero 标题。
+  - Archive：hero 标题、集合计数 StatCard、集合索引标题。
+  - Practice：登录提示 / 编辑入口 Panel 与标题。
+  - Song Detail：编辑标题、Notes / Related 面板标题。
+  - Album Detail：编辑标题、Notes / Related 面板标题。
+  - Artist Detail：三个只读信息面板标题。
+  - Library：资产表单标题、资产列表标题。
+- 新增结构断言后的 RED 为 7 个测试文件中 9 个目标失败、47 个原有用例通过；GREEN 后 7 个测试文件、56 个用例通过。
+- 累计定向回归为 15 个测试文件、123 个用例通过；最终 production build 通过，仅保留既有 chunk size 警告；目标差异检查无错误。
+- 源码收口审计确认剩余原生 `h2` 均属于明确排除的业务实体标题、Archive 管理员 CRUD 表单或 Auth 条件流程。
+- 真实 `#songs`、`#archive`、`#practice`、`#library` 在 1280×800 与 390×844 下无横向溢出，控制台无 warning / error。
+- Song / Album / Artist Detail 在 Guest 环境没有可用真实数据，仅由定向测试覆盖；未新增临时路由或假数据。
+- 未运行 `npm install`，未新增 `EntityCard`，未修改业务数据、路由、Supabase、Auth、导入、权限或 RLS。
+
+本轮集中新增修改：
+
+- `src/features/songs/SongListPage.tsx`
+- `src/features/songs/SongListPage.css`
+- `src/features/songs/SongListPage.test.tsx`
+- `src/features/archive/ArchivePage.tsx`
+- `src/features/archive/ArchivePage.css`
+- `src/features/archive/ArchivePage.test.tsx`
+- `src/features/practice/PracticeHistoryPage.tsx`
+- `src/features/practice/PracticeHistoryPage.css`
+- `src/features/practice/PracticeHistoryPage.test.tsx`
+- `src/features/songs/SongDetailPage.tsx`
+- `src/features/songs/SongDetailPage.css`
+- `src/features/songs/SongDetailPage.test.tsx`
+- `src/features/albums/AlbumDetailPage.tsx`
+- `src/features/albums/AlbumDetailPage.css`
+- `src/features/albums/AlbumDetailPage.test.tsx`
+- `src/features/artists/ArtistDetailPage.tsx`
+- `src/features/artists/ArtistDetailPage.css`
+- `src/features/artists/ArtistDetailPage.test.tsx`
+- `src/features/library/LibraryPage.tsx`
+- `src/features/library/LibraryPage.css`
+- `src/features/library/LibraryPage.test.tsx`
+- 三份状态 / 交接文档
+
+验证命令与结果：
+
+```powershell
+$env:Path = 'C:\Users\Ashin\AppData\Local\nvm\v20.20.2;' + $env:Path
+npm test -- --run src/features/songs/SongListPage.test.tsx src/features/archive/ArchivePage.test.tsx src/features/practice/PracticeHistoryPage.test.tsx src/features/songs/SongDetailPage.test.tsx src/features/albums/AlbumDetailPage.test.tsx src/features/artists/ArtistDetailPage.test.tsx src/features/library/LibraryPage.test.tsx
+npm test -- --run src/components/ui/ui.test.tsx src/App.test.tsx src/features/songs/SongListPage.test.tsx src/features/toolbox/ToolboxPage.test.tsx src/features/albums/AlbumListPage.test.tsx src/features/practice/PracticeHistoryPage.test.tsx src/features/backstage/BackstagePage.test.tsx src/features/albums/AlbumDetailPage.test.tsx src/features/library/LibraryPage.test.tsx src/features/songs/SongDetailPage.test.tsx src/features/auth/AuthPage.test.tsx src/features/artists/ArtistDetailPage.test.tsx src/features/artists/ArtistListPage.test.tsx src/features/archive/ArchivePage.test.tsx src/features/archive/ArchiveDetailPage.test.tsx
+npm run build
+git diff --check -- src/features/songs/SongListPage.tsx src/features/songs/SongListPage.css src/features/songs/SongListPage.test.tsx src/features/archive/ArchivePage.tsx src/features/archive/ArchivePage.css src/features/archive/ArchivePage.test.tsx src/features/practice/PracticeHistoryPage.tsx src/features/practice/PracticeHistoryPage.css src/features/practice/PracticeHistoryPage.test.tsx src/features/songs/SongDetailPage.tsx src/features/songs/SongDetailPage.css src/features/songs/SongDetailPage.test.tsx src/features/albums/AlbumDetailPage.tsx src/features/albums/AlbumDetailPage.css src/features/albums/AlbumDetailPage.test.tsx src/features/artists/ArtistDetailPage.tsx src/features/artists/ArtistDetailPage.css src/features/artists/ArtistDetailPage.test.tsx src/features/library/LibraryPage.tsx src/features/library/LibraryPage.css src/features/library/LibraryPage.test.tsx
+```
+
+结果：RED 阶段 9 个目标断言失败且原有 47 个用例通过；GREEN 后 7 个页面测试文件、56 个用例通过；累计 15 个定向测试文件、123 个用例通过；最终 production build 通过；目标差异检查无错误。
+
+风险与未完成事项：
+
+1. 当前三十一张 UI 切片仍全部未提交、未推送，统一提交前必须审查工作区范围。
+2. Song / Album / Artist Detail 的目标标题没有真实 Guest 数据可做浏览器视觉验收；测试覆盖已通过，但不伪造视觉结论。
+3. 现有 `Panel / SectionHeading / StatCard` 的安全机械迁移已收口；Auth、管理员 CRUD、业务实体卡片与新原语不在本轮范围。
+4. 当前主线仍是 Archive / Import；如不先同步 UI 分支，下一轮应返回该主线。
+
+下一轮提示词：
+
+```text
+继续 RockRoll 项目开发。
+请只读取：
+- AGENTS.md
+- docs/PROJECT_STATUS.md
+- docs/NEXT_TASKS.md
+- docs/SESSION_HANDOFF.md
+- 当前分支状态
+- 本轮修改的 7 个页面目录
+
+当前分支是 codex/ui-phase-2-panels，已有三十一张未提交 UI 切片。
+现有 Panel / SectionHeading / StatCard 的安全机械迁移已经集中收口。
+累计 15 个定向测试文件、123 个用例和 production build 通过。
+请先统一审查 git status 与本轮范围，并与我确认是否提交、推送当前分支；不要自行提交或推送。
+如暂不进行 Git 同步，则返回 Archive / Import 主线。
+不要扫描整个仓库。
+不要运行 npm install。
+不要新增 EntityCard。
+不要修改权限敏感业务行为。
+不要做架构重构。
+完成后中文总结。
+```
+
+建议开启新对话，并粘贴以上提示词继续。
+
 ## 当前有效交接（2026-07-22，UI 第 2 期分支本地合并后）
 
 本轮完成：
@@ -2426,6 +2518,1072 @@ Song Detail 的 Notes / Related 双面板已完成 Panel card 迁移；Song Deta
 
 UI 第 2 期切片已通过 82abfd0 推送到 origin/codex/ui-phase-2-slices，并 fast-forward 合并到本地 main；合并后全量 391 个用例和 production build 通过。main 尚未推送 origin/main。
 继续开发前，从最新 main 创建新的 codex/ 功能分支；不要扫描整个仓库，不运行 npm install，不新增 EntityCard，不修改受限业务范围。
+完成后中文总结。
+```
+
+建议开启新对话，并粘贴以上提示词继续。
+
+## 当前有效交接（2026-07-22，Song List 列表外壳 Panel 迁移后）
+
+本轮完成：
+
+- 从最新本地 `main` 创建新分支 `codex/ui-phase-2-panels`，主分支仍未推送 `origin/main`。
+- `SongListPage` 的 `song-board` 外层列表已迁移到既有 `Panel variant="card"`，保留 `role="list"`、可访问名称、表头、歌曲顺序和单曲卡片。
+- `Panel` 补充标准 `AriaRole` 类型；列表外壳删除共享原语已承担的边框、背景、圆角和内边距重复 CSS。
+- 结构测试完成预期 RED / GREEN；Song List 与共享 UI 共 13 个用例通过，production build 通过，仅保留既有 chunk size 警告。
+- `/#songs` 在 `1280x720` 与 `390x844` 无横向溢出；Guest 数据为空，未伪造列表面板视觉验收。控制台仅有既有 favicon 404。
+- 未运行 `npm install`，未新增 `EntityCard`，未修改歌曲业务逻辑或受限业务范围；本轮切片尚未提交或推送。
+
+本轮修改：
+
+- `src/components/ui/Panel.tsx`
+- `src/features/songs/SongListPage.tsx`
+- `src/features/songs/SongListPage.css`
+- `src/features/songs/SongListPage.test.tsx`
+- `docs/PROJECT_STATUS.md`
+- `docs/NEXT_TASKS.md`
+- `docs/SESSION_HANDOFF.md`
+
+未完成事项：
+
+1. 当前 `codex/ui-phase-2-panels` 上的 Song List 小切片尚未提交或推送。
+2. 本地 `main` 仍领先 `origin/main`；除非用户明确要求并复核领先范围，不推送主分支。
+3. 下一轮应选择另一个单页面小切片，不继续扩大 Song List 范围。
+
+下一轮提示词：
+
+```text
+继续 RockRoll UI 重构。
+请在 E:\Code\RcokRoll 的 codex/ui-phase-2-panels 分支工作。
+请只读取：
+- AGENTS.md
+- docs/PROJECT_STATUS.md
+- docs/NEXT_TASKS.md
+- docs/SESSION_HANDOFF.md
+- docs/UI_REFACTOR_PLAN.md
+- 下一单页面切片涉及的组件、样式、测试和对应共享 UI 原语
+
+Song List 列表外壳已完成 Panel card 迁移；目标 13 个用例和 production build 通过，当前切片尚未提交或推送。
+先核对分支和未提交改动，再选择另一个单页面小切片，先 RED 后 GREEN，一次只迁移一种重复样式。
+不要扫描整个仓库，不运行 npm install，不新增 EntityCard，不修改受限业务范围。
+完成后中文总结。
+```
+
+建议开启新对话，并粘贴以上提示词继续。
+
+## 当前有效交接（2026-07-22，Toolbox 输出标题 SectionHeading 迁移后）
+
+本轮完成：
+
+- 当前分支仍为 `codex/ui-phase-2-panels`，保留上一张 Song List 未提交切片。
+- `ToolboxPage` 输出面板的 `MUSICXML / GP` 与 `MusicXML for Guitar Pro` 已迁移到既有 `SectionHeading as="h2"`。
+- 标题文字、层级、顺序和响应式输出面板布局保持不变；输入面板、文件分析、下载、错误状态与动态 Rhythm 区域未修改。
+- 结构测试完成预期 RED / GREEN；Toolbox 与共享 UI 共 13 个用例通过，production build 通过，仅保留既有 chunk size 警告。
+- `/#toolbox` 在 `1280x720` 与 `390x844` 完成视觉冒烟，共享输出标题无截断或横向溢出；控制台仅有既有 favicon 404。
+- 未运行 `npm install`，未新增 `EntityCard`，未修改受限业务范围；当前累计两张切片均尚未提交或推送。
+
+本轮新增修改：
+
+- `src/features/toolbox/ToolboxPage.tsx`
+- `src/features/toolbox/ToolboxPage.css`
+- `src/features/toolbox/ToolboxPage.test.tsx`
+- 三份状态 / 交接文档
+
+未完成事项：
+
+1. `codex/ui-phase-2-panels` 当前累计 Song List 与 Toolbox 两张未提交切片。
+2. 本地 `main` 仍领先 `origin/main`；除非用户明确要求并复核领先范围，不推送主分支。
+3. 下一轮应选择另一个页面的小切片，不继续扩大 Toolbox 范围。
+
+下一轮提示词：
+
+```text
+继续 RockRoll UI 重构。
+请在 E:\Code\RcokRoll 的 codex/ui-phase-2-panels 分支工作。
+请只读取：
+- AGENTS.md
+- docs/PROJECT_STATUS.md
+- docs/NEXT_TASKS.md
+- docs/SESSION_HANDOFF.md
+- docs/UI_REFACTOR_PLAN.md
+- 下一单页面切片涉及的组件、样式、测试和对应共享 UI 原语
+
+当前分支累计两张未提交切片：Song List 列表外壳 Panel 迁移、Toolbox 输出标题 SectionHeading 迁移。Toolbox 与共享 UI 共 13 个用例、production build 和桌面 / 窄屏视觉冒烟通过。
+先核对分支和未提交改动，再选择另一个页面的小切片，先 RED 后 GREEN，一次只迁移一种重复样式。
+不要扫描整个仓库，不运行 npm install，不新增 EntityCard，不修改受限业务范围。
+完成后中文总结。
+```
+
+建议开启新对话，并粘贴以上提示词继续。
+
+## 当前有效交接（2026-07-22，Album List hero 标题 SectionHeading 迁移后）
+
+本轮完成：
+
+- 当前分支仍为 `codex/ui-phase-2-panels`，保留 Song List 与 Toolbox 两张未提交切片。
+- `AlbumListPage` hero 的 `Album library` 与 `Albums` 已迁移到既有 `SectionHeading as="h1"`。
+- 标题文字、层级、字号、间距和桌面 / 窄屏 hero 布局保持不变；集合加载、搜索、曲风筛选、分页与权限行为未修改。
+- 结构测试完成预期 RED / GREEN；累计页面与共享 UI 共 4 个测试文件、36 个用例通过。
+- production build 与目标文件差异检查通过；仅保留既有 chunk size 与 Windows LF/CRLF 提示。
+- `/#albums` 在 `1280x720` 与 `390x844` 完成只读视觉冒烟，标题和统计卡无截断或横向溢出，控制台无 warning / error。
+- 测试与构建使用当前已有 Node.js `v20.20.2` / npm `10.8.2` 环境；未切换运行时、未运行 `npm install`。
+- 未新增 `EntityCard`，未修改受限业务范围；当前累计三张切片均尚未提交或推送。
+
+本轮新增修改：
+
+- `src/features/albums/AlbumListPage.tsx`
+- `src/features/albums/AlbumListPage.css`
+- `src/features/albums/AlbumListPage.test.tsx`
+- 三份状态 / 交接文档
+
+未完成事项：
+
+1. `codex/ui-phase-2-panels` 当前累计 Song List、Toolbox 与 Album List 三张未提交切片。
+2. 本地 `main` 仍领先 `origin/main`；除非用户明确要求并复核领先范围，不推送主分支。
+3. 下一轮应选择另一个页面的小切片，不继续扩大 Album List 范围。
+
+下一轮提示词：
+
+```text
+继续 RockRoll UI 重构。
+请在 E:\Code\RcokRoll 的 codex/ui-phase-2-panels 分支工作。
+请只读取：
+- AGENTS.md
+- docs/PROJECT_STATUS.md
+- docs/NEXT_TASKS.md
+- docs/SESSION_HANDOFF.md
+- docs/UI_REFACTOR_PLAN.md
+- 下一单页面切片涉及的组件、样式、测试和对应共享 UI 原语
+
+当前分支累计三张未提交切片：Song List 列表外壳 Panel、Toolbox 输出标题 SectionHeading、Album List hero 标题 SectionHeading。累计页面与共享 UI 共 4 个测试文件、36 个用例、production build 和 Album List 桌面 / 窄屏视觉冒烟通过。
+先核对分支和未提交改动，再选择另一个页面的小切片，先 RED 后 GREEN，一次只迁移一种重复样式。
+不要扫描整个仓库，不运行 npm install，不新增 EntityCard，不修改受限业务范围。
+完成后中文总结。
+```
+
+建议开启新对话，并粘贴以上提示词继续。
+
+## 当前有效交接（2026-07-22，Practice History 筛选标题 SectionHeading 迁移后）
+
+本轮完成：
+
+- 当前分支仍为 `codex/ui-phase-2-panels`，保留 Song List、Toolbox 与 Album List 三张未提交切片。
+- `PracticeHistoryPage` 筛选区标题已迁移到既有 `SectionHeading as="h2"`，并通过可选 `headingId` 保留 `aria-labelledby` 关联。
+- 标题文字、层级、筛选区布局、筛选行为、练习数据和 CRUD 均未改变。
+- 结构测试完成预期 RED / GREEN；Practice History 与共享 UI 共 2 个测试文件、18 个用例通过，累计五个定向测试文件、47 个用例、production build 与目标差异检查通过。
+- 本地 `/#practice` Guest 数据为空，目标筛选区不渲染；页面控制台无 warning / error，但未伪造桌面 / 窄屏目标视觉验收。
+- 未运行 `npm install`，未新增 `EntityCard`，未修改受限业务范围；当前累计四张切片均尚未提交或推送。
+
+本轮新增修改：
+
+- `src/components/ui/SectionHeading.tsx`
+- `src/components/ui/ui.test.tsx`
+- `src/features/practice/PracticeHistoryPage.tsx`
+- `src/features/practice/PracticeHistoryPage.css`
+- `src/features/practice/PracticeHistoryPage.test.tsx`
+- 三份状态 / 交接文档
+
+未完成事项：
+
+1. `codex/ui-phase-2-panels` 当前累计四张未提交 UI 切片。
+2. 未经用户要求不要提交、推送或合并。
+3. 下一轮应选择另一个页面的小切片，不继续扩大 Practice History 范围。
+
+下一轮提示词：
+
+```text
+继续 RockRoll UI 重构。
+请在 E:\Code\RcokRoll 的 codex/ui-phase-2-panels 分支工作。
+请只读取：
+- AGENTS.md
+- docs/PROJECT_STATUS.md
+- docs/NEXT_TASKS.md
+- docs/SESSION_HANDOFF.md
+- docs/UI_REFACTOR_PLAN.md
+- 下一单页面切片涉及的组件、样式、测试和对应共享 UI 原语
+
+当前分支累计四张未提交切片：Song List 列表外壳 Panel、Toolbox 输出标题 SectionHeading、Album List hero 标题 SectionHeading、Practice History 筛选标题 SectionHeading。累计 5 个定向测试文件、47 个用例与 production build 通过；Practice History Guest 空数据下筛选区不渲染，未伪造目标视觉验收。
+先核对分支和未提交改动，再选择另一个页面的小切片，先 RED 后 GREEN，一次只迁移一种重复样式。
+不要扫描整个仓库，不运行 npm install，不新增 EntityCard，不修改受限业务范围。
+完成后中文总结。
+```
+
+建议开启新对话，并粘贴以上提示词继续。
+
+## 当前有效交接（2026-07-30，Backstage 内容列 Panel 迁移后）
+
+本轮完成：
+
+- 当前分支仍为 `codex/ui-phase-2-panels`，HEAD 为 `b67e861`，保留此前四张未提交 UI 切片。
+- `BackstagePage` 的 Recent tapes / Import inbox 两个内容列外壳已迁移到既有 `Panel variant="card"`。
+- 标题、mock 数据、内容顺序、文章语义、桌面两列 / 窄屏单列布局及页面专属阴影保持不变。
+- 结构测试完成预期 RED / GREEN；累计 6 个定向测试文件、48 个用例通过。
+- production build 与目标差异检查通过；仅保留既有 chunk size 与 Windows LF/CRLF 提示。
+- `/#backstage` 在 `1280x720` 与 `390x844` 完成只读视觉冒烟，目标面板无截断或横向溢出，控制台无 warning / error。
+- 验证使用当前已有 Node.js `v20.20.2` / npm `10.8.2`；未运行 `npm install`。
+- 未新增 `EntityCard`，未修改 Supabase、Auth、CRUD、导入或权限范围；当前累计五张切片均尚未提交或推送。
+
+本轮新增修改：
+
+- `src/features/backstage/BackstagePage.tsx`
+- `src/features/backstage/BackstagePage.css`
+- `src/features/backstage/BackstagePage.test.tsx`
+- 三份状态 / 交接文档
+
+未完成事项：
+
+1. `codex/ui-phase-2-panels` 当前累计五张未提交 UI 切片：Song List 列表外壳 Panel、Toolbox 输出标题 SectionHeading、Album List hero 标题 SectionHeading、Practice History 筛选标题 SectionHeading、Backstage 内容列 Panel。
+2. 未经用户明确要求，不提交、推送或合并。
+3. 当前主线 Archive / Import 已保持稳定；如继续 UI 第 2 期，下一轮应选择另一个页面的小切片，不继续扩大 Backstage 范围。
+
+下一轮提示词：
+
+```text
+Continue RockRoll project development.
+Read only:
+- AGENTS.md
+- docs/PROJECT_STATUS.md
+- docs/NEXT_TASKS.md
+- docs/SESSION_HANDOFF.md
+- docs/UI_REFACTOR_PLAN.md
+- current task related directory
+
+Current main line: Archive/Import. Keep the real large-list import pipeline stable.
+The current branch is codex/ui-phase-2-panels with five uncommitted UI slices; first verify the branch and existing changes.
+Continue the next UI Phase 2 task in docs/NEXT_TASKS.md with one small page slice, RED before GREEN.
+Do not scan the whole repository.
+Do not run npm install.
+Do not add EntityCard or modify permission-sensitive business behavior.
+Do not do architecture refactoring.
+Summarize in Chinese when done.
+```
+
+建议开启新对话，并粘贴以上提示词继续。
+
+## 当前有效交接（2026-07-30，Album Detail 元数据 StatCard 迁移后）
+
+本轮完成：
+
+- 当前分支仍为 `codex/ui-phase-2-panels`，HEAD 为 `b67e861`，保留此前五张未提交 UI 切片。
+- `AlbumDetailPage` 的发行年份、专辑类型与艺人三项只读元数据已迁移到既有 `StatCard`。
+- 数据、文案、顺序、三列 / 单列响应式布局及页面原有字号、颜色和间距保持不变。
+- 结构测试在 Node.js `v20.20.2` 下完成预期 RED / GREEN；Album Detail 4 个用例通过，累计 7 个定向测试文件、52 个用例通过。
+- production build 通过，仅保留既有 chunk size 警告。
+- Guest 环境下 Album Detail / Album List 均停留在既有加载状态，目标统计卡未渲染；控制台无 warning / error，因此未伪造目标视觉验收。
+- 未运行 `npm install`，未新增 `EntityCard`，未修改数据加载、编辑 / 删除权限、CRUD、Supabase、Auth、导入或 RLS。
+- 当前累计六张切片均尚未提交或推送。
+
+本轮新增修改：
+
+- `src/features/albums/AlbumDetailPage.tsx`
+- `src/features/albums/AlbumDetailPage.css`
+- `src/features/albums/AlbumDetailPage.test.tsx`
+- 三份状态 / 交接文档
+
+未完成事项：
+
+1. `codex/ui-phase-2-panels` 当前累计六张未提交 UI 切片：Song List 列表外壳 Panel、Toolbox 输出标题 SectionHeading、Album List hero 标题 SectionHeading、Practice History 筛选标题 SectionHeading、Backstage 内容列 Panel、Album Detail 元数据 StatCard。
+2. 未经用户明确要求，不提交、推送或合并。
+3. 当前主线 Archive / Import 保持稳定；如继续 UI 第 2 期，下一轮应选择另一个页面的小切片，不继续扩大 Album Detail 范围。
+
+下一轮提示词：
+
+```text
+继续 RockRoll 项目开发。
+请只读取：
+- AGENTS.md
+- docs/PROJECT_STATUS.md
+- docs/NEXT_TASKS.md
+- docs/SESSION_HANDOFF.md
+- docs/UI_REFACTOR_PLAN.md
+- 当前任务相关目录
+
+当前分支是 codex/ui-phase-2-panels，已有六张未提交 UI 切片；先核对分支和现有改动。
+Album Detail 三项元数据已完成 StatCard 迁移；累计 7 个定向测试文件、52 个用例和 production build 通过。
+继续 docs/NEXT_TASKS.md 中的下一项 UI Phase 2 单页面小切片，先 RED 后 GREEN。
+不要扫描整个仓库。
+不要运行 npm install。
+不要新增 EntityCard。
+不要修改权限敏感业务行为。
+不要做架构重构。
+完成后中文总结。
+```
+
+建议开启新对话，并粘贴以上提示词继续。
+
+## 当前有效交接（2026-07-30，Library 分区标题 SectionHeading 迁移后）
+
+本轮完成：
+
+- 当前分支仍为 `codex/ui-phase-2-panels`，HEAD 为 `b67e861`，保留此前六张未提交 UI 切片。
+- `LibraryPage` 的 `Library sections` 二级标题已迁移到既有 `SectionHeading as="h2"`。
+- 标题文字、层级、分类卡顺序、网格跨列及响应式布局保持不变。
+- 结构测试在 Node.js `v20.20.2` 下完成预期 RED / GREEN；Library 8 个用例通过，累计 8 个定向测试文件、60 个用例通过。
+- production build 通过，仅保留既有 chunk size 警告。
+- `/#library` 在 `1280x720` 与 `390x844` 完成只读视觉冒烟：目标标题清晰、分类卡布局正常、无横向溢出，控制台无 warning / error。
+- 未运行 `npm install`，未新增 `EntityCard`，未修改表单、CRUD、service、Supabase、Auth、导入、权限或 RLS。
+- 当前累计七张切片均尚未提交或推送。
+
+本轮新增修改：
+
+- `src/features/library/LibraryPage.tsx`
+- `src/features/library/LibraryPage.test.tsx`
+- 三份状态 / 交接文档
+
+未完成事项：
+
+1. `codex/ui-phase-2-panels` 当前累计七张未提交 UI 切片：Song List 列表外壳 Panel、Toolbox 输出标题 SectionHeading、Album List hero 标题 SectionHeading、Practice History 筛选标题 SectionHeading、Backstage 内容列 Panel、Album Detail 元数据 StatCard、Library 分区标题 SectionHeading。
+2. 未经用户明确要求，不提交、推送或合并。
+3. 当前主线 Archive / Import 保持稳定；如继续 UI 第 2 期，下一轮应选择另一个页面的小切片，不继续扩大 Library 范围。
+
+下一轮提示词：
+
+```text
+继续 RockRoll 项目开发。
+请只读取：
+- AGENTS.md
+- docs/PROJECT_STATUS.md
+- docs/NEXT_TASKS.md
+- docs/SESSION_HANDOFF.md
+- docs/UI_REFACTOR_PLAN.md
+- 当前任务相关目录
+
+当前分支是 codex/ui-phase-2-panels，已有七张未提交 UI 切片；先核对分支和现有改动。
+Library 分区标题已完成 SectionHeading 迁移；累计 8 个定向测试文件、60 个用例和 production build 通过。
+继续 docs/NEXT_TASKS.md 中的下一项 UI Phase 2 单页面小切片，先 RED 后 GREEN。
+不要扫描整个仓库。
+不要运行 npm install。
+不要新增 EntityCard。
+不要修改权限敏感业务行为。
+不要做架构重构。
+完成后中文总结。
+```
+
+建议开启新对话，并粘贴以上提示词继续。
+
+## 当前有效交接（2026-07-30，Song Detail 元数据 StatCard 迁移后）
+
+本轮完成：
+
+- 当前分支仍为 `codex/ui-phase-2-panels`，HEAD 为 `b67e861`，保留此前七张未提交 UI 切片。
+- `SongDetailPage` 的难度、发行年份与 BPM 三项只读元数据已迁移到既有 `StatCard`。
+- 数据、文案、顺序、三列 / 单列响应式布局及页面原有字号、颜色和间距保持不变。
+- 结构测试在 Node.js `v20.20.2` 下完成预期 RED / GREEN；Song Detail 7 个用例通过，累计 9 个定向测试文件、67 个用例通过。
+- production build 通过，仅保留既有 chunk size 警告。
+- Guest 环境没有可渲染的歌曲详情数据，因此未伪造目标统计卡的浏览器视觉验收。
+- 未运行 `npm install`，未新增 `EntityCard`，未修改歌曲加载、编辑 / 删除、CRUD、service、Supabase、Auth、导入、权限或 RLS。
+- 当前累计八张切片均尚未提交或推送。
+
+本轮新增修改：
+
+- `src/features/songs/SongDetailPage.tsx`
+- `src/features/songs/SongDetailPage.css`
+- `src/features/songs/SongDetailPage.test.tsx`
+- 三份状态 / 交接文档
+
+未完成事项：
+
+1. `codex/ui-phase-2-panels` 当前累计八张未提交 UI 切片：Song List 列表外壳 Panel、Toolbox 输出标题 SectionHeading、Album List hero 标题 SectionHeading、Practice History 筛选标题 SectionHeading、Backstage 内容列 Panel、Album Detail 元数据 StatCard、Library 分区标题 SectionHeading、Song Detail 元数据 StatCard。
+2. 未经用户明确要求，不提交、推送或合并。
+3. 当前主线 Archive / Import 保持稳定；如继续 UI 第 2 期，下一轮应选择另一个页面的小切片，不继续扩大 Song Detail 范围。
+
+下一轮提示词：
+
+```text
+继续 RockRoll 项目开发。
+请只读取：
+- AGENTS.md
+- docs/PROJECT_STATUS.md
+- docs/NEXT_TASKS.md
+- docs/SESSION_HANDOFF.md
+- docs/UI_REFACTOR_PLAN.md
+- 当前任务相关目录
+
+当前分支是 codex/ui-phase-2-panels，已有八张未提交 UI 切片；先核对分支和现有改动。
+Song Detail 三项元数据已完成 StatCard 迁移；累计 9 个定向测试文件、67 个用例和 production build 通过。
+继续 docs/NEXT_TASKS.md 中的下一项 UI Phase 2 单页面小切片，先 RED 后 GREEN。
+不要扫描整个仓库。
+不要运行 npm install。
+不要新增 EntityCard。
+不要修改权限敏感业务行为。
+不要做架构重构。
+完成后中文总结。
+```
+
+建议开启新对话，并粘贴以上提示词继续。
+
+## 当前有效交接（2026-07-30，Auth 页面标题 SectionHeading 迁移后）
+
+本轮完成：
+
+- 当前分支仍为 `codex/ui-phase-2-panels`，HEAD 为 `b67e861`，保留此前八张未提交 UI 切片。
+- `AuthPage` 的页面 eyebrow + `h1` 已迁移到既有 `SectionHeading as="h1"`。
+- 标题文案、层级及认证状态、表单、按钮、回调与 Supabase 调用均未改变。
+- 结构测试在 Node.js `v20.20.2` 下完成准确的预期 RED / GREEN；Auth 18 个用例通过，累计 10 个定向测试文件、85 个用例通过。
+- production build 通过，仅保留既有 chunk size 警告。
+- `/#auth` 在桌面与窄屏完成只读视觉冒烟：共享标题清晰、页面无横向溢出，控制台无 warning / error；未执行登录、注册或表单提交。
+- 未运行 `npm install`，未新增 `EntityCard`，未修改 Auth 业务逻辑、Supabase、CRUD、导入、权限或 RLS。
+- 当前累计九张切片均尚未提交或推送。
+
+本轮新增修改：
+
+- `src/features/auth/AuthPage.tsx`
+- `src/features/auth/AuthPage.test.tsx`
+- 三份状态 / 交接文档
+
+未完成事项：
+
+1. `codex/ui-phase-2-panels` 当前累计九张未提交 UI 切片：Song List 列表外壳 Panel、Toolbox 输出标题 SectionHeading、Album List hero 标题 SectionHeading、Practice History 筛选标题 SectionHeading、Backstage 内容列 Panel、Album Detail 元数据 StatCard、Library 分区标题 SectionHeading、Song Detail 元数据 StatCard、Auth 页面标题 SectionHeading。
+2. 未经用户明确要求，不提交、推送或合并。
+3. 当前主线 Archive / Import 保持稳定；如继续 UI 第 2 期，下一轮应选择另一个页面的小切片，不继续扩大 Auth 范围。
+
+下一轮提示词：
+
+```text
+继续 RockRoll 项目开发。
+请只读取：
+- AGENTS.md
+- docs/PROJECT_STATUS.md
+- docs/NEXT_TASKS.md
+- docs/SESSION_HANDOFF.md
+- docs/UI_REFACTOR_PLAN.md
+- 当前任务相关目录
+
+当前分支是 codex/ui-phase-2-panels，已有九张未提交 UI 切片；先核对分支和现有改动。
+Auth 页面标题已完成 SectionHeading 迁移；累计 10 个定向测试文件、85 个用例和 production build 通过。
+继续 docs/NEXT_TASKS.md 中的下一项 UI Phase 2 单页面小切片，先 RED 后 GREEN。
+不要扫描整个仓库。
+不要运行 npm install。
+不要新增 EntityCard。
+不要修改权限敏感业务行为。
+不要做架构重构。
+完成后中文总结。
+```
+
+建议开启新对话，并粘贴以上提示词继续。
+
+## 当前有效交接（2026-07-30，Artist Detail 编辑标题 SectionHeading 迁移后）
+
+本轮完成：
+
+- 当前分支仍为 `codex/ui-phase-2-panels`，HEAD 为 `b67e861`，保留此前九张未提交 UI 切片。
+- `ArtistDetailPage` 编辑表单的 eyebrow + `h2` 已迁移到既有 `SectionHeading as="h2"`。
+- 标题文案、层级、未保存提示、表单字段、按钮、加载、保存 / 删除回调与 Artist CRUD 行为均未改变。
+- 原计划评估的三项统计卡使用 `dl/dt/dd`；为保留定义列表语义，本轮没有迁移统计卡，也没有扩展共享 `StatCard` API。
+- 结构测试在 Node.js `v20.20.2` 下完成准确的预期 RED / GREEN；Artist Detail 6 个用例通过，累计 11 个定向测试文件、91 个用例通过。
+- production build 通过，仅保留既有 chunk size 警告；本轮未执行浏览器视觉验收。
+- 未运行 `npm install`，未新增 `EntityCard`，未修改 Supabase、Auth、导入、权限或 RLS。
+- 当前累计十张切片均尚未提交或推送。
+
+本轮新增修改：
+
+- `src/features/artists/ArtistDetailPage.tsx`
+- `src/features/artists/ArtistDetailPage.css`
+- `src/features/artists/ArtistDetailPage.test.tsx`
+- 三份状态 / 交接文档
+
+未完成事项：
+
+1. `codex/ui-phase-2-panels` 当前累计十张未提交 UI 切片：Song List 列表外壳 Panel、Toolbox 输出标题 SectionHeading、Album List hero 标题 SectionHeading、Practice History 筛选标题 SectionHeading、Backstage 内容列 Panel、Album Detail 元数据 StatCard、Library 分区标题 SectionHeading、Song Detail 元数据 StatCard、Auth 页面标题 SectionHeading、Artist Detail 编辑标题 SectionHeading。
+2. 未经用户明确要求，不提交、推送或合并。
+3. 当前主线 Archive / Import 保持稳定；如继续 UI 第 2 期，下一轮应选择另一个页面的小切片，不继续扩大 Artist Detail 范围。
+
+下一轮提示词：
+
+```text
+继续 RockRoll 项目开发。
+请只读取：
+- AGENTS.md
+- docs/PROJECT_STATUS.md
+- docs/NEXT_TASKS.md
+- docs/SESSION_HANDOFF.md
+- docs/UI_REFACTOR_PLAN.md
+- 当前任务相关目录
+
+当前分支是 codex/ui-phase-2-panels，已有十张未提交 UI 切片；先核对分支和现有改动。
+Artist Detail 编辑标题已完成 SectionHeading 迁移；累计 11 个定向测试文件、91 个用例和 production build 通过。
+继续 docs/NEXT_TASKS.md 中的下一项 UI Phase 2 单页面小切片，先 RED 后 GREEN。
+不要扫描整个仓库。
+不要运行 npm install。
+不要新增 EntityCard。
+不要修改权限敏感业务行为。
+不要做架构重构。
+完成后中文总结。
+```
+
+建议开启新对话，并粘贴以上提示词继续。
+
+## 当前有效交接（2026-07-30，Artist List 新增表单标题 SectionHeading 迁移后）
+
+本轮完成：
+
+- 当前分支仍为 `codex/ui-phase-2-panels`，HEAD 为 `b67e861`，保留此前十张未提交 UI 切片。
+- `ArtistListPage` 新增表单的 eyebrow + `h2` 已迁移到既有 `SectionHeading as="h2"`。
+- 标题文案、层级、1.6rem 字号、窄屏堆叠、表单字段、按钮、加载 / 创建回调与 Artist CRUD 行为均未改变。
+- 结构测试在 Node.js `v20.20.2` 下完成准确的预期 RED / GREEN；Artist List 6 个用例通过，累计 12 个定向测试文件、97 个用例通过。
+- production build 通过，仅保留既有 chunk size 警告。
+- 浏览器核对确认 `ArtistListPage` 当前未挂载到 App，`#artists` 按既有路由测试回退 Backstage；因此未伪造目标视觉验收，也未为验收新增路由。
+- 终端默认 Node.js 为 `v8.17.0`，验证命令通过临时 PATH 使用既有 `v20.20.2`；未运行 `npm install`。
+- 未新增 `EntityCard`，未修改 service、Supabase、Auth、导入、权限或 RLS。
+- 当前累计十一张切片均尚未提交或推送。
+
+本轮新增修改：
+
+- `src/features/artists/ArtistListPage.tsx`
+- `src/features/artists/ArtistListPage.css`
+- `src/features/artists/ArtistListPage.test.tsx`
+- 三份状态 / 交接文档
+
+验证命令与结果：
+
+```powershell
+$env:Path = 'C:\Users\Ashin\AppData\Local\nvm\v20.20.2;' + $env:Path
+npm test -- --run src/features/artists/ArtistListPage.test.tsx
+npm test -- --run src/components/ui/ui.test.tsx src/features/songs/SongListPage.test.tsx src/features/toolbox/ToolboxPage.test.tsx src/features/albums/AlbumListPage.test.tsx src/features/practice/PracticeHistoryPage.test.tsx src/features/backstage/BackstagePage.test.tsx src/features/albums/AlbumDetailPage.test.tsx src/features/library/LibraryPage.test.tsx src/features/songs/SongDetailPage.test.tsx src/features/auth/AuthPage.test.tsx src/features/artists/ArtistDetailPage.test.tsx src/features/artists/ArtistListPage.test.tsx
+npm run build
+```
+
+结果：Artist List 6 个用例通过；累计 12 个定向测试文件、97 个用例通过；production build 通过，仅保留既有 chunk size 警告。
+
+未完成事项：
+
+1. `codex/ui-phase-2-panels` 当前累计十一张未提交 UI 切片：Song List 列表外壳 Panel、Toolbox 输出标题 SectionHeading、Album List hero 标题 SectionHeading、Practice History 筛选标题 SectionHeading、Backstage 内容列 Panel、Album Detail 元数据 StatCard、Library 分区标题 SectionHeading、Song Detail 元数据 StatCard、Auth 页面标题 SectionHeading、Artist Detail 编辑标题 SectionHeading、Artist List 新增表单标题 SectionHeading。
+2. 未经用户明确要求，不提交、推送或合并。
+3. 当前主线 Archive / Import 保持稳定；如继续 UI 第 2 期，下一轮应选择另一个实际挂载页面的小切片，不继续扩大 Artist List 范围。
+
+下一轮提示词：
+
+```text
+继续 RockRoll 项目开发。
+请只读取：
+- AGENTS.md
+- docs/PROJECT_STATUS.md
+- docs/NEXT_TASKS.md
+- docs/SESSION_HANDOFF.md
+- docs/UI_REFACTOR_PLAN.md
+- 当前路由映射的最小相关片段
+- 当前任务相关目录
+
+当前分支是 codex/ui-phase-2-panels，已有十一张未提交 UI 切片；先核对分支和现有改动。
+Artist List 新增表单标题已完成 SectionHeading 迁移；累计 12 个定向测试文件、97 个用例和 production build 通过。
+ArtistListPage 当前未挂载到 App；下一刀请选择另一个实际挂载页面，不要为视觉验收临时新增路由。
+继续 docs/NEXT_TASKS.md 中的下一项 UI Phase 2 单页面小切片，先 RED 后 GREEN。
+不要扫描整个仓库。
+不要运行 npm install。
+不要新增 EntityCard。
+不要修改权限敏感业务行为。
+不要做架构重构。
+完成后中文总结。
+```
+
+建议开启新对话，并粘贴以上提示词继续。
+
+## 当前有效交接（2026-07-30，Inbox Disabled hero Panel 迁移后）
+
+本轮完成：
+
+- 当前分支仍为 `codex/ui-phase-2-panels`，HEAD 为 `b67e861`，保留此前十一张未提交 UI 切片。
+- 路由映射确认 `InboxDisabledPage` 实际挂载到 `#inbox`；本轮没有新增或修改路由。
+- 禁用说明页的 hero 外壳已迁移到既有 `Panel variant="hero"`；标题、说明、Archive 链接、导入按钮不可见状态与 Inbox 专属背景均未改变。
+- 结构测试在 Node.js `v20.20.2` 下完成准确的预期 RED / GREEN；App 6 个用例通过，累计 13 个定向测试文件、103 个用例通过。
+- production build 通过，仅保留既有 chunk size 警告。
+- `/#inbox` 在 `1280x720` 与 `390x844` 完成只读视觉冒烟：hero 布局正常、标题无截断、无横向溢出，控制台无 warning / error。
+- 未运行 `npm install`，未新增 `EntityCard`，未修改 Inbox 导航、可见性、service、Supabase、导入、权限或 RLS。
+- 当前累计十二张切片均尚未提交或推送。
+
+本轮新增修改：
+
+- `src/App.test.tsx`
+- `src/features/inbox/InboxDisabledPage.tsx`
+- `src/features/inbox/InboxPage.css`
+- 三份状态 / 交接文档
+
+验证命令与结果：
+
+```powershell
+$env:Path = 'C:\Users\Ashin\AppData\Local\nvm\v20.20.2;' + $env:Path
+npm test -- --run src/App.test.tsx
+npm test -- --run src/components/ui/ui.test.tsx src/App.test.tsx src/features/songs/SongListPage.test.tsx src/features/toolbox/ToolboxPage.test.tsx src/features/albums/AlbumListPage.test.tsx src/features/practice/PracticeHistoryPage.test.tsx src/features/backstage/BackstagePage.test.tsx src/features/albums/AlbumDetailPage.test.tsx src/features/library/LibraryPage.test.tsx src/features/songs/SongDetailPage.test.tsx src/features/auth/AuthPage.test.tsx src/features/artists/ArtistDetailPage.test.tsx src/features/artists/ArtistListPage.test.tsx
+npm run build
+```
+
+结果：App 6 个用例通过；累计 13 个定向测试文件、103 个用例通过；production build 通过，仅保留既有 chunk size 警告。
+
+未完成事项：
+
+1. `codex/ui-phase-2-panels` 当前累计十二张未提交 UI 切片：Song List 列表外壳 Panel、Toolbox 输出标题 SectionHeading、Album List hero 标题 SectionHeading、Practice History 筛选标题 SectionHeading、Backstage 内容列 Panel、Album Detail 元数据 StatCard、Library 分区标题 SectionHeading、Song Detail 元数据 StatCard、Auth 页面标题 SectionHeading、Artist Detail 编辑标题 SectionHeading、Artist List 新增表单标题 SectionHeading、Inbox Disabled hero Panel。
+2. 未经用户明确要求，不提交、推送或合并。
+3. 当前主线 Archive / Import 保持稳定；如继续 UI 第 2 期，下一轮应选择另一个实际挂载页面的小切片，不继续扩大 Inbox 范围。
+
+下一轮提示词：
+
+```text
+继续 RockRoll 项目开发。
+请只读取：
+- AGENTS.md
+- docs/PROJECT_STATUS.md
+- docs/NEXT_TASKS.md
+- docs/SESSION_HANDOFF.md
+- docs/UI_REFACTOR_PLAN.md
+- 当前路由映射的最小相关片段
+- 当前任务相关目录
+
+当前分支是 codex/ui-phase-2-panels，已有十二张未提交 UI 切片；先核对分支和现有改动。
+Inbox Disabled hero 已完成 Panel 迁移；累计 13 个定向测试文件、103 个用例和 production build 通过。
+继续 docs/NEXT_TASKS.md 中的下一项 UI Phase 2 单页面小切片，先 RED 后 GREEN。
+请选择实际挂载页面，不要为视觉验收临时新增路由。
+不要扫描整个仓库。
+不要运行 npm install。
+不要新增 EntityCard。
+不要修改权限敏感业务行为。
+不要做架构重构。
+完成后中文总结。
+```
+
+建议开启新对话，并粘贴以上提示词继续。
+
+## 当前有效交接（2026-07-30，Practice Statistics 标题 SectionHeading 迁移后）
+
+本轮完成：
+
+- 当前分支仍为 `codex/ui-phase-2-panels`，HEAD 为 `b67e861`，保留此前十二张未提交 UI 切片。
+- 路由映射确认 `PracticeHistoryPage` 实际挂载到 `#practice`；本轮没有新增或修改路由。
+- Practice Statistics 的 `h2` 已迁移到既有 `SectionHeading as="h2"`；标题文案、层级、`id`、`aria-labelledby` 与 `dl/dt/dd` 定义列表语义保持不变。
+- 结构测试在 Node.js `v20.20.2` 下完成准确的预期 RED / GREEN；Practice History 11 个用例通过，累计 13 个定向测试文件、103 个用例通过。
+- production build 通过，仅保留既有 chunk size 警告；目标差异检查通过，仅提示 Windows 下 LF / CRLF 转换。
+- 本地 5173 / 5174 无可复用服务，后台启动被桌面环境策略拒绝，因此本轮未完成浏览器视觉冒烟。
+- 未运行 `npm install`，未新增 `EntityCard`，未修改 Practice 数据加载、CRUD、Supabase、Auth、导入、权限或 RLS。
+- 当前累计十三张切片均尚未提交或推送。
+
+本轮新增修改：
+
+- `src/features/practice/PracticeHistoryPage.tsx`
+- `src/features/practice/PracticeHistoryPage.css`
+- `src/features/practice/PracticeHistoryPage.test.tsx`
+- 三份状态 / 交接文档
+
+验证命令与结果：
+
+```powershell
+$env:Path = 'C:\Users\Ashin\AppData\Local\nvm\v20.20.2;' + $env:Path
+npm test -- --run src/features/practice/PracticeHistoryPage.test.tsx
+npm test -- --run src/components/ui/ui.test.tsx src/App.test.tsx src/features/songs/SongListPage.test.tsx src/features/toolbox/ToolboxPage.test.tsx src/features/albums/AlbumListPage.test.tsx src/features/practice/PracticeHistoryPage.test.tsx src/features/backstage/BackstagePage.test.tsx src/features/albums/AlbumDetailPage.test.tsx src/features/library/LibraryPage.test.tsx src/features/songs/SongDetailPage.test.tsx src/features/auth/AuthPage.test.tsx src/features/artists/ArtistDetailPage.test.tsx src/features/artists/ArtistListPage.test.tsx
+npm run build
+git diff --check -- src/features/practice/PracticeHistoryPage.tsx src/features/practice/PracticeHistoryPage.css src/features/practice/PracticeHistoryPage.test.tsx
+```
+
+结果：Practice History 11 个用例通过；累计 13 个定向测试文件、103 个用例通过；production build 通过，仅保留既有 chunk size 警告；目标差异检查无错误。
+
+未完成事项：
+
+1. `codex/ui-phase-2-panels` 当前累计十三张未提交 UI 切片：Song List 列表外壳 Panel、Toolbox 输出标题 SectionHeading、Album List hero 标题 SectionHeading、Practice History 筛选标题 SectionHeading、Backstage 内容列 Panel、Album Detail 元数据 StatCard、Library 分区标题 SectionHeading、Song Detail 元数据 StatCard、Auth 页面标题 SectionHeading、Artist Detail 编辑标题 SectionHeading、Artist List 新增表单标题 SectionHeading、Inbox Disabled hero Panel、Practice Statistics 标题 SectionHeading。
+2. 未经用户明确要求，不提交、推送或合并。
+3. 本轮浏览器视觉冒烟因本地服务启动被环境策略阻止而未完成；当前主线 Archive / Import 保持稳定。如继续 UI 第 2 期，下一轮应选择另一个实际挂载页面的小切片，不继续扩大 Practice History 范围。
+
+下一轮提示词：
+
+```text
+继续 RockRoll 项目开发。
+请只读取：
+- AGENTS.md
+- docs/PROJECT_STATUS.md
+- docs/NEXT_TASKS.md
+- docs/SESSION_HANDOFF.md
+- docs/UI_REFACTOR_PLAN.md
+- 当前路由映射的最小相关片段
+- 当前任务相关目录
+
+当前分支是 codex/ui-phase-2-panels，已有十三张未提交 UI 切片；先核对分支和现有改动。
+Practice Statistics 标题已完成 SectionHeading 迁移；累计 13 个定向测试文件、103 个用例和 production build 通过。
+继续 docs/NEXT_TASKS.md 中的下一项 UI Phase 2 单页面小切片，先 RED 后 GREEN。
+请选择另一个实际挂载页面，不要为视觉验收临时新增路由。
+不要扫描整个仓库。
+不要运行 npm install。
+不要新增 EntityCard。
+不要修改权限敏感业务行为。
+不要做架构重构。
+完成后中文总结。
+```
+
+建议开启新对话，并粘贴以上提示词继续。
+
+## 当前有效交接（2026-07-31，Archive hero Panel 迁移后）
+
+本轮完成：
+
+- 当前分支仍为 `codex/ui-phase-2-panels`，HEAD 为 `b67e861`，保留此前十三张未提交 UI 切片。
+- 路由映射确认 `ArchivePage` 实际挂载到 `#archive`；本轮没有新增或修改路由。
+- Archive hero 已迁移到既有 `Panel as="header" variant="hero"`；标题、集合计数、文案、`header` 语义及桌面 / 窄屏布局保持不变。
+- 结构测试在 Node.js `v20.20.2` 下完成准确的预期 RED / GREEN；ArchivePage 12 个用例通过，累计 14 个定向测试文件、115 个用例通过。
+- production build 通过，仅保留既有 chunk size 警告；目标差异检查通过，仅提示 Windows 下 LF / CRLF 转换。
+- `/#archive` 在 `1280x720` 与 `390x844` 完成 Guest 只读视觉冒烟：hero 标题无截断、无横向溢出，控制台无 warning / error。
+- 未运行 `npm install`，未新增 `EntityCard`，未修改角色判断、管理员入口可见性、Archive CRUD、导入、service、Supabase、Auth、权限或 RLS。
+- 当前累计十四张切片均尚未提交或推送。
+
+本轮新增修改：
+
+- `src/features/archive/ArchivePage.tsx`
+- `src/features/archive/ArchivePage.test.tsx`
+- 三份状态 / 交接文档
+
+验证命令与结果：
+
+```powershell
+$env:Path = 'C:\Users\Ashin\AppData\Local\nvm\v20.20.2;' + $env:Path
+npm test -- --run src/features/archive/ArchivePage.test.tsx
+npm test -- --run src/components/ui/ui.test.tsx src/App.test.tsx src/features/songs/SongListPage.test.tsx src/features/toolbox/ToolboxPage.test.tsx src/features/albums/AlbumListPage.test.tsx src/features/practice/PracticeHistoryPage.test.tsx src/features/backstage/BackstagePage.test.tsx src/features/albums/AlbumDetailPage.test.tsx src/features/library/LibraryPage.test.tsx src/features/songs/SongDetailPage.test.tsx src/features/auth/AuthPage.test.tsx src/features/artists/ArtistDetailPage.test.tsx src/features/artists/ArtistListPage.test.tsx src/features/archive/ArchivePage.test.tsx
+npm run build
+git diff --check -- src/features/archive/ArchivePage.tsx src/features/archive/ArchivePage.test.tsx
+```
+
+结果：ArchivePage 12 个用例通过；累计 14 个定向测试文件、115 个用例通过；production build 通过，仅保留既有 chunk size 警告；目标差异检查无错误。
+
+未完成事项：
+
+1. `codex/ui-phase-2-panels` 当前累计十四张未提交 UI 切片：Song List 列表外壳 Panel、Toolbox 输出标题 SectionHeading、Album List hero 标题 SectionHeading、Practice History 筛选标题 SectionHeading、Backstage 内容列 Panel、Album Detail 元数据 StatCard、Library 分区标题 SectionHeading、Song Detail 元数据 StatCard、Auth 页面标题 SectionHeading、Artist Detail 编辑标题 SectionHeading、Artist List 新增表单标题 SectionHeading、Inbox Disabled hero Panel、Practice Statistics 标题 SectionHeading、Archive hero Panel。
+2. 未经用户明确要求，不提交、推送或合并。
+3. 当前主线 Archive / Import 保持稳定；如继续 UI 第 2 期，下一轮应选择另一个实际挂载页面的小切片，不继续扩大 Archive 范围。
+
+下一轮提示词：
+
+```text
+继续 RockRoll 项目开发。
+请只读取：
+- AGENTS.md
+- docs/PROJECT_STATUS.md
+- docs/NEXT_TASKS.md
+- docs/SESSION_HANDOFF.md
+- docs/UI_REFACTOR_PLAN.md
+- 当前路由映射的最小相关片段
+- 当前任务相关目录
+
+当前分支是 codex/ui-phase-2-panels，已有十四张未提交 UI 切片；先核对分支和现有改动。
+Archive hero 已完成 Panel 迁移；累计 14 个定向测试文件、115 个用例和 production build 通过。
+继续 docs/NEXT_TASKS.md 中的下一项 UI Phase 2 单页面小切片，先 RED 后 GREEN。
+请选择另一个实际挂载页面，不要为视觉验收临时新增路由。
+不要扫描整个仓库。
+不要运行 npm install。
+不要新增 EntityCard。
+不要修改权限敏感业务行为。
+不要做架构重构。
+完成后中文总结。
+```
+
+建议开启新对话，并粘贴以上提示词继续。
+
+## 当前有效交接（2026-07-31，Song List 新增表单标题 SectionHeading 迁移后）
+
+本轮完成：
+
+- 当前分支仍为 `codex/ui-phase-2-panels`，HEAD 为 `b67e861`，保留此前十四张未提交 UI 切片。
+- 路由映射确认 `SongListPage` 实际挂载到 `#songs`；本轮没有新增或修改路由，也没有继续扩大 Archive 范围。
+- Song List 新增表单的 `h2` 已迁移到既有 `SectionHeading as="h2"`；标题文案、层级、字号、表单字段、提交逻辑及五列 / 单列响应式布局保持不变。
+- 结构测试在校正文案查询后完成准确的预期 RED / GREEN；Song List 7 个用例通过，累计 14 个定向测试文件、116 个用例通过。
+- production build 通过，仅保留既有 chunk size 警告；目标差异检查通过，仅提示 Windows 下 LF / CRLF 转换。
+- `/#songs` 在 `1280x720` 与 `390x844` 完成 Guest 只读视觉冒烟：新增表单标题无截断、页面无横向溢出，控制台无 warning / error。
+- 未运行 `npm install`，未新增 `EntityCard`，未修改 Song 数据加载、创建逻辑、service、Supabase、Auth、Archive、导入、权限或 RLS。
+- 当前累计十五张切片均尚未提交或推送。
+
+本轮新增修改：
+
+- `src/features/songs/SongListPage.tsx`
+- `src/features/songs/SongListPage.css`
+- `src/features/songs/SongListPage.test.tsx`
+- 三份状态 / 交接文档
+
+验证命令与结果：
+
+```powershell
+$env:Path = 'C:\Users\Ashin\AppData\Local\nvm\v20.20.2;' + $env:Path
+npm test -- --run src/features/songs/SongListPage.test.tsx
+npm test -- --run src/components/ui/ui.test.tsx src/App.test.tsx src/features/songs/SongListPage.test.tsx src/features/toolbox/ToolboxPage.test.tsx src/features/albums/AlbumListPage.test.tsx src/features/practice/PracticeHistoryPage.test.tsx src/features/backstage/BackstagePage.test.tsx src/features/albums/AlbumDetailPage.test.tsx src/features/library/LibraryPage.test.tsx src/features/songs/SongDetailPage.test.tsx src/features/auth/AuthPage.test.tsx src/features/artists/ArtistDetailPage.test.tsx src/features/artists/ArtistListPage.test.tsx src/features/archive/ArchivePage.test.tsx
+npm run build
+git diff --check -- src/features/songs/SongListPage.tsx src/features/songs/SongListPage.css src/features/songs/SongListPage.test.tsx
+```
+
+结果：Song List 7 个用例通过；累计 14 个定向测试文件、116 个用例通过；production build 通过，仅保留既有 chunk size 警告；目标差异检查无错误。
+
+未完成事项：
+
+1. `codex/ui-phase-2-panels` 当前累计十五张未提交 UI 切片：Song List 列表外壳 Panel、Toolbox 输出标题 SectionHeading、Album List hero 标题 SectionHeading、Practice History 筛选标题 SectionHeading、Backstage 内容列 Panel、Album Detail 元数据 StatCard、Library 分区标题 SectionHeading、Song Detail 元数据 StatCard、Auth 页面标题 SectionHeading、Artist Detail 编辑标题 SectionHeading、Artist List 新增表单标题 SectionHeading、Inbox Disabled hero Panel、Practice Statistics 标题 SectionHeading、Archive hero Panel、Song List 新增表单标题 SectionHeading。
+2. 未经用户明确要求，不提交、推送或合并。
+3. 当前主线 Archive / Import 保持稳定；如继续 UI 第 2 期，下一轮应选择另一个实际挂载页面的小切片，不继续扩大 Song List 范围。
+
+下一轮提示词：
+
+```text
+继续 RockRoll 项目开发。
+请只读取：
+- AGENTS.md
+- docs/PROJECT_STATUS.md
+- docs/NEXT_TASKS.md
+- docs/SESSION_HANDOFF.md
+- docs/UI_REFACTOR_PLAN.md
+- 当前路由映射的最小相关片段
+- 当前任务相关目录
+
+当前分支是 codex/ui-phase-2-panels，已有十五张未提交 UI 切片；先核对分支和现有改动。
+Song List 新增表单标题已完成 SectionHeading 迁移；累计 14 个定向测试文件、116 个用例和 production build 通过。
+继续 docs/NEXT_TASKS.md 中的下一项 UI Phase 2 单页面小切片，先 RED 后 GREEN。
+请选择另一个实际挂载页面，不要为视觉验收临时新增路由。
+不要扫描整个仓库。
+不要运行 npm install。
+不要新增 EntityCard。
+不要修改权限敏感业务行为。
+不要做架构重构。
+完成后中文总结。
+```
+
+建议开启新对话，并粘贴以上提示词继续。
+
+## 当前有效交接（2026-07-31，Archive Detail 条目索引标题 SectionHeading 迁移后）
+
+本轮完成：
+
+- 当前分支仍为 `codex/ui-phase-2-panels`，HEAD 为 `b67e861`，保留此前十五张未提交 UI 切片。
+- 路由映射确认 `ArchiveDetailPage` 实际挂载到 `#archive/:id`；本轮没有新增或修改路由，也没有继续扩大 Song List 范围。
+- Archive Detail 条目索引的 eyebrow + `h2` 已迁移到既有 `SectionHeading as="h2"`，并通过 `headingId="archive-detail-items-title"` 保持条目区的 `aria-labelledby` 关联。
+- 结构测试准确完成预期 RED / GREEN；Archive Detail 6 个用例通过，累计 15 个定向测试文件、122 个用例通过。
+- production build 通过，仅保留既有 chunk size 警告；目标差异检查通过，仅提示 Windows 下 LF / CRLF 转换。
+- 浏览器连接到真实 `/#archive` 后，Guest 环境显示 0 个集合且列表持续停在加载态，无法进入实际详情页渲染目标标题；控制台无 warning / error，本轮未伪造视觉结论。
+- 权限矩阵保持不变：匿名与普通用户只读 public Archive，只有管理员可见并触发 Archive item 新增、编辑、删除；未修改 UI 可见性、service、Supabase、RLS 或 CRUD。
+- 未运行 `npm install`，未新增 `EntityCard`，未修改数据加载、分页、导入、Auth 或权限敏感业务行为。
+- 当前累计十六张切片均尚未提交或推送。
+
+本轮新增修改：
+
+- `src/features/archive/ArchiveDetailPage.tsx`
+- `src/features/archive/ArchiveDetailPage.css`
+- `src/features/archive/ArchiveDetailPage.test.tsx`
+- 三份状态 / 交接文档
+
+验证命令与结果：
+
+```powershell
+$env:Path = 'C:\Users\Ashin\AppData\Local\nvm\v20.20.2;' + $env:Path
+npm test -- --run src/features/archive/ArchiveDetailPage.test.tsx
+npm test -- --run src/components/ui/ui.test.tsx src/App.test.tsx src/features/songs/SongListPage.test.tsx src/features/toolbox/ToolboxPage.test.tsx src/features/albums/AlbumListPage.test.tsx src/features/practice/PracticeHistoryPage.test.tsx src/features/backstage/BackstagePage.test.tsx src/features/albums/AlbumDetailPage.test.tsx src/features/library/LibraryPage.test.tsx src/features/songs/SongDetailPage.test.tsx src/features/auth/AuthPage.test.tsx src/features/artists/ArtistDetailPage.test.tsx src/features/artists/ArtistListPage.test.tsx src/features/archive/ArchivePage.test.tsx src/features/archive/ArchiveDetailPage.test.tsx
+npm run build
+git diff --check -- src/features/archive/ArchiveDetailPage.tsx src/features/archive/ArchiveDetailPage.css src/features/archive/ArchiveDetailPage.test.tsx
+```
+
+结果：Archive Detail 6 个用例通过；累计 15 个定向测试文件、122 个用例通过；production build 通过，仅保留既有 chunk size 警告；目标差异检查无错误。
+
+未完成事项：
+
+1. `codex/ui-phase-2-panels` 当前累计十六张未提交 UI 切片：Song List 列表外壳 Panel、Toolbox 输出标题 SectionHeading、Album List hero 标题 SectionHeading、Practice History 筛选标题 SectionHeading、Backstage 内容列 Panel、Album Detail 元数据 StatCard、Library 分区标题 SectionHeading、Song Detail 元数据 StatCard、Auth 页面标题 SectionHeading、Artist Detail 编辑标题 SectionHeading、Artist List 新增表单标题 SectionHeading、Inbox Disabled hero Panel、Practice Statistics 标题 SectionHeading、Archive hero Panel、Song List 新增表单标题 SectionHeading、Archive Detail 条目索引标题 SectionHeading。
+2. 未经用户明确要求，不提交、推送或合并。
+3. 当前主线 Archive / Import 保持稳定；如继续 UI 第 2 期，下一轮应选择另一个实际挂载页面的小切片，不继续扩大 Archive Detail 范围。
+
+下一轮提示词：
+
+```text
+继续 RockRoll 项目开发。
+请只读取：
+- AGENTS.md
+- docs/PROJECT_STATUS.md
+- docs/NEXT_TASKS.md
+- docs/SESSION_HANDOFF.md
+- docs/UI_REFACTOR_PLAN.md
+- 当前路由映射的最小相关片段
+- 当前任务相关目录
+
+当前分支是 codex/ui-phase-2-panels，已有十六张未提交 UI 切片；先核对分支和现有改动。
+Archive Detail 条目索引标题已完成 SectionHeading 迁移；累计 15 个定向测试文件、122 个用例和 production build 通过。
+继续 docs/NEXT_TASKS.md 中的下一项 UI Phase 2 单页面小切片，先 RED 后 GREEN。
+请选择另一个实际挂载页面，不要为视觉验收临时新增路由或假数据。
+不要扫描整个仓库。
+不要运行 npm install。
+不要新增 EntityCard。
+不要修改权限敏感业务行为。
+不要做架构重构。
+完成后中文总结。
+```
+
+建议开启新对话，并粘贴以上提示词继续。
+
+## 当前有效交接（2026-07-31，Album List 集合容器 Panel 迁移后）
+
+本轮完成：
+
+- 当前分支仍为 `codex/ui-phase-2-panels`，HEAD 为 `b67e861`，保留此前十六张未提交 UI 切片。
+- 路由映射确认 `AlbumListPage` 实际挂载到 `#albums`；本轮没有新增或修改路由，也没有继续扩大 Archive Detail 范围。
+- Album List 的集合 `<section>` 已迁移到既有 `Panel as="section" variant="card"`；集合标题、来源、描述展开、数量、专辑列表、分页、筛选与数据加载行为保持不变。
+- 结构测试准确完成预期 RED / GREEN；Album List 17 个用例通过，累计 15 个定向测试文件、122 个用例通过。
+- production build 通过，仅保留既有 chunk size 警告；目标差异检查通过，仅提示 Windows 下 LF / CRLF 转换。
+- 浏览器连接到真实 `/#albums` 后，桌面 1280 宽与窄屏 `390x844` 均无横向溢出，控制台无 warning / error；Guest 环境持续停在加载态且没有集合数据，因此目标集合 Panel 未完成真实内容视觉验收，也未注入假数据。
+- 未运行 `npm install`，未新增 `EntityCard`，未修改 Album 数据加载、筛选、分页、service、Supabase、Auth、Archive、导入、权限或 RLS。
+- 当前累计十七张切片均尚未提交或推送。
+
+本轮新增修改：
+
+- `src/features/albums/AlbumListPage.tsx`
+- `src/features/albums/AlbumListPage.css`
+- `src/features/albums/AlbumListPage.test.tsx`
+- 三份状态 / 交接文档
+
+验证命令与结果：
+
+```powershell
+$env:Path = 'C:\Users\Ashin\AppData\Local\nvm\v20.20.2;' + $env:Path
+npm test -- --run src/features/albums/AlbumListPage.test.tsx
+npm test -- --run src/components/ui/ui.test.tsx src/App.test.tsx src/features/songs/SongListPage.test.tsx src/features/toolbox/ToolboxPage.test.tsx src/features/albums/AlbumListPage.test.tsx src/features/practice/PracticeHistoryPage.test.tsx src/features/backstage/BackstagePage.test.tsx src/features/albums/AlbumDetailPage.test.tsx src/features/library/LibraryPage.test.tsx src/features/songs/SongDetailPage.test.tsx src/features/auth/AuthPage.test.tsx src/features/artists/ArtistDetailPage.test.tsx src/features/artists/ArtistListPage.test.tsx src/features/archive/ArchivePage.test.tsx src/features/archive/ArchiveDetailPage.test.tsx
+npm run build
+git diff --check -- src/features/albums/AlbumListPage.tsx src/features/albums/AlbumListPage.css src/features/albums/AlbumListPage.test.tsx
+```
+
+结果：Album List 17 个用例通过；累计 15 个定向测试文件、122 个用例通过；production build 通过，仅保留既有 chunk size 警告；目标差异检查无错误。
+
+未完成事项：
+
+1. `codex/ui-phase-2-panels` 当前累计十七张未提交 UI 切片：Song List 列表外壳 Panel、Toolbox 输出标题 SectionHeading、Album List hero 标题 SectionHeading、Practice History 筛选标题 SectionHeading、Backstage 内容列 Panel、Album Detail 元数据 StatCard、Library 分区标题 SectionHeading、Song Detail 元数据 StatCard、Auth 页面标题 SectionHeading、Artist Detail 编辑标题 SectionHeading、Artist List 新增表单标题 SectionHeading、Inbox Disabled hero Panel、Practice Statistics 标题 SectionHeading、Archive hero Panel、Song List 新增表单标题 SectionHeading、Archive Detail 条目索引标题 SectionHeading、Album List 集合容器 Panel。
+2. 未经用户明确要求，不提交、推送或合并。
+3. 当前主线 Archive / Import 保持稳定；如继续 UI 第 2 期，下一轮应选择另一个实际挂载页面的小切片，不继续扩大 Album List 范围。
+
+下一轮提示词：
+
+```text
+继续 RockRoll 项目开发。
+请只读取：
+- AGENTS.md
+- docs/PROJECT_STATUS.md
+- docs/NEXT_TASKS.md
+- docs/SESSION_HANDOFF.md
+- docs/UI_REFACTOR_PLAN.md
+- 当前路由映射的最小相关片段
+- 当前任务相关目录
+
+当前分支是 codex/ui-phase-2-panels，已有十七张未提交 UI 切片；先核对分支和现有改动。
+Album List 集合容器已完成 Panel 迁移；累计 15 个定向测试文件、122 个用例和 production build 通过。
+继续 docs/NEXT_TASKS.md 中的下一项 UI Phase 2 单页面小切片，先 RED 后 GREEN。
+请选择另一个实际挂载页面，不要为视觉验收临时新增路由或假数据。
+不要扫描整个仓库。
+不要运行 npm install。
+不要新增 EntityCard。
+不要修改权限敏感业务行为。
+不要做架构重构。
+完成后中文总结。
+```
+
+建议开启新对话，并粘贴以上提示词继续。
+
+## 当前有效交接（2026-07-31，Inbox Disabled hero 标题 SectionHeading 迁移后）
+
+本轮完成：
+
+- 当前分支仍为 `codex/ui-phase-2-panels`，HEAD 为 `b67e861`，保留此前十七张未提交 UI 切片。
+- 路由映射确认 `InboxDisabledPage` 实际挂载到 `#inbox`；本轮没有新增或修改路由，也没有继续扩大 Album List 范围。
+- Inbox Disabled hero 的手写 eyebrow + `h1` 已迁移到既有 `SectionHeading as="h1"`；标题文案、层级、禁用说明、Archive 链接和 hero 专属视觉保持不变。
+- 结构测试准确完成预期 RED / GREEN；App 与共享 UI 共 2 个测试文件、13 个用例通过，累计 15 个定向测试文件、122 个用例通过。
+- production build 通过，仅保留既有 chunk size 警告；目标差异检查通过，仅提示 Windows 下 LF / CRLF 转换。
+- 真实 `/#inbox` 在 `1280x800` 与 `390x844` 完成 Guest 只读视觉冒烟：标题和描述无截断、无横向溢出，控制台无 warning / error。
+- 未运行 `npm install`，未新增 `EntityCard`，未修改 Inbox 导入、导航、权限、service、Supabase 或 RLS。
+- 当前累计十八张切片均尚未提交或推送。
+
+本轮新增修改：
+
+- `src/App.test.tsx`
+- `src/features/inbox/InboxDisabledPage.tsx`
+- `src/features/inbox/InboxPage.css`
+- 三份状态 / 交接文档
+
+验证命令与结果：
+
+```powershell
+$env:Path = 'C:\Users\Ashin\AppData\Local\nvm\v20.20.2;' + $env:Path
+npm test -- --run src/App.test.tsx
+npm test -- --run src/App.test.tsx src/components/ui/ui.test.tsx
+npm test -- --run src/components/ui/ui.test.tsx src/App.test.tsx src/features/songs/SongListPage.test.tsx src/features/toolbox/ToolboxPage.test.tsx src/features/albums/AlbumListPage.test.tsx src/features/practice/PracticeHistoryPage.test.tsx src/features/backstage/BackstagePage.test.tsx src/features/albums/AlbumDetailPage.test.tsx src/features/library/LibraryPage.test.tsx src/features/songs/SongDetailPage.test.tsx src/features/auth/AuthPage.test.tsx src/features/artists/ArtistDetailPage.test.tsx src/features/artists/ArtistListPage.test.tsx src/features/archive/ArchivePage.test.tsx src/features/archive/ArchiveDetailPage.test.tsx
+npm run build
+git diff --check -- src/App.test.tsx src/features/inbox/InboxDisabledPage.tsx src/features/inbox/InboxPage.css
+```
+
+结果：首个 App 定向测试按预期因新增共享标题结构断言失败；GREEN 后 App 与共享 UI 共 13 个用例通过；累计 15 个定向测试文件、122 个用例通过；production build 通过，仅保留既有 chunk size 警告；目标差异检查无错误。
+
+未完成事项：
+
+1. `codex/ui-phase-2-panels` 当前累计十八张未提交 UI 切片；本轮新增 Inbox Disabled hero 标题 SectionHeading，既有十七张切片保持不变。
+2. 未经用户明确要求，不提交、推送或合并。
+3. 当前主线 Archive / Import 保持稳定；如继续 UI 第 2 期，下一轮应选择另一个实际挂载页面的小切片，不继续扩大 Inbox Disabled 范围。
+
+下一轮提示词：
+
+```text
+继续 RockRoll 项目开发。
+请只读取：
+- AGENTS.md
+- docs/PROJECT_STATUS.md
+- docs/NEXT_TASKS.md
+- docs/SESSION_HANDOFF.md
+- docs/UI_REFACTOR_PLAN.md
+- 当前路由映射的最小相关片段
+- 当前任务相关目录
+
+当前分支是 codex/ui-phase-2-panels，已有十八张未提交 UI 切片；先核对分支和现有改动。
+Inbox Disabled hero 标题已完成 SectionHeading 迁移；累计 15 个定向测试文件、122 个用例和 production build 通过。
+继续 docs/NEXT_TASKS.md 中的下一项 UI Phase 2 单页面小切片，先 RED 后 GREEN。
+请选择另一个实际挂载页面，不要为视觉验收临时新增路由或假数据。
+不要扫描整个仓库。
+不要运行 npm install。
+不要新增 EntityCard。
+不要修改权限敏感业务行为。
+不要做架构重构。
+完成后中文总结。
+```
+
+建议开启新对话，并粘贴以上提示词继续。
+
+## 当前最终交接（2026-07-31，UI Phase 2 现有原语安全迁移收口后）
+
+本轮结论：
+
+- 用户要求的一次迭代已完成：7 个实际挂载页面、十三类剩余安全结构迁移全部 GREEN。
+- 当前分支 `codex/ui-phase-2-panels`，HEAD `b67e861`，累计三十一张 UI 切片均未提交、未推送。
+- 累计验证为 15 个测试文件、123 个用例通过；最终 production build 通过，仅有既有 chunk size 警告。
+- `#songs`、`#archive`、`#practice`、`#library` 桌面与窄屏无横向溢出，控制台无 warning / error。
+- Song / Album / Artist Detail 因 Guest 无真实数据，仅由定向测试覆盖，未伪造视觉结论。
+- 现有 `Panel / SectionHeading / StatCard` 的安全机械迁移已收口；新原语、Auth、管理员 CRUD 与业务实体卡片不在本轮范围。
+- 详细修改文件、RED / GREEN 命令与结果见上方“集中收口执行记录”。
+
+### 统一审查补充（2026-07-31）
+
+- 复核当前 47 个修改文件，无 staged 或未跟踪污染；两份 UI 工作树起初保存相同差异。
+- 31 张记录切片中保留 29 张；撤回 Album Detail、Song Detail 两张元数据 `StatCard` 切片，恢复 `dl / dt / dd` 定义列表语义。
+- 未改变数据、路由、事件处理、角色判断、管理员入口、导入、Supabase 或 RLS。
+- 修复后在已有依赖的 `E:\Code\RcokRoll` 运行 15 个定向测试文件，123 个用例通过；Codex worktree 因没有 `node_modules` 未直接运行测试，且未运行 `npm install`。
+- 远端实时 `HEAD` 指向 `main`；`origin/main` 为 `8194da5`。本地 `main` 为 `b67e861`，跟踪 `origin/main` 且领先 28 个提交。
+- `feature/mvp-foundation`、`ui/tokens-rebuild`、`codex/toolbox-geometry-compat` 均已被本地 `main` 包含。
+- `codex/toolbox-explicit-rhythm` 为干净 worktree，含 23 个 `main` 未包含的提交；它采用旧 `rhythm-symbols` 实现，而 `main` 已采用 `notation-primitives / rhythm-topology` 实现。两者修改大量相同 Toolbox 文件，不能无产品判断整体合并。
+- 未推送、未删除远端分支、未修改远端默认分支。
+
+未完成事项：
+
+1. 统一审查三十一张未提交 UI 切片。
+2. 取得用户确认后再决定是否提交、推送当前分支。
+3. 如暂不进行 Git 同步，返回 Archive / Import 主线。
+
+下一轮提示词：
+
+```text
+继续 RockRoll 项目开发。
+请只读取：
+- AGENTS.md
+- docs/PROJECT_STATUS.md
+- docs/NEXT_TASKS.md
+- docs/SESSION_HANDOFF.md
+- 当前分支状态
+- 本轮修改的 7 个页面目录
+
+当前分支是 codex/ui-phase-2-panels，已有三十一张未提交 UI 切片。
+现有 Panel / SectionHeading / StatCard 的安全机械迁移已经集中收口。
+累计 15 个定向测试文件、123 个用例和 production build 通过。
+请先统一审查 git status 与本轮范围，并与我确认是否提交、推送当前分支；不要自行提交或推送。
+如暂不进行 Git 同步，则返回 Archive / Import 主线。
+不要扫描整个仓库。
+不要运行 npm install。
+不要新增 EntityCard。
+不要修改权限敏感业务行为。
+不要做架构重构。
 完成后中文总结。
 ```
 

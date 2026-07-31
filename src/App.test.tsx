@@ -88,7 +88,12 @@ describe('App', () => {
 
     renderWithI18n(<App />);
 
-    expect(screen.getByRole('heading', { name: 'Import inbox paused' })).toBeInTheDocument();
+    const heading = screen.getByRole('heading', { name: 'Import inbox paused' });
+    const hero = heading.closest('.inbox-hero');
+
+    expect(heading).toBeInTheDocument();
+    expect(heading.closest('.ui-section-heading')).not.toBeNull();
+    expect(hero).toHaveClass('ui-panel', 'ui-panel--hero');
     expect(
       screen.getByText('The inbox import entry is temporarily disabled. Use Archive -> Add collection for URL imports.'),
     ).toBeInTheDocument();

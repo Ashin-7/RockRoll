@@ -40,6 +40,11 @@ describe('ArchiveDetailPage', () => {
     expect(screen.getByText('Source')).toBeInTheDocument();
     expect(screen.getByText('Items filed')).toBeInTheDocument();
     expect(screen.getByText('Source URL')).toBeInTheDocument();
+    expect(container.querySelector('.archive-detail-section-heading.ui-section-heading')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: 'Items' })).toHaveAttribute(
+      'id',
+      'archive-detail-items-title',
+    );
     expect(screen.getByText('Please Please Me')).toBeInTheDocument();
     expect(screen.getByText('#1')).toBeInTheDocument();
     expect(screen.getByText('Beat music marker.')).toBeInTheDocument();

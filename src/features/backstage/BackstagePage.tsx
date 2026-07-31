@@ -64,7 +64,7 @@ export function BackstagePage() {
       </div>
 
       <div className="backstage-columns">
-        <article className="tape-stack">
+        <Panel as="article" className="tape-stack" variant="card">
           <SectionHeading
             className="backstage-section-heading"
             eyebrow={t('backstage.sections.recentTapes')}
@@ -79,9 +79,9 @@ export function BackstagePage() {
               <span>{tape.recordedAt}</span>
             </div>
           ))}
-        </article>
+        </Panel>
 
-        <article className="inbox-board">
+        <Panel as="article" className="inbox-board" variant="card">
           <SectionHeading
             className="backstage-section-heading"
             eyebrow={t('backstage.sections.importInbox')}
@@ -94,7 +94,7 @@ export function BackstagePage() {
               <p>{draft.source}</p>
             </div>
           ))}
-        </article>
+        </Panel>
       </div>
     </section>
   );

@@ -173,10 +173,12 @@ export function SongDetailPage({
 
           {isEditing ? (
             <form className="song-detail-edit-form" onSubmit={handleUpdateSong}>
-              <div className="song-detail-edit-form__header">
-                <p className="eyebrow">{t('songDetail.formMode')}</p>
-                <h2>{t('songDetail.editSong')}</h2>
-              </div>
+              <SectionHeading
+                as="h2"
+                className="song-detail-edit-form__header"
+                eyebrow={t('songDetail.formMode')}
+                title={t('songDetail.editSong')}
+              />
 
               <section className="song-detail-edit-form__section">
                 <h3>{t('songDetail.identitySection')}</h3>
@@ -261,7 +263,7 @@ export function SongDetailPage({
 
           <section className="song-detail-notes">
             <Panel variant="card">
-              <h2>{t('songDetail.notes')}</h2>
+              <SectionHeading as="h2" className="song-detail-panel__heading" title={t('songDetail.notes')} />
               <p>{song.notes || t('songDetail.noNotes')}</p>
             </Panel>
             <Panel
@@ -270,7 +272,7 @@ export function SongDetailPage({
               variant="card"
               aria-label={t('songDetail.related')}
             >
-              <h2>{t('songDetail.related')}</h2>
+              <SectionHeading as="h2" className="song-detail-panel__heading" title={t('songDetail.related')} />
               <p>{t('songDetail.relatedHint')}</p>
             </Panel>
           </section>

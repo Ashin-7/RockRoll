@@ -58,7 +58,10 @@ describe('ArtistListPage', () => {
 
     renderWithI18n(<ArtistListPage onCreateArtist={createArtist} onLoadArtists={loadArtists} />);
 
-    expect(await screen.findByRole('heading', { name: 'Identity' })).toBeInTheDocument();
+    const addArtistHeading = await screen.findByRole('heading', { level: 2, name: 'Add artist' });
+
+    expect(addArtistHeading.closest('.ui-section-heading')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Identity' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Archive notes' })).toBeInTheDocument();
 
     await user.type(await screen.findByLabelText('Name'), 'Jimi Hendrix');

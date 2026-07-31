@@ -1,4 +1,5 @@
 import { FormEvent, useEffect, useState } from 'react';
+import { SectionHeading } from '../../components/ui';
 import { useI18n } from '../../i18n/I18nProvider';
 import {
   AuthStateChangeCallback,
@@ -250,8 +251,11 @@ export function AuthPage({
   return (
     <section className="auth-page">
       <section>
-        <p className="eyebrow">{t('auth.eyebrow')}</p>
-        <h1>{t('auth.title')}</h1>
+        <SectionHeading
+          as="h1"
+          eyebrow={t('auth.eyebrow')}
+          title={t('auth.title')}
+        />
 
         {isLoadingSession ? <p role="status">{t('auth.loading')}</p> : null}
         {!isLoadingSession && isSendingMagicLink ? <p role="status">Sending magic link...</p> : null}

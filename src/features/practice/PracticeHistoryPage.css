@@ -16,10 +16,10 @@
 .practice-session-entry {
   display: grid;
   gap: var(--space-4);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-panel);
-  background: var(--color-bg-panel);
-  padding: var(--space-6);
+}
+
+.practice-session-entry__heading.ui-section-heading {
+  margin-bottom: 0;
 }
 
 .practice-session-entry h2 {
@@ -178,12 +178,8 @@
   gap: var(--space-4);
 }
 
-.practice-statistics h2 {
+.practice-statistics__heading {
   margin: 0;
-  font-family: var(--font-display);
-  font-size: 1.8rem;
-  line-height: 1;
-  text-transform: uppercase;
 }
 
 .practice-statistics__grid {
@@ -224,12 +220,8 @@
   padding: var(--space-6);
 }
 
-.practice-history-filters h2 {
+.practice-history-filters__heading {
   margin: 0;
-  font-family: var(--font-display);
-  font-size: 1.8rem;
-  line-height: 1;
-  text-transform: uppercase;
 }
 
 .practice-history-filters__grid {

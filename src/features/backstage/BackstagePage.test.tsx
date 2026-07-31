@@ -25,6 +25,10 @@ describe('BackstagePage', () => {
     const sectionHeadings = Array.from(
       container.querySelectorAll('.backstage-columns > article > .ui-section-heading'),
     );
+    const contentPanels = Array.from(
+      container.querySelectorAll('.backstage-columns > article.ui-panel--card'),
+    );
+    expect(contentPanels).toHaveLength(2);
     expect(sectionHeadings).toHaveLength(2);
     sectionHeadings.forEach((heading) => {
       expect(heading.querySelector('p.eyebrow')).toBeInTheDocument();

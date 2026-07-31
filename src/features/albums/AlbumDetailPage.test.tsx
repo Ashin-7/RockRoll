@@ -26,11 +26,18 @@ describe('AlbumDetailPage', () => {
     expect(screen.getByRole('heading', { level: 1, name: 'Axis: Bold as Love' })).toBeInTheDocument();
     expect(screen.getAllByText('Jimi Hendrix').length).toBeGreaterThan(0);
     expect(screen.getByText('1967')).toBeInTheDocument();
+    expect(container.querySelectorAll('.album-detail-grid dt')).toHaveLength(3);
     expect(screen.getByText('Second studio album.')).toBeInTheDocument();
     expect(screen.getByText('Album type')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Archive notes' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Related' })).toBeInTheDocument();
     expect(container.querySelectorAll('section.album-detail-panel.ui-panel--card')).toHaveLength(2);
+    expect(
+      screen.getByRole('heading', { level: 2, name: 'Archive notes' }).closest('.ui-section-heading'),
+    ).toHaveClass('album-detail-panel__heading');
+    expect(screen.getByRole('heading', { level: 2, name: 'Related' }).closest('.ui-section-heading')).toHaveClass(
+      'album-detail-panel__heading',
+    );
     expect(screen.getByText('Songs, media links, archive collections, and artist relationships will collect here as the MVP grows.')).toBeInTheDocument();
   });
 
@@ -67,6 +74,9 @@ describe('AlbumDetailPage', () => {
     await user.click(screen.getByRole('button', { name: 'Edit album' }));
 
     expect(screen.getByText('Album / edit')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: 'Edit album' }).closest('.ui-section-heading')).toHaveClass(
+      'album-detail-edit-form__header',
+    );
     expect(screen.getByRole('heading', { name: 'Identity' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Release profile' })).toBeInTheDocument();
     expect(screen.getAllByRole('heading', { name: 'Archive notes' }).length).toBeGreaterThan(0);

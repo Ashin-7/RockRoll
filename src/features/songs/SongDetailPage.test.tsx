@@ -30,7 +30,14 @@ describe('SongDetailPage', () => {
     expect(screen.getByText('1967')).toBeInTheDocument();
     expect(screen.getByText('92')).toBeInTheDocument();
     expect(screen.getByText('Work on phrasing.')).toBeInTheDocument();
+    expect(container.querySelectorAll('.song-detail-grid dt')).toHaveLength(3);
     expect(container.querySelectorAll('.song-detail-notes > .ui-panel--card')).toHaveLength(2);
+    expect(screen.getByRole('heading', { level: 2, name: 'Notes' }).closest('.ui-section-heading')).toHaveClass(
+      'song-detail-panel__heading',
+    );
+    expect(screen.getByRole('heading', { level: 2, name: 'Related' }).closest('.ui-section-heading')).toHaveClass(
+      'song-detail-panel__heading',
+    );
   });
 
   it('renders the song hero with shared display primitives', async () => {
@@ -75,6 +82,9 @@ describe('SongDetailPage', () => {
 
     await user.click(screen.getByRole('button', { name: 'Edit song' }));
 
+    expect(screen.getByRole('heading', { level: 2, name: 'Edit song' }).closest('.ui-section-heading')).toHaveClass(
+      'song-detail-edit-form__header',
+    );
     expect(screen.getByLabelText('Title')).toHaveValue('Little Wing');
     expect(screen.getByLabelText('Status')).toHaveValue('learning');
     expect(screen.getByLabelText('Difficulty')).toHaveValue(4);

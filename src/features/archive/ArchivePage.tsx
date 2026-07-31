@@ -1,5 +1,15 @@
 import { FormEvent, useEffect, useState } from 'react';
-import { ActionBar, Button, Field, FormSection, SearchableDropdown, SearchableDropdownOption } from '../../components/ui';
+import {
+  ActionBar,
+  Button,
+  Field,
+  FormSection,
+  Panel,
+  SearchableDropdown,
+  SearchableDropdownOption,
+  SectionHeading,
+  StatCard,
+} from '../../components/ui';
 import { useI18n } from '../../i18n/I18nProvider';
 import { AnontravelerPreview, AnontravelerRankDirectoryPage, AnontravelerRankIndexItem } from '../inbox/anontraveler.types';
 import {
@@ -425,16 +435,20 @@ export function ArchivePage({
 
   return (
     <section className="archive-page">
-      <header className="archive-hero">
-        <div>
-          <p className="eyebrow">{t('archive.eyebrow')}</p>
-          <h1>{t('archive.title')}</h1>
-        </div>
-        <div className="archive-hero-metric">
-          <span>{collections.length}</span>
-          <p>{t('archive.totalCollections')}</p>
-        </div>
-      </header>
+      <Panel as="header" className="archive-hero" variant="hero">
+        <SectionHeading
+          as="h1"
+          className="archive-hero__heading"
+          eyebrow={t('archive.eyebrow')}
+          title={t('archive.title')}
+        />
+        <StatCard
+          className="archive-hero-metric"
+          detail={t('archive.totalCollections')}
+          label=""
+          value={collections.length}
+        />
+      </Panel>
 
       <div className="archive-sections" aria-label={t('archive.librarySectionsLabel')}>
         <article>
@@ -455,12 +469,13 @@ export function ArchivePage({
 
       <div className="archive-collections">
         <section className="archive-collection-list" aria-labelledby="archive-collections-title">
-          <div className="archive-section-heading">
-            <div>
-              <p className="archive-section-kicker">{t('archive.collectionIndex')}</p>
-              <h2 id="archive-collections-title">{t('archive.collectionsTitle')}</h2>
-            </div>
-          </div>
+          <SectionHeading
+            as="h2"
+            className="archive-section-heading"
+            eyebrow={t('archive.collectionIndex')}
+            headingId="archive-collections-title"
+            title={t('archive.collectionsTitle')}
+          />
           {isLoading ? <p>{t('archive.collectionsLoading')}</p> : null}
           {error ? <p role="alert">{error}</p> : null}
           {!isLoading && !error && collections.length === 0 ? <p>{t('archive.collectionsEmpty')}</p> : null}

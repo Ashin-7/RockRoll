@@ -8,6 +8,22 @@ const signedInSession = { user: { email: 'player@example.com' } };
 const demoSession = { isDemo: true, user: { email: 'demo@rockroll.local', id: 'local-demo-user' } };
 
 describe('AuthPage', () => {
+  it('uses the shared section heading for the page title', async () => {
+    renderWithI18n(
+      <AuthPage
+        onGetCurrentSession={vi.fn().mockResolvedValue(null)}
+        onAuthStateChange={() => vi.fn()}
+      />,
+    );
+
+    const heading = await screen.findByRole('heading', {
+      level: 1,
+      name: 'Sign in to your archive.',
+    });
+
+    expect(heading.closest('.ui-section-heading')).not.toBeNull();
+  });
+
   it('submits email magic link request', async () => {
     const signIn = vi.fn().mockResolvedValue(undefined);
     const user = userEvent.setup();

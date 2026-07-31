@@ -10,6 +10,10 @@
   gap: var(--space-6);
 }
 
+.songs-hero__heading.ui-section-heading {
+  margin-bottom: 0;
+}
+
 .songs-hero h1 {
   margin: var(--space-2) 0 0;
   font-family: var(--font-display);
@@ -34,12 +38,13 @@
   padding: var(--space-6);
 }
 
-.songs-add-form h2 {
-  margin: 0;
-  font-family: var(--font-display);
+.songs-add-form__heading {
+  margin-bottom: 0;
+}
+
+.songs-add-form .songs-add-form__heading h2 {
   font-size: 1.6rem;
   line-height: 1;
-  text-transform: uppercase;
 }
 
 .songs-add-form__field {
@@ -105,10 +110,6 @@
 .song-board {
   display: grid;
   gap: var(--space-3);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-panel);
-  background: var(--color-bg-panel);
-  padding: var(--space-4);
 }
 
 .song-board__header {

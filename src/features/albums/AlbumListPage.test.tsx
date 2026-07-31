@@ -47,6 +47,7 @@ describe('AlbumListPage', () => {
     const { container } = renderWithI18n(<AlbumListPage albums={albums} />);
 
     expect(container.querySelector('header.albums-hero.ui-panel--hero')).toBeInTheDocument();
+    expect(container.querySelector('.albums-hero__heading.ui-section-heading')).toBeInTheDocument();
     expect(container.querySelector('article.albums-hero__summary.ui-stat-card--right')).toBeInTheDocument();
     expect(screen.getByRole('heading', { level: 1, name: 'Albums' })).toBeInTheDocument();
   });
@@ -198,7 +199,11 @@ describe('AlbumListPage', () => {
     renderWithI18n(<AlbumListPage onLoadAlbumCollections={vi.fn().mockResolvedValue(albumCollections)} />);
 
     expect(screen.getByText('Loading albums...')).toBeInTheDocument();
-    expect(await screen.findByRole('heading', { name: 'Classic rock guide' })).toBeInTheDocument();
+    const collectionHeading = await screen.findByRole('heading', { name: 'Classic rock guide' });
+    const collectionPanel = collectionHeading.closest('section');
+
+    expect(collectionHeading).toBeInTheDocument();
+    expect(collectionPanel).toHaveClass('ui-panel', 'ui-panel--card', 'albums-collection');
     expect(await screen.findByText('Axis: Bold as Love')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Axis: Bold as Love' })).toHaveAttribute('href', '#album/album-1');
     expect(screen.getByText('Jimi Hendrix')).toBeInTheDocument();

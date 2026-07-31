@@ -105,9 +105,11 @@ describe('ToolboxPage', () => {
 
   it('renders the browser-local PDF tab workflow shell', () => {
     const { container } = renderWithI18n(<ToolboxPage />);
+    const outputHeading = screen.getByRole('heading', { level: 2, name: 'MusicXML for Guitar Pro' });
 
     expect(screen.getByRole('heading', { name: 'PDF Tab Workbench' })).toBeInTheDocument();
     expect(container.querySelectorAll('.toolbox-workbench > .ui-panel--card')).toHaveLength(2);
+    expect(outputHeading.closest('.ui-section-heading')).toBeInTheDocument();
     expect(screen.getByText('Your score stays in this browser. Nothing is uploaded.')).toBeInTheDocument();
     expect(screen.getByLabelText(/Guitar tab PDF/)).toHaveAttribute('accept', 'application/pdf,.pdf');
     expect(screen.getByText('MusicXML for Guitar Pro')).toBeInTheDocument();

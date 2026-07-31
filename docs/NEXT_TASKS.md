@@ -1,6 +1,6 @@
 ﻿# RockRoll 下一步任务
 
-更新时间：2026-07-20
+更新时间：2026-07-30
 
 ## 当前状态
 
@@ -1197,3 +1197,379 @@ npm run build
 3. 继续保持一次一个单页面小切片、先 RED 后 GREEN，不新增 `EntityCard`，不修改受限业务范围。
 
 推荐下一轮只读取三份状态 / 交接文档、`docs/UI_REFACTOR_PLAN.md` 与下一任务相关目录；不要扫描整个仓库，不运行 `npm install`。
+
+## 当前任务索引（2026-07-22，Song List 列表外壳 Panel 迁移后）
+
+已完成：
+
+- 已从最新本地 `main` 创建 `codex/ui-phase-2-panels`。
+- Song List 的 `song-board` 外层已迁移到既有 `Panel variant="card"`，结构测试完成先红后绿。
+- 列表语义、可访问名称、表头、歌曲卡片与创建 / 加载行为保持不变。
+- Song List 与共享 UI 共 2 个测试文件、13 个用例及 production build 通过；空数据页面的桌面 / 窄屏只读冒烟无横向溢出。
+
+下一步只执行：
+
+1. 先核对 `codex/ui-phase-2-panels` 当前未提交切片；未经用户要求不要提交、推送或合并。
+2. 如继续 UI 第 2 期，从计划中选择另一个单页面小切片，一次只迁移一种重复 hero / panel / heading 样式。
+3. 继续先 RED 后 GREEN，不新增 `EntityCard`，不改变 Supabase、Auth、导入、权限、Inbox 导航、一键导入或 `match_existing`。
+
+推荐下一轮只读取三份状态 / 交接文档、`docs/UI_REFACTOR_PLAN.md` 与下一任务相关组件、样式、测试和共享 UI 原语；不要扫描整个仓库，不运行 `npm install`。
+
+## 当前任务索引（2026-07-22，Practice History 筛选标题 SectionHeading 迁移后）
+
+已完成：
+
+- Practice History 筛选区标题已迁移到既有 `SectionHeading as="h2"`，结构测试完成先红后绿。
+- 标题文字、层级、筛选布局与 `aria-labelledby` 关联保持不变；练习数据、筛选行为和 CRUD 未修改。
+- Practice History 与共享 UI 共 2 个测试文件、18 个用例通过；累计五个定向测试文件、47 个用例、production build 与目标差异检查通过。Guest 空数据下筛选区不渲染，因此未伪造目标视觉验收。
+- 当前分支 `codex/ui-phase-2-panels` 累计 Song List、Toolbox、Album List 与 Practice History 四张未提交切片。
+
+下一步只执行：
+
+1. 先核对当前累计四张未提交 UI 切片；未经用户要求不要提交、推送或合并。
+2. 如继续 UI 第 2 期，从计划中选择另一个页面的小切片，不继续扩大 Practice History 范围。
+3. 继续先 RED 后 GREEN，一次只迁移一种重复样式；不新增 `EntityCard`，不改变受限业务范围。
+
+推荐下一轮只读取三份状态 / 交接文档、`docs/UI_REFACTOR_PLAN.md` 与下一任务相关组件、样式、测试和共享 UI 原语；不要扫描整个仓库，不运行 `npm install`。
+
+## 当前任务索引（2026-07-22，Toolbox 输出标题 SectionHeading 迁移后）
+
+已完成：
+
+- Toolbox 输出面板的 eyebrow + `h2` 已迁移到既有 `SectionHeading as="h2"`，结构测试完成先红后绿。
+- 标题文字、层级、输出面板布局和业务行为保持不变；输入面板及动态 Rhythm 区域未修改。
+- Toolbox 与共享 UI 共 2 个测试文件、13 个用例、production build 及桌面 / 窄屏视觉冒烟通过。
+- 当前分支 `codex/ui-phase-2-panels` 累计 Song List 列表外壳与 Toolbox 输出标题两张未提交切片。
+
+下一步只执行：
+
+1. 先核对当前累计两张未提交 UI 切片；未经用户要求不要提交、推送或合并。
+2. 如继续 UI 第 2 期，从计划中选择另一个页面的小切片，不继续扩大 Toolbox 范围，一次只迁移一种重复样式。
+3. 继续先 RED 后 GREEN，不新增 `EntityCard`，不改变 Supabase、Auth、导入、权限、Inbox 导航、一键导入或 `match_existing`。
+
+推荐下一轮只读取三份状态 / 交接文档、`docs/UI_REFACTOR_PLAN.md` 与下一任务相关组件、样式、测试和共享 UI 原语；不要扫描整个仓库，不运行 `npm install`。
+
+## 当前任务索引（2026-07-22，Album List hero 标题 SectionHeading 迁移后）
+
+已完成：
+
+- Album List hero 的 eyebrow + `h1` 已迁移到既有 `SectionHeading as="h1"`，结构测试完成先红后绿。
+- 标题文字、层级、字号、间距和响应式 hero 布局保持不变；集合加载、筛选、分页与权限行为未修改。
+- 累计页面与共享 UI 共 4 个测试文件、36 个用例、production build、目标差异检查及 Album List 桌面 / 窄屏视觉冒烟通过。
+- 当前分支 `codex/ui-phase-2-panels` 累计 Song List、Toolbox 与 Album List 三张未提交切片。
+
+下一步只执行：
+
+1. 先核对当前累计三张未提交 UI 切片；未经用户要求不要提交、推送或合并。
+2. 当前累计切片已达到三张，建议开启新对话后再从 UI 计划选择新的单页面小切片，不继续扩大 Album List 范围。
+3. 继续先 RED 后 GREEN，一次只迁移一种重复样式；不新增 `EntityCard`，不改变 Supabase、Auth、导入、权限、Inbox 导航、一键导入或 `match_existing`。
+
+推荐下一轮只读取三份状态 / 交接文档、`docs/UI_REFACTOR_PLAN.md` 与下一任务相关组件、样式、测试和共享 UI 原语；不要扫描整个仓库，不运行 `npm install`。
+
+## 当前任务索引（2026-07-30，Backstage 内容列 Panel 迁移后）
+
+已完成：
+
+- Backstage 的 Recent tapes / Import inbox 两个内容列外壳已迁移到既有 `Panel variant="card"`，结构测试完成先红后绿。
+- 标题、mock 数据、文章语义、内部卡片与响应式布局保持不变；未触碰 CRUD、service、Supabase 或权限范围。
+- 累计 6 个定向测试文件、48 个用例、production build 与目标差异检查通过。
+- `/#backstage` 桌面 / 窄屏只读视觉冒烟通过：目标 Panel 保持两列 / 单列，无横向溢出，控制台无 warning / error。
+- 当前分支 `codex/ui-phase-2-panels` 累计 Song List、Toolbox、Album List、Practice History 与 Backstage 五张未提交切片。
+
+下一步只执行：
+
+1. 先核对当前累计五张未提交 UI 切片；未经用户明确要求，不提交、推送或合并。
+2. 当前累计切片和修改文件数已达到会话交接阈值，下一轮再从 UI 计划选择新的单页面小切片，不继续扩大 Backstage 范围。
+3. 继续先 RED 后 GREEN，一次只迁移一种重复样式；不新增 `EntityCard`，不改变受限业务范围。
+
+推荐下一轮只读取三份状态 / 交接文档、`docs/UI_REFACTOR_PLAN.md` 与下一任务相关组件、样式、测试和共享 UI 原语；不要扫描整个仓库，不运行 `npm install`。
+
+## 当前任务索引（2026-07-30，Album Detail 元数据 StatCard 迁移后）
+
+已完成：
+
+- Album Detail 的发行年份、专辑类型与艺人三项只读元数据已迁移到既有 `StatCard`，结构测试完成先红后绿。
+- 数据、文案、顺序、三列 / 单列布局与页面视觉规格保持不变；未触碰数据加载、编辑 / 删除权限、CRUD、service、Supabase 或 RLS。
+- 累计 7 个定向测试文件、52 个用例和 production build 通过。
+- Guest 环境下目标数据未渲染，控制台无 warning / error，但未伪造目标视觉验收。
+- 当前分支 `codex/ui-phase-2-panels` 累计六张未提交 UI 切片。
+
+下一步只执行：
+
+1. 先核对当前累计六张未提交 UI 切片；未经用户明确要求，不提交、推送或合并。
+2. 当前累计切片和修改文件数继续超过会话交接阈值；下一轮再从 UI 计划选择另一个页面的小切片，不继续扩大 Album Detail 范围。
+3. 继续先 RED 后 GREEN，一次只迁移一种重复样式；不新增 `EntityCard`，不改变受限业务范围。
+
+推荐下一轮只读取三份状态 / 交接文档、`docs/UI_REFACTOR_PLAN.md` 与下一任务相关组件、样式、测试和共享 UI 原语；不要扫描整个仓库，不运行 `npm install`。
+
+## 当前任务索引（2026-07-30，Library 分区标题 SectionHeading 迁移后）
+
+已完成：
+
+- Library 的 `Library sections` 二级标题已迁移到既有 `SectionHeading as="h2"`，结构测试完成先红后绿。
+- 标题文字、层级、分类卡顺序与响应式布局保持不变；未触碰表单、CRUD、service、Supabase 或权限范围。
+- 累计 8 个定向测试文件、60 个用例和 production build 通过。
+- `/#library` 桌面 / 窄屏只读视觉冒烟通过：标题与分类卡对齐正常，无横向溢出，控制台无 warning / error。
+- 当前分支 `codex/ui-phase-2-panels` 累计七张未提交 UI 切片。
+
+下一步只执行：
+
+1. 先核对当前累计七张未提交 UI 切片；未经用户明确要求，不提交、推送或合并。
+2. 当前累计切片和修改文件数继续超过会话交接阈值；下一轮再从 UI 计划选择另一个页面的小切片，不继续扩大 Library 范围。
+3. 继续先 RED 后 GREEN，一次只迁移一种重复样式；不新增 `EntityCard`，不改变受限业务范围。
+
+推荐下一轮只读取三份状态 / 交接文档、`docs/UI_REFACTOR_PLAN.md` 与下一任务相关组件、样式、测试和共享 UI 原语；不要扫描整个仓库，不运行 `npm install`。
+
+## 当前任务索引（2026-07-30，Song Detail 元数据 StatCard 迁移后）
+
+已完成：
+
+- Song Detail 的难度、发行年份与 BPM 三项只读元数据已迁移到既有 `StatCard`，结构测试完成先红后绿。
+- 数据、文案、顺序、三列 / 单列布局与页面视觉规格保持不变；未触碰加载、编辑 / 删除、CRUD、service、Supabase 或权限范围。
+- 累计 9 个定向测试文件、67 个用例和 production build 通过。
+- Guest 环境没有可渲染的歌曲详情数据，未伪造目标统计卡的浏览器视觉验收。
+- 当前分支 `codex/ui-phase-2-panels` 累计八张未提交 UI 切片。
+
+下一步只执行：
+
+1. 先核对当前累计八张未提交 UI 切片；未经用户明确要求，不提交、推送或合并。
+2. 当前累计切片和修改文件数继续超过会话交接阈值；下一轮再从 UI 计划选择另一个页面的小切片，不继续扩大 Song Detail 范围。
+3. 继续先 RED 后 GREEN，一次只迁移一种重复样式；不新增 `EntityCard`，不改变受限业务范围。
+
+推荐下一轮只读取三份状态 / 交接文档、`docs/UI_REFACTOR_PLAN.md` 与下一任务相关组件、样式、测试和共享 UI 原语；不要扫描整个仓库，不运行 `npm install`。
+
+## 当前任务索引（2026-07-30，Auth 页面标题 SectionHeading 迁移后）
+
+已完成：
+
+- Auth 页面的 eyebrow + `h1` 已迁移到既有 `SectionHeading as="h1"`，结构测试完成准确的先红后绿。
+- 标题文案、层级及认证状态、表单、按钮、回调与 Supabase 调用保持不变。
+- 累计 10 个定向测试文件、85 个用例和 production build 通过。
+- `/#auth` 桌面 / 窄屏只读视觉冒烟通过：共享标题清晰、页面无横向溢出，控制台无 warning / error。
+- 当前分支 `codex/ui-phase-2-panels` 累计九张未提交 UI 切片。
+
+下一步只执行：
+
+1. 先核对当前累计九张未提交 UI 切片；未经用户明确要求，不提交、推送或合并。
+2. 当前累计切片和修改文件数继续超过会话交接阈值；下一轮再从 UI 计划选择另一个页面的小切片，不继续扩大 Auth 范围。
+3. 继续先 RED 后 GREEN，一次只迁移一种重复样式；不新增 `EntityCard`，不改变受限业务范围。
+
+推荐下一轮只读取三份状态 / 交接文档、`docs/UI_REFACTOR_PLAN.md` 与下一任务相关组件、样式、测试和共享 UI 原语；不要扫描整个仓库，不运行 `npm install`。
+
+## 当前任务索引（2026-07-30，Artist Detail 编辑标题 SectionHeading 迁移后）
+
+已完成：
+
+- Artist Detail 编辑表单的 eyebrow + `h2` 已迁移到既有 `SectionHeading as="h2"`，结构测试完成准确的先红后绿。
+- 标题文案、层级、未保存提示、表单字段与 Artist 加载 / 保存 / 删除行为保持不变。
+- 原计划评估的统计卡仍保留 `dl/dt/dd` 原生语义，没有为本切片扩展 `StatCard`。
+- 累计 11 个定向测试文件、91 个用例和 production build 通过；本轮未执行浏览器视觉验收。
+- 当前分支 `codex/ui-phase-2-panels` 累计十张未提交 UI 切片。
+
+下一步只执行：
+
+1. 先核对当前累计十张未提交 UI 切片；未经用户明确要求，不提交、推送或合并。
+2. 当前累计切片和修改文件数继续超过会话交接阈值；下一轮再从 UI 计划选择另一个页面的小切片，不继续扩大 Artist Detail 范围。
+3. 继续先 RED 后 GREEN，一次只迁移一种重复样式；不新增 `EntityCard`，不改变权限敏感业务行为。
+
+推荐下一轮只读取三份状态 / 交接文档、`docs/UI_REFACTOR_PLAN.md` 与下一任务相关组件、样式、测试和共享 UI 原语；不要扫描整个仓库，不运行 `npm install`。
+
+## 当前任务索引（2026-07-30，Artist List 新增表单标题 SectionHeading 迁移后）
+
+已完成：
+
+- Artist List 新增表单的 eyebrow + `h2` 已迁移到既有 `SectionHeading as="h2"`，结构测试完成准确的先红后绿。
+- 标题文案、层级、字号、窄屏布局、表单字段及 Artist 加载 / 创建行为保持不变。
+- 累计 12 个定向测试文件、97 个用例和 production build 通过。
+- `ArtistListPage` 当前未挂载到 App，`#artists` 会回退 Backstage，因此未伪造目标视觉验收，也未扩大到路由改动。
+- 当前分支 `codex/ui-phase-2-panels` 累计十一张未提交 UI 切片。
+
+下一步只执行：
+
+1. 先核对当前累计十一张未提交 UI 切片；未经用户明确要求，不提交、推送或合并。
+2. 当前累计切片和修改文件数继续超过会话交接阈值；下一轮再从 UI 计划选择另一个实际挂载页面的小切片，不继续扩大 Artist List 范围。
+3. 继续先 RED 后 GREEN，一次只迁移一种重复样式；不新增 `EntityCard`，不改变权限敏感业务行为，也不为视觉验收临时新增路由。
+
+推荐下一轮只读取三份状态 / 交接文档、`docs/UI_REFACTOR_PLAN.md`、当前路由映射的最小相关片段与下一任务相关组件、样式、测试和共享 UI 原语；不要扫描整个仓库，不运行 `npm install`。
+
+## 集中收口执行记录（2026-07-31，UI Phase 2 现有原语安全迁移）
+
+已完成：
+
+- 按一次迭代完成全部剩余安全切片的要求，集中完成 7 个实际挂载页面、十三类 `Panel / SectionHeading / StatCard` 迁移。
+- 目标范围包括 Song List、Archive、Practice、Song Detail、Album Detail、Artist Detail 与 Library；数据、路由、权限、导入和业务行为保持不变。
+- RED 阶段 9 个目标结构断言准确失败；GREEN 后 7 个页面测试文件、56 个用例通过。
+- 累计 15 个定向测试文件、123 个用例和 production build 通过。
+- `#songs / #archive / #practice / #library` 桌面与窄屏视觉冒烟通过；Detail 页因 Guest 无真实数据，仅由定向测试覆盖。
+- 当前分支 `codex/ui-phase-2-panels` 累计三十一张未提交 UI 切片；现有三种共享原语的安全机械迁移已收口。
+
+下一步只执行：
+
+1. 先统一审查当前三十一张未提交 UI 切片及工作区范围；未经用户明确要求，不提交、推送或合并。
+2. 与用户确认是否将累计 UI Phase 2 变更提交并推送当前分支；只提交确认范围，避免夹带无关改动。
+3. 如不进行 Git 同步，返回 Archive / Import 主线；不要继续把 Auth、管理员 CRUD 或业务实体卡片机械迁移到现有原语。
+4. 若未来继续 UI Phase 2 的新原语工作，需单独设计并取得用户确认；继续禁止默认新增 `EntityCard` 或进行架构重构。
+
+推荐下一轮只读取三份状态 / 交接文档、当前分支状态和本轮修改的 7 个页面目录；不要扫描整个仓库，不运行 `npm install`。
+
+## 当前任务索引（2026-07-31，31 张 UI 切片统一审查后）
+
+已完成：
+
+- 31 张记录切片已逐文件统一审查；29 张可保留。
+- Album Detail 与 Song Detail 的元数据 `StatCard` 迁移因破坏 `dl / dt / dd` 定义列表语义而撤回，其余标题和 Panel 迁移保持。
+- 数据、路由、权限、导入、CRUD、Supabase 与 RLS 行为未改变。
+- 修复后累计 15 个定向测试文件、123 个用例通过；未运行 `npm install`。
+- 远端默认分支与本地 tracking 事实均指向 `main`。
+
+下一步只执行：
+
+1. 将已审 UI 成果提交并纳入本地 `main`，不推送。
+2. 由用户确认旧 `codex/toolbox-explicit-rhythm` 的互斥实现是保留分支还是选择性移植；确认前不整体合并。
+3. 只有在相关提交已纳入且 worktree 无占用后，才删除其余本地分支。
+4. 整合完成后运行定向 Toolbox / UI 验证、production build 与 `git diff --check`。
+
+## 当前任务索引（2026-07-31，Archive Detail 条目索引标题 SectionHeading 迁移后）
+
+已完成：
+
+- 实际挂载到 `#archive/:id` 的条目索引标题已迁移到既有 `SectionHeading as="h2"`，结构测试完成准确的先红后绿。
+- 标题文案、层级、可访问关联、分页、数据加载、角色判断与管理员 Archive item CRUD 行为保持不变。
+- 累计 15 个定向测试文件、122 个用例和 production build 通过。
+- Guest 环境没有可进入的 Archive collection 详情，目标标题未完成浏览器视觉验收；控制台无 warning / error，未伪造结论。
+- 当前分支 `codex/ui-phase-2-panels` 累计十六张未提交 UI 切片。
+
+下一步只执行：
+
+1. 先核对当前累计十六张未提交 UI 切片；未经用户明确要求，不提交、推送或合并。
+2. 当前累计切片和修改文件数继续超过会话交接阈值；下一轮再从 UI 计划选择另一个实际挂载页面的小切片，不继续扩大 Archive Detail 范围。
+3. 继续先 RED 后 GREEN，一次只迁移一种重复样式；不新增 `EntityCard`，不改变权限敏感业务行为，也不为视觉验收临时新增路由或假数据。
+
+推荐下一轮只读取三份状态 / 交接文档、`docs/UI_REFACTOR_PLAN.md`、当前路由映射的最小相关片段与下一任务相关组件、样式、测试和共享 UI 原语；不要扫描整个仓库，不运行 `npm install`。
+
+## 当前任务索引（2026-07-30，Inbox Disabled hero Panel 迁移后）
+
+已完成：
+
+- 实际挂载到 `#inbox` 的禁用说明页 hero 已迁移到既有 `Panel variant="hero"`，结构测试完成准确的先红后绿。
+- 标题、说明、Archive 链接、导入入口禁用状态与 Inbox 专属背景保持不变；未触碰权限或导入行为。
+- 累计 13 个定向测试文件、103 个用例和 production build 通过。
+- `/#inbox` 桌面 / 窄屏只读视觉冒烟通过：目标 hero 无截断或横向溢出，控制台无 warning / error。
+- 当前分支 `codex/ui-phase-2-panels` 累计十二张未提交 UI 切片。
+
+下一步只执行：
+
+1. 先核对当前累计十二张未提交 UI 切片；未经用户明确要求，不提交、推送或合并。
+2. 当前累计切片和修改文件数继续超过会话交接阈值；下一轮再从 UI 计划选择另一个实际挂载页面的小切片，不继续扩大 Inbox 范围。
+3. 继续先 RED 后 GREEN，一次只迁移一种重复样式；不新增 `EntityCard`，不改变权限敏感业务行为，也不为视觉验收临时新增路由。
+
+推荐下一轮只读取三份状态 / 交接文档、`docs/UI_REFACTOR_PLAN.md`、当前路由映射的最小相关片段与下一任务相关组件、样式、测试和共享 UI 原语；不要扫描整个仓库，不运行 `npm install`。
+
+## 当前任务索引（2026-07-30，Practice Statistics 标题 SectionHeading 迁移后）
+
+已完成：
+
+- 实际挂载到 `#practice` 的 Practice Statistics 标题已迁移到既有 `SectionHeading as="h2"`，结构测试完成准确的先红后绿。
+- 标题文案、层级、可访问关联、统计定义列表、数据加载与 Practice CRUD 行为保持不变。
+- 累计 13 个定向测试文件、103 个用例和 production build 通过。
+- 本地预览服务无法在当前桌面环境启动，本轮未完成浏览器视觉冒烟，也未伪造视觉结论。
+- 当前分支 `codex/ui-phase-2-panels` 累计十三张未提交 UI 切片。
+
+下一步只执行：
+
+1. 先核对当前累计十三张未提交 UI 切片；未经用户明确要求，不提交、推送或合并。
+2. 当前累计切片和修改文件数继续超过会话交接阈值；下一轮再从 UI 计划选择另一个实际挂载页面的小切片，不继续扩大 Practice History 范围。
+3. 继续先 RED 后 GREEN，一次只迁移一种重复样式；不新增 `EntityCard`，不改变权限敏感业务行为，也不为视觉验收临时新增路由。
+
+推荐下一轮只读取三份状态 / 交接文档、`docs/UI_REFACTOR_PLAN.md`、当前路由映射的最小相关片段与下一任务相关组件、样式、测试和共享 UI 原语；不要扫描整个仓库，不运行 `npm install`。
+
+## 当前任务索引（2026-07-31，Archive hero Panel 迁移后）
+
+已完成：
+
+- 实际挂载到 `#archive` 的 Archive hero 已迁移到既有 `Panel as="header" variant="hero"`，结构测试完成准确的先红后绿。
+- 标题、集合计数、header 语义、响应式布局及 Archive 角色判断、管理员入口、CRUD 与导入行为保持不变。
+- 累计 14 个定向测试文件、115 个用例和 production build 通过。
+- `/#archive` 桌面 / 窄屏 Guest 只读视觉冒烟通过：目标 hero 无截断或横向溢出，控制台无 warning / error。
+- 当前分支 `codex/ui-phase-2-panels` 累计十四张未提交 UI 切片。
+
+下一步只执行：
+
+1. 先核对当前累计十四张未提交 UI 切片；未经用户明确要求，不提交、推送或合并。
+2. 当前累计切片和修改文件数继续超过会话交接阈值；下一轮再从 UI 计划选择另一个实际挂载页面的小切片，不继续扩大 Archive 范围。
+3. 继续先 RED 后 GREEN，一次只迁移一种重复样式；不新增 `EntityCard`，不改变权限敏感业务行为，也不为视觉验收临时新增路由。
+
+推荐下一轮只读取三份状态 / 交接文档、`docs/UI_REFACTOR_PLAN.md`、当前路由映射的最小相关片段与下一任务相关组件、样式、测试和共享 UI 原语；不要扫描整个仓库，不运行 `npm install`。
+
+## 当前任务索引（2026-07-31，Song List 新增表单标题 SectionHeading 迁移后）
+
+已完成：
+
+- 实际挂载到 `#songs` 的新增表单标题已迁移到既有 `SectionHeading as="h2"`，结构测试在校正文案查询后完成准确的先红后绿。
+- 标题文案、层级、字号、表单字段、提交逻辑与五列 / 单列响应式布局保持不变；未触碰 Archive 或权限敏感业务范围。
+- 累计 14 个定向测试文件、116 个用例和 production build 通过。
+- `/#songs` 桌面 / 窄屏 Guest 只读视觉冒烟通过：目标标题无截断、页面无横向溢出，控制台无 warning / error。
+- 当前分支 `codex/ui-phase-2-panels` 累计十五张未提交 UI 切片。
+
+下一步只执行：
+
+1. 先核对当前累计十五张未提交 UI 切片；未经用户明确要求，不提交、推送或合并。
+2. 当前累计切片和修改文件数继续超过会话交接阈值；下一轮再从 UI 计划选择另一个实际挂载页面的小切片，不继续扩大 Song List 范围。
+3. 继续先 RED 后 GREEN，一次只迁移一种重复样式；不新增 `EntityCard`，不改变权限敏感业务行为，也不为视觉验收临时新增路由。
+
+推荐下一轮只读取三份状态 / 交接文档、`docs/UI_REFACTOR_PLAN.md`、当前路由映射的最小相关片段与下一任务相关组件、样式、测试和共享 UI 原语；不要扫描整个仓库，不运行 `npm install`。
+
+## 当前任务索引（2026-07-31，Album List 集合容器 Panel 迁移后）
+
+已完成：
+
+- 实际挂载到 `#albums` 的集合容器已迁移到既有 `Panel as="section" variant="card"`，结构测试完成准确的先红后绿。
+- `<section>` 语义、集合标题、来源、描述展开、数量、专辑列表、分页、筛选与数据加载行为保持不变。
+- 累计 15 个定向测试文件、122 个用例和 production build 通过。
+- `/#albums` 桌面与窄屏页面均无横向溢出，控制台无 warning / error；Guest 环境没有渲染集合数据，目标 Panel 未完成真实内容视觉验收。
+- 当前分支 `codex/ui-phase-2-panels` 累计十七张未提交 UI 切片。
+
+下一步只执行：
+
+1. 先核对当前累计十七张未提交 UI 切片；未经用户明确要求，不提交、推送或合并。
+2. 当前累计切片和修改文件数继续超过会话交接阈值；下一轮再从 UI 计划选择另一个实际挂载页面的小切片，不继续扩大 Album List 范围。
+3. 继续先 RED 后 GREEN，一次只迁移一种重复样式；不新增 `EntityCard`，不改变权限敏感业务行为，也不为视觉验收临时新增路由或假数据。
+
+推荐下一轮只读取三份状态 / 交接文档、`docs/UI_REFACTOR_PLAN.md`、当前路由映射的最小相关片段与下一任务相关组件、样式、测试和共享 UI 原语；不要扫描整个仓库，不运行 `npm install`。
+
+## 当前任务索引（2026-07-31，Inbox Disabled hero 标题 SectionHeading 迁移后）
+
+已完成：
+
+- 实际挂载到 `#inbox` 的禁用说明页 hero 标题已迁移到既有 `SectionHeading as="h1"`，结构测试完成准确的先红后绿。
+- 标题文案、层级、Inbox 禁用说明、Archive 链接、hero Panel 与响应式布局保持不变；未触碰导入或权限行为。
+- 累计 15 个定向测试文件、122 个用例和 production build 通过。
+- `/#inbox` 桌面与窄屏只读视觉冒烟通过：标题和描述无截断、页面无横向溢出，控制台无 warning / error。
+- 当前分支 `codex/ui-phase-2-panels` 累计十八张未提交 UI 切片。
+
+下一步只执行：
+
+1. 先核对当前累计十八张未提交 UI 切片；未经用户明确要求，不提交、推送或合并。
+2. 当前累计切片和修改文件数继续超过会话交接阈值；下一轮再从 UI 计划选择另一个实际挂载页面的小切片，不继续扩大 Inbox Disabled 范围。
+3. 继续先 RED 后 GREEN，一次只迁移一种重复样式；不新增 `EntityCard`，不改变权限敏感业务行为，也不为视觉验收临时新增路由或假数据。
+
+推荐下一轮只读取三份状态 / 交接文档、`docs/UI_REFACTOR_PLAN.md`、当前路由映射的最小相关片段与下一任务相关组件、样式、测试和共享 UI 原语；不要扫描整个仓库，不运行 `npm install`。
+
+## 当前任务索引（2026-07-31，UI Phase 2 现有原语安全迁移最终收口）
+
+已完成：
+
+- 一次迭代完成 7 个实际挂载页面、十三类剩余 `Panel / SectionHeading / StatCard` 安全迁移。
+- RED 阶段 9 个目标断言准确失败；GREEN 后 7 个页面测试文件、56 个用例通过。
+- 累计 15 个定向测试文件、123 个用例和 production build 通过。
+- 可直达页面桌面 / 窄屏视觉冒烟通过；Detail 页因 Guest 无真实数据，仅由定向测试覆盖。
+- 当前分支累计三十一张未提交 UI 切片；现有三种共享原语的安全机械迁移已收口。
+
+下一步只执行：
+
+1. 统一审查当前分支与三十一张未提交 UI 切片。
+2. 与用户确认是否提交、推送；未经明确要求不执行 Git 同步。
+3. 如暂不进行 Git 同步，返回 Archive / Import 主线。
+4. 新原语或 Auth / 管理员 CRUD / 业务实体卡片迁移必须单独设计确认。
+
+推荐下一轮只读取三份状态 / 交接文档、当前分支状态和本轮修改的 7 个页面目录；不要扫描整个仓库，不运行 `npm install`。

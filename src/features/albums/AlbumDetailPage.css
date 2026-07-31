@@ -86,6 +86,11 @@
   align-items: end;
   justify-content: space-between;
   gap: var(--space-4);
+  margin-bottom: 0;
+}
+
+.album-detail-edit-form__header .ui-section-heading__text p.eyebrow {
+  margin: 0;
 }
 
 .album-detail-edit-form__header p,
@@ -203,6 +208,10 @@
   display: grid;
   align-content: start;
   gap: var(--space-3);
+}
+
+.album-detail-panel__heading.ui-section-heading {
+  margin-bottom: 0;
 }
 
 .album-detail-panel h2,

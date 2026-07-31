@@ -32,13 +32,9 @@
 }
 
 .artists-add-form__header {
-  display: flex;
-  align-items: end;
-  justify-content: space-between;
-  gap: var(--space-4);
+  margin-bottom: 0;
 }
 
-.artists-add-form h2,
 .artists-add-form h3 {
   margin: 0;
   font-family: var(--font-display);
@@ -46,8 +42,9 @@
   text-transform: uppercase;
 }
 
-.artists-add-form h2 {
+.artists-add-form__header .ui-section-heading__text h2 {
   font-size: 1.6rem;
+  line-height: 1;
 }
 
 .artists-add-form h3 {

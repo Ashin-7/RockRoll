@@ -1,5 +1,5 @@
 ﻿import { type FocusEvent, useEffect, useMemo, useRef, useState } from 'react';
-import { Panel, StatCard } from '../../components/ui';
+import { Panel, SectionHeading, StatCard } from '../../components/ui';
 import { useI18n } from '../../i18n/I18nProvider';
 import { AlbumCollectionOption, AlbumCollectionPageInput, AlbumCollectionSummary, AlbumSummary } from './album.types';
 import { getAlbumCollectionById, listAlbumCollectionOptions, listAlbumCollections } from './albums.service';
@@ -365,10 +365,12 @@ export function AlbumListPage({
   return (
     <section className="albums-page">
       <Panel as="header" className="albums-hero" variant="hero">
-        <div>
-          <p className="eyebrow">{t('albums.eyebrow')}</p>
-          <h1>{t('albums.title')}</h1>
-        </div>
+        <SectionHeading
+          as="h1"
+          className="albums-hero__heading"
+          eyebrow={t('albums.eyebrow')}
+          title={t('albums.title')}
+        />
         <StatCard
           align="right"
           className="albums-hero__summary"
@@ -480,7 +482,7 @@ export function AlbumListPage({
             const isDescriptionExpanded = Boolean(expandedDescriptionIds[collection.id]);
 
             return (
-              <section className="albums-collection" key={collection.id}>
+              <Panel as="section" className="albums-collection" key={collection.id} variant="card">
                 <header className="albums-collection__header">
                   <div>
                     <p>{collection.source}</p>
@@ -572,7 +574,7 @@ export function AlbumListPage({
                     </button>
                   </div>
                 </div>
-              </section>
+              </Panel>
             );
           })}
         </div>
