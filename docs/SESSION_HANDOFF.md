@@ -3595,3 +3595,167 @@ UI Phase 2 切片已经统一审查、提交并完成本地分支收口。
 ```
 
 建议开启新对话，并粘贴以上提示词继续。
+
+## 当前最终交接（2026-08-14，首页与全局导航编辑部视觉重构后）
+
+本轮完成：
+
+- 全局 AppShell 已改为顶部横向导航；Backstage 与 Album 页面使用统一纸张主题。
+- `#backstage` 已完整重构为私人音乐档案馆首页：蓝色大标题、红色今日练习单、音箱旋钮、数据横条、近期录音带、导入草稿清单。
+- 首页保留 `backstage.mock.ts` 既有数据；练习条目与导入条目真实链接分别保持为 `#practice`、`#inbox`。
+- 修复首页同时激活“后台”和“资料库”的导航问题，并补充 AppShell 回归测试。
+- 视觉概念稿：`C:\Users\Ashin\.codex\generated_images\019ffdfc-4921-73c2-bb77-63fc84c2a2b7\exec-042856d9-00d1-431c-8cdb-9c8e2eedb60f.png`。
+- 浏览器截图：`C:\Users\Ashin\.codex\visualizations\2026\08\14\019ffdfc-4921-73c2-bb77-63fc84c2a2b7\rockroll-backstage-desktop.png` 与 `rockroll-backstage-mobile.png`。
+
+验证：
+
+- `BackstagePage.test.tsx`、`AppShell.test.tsx`、`App.test.tsx`：3 个文件、12 个用例通过。
+- TypeScript build 与 Vite production build 通过；只有既有 chunk size 警告。
+- `1536x1024` 与 `390x844` 无横向溢出、无 Vite error overlay；首页仅“后台”激活，练习入口点击后进入 `#practice`。
+- 未运行 `npm install`，未新增依赖，未修改 Supabase、Auth、导入、权限或 RLS。
+
+Git / 工作区：
+
+- 当前分支 `main`，HEAD `822aabf`，领先 `origin/main` 54 个提交。
+- 本轮未提交、未推送。当前未提交范围包含 AppShell、Album List、Backstage 及三份交接文档。
+- `.tmp/archive-import-validation/` 为既有未跟踪目录，未读取、未修改、未清理。
+
+下一轮提示词：
+
+```text
+继续 RockRoll UI 重构，优先重构 Practice 页面。
+请只读取：
+- AGENTS.md
+- docs/PROJECT_STATUS.md
+- docs/NEXT_TASKS.md
+- docs/SESSION_HANDOFF.md
+- src/app/shell/
+- src/features/practice/ 当前页面、样式和测试
+
+沿用已确认的编辑部唱片档案视觉语言，但以练习记录的可读性和操作效率为先。
+不要扫描整个仓库。
+不要运行 npm install。
+不要新增依赖。
+不要修改 Supabase、Auth、权限、RLS 或数据契约。
+不要提交或推送。
+完成后中文总结。
+```
+
+建议开启新对话，并粘贴以上提示词继续。
+
+## 当前最终交接（2026-08-17，状态复核）
+
+### 当前成果
+
+- 首页与全局 AppShell 已完成编辑部 / 唱片档案视觉重构，Backstage、Album 与顶部导航形成统一纸张主题。
+- `#backstage` 保留既有 mock 数据和真实入口；练习与导入入口仍分别指向 `#practice`、`#inbox`。
+- 首页导航激活状态问题已修复，Album 路由仍归入“资料库”。
+- 本次仅复核交接，没有修改业务代码。
+
+### Git 与工作区
+
+- 分支：`main`。
+- HEAD：`822aabf`。
+- 相对 `origin/main`：领先 54 个提交，落后 0 个提交。
+- 未提交的已跟踪文件共 13 个：AppShell 3 个、Album List 3 个、Backstage 3 个、`src/App.test.tsx` 1 个，以及三份状态 / 交接文档。
+- 未跟踪目录 `.tmp/archive-import-validation/` 仅含既有本地 Vite 日志；未读取、修改或清理。
+- 未提交、未推送。
+
+### 最近验证
+
+- 最近一次有效验证记录来自 2026-08-14：`BackstagePage.test.tsx`、`AppShell.test.tsx`、`App.test.tsx` 共 12 个用例通过。
+- TypeScript build 与 Vite production build 当时通过，仅保留既有 chunk size 警告。
+- `1536x1024` 与 `390x844` 浏览器验收当时通过：无横向溢出、无 Vite error overlay，首页仅“后台”激活，练习入口可进入 `#practice`。
+- 本次是文档整理，没有重复运行测试或构建；以上结果不冒充 2026-08-17 的新验证。
+
+### 未完成事项与风险
+
+1. 当前未提交 UI 改动尚未形成提交，也尚未推送；继续开发前必须保留并核对这些改动。
+2. 下一项直接任务是 Practice 页面视觉重构，不能改变 Practice CRUD、数据契约、Supabase、Auth、权限或 RLS。
+3. Archive / Import 真实大列表验证仍未完成；恢复时先确认 Supabase 项目可达并登录管理员账号，不使用 service role key、不绕过 RLS。
+4. 不要把 `preview`、保存到 `import_candidates` 的 `saved`、按实体拆分的 `planned` 与正式公共行 `committed` 混为同一数量。
+
+### 下一轮提示词
+
+```text
+继续 RockRoll UI 重构，优先重构 Practice 页面。
+请只读取：
+- AGENTS.md
+- docs/PROJECT_STATUS.md
+- docs/NEXT_TASKS.md
+- docs/SESSION_HANDOFF.md
+- src/app/shell/
+- src/features/practice/ 当前页面、样式和测试
+
+当前分支是 main，HEAD 822aabf，相对 origin/main 领先 54 个提交；先保留并核对现有未提交 UI 改动。
+沿用已确认的编辑部唱片档案视觉语言，但以练习记录的可读性和操作效率为先。
+不要扫描整个仓库。
+不要运行 npm install。
+不要新增依赖。
+不要修改 Supabase、Auth、权限、RLS 或 Practice 数据契约。
+不要提交或推送。
+完成后中文总结。
+```
+
+建议开启新对话，并粘贴以上提示词继续。
+
+## 当前最终交接（2026-08-17，Practice 页面编辑部视觉重构后）
+
+### 本轮完成
+
+- `#practice` 已纳入 AppShell editorial（纸张）主题，与 `#backstage`、`#albums` 统一编辑部 / 唱片档案视觉语言；导航激活状态与路由归属不变。
+- Practice hero 重构为蓝色大标题 + 黄色标签 + 底部蓝线；统计区改为蓝色数据横条账本（保留 `dl / dt / dd` 语义）；历史列表改为纸张账本行式（点线分隔、蓝字表头、Georgia 斜体复盘）；表单与筛选改为无边框区块 + 下划线输入；hero 紧凑，以练习记录的可读性和操作效率为先。
+- 表单控件补 `ui-input / ui-select / ui-textarea`、按钮补 `ui-button-unstyled`（沿用 Album List 绕过全局 shim 的既有机制）；未改 CRUD、数据契约、i18n 文案、Supabase、Auth、权限或 RLS。
+
+### 修改文件（本轮 6 个）
+
+- `src/app/shell/AppShell.tsx`：`#practice` 纳入 `isEditorial`。
+- `src/app/shell/AppShell.test.tsx`：新增 `#practice` editorial 断言。
+- `src/features/practice/PracticeHistoryPage.tsx`：筛选控件与卡片按钮补 `ui-*` / `ui-button-unstyled` 类。
+- `src/features/practice/PracticeSessionForm.tsx`：表单控件与按钮补 `ui-*` / `ui-button-unstyled` 类。
+- `src/features/practice/PracticeHistoryPage.css`：整页重写为纸张编辑部主题（保留全部类名与 1080 / 720 断点）。
+- `src/features/practice/PracticeHistoryPage.test.tsx`：新增 hero / 统计定义列表 / 控件类结构断言。
+
+### 验证
+
+- AppShell 6 个用例通过；practice / shell / App 合计 6 个测试文件、38 个用例全部通过（含本轮先 RED 后 GREEN 的结构断言）。
+- TypeScript build 与 Vite production build 通过，仅保留既有主 chunk 超过 500 kB 警告。
+- `git diff --check` 通过，仅提示 Windows 下 LF / CRLF 转换。
+- 未运行 `npm install`，未新增依赖；本轮未执行浏览器视觉截图。
+
+### Git 与工作区
+
+- 分支 `main`，HEAD `e1afa3b`，与 `origin/main` 完全同步（本轮 UI 改动已提交并推送）。
+- 提交拆分：`510a0f2`（AppShell / Backstage / Albums 编辑部主题，10 个文件）、`e1afa3b`（Practice 编辑部主题，4 个文件）、本提交（三份交接文档）。
+- 远端仅保留 `origin/main`；旧远程分支 `codex/ui-phase-2-slices` 已删除；恢复标签 `archive/toolbox-explicit-rhythm-20260731` 已删除；4 个辅助 worktree 已移除（移除前均确认干净）。
+- 未跟踪目录 `.tmp/archive-import-validation/` 保持未动。
+
+### 未完成事项与风险
+
+1. UI 改动已提交并推送，工作区干净；后续重构以新切片为粒度继续提交。
+2. 下一项可从 UI 重构计划选择剩余实际挂载页面（Archive Detail、Library、Song Detail 等），或返回 Archive / Import 真实大列表验证主线。
+3. Archive / Import 真实大列表验证仍未完成；恢复时先确认 Supabase 项目可达并登录管理员账号，不使用 service role key、不绕过 RLS。
+4. 不要把 `preview`、保存到 `import_candidates` 的 `saved`、按实体拆分的 `planned` 与正式公共行 `committed` 混为同一数量。
+
+### 下一轮提示词
+
+```text
+继续 RockRoll UI 重构。
+请只读取：
+- AGENTS.md
+- docs/PROJECT_STATUS.md
+- docs/NEXT_TASKS.md
+- docs/SESSION_HANDOFF.md
+- 下一任务相关目录（见 docs/NEXT_TASKS.md）
+
+当前分支是 main，HEAD e1afa3b，与 origin/main 完全同步；AppShell、Backstage、Albums、Practice 的编辑部纸张主题 UI 改动已提交并推送，工作区干净（仅 .tmp/archive-import-validation/ 为既有未跟踪日志目录）。
+优先从 docs/NEXT_TASKS.md 选择下一个实际挂载页面的最小 UI 切片，沿用已确认的编辑部唱片档案视觉语言。
+先补结构 / 行为回归断言，再做最小页面改动。
+不要扫描整个仓库。
+不要运行 npm install。
+不要新增依赖。
+不要修改 Supabase、Auth、权限、RLS 或数据契约。
+完成后中文总结。
+```
+
+建议开启新对话，并粘贴以上提示词继续。

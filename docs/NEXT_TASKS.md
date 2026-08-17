@@ -1,4 +1,4 @@
-﻿# RockRoll 下一步任务
+# RockRoll 下一步任务
 
 更新时间：2026-07-30
 
@@ -1412,6 +1412,22 @@ npm run build
 
 推荐下一轮只读取三份状态 / 交接文档、当前分支状态和本轮修改的 7 个页面目录；不要扫描整个仓库，不运行 `npm install`。
 
+## 当前任务索引（2026-08-14，首页与全局导航重构后）
+
+已完成：
+
+- `#backstage` 已按确认的编辑部唱片档案方向完成整页重构，并与 Album 页面及全局顶部导航形成统一视觉骨架。
+- 首页保留现有数据和入口，只重组信息层级与视觉表达；没有扩大业务范围、权限范围或数据层。
+- 定向 3 个测试文件、12 个用例、TypeScript build、production build，以及桌面 / 手机真实浏览器验收均通过。
+- 当前未提交改动同时包含 AppShell、Album List 与 Backstage；`.tmp/archive-import-validation/` 是既有未跟踪内容，保持不动。
+
+下一步建议：
+
+1. 开启新对话后优先重构 `#practice`，沿用纸张、蓝 / 红 / 黄强调色和音乐档案编辑部语言，但保留练习 CRUD 的高可读性与表单效率。
+2. 先只读取 Practice 页面组件、相邻样式与测试，以及 AppShell 当前实现；不要扫描整个仓库。
+3. 继续先写结构 / 行为回归断言，再做页面视觉；不新增依赖，不修改 Supabase、Auth、权限、RLS 或 Practice 数据契约。
+4. 未经用户明确要求，不提交、推送或清理 `.tmp/archive-import-validation/`。
+
 ## 当前任务索引（2026-07-31，31 张 UI 切片统一审查后）
 
 已完成：
@@ -1591,3 +1607,34 @@ npm run build
 4. 新原语或 Auth / 管理员 CRUD / 业务实体卡片迁移必须单独设计确认。
 
 推荐下一轮只读取三份状态 / 交接文档、当前分支状态和本轮修改的 7 个页面目录；不要扫描整个仓库，不运行 `npm install`。
+
+## 当前任务索引（2026-08-17，交接状态复核）
+
+当前状态：
+
+- `main` 当前为 `822aabf`，相对 `origin/main` 领先 54 个提交；AppShell、Album List、Backstage 与三份交接文档仍有未提交改动。
+- 2026-08-14 的首页 / 全局导航视觉重构已完成并通过当时记录的定向测试、构建与浏览器验收；本次仅复核 Git 与文档状态，没有重复执行验证。
+- `.tmp/archive-import-validation/` 是既有未跟踪日志目录，继续保持不动。
+
+下一步只执行：
+
+1. 优先重构 `#practice`，沿用已确认的编辑部唱片档案视觉语言，但以练习 CRUD 的可读性与操作效率为先。
+2. 只读取 `src/features/practice/` 当前页面、相邻样式和测试，以及 `src/app/shell/` 的必要实现；不要扫描整个仓库。
+3. 先补结构 / 行为回归断言，再做最小页面改动；不新增依赖，不修改 Supabase、Auth、权限、RLS 或 Practice 数据契约。
+4. 未经用户明确要求，不提交、不推送，也不清理 `.tmp/archive-import-validation/`。
+5. 如切回 Archive / Import 主线，先恢复 Supabase 连通性与管理员会话，再区分核对 `preview`、`saved`、`planned`、`committed` 四类数量。
+
+## 当前任务索引（2026-08-17，Practice 页面编辑部视觉重构后）
+
+已完成：
+
+- `#practice` 已纳入 AppShell editorial（纸张）主题，hero、统计数据横条、历史账本列表与记录表单全部重构为编辑部 / 唱片档案视觉语言。
+- 表单控件补 `ui-input / ui-select / ui-textarea`、按钮补 `ui-button-unstyled`（沿用 Album List 绕过全局 shim 的机制）；CRUD、数据契约、i18n 文案、Supabase、Auth、权限与 RLS 均未改动。
+- 结构断言先 RED 后 GREEN：AppShell 6 个用例、practice / shell / App 合计 6 个测试文件、38 个用例全部通过；TypeScript build 与 production build 通过，仅保留既有 chunk 警告。
+
+下一步只执行：
+
+1. UI 编辑部主题改动已提交（`510a0f2` / `e1afa3b`）并推送 `origin/main`，工作区干净；下一任务直接从下方选择。
+2. 下一任务可从 UI 重构计划选择剩余实际挂载页面（如 Archive Detail、Library、Song Detail），或返回 Archive / Import 真实大列表验证主线。
+3. 如返回 Archive / Import 主线，先恢复 Supabase 连通性与管理员会话，不绕过 RLS，再区分核对 `preview`、`saved`、`planned`、`committed` 四类数量。
+4. 不新增依赖，不修改 Supabase、Auth、权限、RLS 或数据契约；`.tmp/archive-import-validation/` 继续保留不动。

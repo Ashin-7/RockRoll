@@ -1,4 +1,4 @@
-﻿# RockRoll 项目状态
+# RockRoll 项目状态
 
 更新时间：2026-07-20
 
@@ -1678,3 +1678,29 @@ rebase 前结果：4 个测试文件、19 个用例通过；生产构建通过�
 - 未推送、未删除远端分支、未修改远端默认分支。
 - 验证结果：UI 15 个测试文件、123 个用例通过；当前 `main` Toolbox 11 个测试文件、101 个用例通过；旧恢复分支 Toolbox 10 个测试文件、134 个用例通过；production build 通过，仅保留既有主 chunk 超过 500 kB 警告。
 - 未运行 `npm install`，未新增依赖，未修改业务数据、路由、权限、导入、Supabase 或 RLS。
+
+## 追加完成：首页与全局导航编辑部视觉重构（2026-08-14）
+
+- 以已确认的编辑部 / 唱片内页方向重构 `#backstage`：蓝色档案馆标题、红色今日练习单、音箱旋钮、数据横条、近期录音带与导入草稿清单形成同一套视觉语言，不再呈现后台管理仪表盘气质。
+- 首页继续使用既有 mock 数据与真实路由，没有增加 Dashboard、推荐、播放器或虚构业务区块；近期练习和导入草稿入口分别保持指向 `#practice` 与 `#inbox`。
+- 全局 AppShell 采用顶部横向导航；`#backstage` 与 Album 页面共用纸张主题。修复了首页同时激活“后台”和“资料库”的状态错误，Album 路由仍正确归入“资料库”。
+- Backstage 与 AppShell 新增结构和导航回归断言；定向 3 个测试文件、12 个用例通过，TypeScript build 与 production build 通过，仅保留既有主 chunk 超过 500 kB 警告。
+- `#backstage` 在 `1536x1024` 与 `390x844` 完成真实浏览器验收：无横向溢出、无 Vite error overlay，首页仅“后台”处于激活状态，近期练习点击后可进入 `#practice`。
+- 未运行 `npm install`，未新增依赖；未修改 Supabase、Auth、数据 service、导入、权限或 RLS。当前 `main` 为 `822aabf`，领先 `origin/main` 54 个提交，本轮未提交或推送；未跟踪目录 `.tmp/archive-import-validation/` 保持未动。
+
+## 当前状态复核（2026-08-17）
+
+- 当前仍为 `main` 分支，HEAD `822aabf`，相对 `origin/main` 领先 54 个提交、落后 0 个提交；本次仅整理交接，没有新增业务代码、提交或推送。
+- 未提交实现仍集中在 AppShell、Album List 与 Backstage，共 10 个源码 / 样式 / 测试文件；另有本轮交接前已修改的三份状态文档。
+- `.tmp/archive-import-validation/` 仍是既有未跟踪目录，仅包含本地 Vite 日志；本次未读取、修改或清理。
+- 最近一次已记录验证仍为 2026-08-14 的 3 个定向测试文件、12 个用例、TypeScript build、production build 与桌面 / 手机浏览器验收；本次文档整理未重复运行测试或构建。
+- 当前直接后续任务为 Practice 页面视觉重构；Archive / Import 真实大列表验证仍属于未完成主线，恢复时必须先确认 Supabase 可达且已有管理员会话，不绕过 RLS。
+
+## 追加完成：Practice 页面编辑部视觉重构（2026-08-17）
+
+- `#practice` 已纳入 AppShell editorial（纸张）主题，与 `#backstage`、`#albums` 统一编辑部 / 唱片档案视觉语言；导航激活状态与路由归属保持不变。
+- Practice hero 重构为蓝色大标题 + 黄色标签 + 底部蓝线；统计区改为蓝色数据横条账本（保留 `dl / dt / dd` 语义）；历史列表改为纸张账本行式（点线分隔、蓝字表头、Georgia 斜体复盘文本）；表单与筛选改为无边框区块 + 下划线输入，hero 保持紧凑，以练习记录的可读性和操作效率为先。
+- 表单控件补 `ui-input / ui-select / ui-textarea`、按钮补 `ui-button-unstyled`，沿用 Album List 绕过全局 shim 样式的既有机制；未改变任何 CRUD、数据契约、Supabase、Auth、权限或 RLS，也未改 i18n 文案。
+- 先补断言后改页面：AppShell 新增 `#practice` editorial 断言先 RED 后 GREEN；Practice 页新增结构回归断言（统计区定义列表语义、hero eyebrow、控件 `ui-*` 类）先 RED 后 GREEN。
+- 验证：AppShell 6 个用例通过；practice / shell / App 合计 6 个测试文件、38 个用例全部通过；TypeScript build 与 Vite production build 通过，仅保留既有主 chunk 超过 500 kB 警告；`git diff --check` 通过，仅提示 Windows 下 LF / CRLF 转换。
+- 未运行 `npm install`，未新增依赖；本轮 UI 改动已拆分为 `510a0f2`（AppShell / Backstage / Albums）与 `e1afa3b`（Practice）两个提交并推送 `origin/main`；`.tmp/archive-import-validation/` 未清理。分支与远端同步，标签与辅助 worktree 均已清理，仅保留 `main`。
