@@ -1638,3 +1638,19 @@ npm run build
 2. 下一任务可从 UI 重构计划选择剩余实际挂载页面（如 Archive Detail、Library、Song Detail），或返回 Archive / Import 真实大列表验证主线。
 3. 如返回 Archive / Import 主线，先恢复 Supabase 连通性与管理员会话，不绕过 RLS，再区分核对 `preview`、`saved`、`planned`、`committed` 四类数量。
 4. 不新增依赖，不修改 Supabase、Auth、权限、RLS 或数据契约；`.tmp/archive-import-validation/` 继续保留不动。
+
+## 当前任务索引（2026-08-17，Archive 页面编辑部视觉重构后）
+
+已完成：
+
+- `#archive` 已纳入 AppShell editorial 主题；hero、集合索引账本、管理员表单、榜单目录下拉、URL 导入预览与手动匹配全部重构为纸张编辑部视觉。
+- `Button` 与 `SearchableDropdown` 由 `ArchivePage.css` 作用域覆盖为编辑风格，未改组件；表单输入补 `ui-input / ui-textarea`；导入、CRUD、数据契约、Supabase、Auth、权限与 RLS 均未改动。
+- 结构断言先 RED 后 GREEN：AppShell 7 个用例、archive / practice / shell / App 合计 9 个测试文件、71 个用例全部通过；TypeScript build 与 production build 通过，仅保留既有 chunk 警告。
+- 依赖恢复：`node_modules` 曾被清空，已用 `npm ci` 按既有 `package-lock.json` 恢复（152 个包），未新增依赖。
+
+下一步只执行：
+
+1. 本轮 Archive 改动提交并推送后，工作区干净；下一任务直接从下方选择。
+2. 下一任务可从 UI 重构计划选择剩余实际挂载页面（Archive Detail、Library、Song Detail），或返回 Archive / Import 真实大列表验证主线。
+3. 如返回 Archive / Import 主线，先恢复 Supabase 连通性与管理员会话，不绕过 RLS，再区分核对 `preview`、`saved`、`planned`、`committed` 四类数量。
+4. 不新增依赖，不修改 Supabase、Auth、权限、RLS 或数据契约；`.tmp/archive-import-validation/` 继续保留不动。

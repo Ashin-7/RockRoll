@@ -3759,3 +3759,62 @@ Git / 工作区：
 ```
 
 建议开启新对话，并粘贴以上提示词继续。
+
+## 当前最终交接（2026-08-17，Archive 页面编辑部视觉重构后）
+
+### 本轮完成
+
+- `#archive` 已纳入 AppShell editorial（纸张）主题，与 `#backstage`、`#albums`、`#practice` 统一编辑部 / 唱片档案视觉语言；导航激活状态与路由归属不变。
+- Archive hero 重构为蓝色大标题 + 黄色标签 + 集合数黄色便签；Artists / Albums / Genres 分区改为蓝字标题 + Georgia 斜体说明；集合索引改为纸张账本（默认展开 `details`、蓝色计数 pill、卡片行式点线分隔）。
+- 管理员表单、Anontraveler 榜单目录下拉、URL 导入预览样例与手动匹配全部改为无边框区块 + 下划线输入 + 蓝底 / 蓝描边按钮；`Button` 与 `SearchableDropdown` 由 `ArchivePage.css` 作用域覆盖，未改组件本身。
+- 表单输入补 `ui-input / ui-textarea`（沿用绕过全局 shim 的既有机制）；未改导入、CRUD、数据契约、i18n 文案、Supabase、Auth、权限或 RLS。
+
+### 修改文件（本轮 5 个）
+
+- `src/app/shell/AppShell.tsx`：`#archive` 纳入 `isEditorial`。
+- `src/app/shell/AppShell.test.tsx`：新增 `#archive` editorial 断言。
+- `src/features/archive/ArchivePage.tsx`：8 处表单输入补 `ui-input / ui-textarea` 类。
+- `src/features/archive/ArchivePage.css`：整页重写为纸张编辑部主题（保留全部类名与 760px 断点）。
+- `src/features/archive/ArchivePage.test.tsx`：新增 hero / metric / 输入框结构断言。
+
+### 验证
+
+- AppShell 7 个用例通过；archive / practice / shell / App 合计 9 个测试文件、71 个用例全部通过。
+- TypeScript build 与 Vite production build 通过，仅保留既有主 chunk 超过 500 kB 警告。
+- `git diff --check` 通过，仅提示 Windows 下 LF / CRLF 转换。
+- 本轮未执行浏览器视觉截图；依赖已用 `npm ci` 恢复（`node_modules` 曾被清空，`package-lock.json` 未变）。
+
+### Git 与工作区
+
+- 分支 `main`，本轮 Archive 改动（`src/app/shell/*`、`src/features/archive/*`）与三份交接文档提交并推送后，与 `origin/main` 同步；仅保留 `main`。
+- 未跟踪目录 `.tmp/archive-import-validation/` 保持未动。
+
+### 未完成事项与风险
+
+1. UI 重构已覆盖 Backstage、Albums、Practice、Archive 四个实际挂载页面；剩余可重构页面：Archive Detail、Library、Song List、Song / Album / Artist Detail、Auth、Toolbox。
+2. Archive / Import 真实大列表验证仍未完成；恢复时先确认 Supabase 项目可达并登录管理员账号，不使用 service role key、不绕过 RLS。
+3. 不要把 `preview`、保存到 `import_candidates` 的 `saved`、按实体拆分的 `planned` 与正式公共行 `committed` 混为同一数量。
+4. Detail 页（`#archive/:id` 等）尚未进入 editorial 壳；如后续重构 Archive Detail，需要同步评估 AppShell 的 `#archive/` 前缀路由是否纳入 `isEditorial`。
+
+### 下一轮提示词
+
+```text
+继续 RockRoll UI 重构。
+请只读取：
+- AGENTS.md
+- docs/PROJECT_STATUS.md
+- docs/NEXT_TASKS.md
+- docs/SESSION_HANDOFF.md
+- 下一任务相关目录（见 docs/NEXT_TASKS.md）
+
+当前分支是 main，与 origin/main 完全同步；Backstage、Albums、Practice、Archive 的编辑部纸张主题 UI 改动已提交并推送，工作区干净（仅 .tmp/archive-import-validation/ 为既有未跟踪日志目录；node_modules 已用 npm ci 恢复）。
+优先从 docs/NEXT_TASKS.md 选择下一个实际挂载页面的最小 UI 切片，沿用已确认的编辑部唱片档案视觉语言。
+先补结构 / 行为回归断言，再做最小页面改动。
+不要扫描整个仓库。
+不要运行 npm install。
+不要新增依赖。
+不要修改 Supabase、Auth、权限、RLS 或数据契约。
+完成后中文总结。
+```
+
+建议开启新对话，并粘贴以上提示词继续。

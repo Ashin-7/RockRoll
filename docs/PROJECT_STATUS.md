@@ -1704,3 +1704,12 @@ rebase 前结果：4 个测试文件、19 个用例通过；生产构建通过�
 - 先补断言后改页面：AppShell 新增 `#practice` editorial 断言先 RED 后 GREEN；Practice 页新增结构回归断言（统计区定义列表语义、hero eyebrow、控件 `ui-*` 类）先 RED 后 GREEN。
 - 验证：AppShell 6 个用例通过；practice / shell / App 合计 6 个测试文件、38 个用例全部通过；TypeScript build 与 Vite production build 通过，仅保留既有主 chunk 超过 500 kB 警告；`git diff --check` 通过，仅提示 Windows 下 LF / CRLF 转换。
 - 未运行 `npm install`，未新增依赖；本轮 UI 改动已拆分为 `510a0f2`（AppShell / Backstage / Albums）与 `e1afa3b`（Practice）两个提交并推送 `origin/main`；`.tmp/archive-import-validation/` 未清理。分支与远端同步，标签与辅助 worktree 均已清理，仅保留 `main`。
+
+## 追加完成：Archive 页面编辑部视觉重构（2026-08-17）
+
+- `#archive` 已纳入 AppShell editorial（纸张）主题；hero 重构为蓝色大标题 + 黄色标签 + 集合数黄色便签（`StatCard` 保留 `ui-stat-card` 结构）；Artists / Albums / Genres 分区改为蓝字标题 + Georgia 斜体说明的账本横条。
+- 集合索引改为纸张账本：`details` 保持 `open` 默认展开，summary 黄字/蓝色计数 pill，卡片行式点线分隔；管理员表单、Anontraveler 目录下拉、URL 导入预览与手动匹配全部改为无边框区块 + 下划线输入 + 蓝底 / 蓝描边按钮。
+- 表单输入补 `ui-input / ui-textarea`（沿用既有绕过全局 shim 的机制）；`Button`（`ui-button`）与 `SearchableDropdown` 由 `ArchivePage.css` 作用域覆盖为编辑风格，未改动组件本身。
+- 先补断言后改页面：AppShell 新增 `#archive` editorial 断言与 Archive 页 hero / metric / 输入框结构断言；未改变任何导入、CRUD、数据契约、Supabase、Auth、权限或 RLS，也未改 i18n 文案。
+- 验证：AppShell 7 个用例通过；archive / practice / shell / App 合计 9 个测试文件、71 个用例全部通过；TypeScript build 与 Vite production build 通过，仅保留既有主 chunk 超过 500 kB 警告；`git diff --check` 通过，仅提示 Windows 下 LF / CRLF 转换。
+- 恢复依赖说明：本轮运行 `npm ci` 恢复了被清空的 `node_modules`（152 个包，`package-lock.json` 未变）；未新增依赖；`.tmp/archive-import-validation/` 未清理。
