@@ -29,7 +29,8 @@ export function AppShell({
   const { locale, setLocale, t } = useI18n();
   const displayName = accountName ?? t('auth.guest');
   const isLibraryRoute = currentHash === '#albums' || currentHash.startsWith('#album/');
-  const isEditorial = currentHash === '#backstage' || isLibraryRoute || currentHash === '#practice';
+  const isEditorial =
+    currentHash === '#backstage' || isLibraryRoute || currentHash === '#practice' || currentHash === '#archive';
 
   function isActiveNavItem(href: string) {
     if (href === '#library' && isLibraryRoute) {

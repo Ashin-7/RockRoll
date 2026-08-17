@@ -541,6 +541,7 @@ export function ArchivePage({
               <FormSection title={t('archive.urlImportSection')}>
                 <Field label={t('archive.anontravelerUrlLabel')}>
                   <input
+                    className="ui-input"
                     required
                     value={anontravelerUrl}
                     onChange={(event) => setAnontravelerUrl(event.target.value)}
@@ -592,6 +593,7 @@ export function ArchivePage({
               <FormSection title={t('archive.identitySection')}>
                 <Field label={t('archive.collectionTitleLabel')}>
                   <input
+                    className="ui-input"
                     required
                     value={previewTitle}
                     onChange={(event) => setPreviewTitle(event.target.value)}
@@ -599,6 +601,7 @@ export function ArchivePage({
                 </Field>
                 <Field label={t('archive.descriptionLabel')}>
                   <textarea
+                    className="ui-textarea"
                     value={previewDescription}
                     onChange={(event) => setPreviewDescription(event.target.value)}
                   />
@@ -654,6 +657,7 @@ export function ArchivePage({
               <FormSection title={t('archive.identitySection')}>
                 <Field label={t('archive.collectionTitleLabel')}>
                   <input
+                    className="ui-input"
                     required
                     value={form.title}
                     onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))}
@@ -661,6 +665,7 @@ export function ArchivePage({
                 </Field>
                 <Field label={t('archive.descriptionLabel')}>
                   <textarea
+                    className="ui-textarea"
                     value={form.description}
                     onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))}
                   />
@@ -669,12 +674,14 @@ export function ArchivePage({
               <FormSection title={t('archive.sourceProfileSection')}>
                 <Field label={t('archive.sourceLabel')}>
                   <input
+                    className="ui-input"
                     value={form.source}
                     onChange={(event) => setForm((current) => ({ ...current, source: event.target.value }))}
                   />
                 </Field>
                 <Field label={t('archive.sourceUrlLabel')}>
                   <input
+                    className="ui-input"
                     value={form.sourceUrl}
                     onChange={(event) => setForm((current) => ({ ...current, sourceUrl: event.target.value }))}
                   />
@@ -762,6 +769,7 @@ export function ArchivePage({
                           <>
                             <Field label={`Existing public ${reviewItem.entityType} ID for ${reviewItem.displayTitle}`}>
                               <input
+                                className="ui-input"
                                 value={matchTargetIds[reviewItem.id] ?? ''}
                                 onChange={(event) => setMatchTargetIds((targetIds) => ({
                                   ...targetIds,

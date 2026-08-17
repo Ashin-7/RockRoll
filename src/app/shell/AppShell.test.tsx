@@ -52,6 +52,18 @@ describe('AppShell', () => {
     expect(screen.getByRole('link', { name: 'Practice' })).toHaveAttribute('aria-current', 'page');
   });
 
+  it('uses the editorial top navigation for the archive route', () => {
+    const { container } = renderWithI18n(
+      <AppShell currentHash="#archive">
+        <h2>Archive</h2>
+      </AppShell>,
+    );
+
+    expect(container.querySelector('.app-shell')).toHaveClass('app-shell--editorial');
+    expect(container.querySelector('.app-shell__header')).toHaveAttribute('data-layout', 'top');
+    expect(screen.getByRole('link', { name: 'Archive' })).toHaveAttribute('aria-current', 'page');
+  });
+
   it('only marks backstage active on the backstage route', () => {
     renderWithI18n(
       <AppShell currentHash="#backstage">

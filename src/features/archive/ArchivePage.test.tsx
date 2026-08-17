@@ -187,6 +187,14 @@ describe('ArchivePage', () => {
     expect(screen.getByText('Source profile')).toBeInTheDocument();
   });
 
+  it('keeps editorial-friendly structure for hero, metric and form inputs', async () => {
+    const { container } = renderWithI18n(<ArchivePage onLoadImportRole={async () => 'admin'} />);
+
+    expect(container.querySelector('.archive-hero .eyebrow')).toBeInTheDocument();
+    expect(container.querySelector('article.archive-hero-metric.ui-stat-card')).toBeInTheDocument();
+    expect(await screen.findByLabelText('Anontraveler rank URL')).toHaveClass('ui-input');
+  });
+
   it('loads and renders archive collections', async () => {
     const user = userEvent.setup();
 
