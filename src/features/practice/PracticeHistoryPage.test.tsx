@@ -75,6 +75,17 @@ describe('PracticeHistoryPage', () => {
     expect(screen.getByText('No practice sessions recorded yet.')).toBeInTheDocument();
   });
 
+  it('keeps editorial-friendly structure for hero and statistics', () => {
+    const { container } = renderWithI18n(<PracticeHistoryPage sessions={[]} />);
+
+    expect(container.querySelector('.practice-history-hero .eyebrow')).toBeInTheDocument();
+
+    const grid = container.querySelector('dl.practice-statistics__grid');
+    expect(grid).toBeInTheDocument();
+    expect(grid?.querySelectorAll('dt')).toHaveLength(5);
+    expect(grid?.querySelectorAll('dd')).toHaveLength(5);
+  });
+
   it('filters practice history by song and focus area, then sorts by oldest first', async () => {
     const user = userEvent.setup();
 
@@ -178,6 +189,10 @@ describe('PracticeHistoryPage', () => {
     expect(await screen.findByText('No practice sessions recorded yet.')).toBeInTheDocument();
     expect(await screen.findByRole('option', { name: 'Little Wing' })).toBeInTheDocument();
 
+    expect(screen.getByLabelText('Song')).toHaveClass('ui-select');
+    expect(screen.getByLabelText('Duration minutes')).toHaveClass('ui-input');
+    expect(screen.getByRole('button', { name: 'Save practice session' })).toHaveClass('ui-button-unstyled');
+
     await user.selectOptions(screen.getByLabelText('Song'), 'little-wing');
     await user.type(screen.getByLabelText('Duration minutes'), '30');
     await user.type(screen.getByLabelText('Goal duration minutes'), '45');
@@ -235,6 +250,9 @@ describe('PracticeHistoryPage', () => {
     );
 
     expect(await screen.findByRole('heading', { name: 'Little Wing' })).toBeInTheDocument();
+
+    expect(screen.getByRole('button', { name: 'Edit practice session' })).toHaveClass('ui-button-unstyled');
+    expect(screen.getByRole('button', { name: 'Delete practice session' })).toHaveClass('ui-button-unstyled');
 
     await user.click(screen.getByRole('button', { name: 'Delete practice session' }));
 

@@ -83,7 +83,7 @@ export function PracticeSessionForm({ initialValues, onSave = createPracticeSess
         {songs.length > 0 ? (
           <div className="practice-session-form__field">
             <label htmlFor="songId">{t('practice.song')}</label>
-            <select id="songId" value={songId} onChange={(event) => setSongId(event.target.value)}>
+            <select className="ui-select" id="songId" value={songId} onChange={(event) => setSongId(event.target.value)}>
               <option value="">{t('practice.noSong')}</option>
               {songs.map((song) => (
                 <option key={song.id} value={song.id}>
@@ -103,6 +103,7 @@ export function PracticeSessionForm({ initialValues, onSave = createPracticeSess
           <label htmlFor="durationMinutes">{t('practice.duration')}</label>
           <div className="practice-number-field">
             <input
+              className="ui-input"
               id="durationMinutes"
               type="number"
               min="1"
@@ -112,6 +113,7 @@ export function PracticeSessionForm({ initialValues, onSave = createPracticeSess
             />
             <div className="practice-number-field__controls">
               <button
+                className="ui-button-unstyled"
                 type="button"
                 aria-label={t('practice.decreaseDuration')}
                 onClick={() => adjustNumberValue(durationMinutes, setDurationMinutes, -1)}
@@ -119,6 +121,7 @@ export function PracticeSessionForm({ initialValues, onSave = createPracticeSess
                 -
               </button>
               <button
+                className="ui-button-unstyled"
                 type="button"
                 aria-label={t('practice.increaseDuration')}
                 onClick={() => adjustNumberValue(durationMinutes, setDurationMinutes, 1)}
@@ -133,6 +136,7 @@ export function PracticeSessionForm({ initialValues, onSave = createPracticeSess
           <label htmlFor="goalDurationMinutes">{t('practice.goalDuration')}</label>
           <div className="practice-number-field">
             <input
+              className="ui-input"
               id="goalDurationMinutes"
               type="number"
               min="1"
@@ -141,6 +145,7 @@ export function PracticeSessionForm({ initialValues, onSave = createPracticeSess
             />
             <div className="practice-number-field__controls">
               <button
+                className="ui-button-unstyled"
                 type="button"
                 aria-label={t('practice.decreaseGoalDuration')}
                 onClick={() => adjustNumberValue(goalDurationMinutes, setGoalDurationMinutes, -1)}
@@ -148,6 +153,7 @@ export function PracticeSessionForm({ initialValues, onSave = createPracticeSess
                 -
               </button>
               <button
+                className="ui-button-unstyled"
                 type="button"
                 aria-label={t('practice.increaseGoalDuration')}
                 onClick={() => adjustNumberValue(goalDurationMinutes, setGoalDurationMinutes, 1)}
@@ -162,6 +168,7 @@ export function PracticeSessionForm({ initialValues, onSave = createPracticeSess
           <label htmlFor="completionPercent">{t('practice.completionPercent')}</label>
           <div className="practice-number-field">
             <input
+              className="ui-input"
               id="completionPercent"
               type="number"
               min="0"
@@ -171,6 +178,7 @@ export function PracticeSessionForm({ initialValues, onSave = createPracticeSess
             />
             <div className="practice-number-field__controls">
               <button
+                className="ui-button-unstyled"
                 type="button"
                 aria-label={t('practice.decreaseCompletionPercent')}
                 onClick={() => adjustNumberValue(completionPercent, setCompletionPercent, -1, 0, 100)}
@@ -178,6 +186,7 @@ export function PracticeSessionForm({ initialValues, onSave = createPracticeSess
                 -
               </button>
               <button
+                className="ui-button-unstyled"
                 type="button"
                 aria-label={t('practice.increaseCompletionPercent')}
                 onClick={() => adjustNumberValue(completionPercent, setCompletionPercent, 1, 0, 100)}
@@ -191,16 +200,29 @@ export function PracticeSessionForm({ initialValues, onSave = createPracticeSess
         <div className="practice-session-form__field">
           <label htmlFor="bpm">{t('practice.bpm')}</label>
           <div className="practice-number-field">
-            <input id="bpm" type="number" min="1" value={bpm} onChange={(event) => setBpm(event.target.value)} />
+            <input
+              className="ui-input"
+              id="bpm"
+              type="number"
+              min="1"
+              value={bpm}
+              onChange={(event) => setBpm(event.target.value)}
+            />
             <div className="practice-number-field__controls">
               <button
+                className="ui-button-unstyled"
                 type="button"
                 aria-label={t('practice.decreaseBpm')}
                 onClick={() => adjustNumberValue(bpm, setBpm, -1)}
               >
                 -
               </button>
-              <button type="button" aria-label={t('practice.increaseBpm')} onClick={() => adjustNumberValue(bpm, setBpm, 1)}>
+              <button
+                className="ui-button-unstyled"
+                type="button"
+                aria-label={t('practice.increaseBpm')}
+                onClick={() => adjustNumberValue(bpm, setBpm, 1)}
+              >
                 +
               </button>
             </div>
@@ -212,12 +234,18 @@ export function PracticeSessionForm({ initialValues, onSave = createPracticeSess
         <h3>{t('practiceHistory.formNotesSection')}</h3>
         <div className="practice-session-form__field">
           <label htmlFor="focusArea">{t('practice.focusArea')}</label>
-          <input id="focusArea" value={focusArea} onChange={(event) => setFocusArea(event.target.value)} />
+          <input
+            className="ui-input"
+            id="focusArea"
+            value={focusArea}
+            onChange={(event) => setFocusArea(event.target.value)}
+          />
         </div>
 
         <div className="practice-session-form__field">
           <label htmlFor="tagsText">{t('practice.tags')}</label>
           <input
+            className="ui-input"
             id="tagsText"
             value={tagsText}
             onChange={(event) => setTagsText(event.target.value)}
@@ -227,13 +255,18 @@ export function PracticeSessionForm({ initialValues, onSave = createPracticeSess
 
         <div className="practice-session-form__field">
           <label htmlFor="reflection">{t('practice.reflection')}</label>
-          <textarea id="reflection" value={reflection} onChange={(event) => setReflection(event.target.value)} />
+          <textarea
+            className="ui-textarea"
+            id="reflection"
+            value={reflection}
+            onChange={(event) => setReflection(event.target.value)}
+          />
         </div>
       </section>
 
       <div className="practice-session-form__actions">
         <span>{t('practiceHistory.formSaveHint')}</span>
-        <button type="submit">{t('practice.save')}</button>
+        <button className="ui-button-unstyled" type="submit">{t('practice.save')}</button>
       </div>
     </form>
   );

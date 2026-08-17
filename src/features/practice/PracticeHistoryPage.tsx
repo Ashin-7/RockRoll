@@ -399,7 +399,11 @@ export function PracticeHistoryPage({
           <div className="practice-history-filters__grid">
             <label>
               <span>{t('practiceHistory.songFilterLabel')}</span>
-              <select value={songFilter} onChange={(event) => setSongFilter(event.target.value)}>
+              <select
+                className="ui-select"
+                value={songFilter}
+                onChange={(event) => setSongFilter(event.target.value)}
+              >
                 <option value="">{t('practiceHistory.allSongs')}</option>
                 {songFilterOptions.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -411,6 +415,7 @@ export function PracticeHistoryPage({
             <label>
               <span>{t('practiceHistory.focusFilterLabel')}</span>
               <input
+                className="ui-input"
                 type="search"
                 value={focusFilter}
                 onChange={(event) => setFocusFilter(event.target.value)}
@@ -420,6 +425,7 @@ export function PracticeHistoryPage({
             <label>
               <span>{t('practiceHistory.sortLabel')}</span>
               <select
+                className="ui-select"
                 value={sortOrder}
                 onChange={(event) => setSortOrder(event.target.value as PracticeHistorySort)}
               >
@@ -509,6 +515,7 @@ export function PracticeHistoryPage({
 
               <div className="practice-history-card__actions">
                 <button
+                  className="ui-button-unstyled"
                   aria-label={t('practiceHistory.editSession')}
                   onClick={() => setEditingSession(session)}
                   type="button"
@@ -516,6 +523,7 @@ export function PracticeHistoryPage({
                   {t('songDetail.edit')}
                 </button>
                 <button
+                  className="ui-button-unstyled"
                   aria-label={t('practiceHistory.deleteSession')}
                   disabled={deletingSessionId === session.id}
                   onClick={() => handleDeleteSession(session.id)}
