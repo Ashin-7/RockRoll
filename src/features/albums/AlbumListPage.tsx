@@ -1,5 +1,5 @@
 ﻿import { type FocusEvent, useEffect, useMemo, useRef, useState } from 'react';
-import { Panel, SectionHeading, StatCard } from '../../components/ui';
+import { Panel } from '../../components/ui';
 import { useI18n } from '../../i18n/I18nProvider';
 import { AlbumCollectionOption, AlbumCollectionPageInput, AlbumCollectionSummary, AlbumSummary } from './album.types';
 import { getAlbumCollectionById, listAlbumCollectionOptions, listAlbumCollections } from './albums.service';
@@ -62,7 +62,7 @@ function CollectionDescription({
     <div className="albums-collection__description">
       <span ref={descriptionRef} className={isExpanded ? 'is-expanded' : ''}>{description}</span>
       {canExpand ? (
-        <button type="button" aria-expanded={isExpanded} onClick={onToggle}>
+        <button className="ui-button-unstyled" type="button" aria-expanded={isExpanded} onClick={onToggle}>
           {isExpanded ? collapseLabel : expandLabel}
         </button>
       ) : null}
@@ -91,6 +91,10 @@ function mapFlatAlbumsToCollection(albums: AlbumSummary[] = []): AlbumCollection
       })),
     },
   ];
+}
+
+function formatAlbumRank(rank: number | null) {
+  return rank ? String(rank).padStart(2, '0') : null;
 }
 
 export function AlbumListPage({
@@ -207,6 +211,7 @@ export function AlbumListPage({
     (total, collection) => total + (collection.totalAlbumCount ?? collection.albums.length),
     0,
   );
+  const heroAlbumTotal = isLoading && totalAlbums === 0 ? 55 : totalAlbums;
   const styleOptions = useMemo(
     () =>
       Array.from(
@@ -365,23 +370,22 @@ export function AlbumListPage({
   return (
     <section className="albums-page">
       <Panel as="header" className="albums-hero" variant="hero">
-        <SectionHeading
-          as="h1"
-          className="albums-hero__heading"
-          eyebrow={t('albums.eyebrow')}
-          title={t('albums.title')}
-        />
-        <StatCard
-          align="right"
-          className="albums-hero__summary"
-          label={t('albums.total')}
-          value={totalAlbums}
-        />
+        <div className="albums-hero__heading">
+          <span className="albums-hero__year">2025</span>
+          <h1>
+            <span>Best Metal</span>
+            <span>Albums <em>Top {heroAlbumTotal}</em></span>
+          </h1>
+        </div>
+        <aside className="albums-hero__note">
+          <strong>2025 版</strong>
+          <p>这不是权威答案，是一间私人唱片房里，经过多年反复聆听留下的顺序。</p>
+        </aside>
       </Panel>
 
       <section className="albums-toolbar" aria-label={t('albums.toolbarLabel')}>
         {!hasProvidedAlbums && collectionOptions.length > 0 ? (
-          <div className="albums-filter-dropdown" onBlur={handleCollectionDropdownBlur}>
+          <div className="ui-searchable-dropdown albums-filter-dropdown" onBlur={handleCollectionDropdownBlur}>
             <span>Collection category</span>
             <input
               className="albums-filter-input"
@@ -416,7 +420,7 @@ export function AlbumListPage({
           </div>
         ) : null}
         {!isLoading && displayCollections.length > 0 ? (
-          <div className="albums-filter-dropdown" onBlur={handleStyleDropdownBlur}>
+          <div className="ui-searchable-dropdown albums-filter-dropdown" onBlur={handleStyleDropdownBlur}>
             <span>{t('albums.styleFilterLabel')}</span>
             <input
               className="albums-filter-input"
@@ -457,6 +461,11 @@ export function AlbumListPage({
             ) : null}
           </div>
         ) : null}
+        {!isLoading && totalAlbums > 0 ? (
+          <span className="albums-toolbar__range">
+            01—{String(Math.min(albumPageSize, totalAlbums)).padStart(2, '0')} / {totalAlbums}
+          </span>
+        ) : null}
       </section>
 
       {error ? <p className="albums-error" role="alert">{error}</p> : null}
@@ -484,19 +493,19 @@ export function AlbumListPage({
             return (
               <Panel as="section" className="albums-collection" key={collection.id} variant="card">
                 <header className="albums-collection__header">
-                  <div>
+                  <div className="albums-collection__identity">
                     <p>{collection.source}</p>
                     <h2>{collection.title}</h2>
-                    {collection.description ? (
-                      <CollectionDescription
-                        collapseLabel={t('albums.collapseDescription')}
-                        description={collection.description}
-                        expandLabel={t('albums.expandDescription')}
-                        isExpanded={isDescriptionExpanded}
-                        onToggle={() => toggleCollectionDescription(collection.id)}
-                      />
-                    ) : null}
                   </div>
+                  {collection.description ? (
+                    <CollectionDescription
+                      collapseLabel={t('albums.collapseDescription')}
+                      description={collection.description}
+                      expandLabel={t('albums.expandDescription')}
+                      isExpanded={isDescriptionExpanded}
+                      onToggle={() => toggleCollectionDescription(collection.id)}
+                    />
+                  ) : null}
                   <div className="albums-collection__meta">
                     <span>
                       {t('albums.collectionCount').replace('{count}', String(collectionAlbumCount))}
@@ -506,14 +515,19 @@ export function AlbumListPage({
                 </header>
 
                 <div className="albums-collection__list">
-                  {pageAlbums.map((album) => {
+                  {pageAlbums.map((album, albumIndex) => {
                     const noteId = `${collection.id}:${album.id}`;
                     const noteText = album.reviewNote || album.notes || t('albums.noNotes');
                     const isNoteExpanded = Boolean(expandedNoteIds[noteId]);
+                    const cardVariant = albumIndex < 3 ? 'feature' : albumIndex < 5 ? 'rail' : 'list';
+                    const formattedRank = formatAlbumRank(album.rank);
 
                     return (
-                      <article className="albums-card" key={`${collection.id}:${album.id}`}>
-                        <div className="albums-card__rank">{album.rank ? `#${album.rank}` : t('albums.noRank')}</div>
+                      <article
+                        className={`albums-card albums-card--${cardVariant}`}
+                        key={`${collection.id}:${album.id}`}
+                      >
+                        <div className="albums-card__rank">{formattedRank ?? t('albums.noRank')}</div>
                         <div className="albums-card__cover">
                           {album.coverUrl ? (
                             <img src={album.coverUrl} alt={`${album.title} ${t('albums.coverAltSuffix')}`} loading="lazy" />
@@ -539,7 +553,7 @@ export function AlbumListPage({
                         </div>
                         <button
                           type="button"
-                          className={`albums-card__note${isNoteExpanded ? ' is-expanded' : ''}`}
+                          className={`ui-button-unstyled albums-card__note${isNoteExpanded ? ' is-expanded' : ''}`}
                           aria-expanded={isNoteExpanded}
                           onClick={() => toggleAlbumNote(noteId)}
                         >
@@ -560,6 +574,7 @@ export function AlbumListPage({
                   <div>
                     <button
                       type="button"
+                      className="ui-button-unstyled"
                       disabled={currentPageIndex === 0}
                       onClick={() => updateCollectionPage(collection.id, currentPageIndex - 1)}
                     >
@@ -567,6 +582,7 @@ export function AlbumListPage({
                     </button>
                     <button
                       type="button"
+                      className="ui-button-unstyled"
                       disabled={currentPageIndex >= pageCount - 1}
                       onClick={() => updateCollectionPage(collection.id, currentPageIndex + 1)}
                     >

@@ -12,6 +12,7 @@ describe('AppShell', () => {
     );
 
     expect(screen.getByText('RockRoll')).toBeInTheDocument();
+    expect(document.querySelector('.app-shell__header')).toHaveAttribute('data-layout', 'top');
     expect(screen.getByRole('navigation', { name: 'Primary' })).toBeInTheDocument();
     expect(screen.getByText('Backstage')).toBeInTheDocument();
     expect(screen.getByText('Songs')).toBeInTheDocument();
@@ -22,9 +23,44 @@ describe('AppShell', () => {
     expect(screen.getByRole('link', { name: 'Toolbox' })).toHaveAttribute('href', '#toolbox');
     expect(within(screen.getByRole('navigation', { name: 'Primary' })).queryByRole('link', { name: 'Auth' })).toBeNull();
     expect(screen.getByText('Guest')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Auth' })).toHaveAttribute('href', '#auth');
-    expect(within(screen.getByTestId('account-menu')).getByRole('link', { name: 'Auth' })).toBeVisible();
+    expect(screen.getByRole('link', { name: 'Guest' })).toHaveAttribute('href', '#auth');
+    expect(within(screen.getByTestId('account-menu')).getByRole('link', { name: 'Guest' })).toBeVisible();
     expect(screen.getByText('Today in the room')).toBeInTheDocument();
+  });
+
+  it('uses the editorial top navigation for the albums route', () => {
+    const { container } = renderWithI18n(
+      <AppShell currentHash="#albums">
+        <h2>Albums</h2>
+      </AppShell>,
+    );
+
+    expect(container.querySelector('.app-shell')).toHaveClass('app-shell--editorial');
+    expect(container.querySelector('.app-shell__header')).toHaveAttribute('data-layout', 'top');
+    expect(screen.getByRole('link', { name: 'Library' })).toHaveAttribute('aria-current', 'page');
+  });
+
+  it('uses the editorial top navigation for the practice route', () => {
+    const { container } = renderWithI18n(
+      <AppShell currentHash="#practice">
+        <h2>Practice history</h2>
+      </AppShell>,
+    );
+
+    expect(container.querySelector('.app-shell')).toHaveClass('app-shell--editorial');
+    expect(container.querySelector('.app-shell__header')).toHaveAttribute('data-layout', 'top');
+    expect(screen.getByRole('link', { name: 'Practice' })).toHaveAttribute('aria-current', 'page');
+  });
+
+  it('only marks backstage active on the backstage route', () => {
+    renderWithI18n(
+      <AppShell currentHash="#backstage">
+        <h2>Backstage</h2>
+      </AppShell>,
+    );
+
+    expect(screen.getByRole('link', { name: 'Backstage' })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByRole('link', { name: 'Library' })).not.toHaveAttribute('aria-current');
   });
 
   it('marks the current hash route as active', () => {

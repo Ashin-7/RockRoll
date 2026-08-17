@@ -47,9 +47,10 @@ describe('AlbumListPage', () => {
     const { container } = renderWithI18n(<AlbumListPage albums={albums} />);
 
     expect(container.querySelector('header.albums-hero.ui-panel--hero')).toBeInTheDocument();
-    expect(container.querySelector('.albums-hero__heading.ui-section-heading')).toBeInTheDocument();
-    expect(container.querySelector('article.albums-hero__summary.ui-stat-card--right')).toBeInTheDocument();
-    expect(screen.getByRole('heading', { level: 1, name: 'Albums' })).toBeInTheDocument();
+    expect(container.querySelector('.albums-hero__heading')).toBeInTheDocument();
+    expect(container.querySelector('aside.albums-hero__note')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: 'Best Metal Albums Top 1' })).toBeInTheDocument();
+    expect(screen.getByText('2025 版')).toBeInTheDocument();
   });
 
   it('searches collection categories in the trigger input and selects from a floating list', async () => {
@@ -208,12 +209,33 @@ describe('AlbumListPage', () => {
     expect(screen.getByRole('link', { name: 'Axis: Bold as Love' })).toHaveAttribute('href', '#album/album-1');
     expect(screen.getByText('Jimi Hendrix')).toBeInTheDocument();
     expect(screen.getByAltText('Axis: Bold as Love cover')).toBeInTheDocument();
-    expect(screen.getByText('#7')).toBeInTheDocument();
+    expect(screen.getByText('07')).toBeInTheDocument();
     expect(screen.getByText('1967')).toBeInTheDocument();
     expect(screen.getAllByText('Psychedelic rock')).toHaveLength(1);
     expect(screen.getAllByText('Blues rock')).toHaveLength(1);
     expect(screen.getByText('Essential guitar record.')).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Open source link' })).not.toBeInTheDocument();
+  });
+
+  it('presents the first five records as an editorial wall before the compact chart continues', async () => {
+    const wallCollection: AlbumCollectionSummary = {
+      ...albumCollections[0],
+      albums: Array.from({ length: 6 }, (_, index) => ({
+        ...albumCollections[0].albums[0],
+        id: `album-${index + 1}`,
+        title: `Album ${index + 1}`,
+        rank: index + 1,
+      })),
+    };
+
+    renderWithI18n(<AlbumListPage onLoadAlbumCollections={vi.fn().mockResolvedValue([wallCollection])} />);
+
+    expect((await screen.findByText('Album 1')).closest('article')).toHaveClass('albums-card--feature');
+    expect(screen.getByText('Album 3').closest('article')).toHaveClass('albums-card--feature');
+    expect(screen.getByText('Album 4').closest('article')).toHaveClass('albums-card--rail');
+    expect(screen.getByText('Album 5').closest('article')).toHaveClass('albums-card--rail');
+    expect(screen.getByText('Album 6').closest('article')).toHaveClass('albums-card--list');
+    expect(screen.getByText('01')).toBeInTheDocument();
   });
 
   it('hides manual album creation and points users to link import', async () => {
@@ -283,14 +305,15 @@ describe('AlbumListPage', () => {
     renderWithI18n(<AlbumListPage onLoadAlbumCollections={vi.fn().mockResolvedValue([pagedCollection])} />);
 
     expect(await screen.findByText('Album 1')).toBeInTheDocument();
-    expect(screen.getByText('#1')).toBeInTheDocument();
+    expect(screen.getByText('01')).toBeInTheDocument();
     expect(screen.getByText('Showing 1-25 of 26 albums')).toBeInTheDocument();
     expect(screen.queryByText('Album 26')).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Next page' }));
 
-    expect(screen.getByText('Album 26')).toBeInTheDocument();
-    expect(screen.getByText('#26')).toBeInTheDocument();
+    const album26 = screen.getByText('Album 26');
+    expect(album26).toBeInTheDocument();
+    expect(album26.closest('article')?.querySelector('.albums-card__rank')).toHaveTextContent('26');
     expect(screen.getByText('Showing 26-26 of 26 albums')).toBeInTheDocument();
     expect(screen.queryByText('Album 1')).not.toBeInTheDocument();
   });

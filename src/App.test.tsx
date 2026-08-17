@@ -51,7 +51,7 @@ describe('App', () => {
 
     renderWithI18n(<App />);
 
-    await user.click(screen.getByRole('link', { name: 'Auth' }));
+    await user.click(screen.getByRole('link', { name: 'Guest' }));
 
     expect(scrollTo).toHaveBeenCalledWith({ left: 0, top: 0 });
   });
@@ -77,7 +77,7 @@ describe('App', () => {
 
     expect(screen.getByText('Guest')).toBeInTheDocument();
 
-    await user.click(screen.getByRole('link', { name: 'Auth' }));
+    await user.click(screen.getByRole('link', { name: 'Guest' }));
 
     expect(screen.getByText('RockRoll')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Sign in to your archive.' })).toBeInTheDocument();
