@@ -1688,3 +1688,19 @@ npm run build
 3. 选择一个真实 Anontraveler 大榜单，依次记录并区分 `preview`、`saved`、`planned`、`committed`，同时检查重复导入与幂等性。
 4. 只有确认是代码缺陷后才做最小修复，并运行 archive / inbox / albums 相关定向测试；若涉及权限变化，先更新 `docs/PERMISSIONS.md`。
 5. 下一轮只读取三份状态 / 交接文档及 Archive / Inbox / Albums 的最小相关文件；不要运行 `npm install`，不要扫描整个仓库。
+
+## 当前任务索引（2026-08-24，Library 与首批 RockRoll UI 控件后）
+
+已完成：
+
+- `#library` 已纳入 editorial 纸张主题，桌面与移动端的 hero、统计、分区、表单、空状态和表格滚动完成视觉收口。
+- RockRoll UI 已提供 `Button`、`Field`、`Input`、`Textarea`、`Select`；其中 `Select` 是 `@radix-ui/react-select@2.3.7` 的薄封装，业务页面只使用简化 API。
+- 组件 / AppShell / Library 共 27 个定向用例与 production build 通过；两种视口无页面横向溢出、无控制台错误，Select 鼠标与键盘交互通过。
+
+下一步只执行：
+
+1. 继续 UI 主线，优先处理实际挂载的 `#songs`：统一列表 / 新增表单视觉，并使用现有 RockRoll `Button / Field / Input / Select`；只有出现真实搜索输入时再增量建立 `SearchInput`。
+2. 只读取 `src/features/songs/`、`src/components/ui/` 的必要文件和 AppShell 必要实现；先补结构 / 行为断言，再做最小页面改动。
+3. 继续核对 `1280x800` 与 `390x844` 的页面高度、导航滚动、表格横向滚动、文本溢出和 Focus 状态。
+4. 本阶段不修改 Supabase、Auth、权限、RLS、Albums 查询、封面 Storage、Archive / Import 或 Node Worker；不进行全站组件一次性迁移。
+5. `@radix-ui/react-select` 已安装，除非下一页确实需要新的 Radix Primitive，否则不要继续新增依赖；不要运行 `npm install`。

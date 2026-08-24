@@ -3899,3 +3899,51 @@ Summarize in Chinese when done.
 ```
 
 建议开启新对话，并粘贴以上提示词继续。
+
+## 当前最终交接（2026-08-24，Library 与首批 RockRoll UI 控件后）
+
+### 本轮完成
+
+- `#library` 已纳入 editorial 纸张主题；hero、三格统计、资料分区、媒体资产表单、空状态与资产表格统一为当前编辑部 / 唱片档案视觉。
+- 新增 RockRoll `Input`、`Textarea`、Radix `Select` 薄封装；完善 `Button` 与 `Field` 的视觉、Focus、Disabled、Error 和 ARIA 状态。Library 已全部迁移到这些公共控件及既有 `FormSection / ActionBar`。
+- 新增 `@radix-ui/react-select@2.3.7`；Select 的 Primitive 组合、Portal 和键盘行为封装在 `src/components/ui/Select.tsx`，业务页面只传 `value / options / onValueChange`。
+- 数据 service、媒体 CRUD、Supabase、Auth、权限、RLS、Albums 查询、封面 Storage、Archive / Import 与 Node Worker 均未修改。
+
+### 验证
+
+- Node.js `v20.20.2`：`npm test -- --run src/components/ui/ui.test.tsx src/app/shell/AppShell.test.tsx src/features/library/LibraryPage.test.tsx`，3 个文件、27 个用例通过。
+- `npm run build` 通过；保留主 chunk 超过 500 kB 警告（约 `666.05 kB`，gzip `185.39 kB`）。
+- Browser + Playwright：`1280x800` 与 `390x844` 无页面横向溢出、无控制台错误；Radix Select 的弹层主题、鼠标选项和键盘 `ArrowDown / Enter` 选择通过。
+- `npm audit --omit=dev --json`：生产依赖 0 个漏洞；`git diff --check` 无空白错误，仅提示 Windows LF / CRLF 转换。
+
+### 当前风险
+
+1. 本轮只建立首批控件和单页增量样板，不代表全站已完成组件迁移；继续按页面推进，避免演变成自有 UI Framework。
+2. build 主 chunk 警告仍存在，但性能优化排在稳定 UI 基线之后，本轮不做代码分割或查询重构。
+3. `.tmp/archive-import-validation/` 与两张 `output/playwright/archive-detail-*.png` 是既有未跟踪文件，后续提交继续排除。
+
+### 下一轮推荐任务
+
+继续 `#songs` 页面视觉与控件收口；只在页面出现真实重复需求时完善 `SearchInput` 或下一项 Radix Primitive。
+
+### 下一轮推荐提示词
+
+```text
+继续 RockRoll 项目 UI 重构。
+请只读取：
+- AGENTS.md
+- docs/PROJECT_STATUS.md
+- docs/NEXT_TASKS.md
+- docs/SESSION_HANDOFF.md
+- src/features/songs/
+- src/components/ui/ 的必要文件
+
+当前主线：完成剩余页面视觉统一，再做响应式 / 滚动 / 表格 / 页面高度收口和完整 UI 回归。
+继续 docs/NEXT_TASKS.md 中的 #songs 页面任务，增量复用 RockRoll UI；不要做全站组件迁移。
+不要扫描整个仓库。
+不要运行 npm install。
+不要修改 Supabase、Auth、权限、RLS、Albums 查询、封面 Storage、Archive / Import 或 Node Worker。
+完成后中文总结。
+```
+
+建议开启新对话，并粘贴以上提示词继续。

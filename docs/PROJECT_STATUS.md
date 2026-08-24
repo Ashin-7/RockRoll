@@ -1731,3 +1731,12 @@ rebase 前结果：4 个测试文件、19 个用例通过；生产构建通过�
 - 2026-08-24 浏览器复验确认 `1280x720` 与 `390x844` 下 `#archive/:id` 均进入 editorial 壳、无横向溢出、控制台无 warning / error；点击 Archive 导航后进入 `#archive` 且激活状态正确。
 - 当前 Guest 会话中的真实详情请求持续停在 `Loading archive collection...`，因此本次没有把 2026-08-17 的详情 hero / 条目内容截图冒充为新验证；该现象留待 Archive / Import 主线恢复 Supabase 连通性和管理员会话后继续核对。
 - 未运行 `npm install`，未新增依赖，未修改 CRUD、数据契约、Supabase、Auth、权限或 RLS；`.tmp/archive-import-validation/` 与两张既有 `output/playwright/archive-detail-*.png` 均未提交、未清理。
+
+## 追加完成：Library 页面与首批 RockRoll UI 控件（2026-08-24）
+
+- 项目主线已按用户最新决策调整为：完成剩余页面视觉统一 → 响应式 / 滚动 / 表格 / 页面高度收口 → 完整 UI 回归并形成稳定基线；随后才进入 Albums 查询、封面 Storage 自有化、Archive / Import 验证与 Node Worker 评估。
+- `#library` 已纳入 AppShell editorial 纸张主题；hero、统计横条、资料分区、媒体资产表单、空状态和横向表格统一为蓝 / 黄 / 黑编辑部视觉，保留原有媒体 CRUD、数据类型、文案与语义结构。
+- 新增首批 RockRoll UI 薄封装：`Input`、`Textarea`、Radix `Select`；补齐 `Button` 的 primary / secondary / ghost 状态，以及 `Field` 的 label、hint、error、`aria-describedby`、`aria-invalid` 关联。业务页面不直接组合 Radix Primitive。
+- 新增唯一运行时依赖 `@radix-ui/react-select@2.3.7`，用于受控值、键盘导航、Focus 管理和 Portal 弹层；未引入 shadcn、Tailwind、图标库或其他 UI 框架。`npm audit --omit=dev` 为 0 个漏洞。
+- 验证：组件 / AppShell / Library 3 个测试文件、27 个用例全部通过；TypeScript 与 production build 通过；`1280x800`、`390x844` 均无页面横向溢出、控制台无错误，Radix Select 的鼠标与键盘选择均在真实浏览器通过。
+- production build 仍有主 chunk 超过 500 kB 警告，当前约 `666.05 kB`（gzip `185.39 kB`）；按当前 UI 阶段不扩展为性能重构。未修改 Supabase、Auth、权限、RLS、Albums 查询、封面 Storage 或 Archive / Import。
