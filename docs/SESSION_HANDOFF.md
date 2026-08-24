@@ -3818,3 +3818,84 @@ Git / 工作区：
 ```
 
 建议开启新对话，并粘贴以上提示词继续。
+
+## 当前有效交接（2026-08-17，Archive Detail 编辑部视觉重构后）
+
+本轮完成：
+
+- `#archive/:id`（`ArchiveDetailPage`）已纳入 AppShell editorial 纸张主题：`isEditorial` 从只匹配 `#archive` 扩展为同时匹配 `#archive/` 前缀，修复从档案首页进入集合详情时的主题断层。
+- ArchiveDetailPage.css 整页重写为纸张编辑部视觉：hero 蓝色大标题 + 黄色标签 + 返回链接、三格统计账本横条、条目账本行式卡片（点线分隔、Georgia 斜体评语、黄色曲风标签）、管理员下划线表单 + 蓝底 / 蓝描边按钮。
+- 表单输入补 `ui-input / ui-textarea` 类；`Button`（`ui-button`）由页面 CSS 作用域覆盖为编辑风格，未改组件本身。
+- 先补断言后改页面：AppShell 新增 `#archive/:id` editorial 断言、ArchiveDetailPage 新增表单输入 `ui-*` 类断言，均先 RED 后 GREEN。
+- 未改变任何导入、CRUD、数据契约、Supabase、Auth、权限或 RLS，也未改 i18n 文案；未运行 `npm install`，未新增依赖。
+- 本轮改动尚未提交或推送；`.tmp/archive-import-validation/` 未清理。
+
+本轮修改文件（5 个）：
+
+- `src/app/shell/AppShell.tsx`：`isEditorial` 增加 `currentHash.startsWith('#archive/')`。
+- `src/app/shell/AppShell.test.tsx`：新增 `#archive/:id` editorial 断言。
+- `src/features/archive/ArchiveDetailPage.tsx`：4 处表单输入补 `ui-input / ui-textarea` 类。
+- `src/features/archive/ArchiveDetailPage.css`：整页重写为纸张编辑部主题（保留全部类名与 760px 断点）。
+- `src/features/archive/ArchiveDetailPage.test.tsx`：新增管理员表单输入结构断言。
+
+验证：
+
+- RED：2 个新断言如预期失败（AppShell editorial 类缺失、表单输入无 `ui-*` 类）。
+- GREEN：AppShell 8 个用例、ArchiveDetailPage 6 个用例通过；archive / app / App 合计 6 个测试文件、53 个用例全部通过。
+- TypeScript build 与 Vite production build 通过，仅保留既有主 chunk 超过 500 kB 警告；`git diff --check` 通过，仅提示 Windows 下 LF / CRLF 转换。
+- 真实浏览器冒烟：`/#archive/c408ee43-7578-4308-890e-ee3b9e653fd0` 在 `1280x720` 与 `390x844` 下 editorial 生效、hero 渲染、无横向溢出、控制台无 warning / error；截图保存到 `output/playwright/archive-detail-desktop.png` 与 `output/playwright/archive-detail-mobile.png`。
+- 验证使用临时 PATH 指向既有 Node.js `v20.20.2` 直接调用本地依赖（`vitest.mjs`、`typescript/bin/tsc`、`vite/bin/vite.js`），临时 Vite 服务已停止，冒烟脚本已清理。
+
+未完成事项与风险：
+
+1. UI 重构已覆盖 Backstage、Albums、Practice、Archive、Archive Detail 五个实际挂载页面；剩余可重构页面：Library、Song List、Song / Album / Artist Detail、Auth、Toolbox。
+2. Archive / Import 真实大列表验证仍未完成；恢复时先确认 Supabase 项目可达并登录管理员账号，不使用 service role key、不绕过 RLS。
+3. 不要把 `preview`、保存到 `import_candidates` 的 `saved`、按实体拆分的 `planned` 与正式公共行 `committed` 混为同一数量。
+4. 本轮 Archive Detail 改动未提交、未推送；继续前先核对 `git status` 与分支，仅按确认范围提交，避免夹带 `.tmp/archive-import-validation/`。
+
+## 当前最终交接（2026-08-24，Archive Detail 收口后）
+
+### 本轮完成
+
+- Archive Detail 编辑部主题实现已提交为 `f7c2cd6`：`#archive/:id` 使用 editorial 壳，详情 hero、统计横条、条目账本与管理员表单统一为纸张编辑部视觉。
+- 实现提交仅包含 `src/app/shell/AppShell.*` 与 `src/features/archive/ArchiveDetailPage.*` 5 个文件；未修改 CRUD、数据契约、Supabase、Auth、权限或 RLS。
+- 两张既有 `output/playwright/archive-detail-*.png` 与 `.tmp/archive-import-validation/` 均未提交、未清理。
+
+### 验证
+
+- 命令级 Node.js `v20.20.2`：archive / app / App 共 6 个测试文件、53 个用例通过。
+- TypeScript build 与 Vite production build 通过，仅保留既有主 chunk 超过 500 kB 警告；`git diff --check` 通过，仅提示 LF / CRLF 转换。
+- Browser 插件复验：`1280x720` 与 `390x844` 下 editorial 壳生效、无横向溢出、控制台无 warning / error；点击 Archive 导航后正确进入 `#archive` 并显示激活状态。
+- 当前 Guest 会话中的真实详情数据持续停在 `Loading archive collection...`；本次未重新验证 hero / 条目内容，2026-08-17 的真实内容截图仅作为历史证据。
+
+### 当前风险
+
+1. Archive / Import 真实大列表验证仍未完成；当前加载态进一步说明下一轮应先恢复 Supabase 连通性与管理员会话。
+2. 不使用 service role key，不绕过 RLS，不把前端隐藏按钮当作权限保证。
+3. 必须分别记录 `preview`、`saved`、`planned`、`committed`，不能用单一“导入数量”混称。
+4. 工作区仍保留 `.tmp/archive-import-validation/` 与两张既有 Archive Detail 截图，后续提交必须继续排除这些未跟踪文件。
+
+### 下一轮推荐任务
+
+恢复 Archive / Import 真实大列表验证：先确认 Supabase 项目可达和管理员会话，再使用一个真实 Anontraveler 大榜单核对四类数量、重复导入及幂等性；只有确认代码缺陷后才实施最小修复。
+
+### 下一轮推荐提示词
+
+```text
+Continue RockRoll project development.
+Read only:
+- AGENTS.md
+- docs/PROJECT_STATUS.md
+- docs/NEXT_TASKS.md
+- docs/SESSION_HANDOFF.md
+- current task related directory
+
+Current main line: Archive/Import. Stabilize the real large-list import pipeline first.
+Continue the next task in docs/NEXT_TASKS.md.
+Do not scan the whole repository.
+Do not run npm install.
+Do not do architecture refactoring.
+Summarize in Chinese when done.
+```
+
+建议开启新对话，并粘贴以上提示词继续。

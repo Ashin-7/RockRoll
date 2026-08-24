@@ -1713,3 +1713,21 @@ rebase 前结果：4 个测试文件、19 个用例通过；生产构建通过�
 - 先补断言后改页面：AppShell 新增 `#archive` editorial 断言与 Archive 页 hero / metric / 输入框结构断言；未改变任何导入、CRUD、数据契约、Supabase、Auth、权限或 RLS，也未改 i18n 文案。
 - 验证：AppShell 7 个用例通过；archive / practice / shell / App 合计 9 个测试文件、71 个用例全部通过；TypeScript build 与 Vite production build 通过，仅保留既有主 chunk 超过 500 kB 警告；`git diff --check` 通过，仅提示 Windows 下 LF / CRLF 转换。
 - 恢复依赖说明：本轮运行 `npm ci` 恢复了被清空的 `node_modules`（152 个包，`package-lock.json` 未变）；未新增依赖；`.tmp/archive-import-validation/` 未清理。
+
+## 追加完成：Archive Detail 页面编辑部视觉重构（2026-08-17）
+
+- `#archive/:id`（`ArchiveDetailPage`）已纳入 AppShell editorial（纸张）主题：`isEditorial` 从只匹配 `#archive` 扩展为同时匹配 `#archive/` 前缀路由，解决从档案首页点进集合详情时主题瞬间切回暗色录音棚的视觉断层。
+- 页面整页重写为纸张编辑部主题：hero 蓝色大标题 + 黄色标签 + 底部蓝线 + 返回链接；来源 / 条目数 / 来源 URL 三格统计改为蓝字表头 + display 字号的账本横条；条目索引改为账本行式（点线分隔、封面框、Georgia 斜体评语、黄色曲风标签）；管理员条目表单改为无边框区块 + 下划线输入 + 蓝底 / 蓝描边按钮。
+- 表单输入补 `ui-input / ui-textarea` 类（沿用既有绕过全局 shim 的机制）；`Button`（`ui-button`）由 `ArchiveDetailPage.css` 作用域覆盖为编辑风格，未改动组件本身。
+- 先补断言后改页面：AppShell 新增 `#archive/:id` editorial 断言、ArchiveDetailPage 新增管理员表单输入 `ui-*` 类断言，均先 RED 后 GREEN；未改变任何导入、CRUD、数据契约、Supabase、Auth、权限或 RLS，也未改 i18n 文案。
+- 验证：AppShell 8 个用例、ArchiveDetailPage 6 个用例通过；archive / app / App 合计 6 个测试文件、53 个用例全部通过；TypeScript build 与 Vite production build 通过，仅保留既有主 chunk 超过 500 kB 警告；`git diff --check` 通过，仅提示 Windows 下 LF / CRLF 转换。
+- 真实浏览器视觉冒烟：以真实公开集合 `c408ee43-7578-4308-890e-ee3b9e653fd0` 在 `1280x720` 与 `390x844` 打开 `/#archive/:id`，editorial 主题生效、hero 渲染、两种视口均无横向溢出、控制台无 warning / error；截图保存到 `output/playwright/archive-detail-desktop.png` 与 `output/playwright/archive-detail-mobile.png`。
+- 未运行 `npm install`，未新增依赖；本轮改动尚未提交或推送；`.tmp/archive-import-validation/` 未清理。
+
+## Archive Detail 页面收口复验与提交（2026-08-24）
+
+- Archive Detail 编辑部主题实现已以提交 `f7c2cd6` 收口；提交仅包含 AppShell 的 `#archive/` editorial 路由、ArchiveDetailPage 页面与样式、两处对应测试，共 5 个文件。
+- 使用命令级 Node.js `v20.20.2` 重新运行 archive / app / App 相关 6 个测试文件，53 个用例全部通过；TypeScript build 与 Vite production build 通过，仅保留既有主 chunk 超过 500 kB 警告；`git diff --check` 通过，仅提示 Windows 下 LF / CRLF 转换。
+- 2026-08-24 浏览器复验确认 `1280x720` 与 `390x844` 下 `#archive/:id` 均进入 editorial 壳、无横向溢出、控制台无 warning / error；点击 Archive 导航后进入 `#archive` 且激活状态正确。
+- 当前 Guest 会话中的真实详情请求持续停在 `Loading archive collection...`，因此本次没有把 2026-08-17 的详情 hero / 条目内容截图冒充为新验证；该现象留待 Archive / Import 主线恢复 Supabase 连通性和管理员会话后继续核对。
+- 未运行 `npm install`，未新增依赖，未修改 CRUD、数据契约、Supabase、Auth、权限或 RLS；`.tmp/archive-import-validation/` 与两张既有 `output/playwright/archive-detail-*.png` 均未提交、未清理。

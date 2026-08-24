@@ -1654,3 +1654,37 @@ npm run build
 2. 下一任务可从 UI 重构计划选择剩余实际挂载页面（Archive Detail、Library、Song Detail），或返回 Archive / Import 真实大列表验证主线。
 3. 如返回 Archive / Import 主线，先恢复 Supabase 连通性与管理员会话，不绕过 RLS，再区分核对 `preview`、`saved`、`planned`、`committed` 四类数量。
 4. 不新增依赖，不修改 Supabase、Auth、权限、RLS 或数据契约；`.tmp/archive-import-validation/` 继续保留不动。
+
+## 当前任务索引（2026-08-17，Archive Detail 页面编辑部视觉重构后）
+
+已完成：
+
+- `#archive/:id`（`ArchiveDetailPage`）已纳入 AppShell editorial 纸张主题；`isEditorial` 扩展为同时匹配 `#archive/` 前缀，解决从档案首页点进集合详情的主题断层。
+- hero 蓝色大标题 + 黄色标签、三格统计账本横条、条目账本行式卡片、管理员下划线表单与编辑风格按钮均已重写为纸张编辑部视觉；表单输入补 `ui-input / ui-textarea`。
+- 结构断言先 RED 后 GREEN：AppShell 8 个用例、ArchiveDetailPage 6 个用例通过；archive / app / App 合计 6 个测试文件、53 个用例全部通过；TypeScript build 与 production build 通过，仅保留既有 chunk 警告。
+- 真实浏览器冒烟：`/#archive/c408ee43-7578-4308-890e-ee3b9e653fd0` 在 `1280x720` 与 `390x844` 下 editorial 生效、无横向溢出、控制台无 warning / error；截图在 `output/playwright/archive-detail-{desktop,mobile}.png`。
+- 本轮改动尚未提交或推送；`.tmp/archive-import-validation/` 未清理。
+
+下一步只执行：
+
+1. 如继续 UI 重构，从 UI 计划选择下一个实际挂载页面小切片（Library、Song List、Song / Album Detail、Auth、Toolbox 等），继续先补结构 / 行为回归断言再做最小页面改动；不修改 Supabase、Auth、权限、RLS 或数据契约。
+2. 如切回 Archive / Import 主线，先恢复 Supabase 连通性与管理员会话，不绕过 RLS，再区分核对 `preview`、`saved`、`planned`、`committed` 四类数量。
+3. 不新增依赖，不运行 `npm install`；`.tmp/archive-import-validation/` 继续保留不动。
+
+推荐下一轮只读取三份状态 / 交接文档、`src/app/shell/AppShell.*` 与下一任务相关页面目录；不要扫描整个仓库。
+
+## 当前任务索引（2026-08-24，Archive Detail 收口后）
+
+已完成：
+
+- Archive Detail 编辑部主题实现已提交为 `f7c2cd6`；6 个定向测试文件、53 个用例通过，TypeScript build 与 production build 通过。
+- 桌面 `1280x720` 与移动端 `390x844` 已复验 editorial 壳、无横向溢出、控制台健康及返回 Archive 的导航交互。
+- 当前 Guest 会话中的详情数据持续停在加载态，本次未重新验证真实 hero / 条目内容；2026-08-17 的内容截图只作为历史证据保留。
+
+下一步只执行：
+
+1. 返回 Archive / Import 真实大列表验证主线，不继续新的 UI 页面切片。
+2. 先确认 Supabase 项目可达并取得管理员会话；不使用 service role key，不绕过 RLS。
+3. 选择一个真实 Anontraveler 大榜单，依次记录并区分 `preview`、`saved`、`planned`、`committed`，同时检查重复导入与幂等性。
+4. 只有确认是代码缺陷后才做最小修复，并运行 archive / inbox / albums 相关定向测试；若涉及权限变化，先更新 `docs/PERMISSIONS.md`。
+5. 下一轮只读取三份状态 / 交接文档及 Archive / Inbox / Albums 的最小相关文件；不要运行 `npm install`，不要扫描整个仓库。
