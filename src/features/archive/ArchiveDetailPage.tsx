@@ -304,6 +304,7 @@ export function ArchiveDetailPage({
               <label>
                 {t('archiveDetail.albumIdLabel')}
                 <input
+                  className="ui-input"
                   required
                   value={form.entityId}
                   onChange={(event) => setForm((current) => ({ ...current, entityId: event.target.value }))}
@@ -312,6 +313,7 @@ export function ArchiveDetailPage({
               <label>
                 {t('archiveDetail.displayTitleLabel')}
                 <input
+                  className="ui-input"
                   required
                   value={form.displayTitle}
                   onChange={(event) => setForm((current) => ({ ...current, displayTitle: event.target.value }))}
@@ -323,6 +325,7 @@ export function ArchiveDetailPage({
               <label>
                 {t('archiveDetail.positionLabel')}
                 <input
+                  className="ui-input"
                   min="1"
                   type="number"
                   value={form.position}
@@ -332,6 +335,7 @@ export function ArchiveDetailPage({
               <label>
                 {t('archiveDetail.noteLabel')}
                 <textarea
+                  className="ui-textarea"
                   value={form.note}
                   onChange={(event) => setForm((current) => ({ ...current, note: event.target.value }))}
                 />

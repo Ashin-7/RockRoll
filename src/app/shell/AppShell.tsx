@@ -30,7 +30,11 @@ export function AppShell({
   const displayName = accountName ?? t('auth.guest');
   const isLibraryRoute = currentHash === '#albums' || currentHash.startsWith('#album/');
   const isEditorial =
-    currentHash === '#backstage' || isLibraryRoute || currentHash === '#practice' || currentHash === '#archive';
+    currentHash === '#backstage' ||
+    isLibraryRoute ||
+    currentHash === '#practice' ||
+    currentHash === '#archive' ||
+    currentHash.startsWith('#archive/');
 
   function isActiveNavItem(href: string) {
     if (href === '#library' && isLibraryRoute) {

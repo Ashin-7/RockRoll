@@ -123,6 +123,11 @@ describe('ArchiveDetailPage', () => {
     expect(screen.getByText('Album link')).toBeInTheDocument();
     expect(screen.getByText('Placement')).toBeInTheDocument();
 
+    expect(screen.getByLabelText('Album ID')).toHaveClass('ui-input');
+    expect(screen.getByLabelText('Display title')).toHaveClass('ui-input');
+    expect(screen.getByLabelText('Position')).toHaveClass('ui-input');
+    expect(screen.getByLabelText('Note')).toHaveClass('ui-textarea');
+
     await user.type(screen.getByLabelText('Album ID'), 'album-1');
     await user.type(screen.getByLabelText('Display title'), 'Please Please Me');
     await user.type(screen.getByLabelText('Position'), '1');
