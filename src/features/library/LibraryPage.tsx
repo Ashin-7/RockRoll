@@ -1,5 +1,16 @@
 import { FormEvent, useEffect, useState } from 'react';
-import { Panel, SectionHeading, StatCard } from '../../components/ui';
+import {
+  ActionBar,
+  Button,
+  Field,
+  FormSection,
+  Input,
+  Panel,
+  Select,
+  SectionHeading,
+  StatCard,
+  Textarea,
+} from '../../components/ui';
 import { useI18n } from '../../i18n/I18nProvider';
 import {
   createMediaAsset,
@@ -233,86 +244,66 @@ export function LibraryPage({
             eyebrow={editingAssetId ? t('library.editMode') : t('library.formMode')}
             title={editingAssetId ? t('library.editTitle') : t('library.addTitle')}
           />
-          <fieldset>
-            <legend>{t('library.identitySection')}</legend>
-            <label>
-              {t('library.fileNameLabel')}
-              <input
+          <FormSection title={t('library.identitySection')}>
+            <Field label={t('library.fileNameLabel')}>
+              <Input
                 required
                 value={form.fileName}
                 onChange={(event) => setForm((current) => ({ ...current, fileName: event.target.value }))}
               />
-            </label>
-            <label>
-              {t('library.mediaTypeLabel')}
-              <select
+            </Field>
+            <Field label={t('library.mediaTypeLabel')}>
+              <Select
+                options={mediaTypes.map((mediaType) => ({ label: mediaType, value: mediaType }))}
                 value={form.mediaType}
-                onChange={(event) => setForm((current) => ({ ...current, mediaType: event.target.value as MediaType }))}
-              >
-                {mediaTypes.map((mediaType) => (
-                  <option key={mediaType} value={mediaType}>
-                    {mediaType}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </fieldset>
-          <fieldset>
-            <legend>{t('library.storageProfileSection')}</legend>
-            <label>
-              {t('library.storageBucketLabel')}
-              <input
+                onValueChange={(mediaType) => setForm((current) => ({ ...current, mediaType }))}
+              />
+            </Field>
+          </FormSection>
+          <FormSection title={t('library.storageProfileSection')}>
+            <Field label={t('library.storageBucketLabel')}>
+              <Input
                 value={form.storageBucket}
                 onChange={(event) => setForm((current) => ({ ...current, storageBucket: event.target.value }))}
               />
-            </label>
-            <label>
-              {t('library.storagePathLabel')}
-              <input
+            </Field>
+            <Field label={t('library.storagePathLabel')}>
+              <Input
                 required
                 value={form.storagePath}
                 onChange={(event) => setForm((current) => ({ ...current, storagePath: event.target.value }))}
               />
-            </label>
-          </fieldset>
-          <fieldset>
-            <legend>{t('library.linkSection')}</legend>
-            <label>
-              {t('library.linkedEntityTypeLabel')}
-              <select
+            </Field>
+          </FormSection>
+          <FormSection title={t('library.linkSection')}>
+            <Field label={t('library.linkedEntityTypeLabel')}>
+              <Select
+                options={[
+                  { label: t('library.noLinkedEntity'), value: '' as const },
+                  ...linkEntityTypes.map((entityType) => ({ label: entityType, value: entityType })),
+                ]}
                 value={form.linkedEntityType}
-                onChange={(event) =>
-                  setForm((current) => ({ ...current, linkedEntityType: event.target.value as MediaFormState['linkedEntityType'] }))
-                }
-              >
-                <option value="">{t('library.noLinkedEntity')}</option>
-                {linkEntityTypes.map((entityType) => (
-                  <option key={entityType} value={entityType}>
-                    {entityType}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              {t('library.linkedEntityIdLabel')}
-              <input
+                onValueChange={(linkedEntityType) => setForm((current) => ({ ...current, linkedEntityType }))}
+              />
+            </Field>
+            <Field label={t('library.linkedEntityIdLabel')}>
+              <Input
                 value={form.linkedEntityId}
                 onChange={(event) => setForm((current) => ({ ...current, linkedEntityId: event.target.value }))}
               />
-            </label>
-            <label className="library-form-notes">
-              {t('library.notesLabel')}
-              <textarea
+            </Field>
+            <Field className="library-form-notes" label={t('library.notesLabel')}>
+              <Textarea
                 value={form.notes}
                 onChange={(event) => setForm((current) => ({ ...current, notes: event.target.value }))}
               />
-            </label>
-          </fieldset>
-          <div className="library-form-actions">
+            </Field>
+          </FormSection>
+          <ActionBar className="library-form-actions">
             {editingAssetId ? (
-              <button
+              <Button
                 type="button"
-                className="library-secondary-action"
+                variant="secondary"
                 onClick={() => {
                   setEditingAssetId(null);
                   setForm(initialForm);
@@ -320,10 +311,12 @@ export function LibraryPage({
                 }}
               >
                 {t('library.cancelEdit')}
-              </button>
+              </Button>
             ) : null}
-            <button type="submit">{editingAssetId ? t('library.updateSubmit') : t('library.addSubmit')}</button>
-          </div>
+            <Button type="submit" variant="primary">
+              {editingAssetId ? t('library.updateSubmit') : t('library.addSubmit')}
+            </Button>
+          </ActionBar>
           {message ? <p role="status">{message}</p> : null}
         </form>
 
@@ -366,65 +359,58 @@ export function LibraryPage({
                                 <div className="library-link-item" key={link.id}>
                                   {editingLinkId === link.id ? (
                                     <form className="library-link-form" onSubmit={handleLinkSubmit}>
-                                      <label>
-                                        {t('library.editLinkedEntityTypeLabel')}
-                                        <select
+                                      <Field label={t('library.editLinkedEntityTypeLabel')}>
+                                        <Select
+                                          options={linkEntityTypes.map((entityType) => ({ label: entityType, value: entityType }))}
                                           value={linkForm.entityType}
-                                          onChange={(event) =>
-                                            setLinkForm((current) => ({
-                                              ...current,
-                                              entityType: event.target.value as MediaLinkEntityType,
-                                            }))
+                                          onValueChange={(entityType) =>
+                                            setLinkForm((current) => ({ ...current, entityType }))
                                           }
-                                        >
-                                          {linkEntityTypes.map((entityType) => (
-                                            <option key={entityType} value={entityType}>
-                                              {entityType}
-                                            </option>
-                                          ))}
-                                        </select>
-                                      </label>
-                                      <label>
-                                        {t('library.editLinkedEntityIdLabel')}
-                                        <input
+                                        />
+                                      </Field>
+                                      <Field label={t('library.editLinkedEntityIdLabel')}>
+                                        <Input
                                           required
                                           value={linkForm.entityId}
                                           onChange={(event) =>
                                             setLinkForm((current) => ({ ...current, entityId: event.target.value }))
                                           }
                                         />
-                                      </label>
+                                      </Field>
                                       <div className="library-link-actions">
-                                        <button type="submit">{t('library.updateLinkSubmit')}</button>
-                                        <button
+                                        <Button type="submit" variant="primary">{t('library.updateLinkSubmit')}</Button>
+                                        <Button
                                           type="button"
+                                          variant="secondary"
                                           onClick={() => {
                                             setEditingLinkId(null);
                                             setLinkForm({ entityType: 'song', entityId: '' });
                                           }}
                                         >
                                           {t('library.cancelEdit')}
-                                        </button>
+                                        </Button>
                                       </div>
                                     </form>
                                   ) : (
                                     <>
                                       <span>{linkLabel}</span>
                                       <div className="library-link-actions">
-                                        <button
+                                        <Button
                                           type="button"
+                                          variant="secondary"
                                           aria-label={`${t('library.editLinkAction')} ${linkLabel}`}
                                           onClick={() => handleEditLink(link)}
                                         >
                                           {t('library.editLinkAction')}
-                                        </button>
-                                        <button
+                                        </Button>
+                                        <Button
                                           type="button"
+                                          variant="ghost"
                                           aria-label={`${t('library.deleteLinkAction')} ${linkLabel}`}
                                           onClick={() => handleDeleteLink(link.id)}
                                         >
                                           {t('library.deleteLinkAction')}
-                                        </button>
+                                        </Button>
                                       </div>
                                     </>
                                   )}
@@ -439,16 +425,22 @@ export function LibraryPage({
                       <td>{asset.notes || t('library.noNotes')}</td>
                       <td>
                         <div className="library-row-actions">
-                          <button type="button" aria-label={`${t('library.editAction')} ${asset.fileName}`} onClick={() => handleEdit(asset)}>
-                            {t('library.editAction')}
-                          </button>
-                          <button
+                          <Button
                             type="button"
+                            variant="secondary"
+                            aria-label={`${t('library.editAction')} ${asset.fileName}`}
+                            onClick={() => handleEdit(asset)}
+                          >
+                            {t('library.editAction')}
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
                             aria-label={`${t('library.deleteAction')} ${asset.fileName}`}
                             onClick={() => handleDelete(asset)}
                           >
                             {t('library.deleteAction')}
-                          </button>
+                          </Button>
                         </div>
                       </td>
                     </tr>

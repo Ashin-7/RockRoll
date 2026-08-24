@@ -32,6 +32,7 @@ export function AppShell({
   const isEditorial =
     currentHash === '#backstage' ||
     isLibraryRoute ||
+    currentHash === '#library' ||
     currentHash === '#practice' ||
     currentHash === '#archive' ||
     currentHash.startsWith('#archive/');

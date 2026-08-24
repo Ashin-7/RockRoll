@@ -131,11 +131,19 @@
   padding: var(--space-8);
 }
 
-/* Albums editorial surface: the accepted concept owns the complete shell. */
+/* Editorial surface: the accepted concept owns the complete shell. */
 .app-shell--editorial {
   --editorial-paper: #f2ecdd;
   --editorial-ink: #11100d;
   --editorial-blue: #183fca;
+  --control-bg: rgba(255, 255, 255, 0.42);
+  --control-border: rgba(17, 16, 13, 0.58);
+  --control-fg: var(--editorial-ink);
+  --control-fg-muted: rgba(17, 16, 13, 0.68);
+  --control-primary: var(--editorial-blue);
+  --control-primary-fg: #fff;
+  --control-focus: var(--editorial-blue);
+  --control-focus-ring: rgba(24, 63, 202, 0.18);
   display: block;
   background-color: var(--editorial-paper);
   background-image:

@@ -87,11 +87,13 @@ describe('LibraryPage', () => {
     renderWithI18n(<LibraryPage onCreateMediaAsset={createMediaAsset} onLoadMediaAssets={loadMediaAssets} />);
 
     await user.type(await screen.findByLabelText('File name'), 'album-cover.jpg');
-    await user.selectOptions(screen.getByLabelText('Media type'), 'image');
+    await user.click(screen.getByLabelText('Media type'));
+    await user.click(screen.getByRole('option', { name: 'image' }));
     await user.type(screen.getByLabelText('Storage bucket'), 'covers');
     await user.type(screen.getByLabelText('Storage path or URL'), 'covers/album-cover.jpg');
     await user.type(screen.getByLabelText('Notes'), 'Cover reference.');
-    await user.selectOptions(screen.getByLabelText('Linked entity type'), 'album');
+    await user.click(screen.getByLabelText('Linked entity type'));
+    await user.click(screen.getByRole('option', { name: 'album' }));
     await user.type(screen.getByLabelText('Linked entity ID'), 'album-1');
     await user.click(screen.getByRole('button', { name: 'Add media asset' }));
 
@@ -164,7 +166,8 @@ describe('LibraryPage', () => {
 
     await screen.findByText('solo-take.mp4');
     await user.click(screen.getByRole('button', { name: 'Edit link song: song-1' }));
-    await user.selectOptions(screen.getByLabelText('Edit linked entity type'), 'album');
+    await user.click(screen.getByLabelText('Edit linked entity type'));
+    await user.click(screen.getByRole('option', { name: 'album' }));
     await user.clear(screen.getByLabelText('Edit linked entity ID'));
     await user.type(screen.getByLabelText('Edit linked entity ID'), 'album-1');
     await user.click(screen.getByRole('button', { name: 'Update link' }));

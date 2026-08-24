@@ -7,10 +7,13 @@ import {
   Button,
   Field,
   FormSection,
+  Input,
   Panel,
+  Select,
   SearchableDropdown,
   SectionHeading,
   StatCard,
+  Textarea,
 } from './index';
 
 describe('minimal UI components', () => {
@@ -33,6 +36,60 @@ describe('minimal UI components', () => {
     );
 
     expect(screen.getByLabelText('Title')).toBeInTheDocument();
+  });
+
+  it('connects field hints and errors to the wrapped control', () => {
+    renderWithI18n(
+      <Field error="Title is required" hint="Use the original filename" label="Title">
+        <Input />
+      </Field>,
+    );
+
+    expect(screen.getByLabelText('Title')).toHaveAttribute('aria-invalid', 'true');
+    expect(screen.getByLabelText('Title')).toHaveAccessibleDescription(
+      'Use the original filename Title is required',
+    );
+    expect(screen.getByText('Title is required')).toHaveAttribute('role', 'alert');
+  });
+
+  it('applies RockRoll control classes while forwarding native props', () => {
+    renderWithI18n(
+      <>
+        <Input aria-label="Filename" required />
+        <Textarea aria-label="Notes" rows={3} />
+        <Select
+          aria-label="Media type"
+          defaultValue="audio"
+          options={[{ label: 'Audio', value: 'audio' }]}
+        />
+      </>,
+    );
+
+    expect(screen.getByLabelText('Filename')).toHaveClass('ui-input');
+    expect(screen.getByLabelText('Notes')).toHaveClass('ui-textarea');
+    expect(screen.getByLabelText('Media type')).toHaveClass('ui-select');
+  });
+
+  it('uses the Radix select interaction contract', async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+
+    renderWithI18n(
+      <Select
+        aria-label="Media type"
+        onValueChange={onValueChange}
+        options={[
+          { label: 'Audio', value: 'audio' },
+          { label: 'Video', value: 'video' },
+        ]}
+        value="audio"
+      />,
+    );
+
+    await user.click(screen.getByRole('combobox', { name: 'Media type' }));
+    await user.click(screen.getByRole('option', { name: 'Video' }));
+
+    expect(onValueChange).toHaveBeenCalledWith('video');
   });
 
   it('renders a form section legend and action bar content', () => {

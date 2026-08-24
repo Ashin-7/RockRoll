@@ -65,7 +65,7 @@ select:not(.ui-select) {
   padding: 0.8rem 0.95rem;
 }
 
-button:not(.ui-button):not(.ui-button-unstyled):not([class*="__language"]):not([class*="__account"]) {
+button:not(.ui-button):not(.ui-button-unstyled):not(.ui-select-trigger):not([class*="__language"]):not([class*="__account"]) {
   /* Temporary shim to keep bare buttons styled until replaced by ui-button */
   border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-pill);

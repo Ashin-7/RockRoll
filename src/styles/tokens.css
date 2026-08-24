@@ -79,6 +79,18 @@
   --font-body: Inter, "Segoe UI", Arial, sans-serif;
   --font-mono: ui-monospace, "JetBrains Mono", "SFMono-Regular", monospace;
 
+  /* --- 表单控件 --- */
+  --control-height: 2.75rem;
+  --control-radius: var(--radius-sm);
+  --control-bg: var(--color-bg-input);
+  --control-border: var(--color-border-strong);
+  --control-fg: var(--color-fg);
+  --control-fg-muted: var(--color-fg-muted);
+  --control-primary: var(--color-accent);
+  --control-primary-fg: var(--c-coal-900);
+  --control-focus: var(--color-accent);
+  --control-focus-ring: var(--color-accent-soft);
+
   /* --- 断点（仅作文档约束，@media 中统一引用这些数值） --- */
   --bp-sm: 760px;
   --bp-md: 900px;

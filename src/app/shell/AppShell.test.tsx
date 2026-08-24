@@ -75,6 +75,17 @@ describe('AppShell', () => {
     expect(container.querySelector('.app-shell__header')).toHaveAttribute('data-layout', 'top');
   });
 
+  it('uses the editorial top navigation for the media library route', () => {
+    const { container } = renderWithI18n(
+      <AppShell currentHash="#library">
+        <h2>Media library</h2>
+      </AppShell>,
+    );
+
+    expect(container.querySelector('.app-shell')).toHaveClass('app-shell--editorial');
+    expect(screen.getByRole('link', { name: 'Library' })).toHaveAttribute('aria-current', 'page');
+  });
+
   it('only marks backstage active on the backstage route', () => {
     renderWithI18n(
       <AppShell currentHash="#backstage">
